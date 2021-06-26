@@ -1,12 +1,11 @@
 .. Keep REAMD.rst synchronized with index.rst (documentation)
 
 
-|MDTools_writing|
+#######
+MDTools
+#######
 
 |GPLv3 license| |made-with-python| |made-with-sphinx-doc| |mdanalysis|
-
-.. contents::
-    :local:
 
 
 Introduction
@@ -15,38 +14,28 @@ Introduction
 MDTools is a collection of ready-to-use Python_ scripts to prepare and
 analyze molecular dynamics (MD) simulations.
 
+The main feature of this package is not the package itself, but the
+Python scripts shipped along with this package in the ``scripts/``
+directory.  These Python scripts are fully functional and directly
+executable (provided you have installed Python_) without the need to go
+into the source code.
+
 The idea is to provide you with a collection of scripts to prepare and
 analyze MD simulations similar to the command-line tools shipped along
 with Gromacs_.  For instance, the script
-:file:`scripts/dynamics/msd_serial.py` can be used to calculate the mean
+``scripts/dynamics/msd_serial.py`` can be used to calculate the mean
 square displacement of a given selection (i.e. a user-defined group of
 atoms).  Since MDTools is based on MDAnalysis_, you are not limited to
 Gromacs_ trajectories but you can read and analyze a variety of
 different `trajectory and topology formats`_.  You also benefit from
 MDAnalysis' rich `selection syntax`_.
 
+
+Documentation
+=============
+
 The complete documentation of MDTools including installation_ and usage_
 instructions can be found `here <TODO>`_.
-
-.. note::
-    
-    **This project is at the beginning**.  At the moment it is mainly
-    intended for my personal use and will evolve according to my
-    personal needs.  However, everybody is welcome to use it and to
-    contribute to it and to write scripts for his/her own purposes.  As
-    mentioned above, the aim of this project is to build up a collection
-    of generic Python scripts to prepare and analyze MD simulations.  If
-    you want to contribute, please read the
-    `Developers guide`_.
-
-.. _Python: https://www.python.org/
-.. _Gromacs: https://manual.gromacs.org/
-.. _MDAnalysis: https://www.mdanalysis.org/
-.. _trajectory and topology formats: https://userguide.mdanalysis.org/stable/formats/index.html
-.. _selection syntax: https://userguide.mdanalysis.org/stable/selections.html
-.. _installation: TODO
-.. _usage: TODO
-.. _Developers guide: TODO
 
 
 License
@@ -62,13 +51,17 @@ MDTools is distributed in the hope that it will be useful, but
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 `GNU General Public License`_ for more details.
 
+
+.. _Python: https://www.python.org/
+.. _Gromacs: https://manual.gromacs.org/
+.. _MDAnalysis: https://www.mdanalysis.org/
+.. _trajectory and topology formats: https://userguide.mdanalysis.org/stable/formats/index.html
+.. _selection syntax: https://userguide.mdanalysis.org/stable/selections.html
+.. _installation: TODO
+.. _usage: TODO
+.. _Developers guide: TODO
 .. _GNU General Public License: https://www.gnu.org/licenses/gpl-3.0.html
 
-
-.. |MDTools_writing| image:: ../logo/mdtools_label_3900x760.png
-    :width: 450 px
-    :align: middle
-    :alt: MDTools
 .. |GPLv3 license| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
     :alt: License GPLv3
     :target: http://perso.crans.org/besson/LICENSE.html
