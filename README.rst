@@ -38,16 +38,6 @@ The complete documentation of MDTools including installation_ and usage_
 instructions can be found `here <TODO>`_.
 
 
-.. _Python: https://www.python.org/
-.. _Gromacs: https://manual.gromacs.org/
-.. _MDAnalysis: https://www.mdanalysis.org/
-.. _trajectory and topology formats: https://userguide.mdanalysis.org/stable/formats/index.html
-.. _selection syntax: https://userguide.mdanalysis.org/stable/selections.html
-.. _installation: TODO
-.. _usage: TODO
-.. _Developers guide: TODO
-
-
 License
 =======
 
@@ -61,13 +51,17 @@ MDTools is distributed in the hope that it will be useful, but
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 `GNU General Public License`_ for more details.
 
+
+.. _Python: https://www.python.org/
+.. _Gromacs: https://manual.gromacs.org/
+.. _MDAnalysis: https://www.mdanalysis.org/
+.. _trajectory and topology formats: https://userguide.mdanalysis.org/stable/formats/index.html
+.. _selection syntax: https://userguide.mdanalysis.org/stable/selections.html
+.. _installation: TODO
+.. _usage: TODO
+.. _Developers guide: TODO
 .. _GNU General Public License: https://www.gnu.org/licenses/gpl-3.0.html
 
-
-.. |MDTools_writing| image:: ../logo/mdtools_label_3900x760.png
-    :width: 450 px
-    :align: middle
-    :alt: MDTools
 .. |GPLv3 license| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
     :alt: License GPLv3
     :target: http://perso.crans.org/besson/LICENSE.html
