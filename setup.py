@@ -106,7 +106,7 @@ if __name__ == '__main__':
         url="https://github.com/andthum/mdtools",
         project_urls={
             'Source': "https://github.com/andthum/mdtools",
-            'Documentation': "TODO",
+            'Documentation': "https://mdtools.readthedocs.io/en/latest/",
             'Issue Tracker': "TODO",
             'Feature Requests': "TODO",
         },
