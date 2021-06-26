@@ -20,7 +20,7 @@ analyze molecular dynamics (MD) simulations.
 The idea is to provide you with a collection of scripts to prepare and
 analyze MD simulations similar to the command-line tools shipped along
 with Gromacs_.  For instance, the script
-:file:`scripts/dynamics/msd_serial.py` can be used to calculate the mean
+``scripts/dynamics/msd_serial.py`` can be used to calculate the mean
 square displacement of a given selection (i.e. a user-defined group of
 atoms).  Since MDTools is based on MDAnalysis_, you are not limited to
 Gromacs_ trajectories but you can read and analyze a variety of
