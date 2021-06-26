@@ -1,0 +1,422 @@
+#!/usr/bin/env python3
+
+
+# This file is part of MDTools.
+# Copyright (C) 2020  Andreas Thum
+#
+# MDTools is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# MDTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+import os
+import sys
+from datetime import datetime
+import psutil
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+#from matplotlib.backends.backend_pdf import PdfPages
+import mdtools as mdt
+
+
+
+
+def read_matrix(infile):
+    """
+    Read data file. The file must have the same format as the output
+    produced by GROMACS' function gmx densmap with the -od flag. I.e.,
+    the input file must be an ASCII file containing a 2-dimensional
+    matrix. The first column must contain the x values and the first row
+    the y values. The upper left corner can have any value, but is
+    usually set to zero. The remaining elements of the matrix must
+    contain the z values for each (x,y) pair. The file may contain
+    comment lines starting with #, which will be ignored.
+    
+    Parameters
+    ----------
+    infile : str
+        Name of the data file.
+    
+    Returns
+    -------
+    x : numpy.ndarray
+        1-dimensional array containing the x values.
+    y : numpy.ndarray
+        1-dimensional array containing the y values.
+    z : numpy.ndarray
+        2-dimensional array containing the z values for each (x,y) pair.
+    """
+    
+    data = np.genfromtxt(infile)
+    x = data[1:,0]
+    y = data[0,1:]
+    z = data[1:,1:]
+    
+    # Make the columns corresponding to the x values and the rows to the
+    # y values
+    z = np.ascontiguousarray(z.T)
+    
+    return x, y, z
+
+
+
+
+def move_hex(pos, n, a):
+    """
+    Given the position `pos` of one hexagon midpoint and the lattice
+    constant `a`, calculate the position of another hexagon midpoint
+    with offset `n` from the initial hexagon midpoint. Works only for
+    hexagonal lattices whose edges align with the x axis.
+    
+    Parameters
+    ----------
+    pos : array_like
+        Array of shape ``(2,)`` containing the x and y position of the
+        initial hexagon midpoint.
+    n : array_like
+        Array of the same shape as `pos` indicating how many hexagons to
+        move in x and y direction.
+    a : scalar
+        The lattice constant of the hexagonal lattice.
+    
+    Returns
+    -------
+    new_pos : numpy.ndarray
+        Array of the same shape as `pos` containing the position of the
+        new hexagon midpoint.
+    """
+    
+    pos = np.asarray(pos)
+    n = np.asarray(n)
+    
+    if pos.shape != (2,):
+        raise ValueError("pos must be of shape (2,)")
+    if n.shape != pos.shape:
+        raise ValueError("n must be of the same shape as pos")
+    
+    xdist = a * np.cos(np.deg2rad(30))
+    ydist = a / 2
+    
+    return pos + n * np.array([xdist, ydist])
+
+
+
+
+def g(x, m=1, c=0):
+    """Straight line with slope `m` and intercept `c`."""
+    return m*x + c
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    
+    timer_tot = datetime.now()
+    proc = psutil.Process(os.getpid())
+    
+    
+    parser = argparse.ArgumentParser(
+                 description=(
+                     "Extract cross sections from a 2-dimensional"
+                     " density matrix along hexagonal axes (first"
+                     " nearest neighbour and second nearest neighbour"
+                     " axes). The file containing the matrix must have"
+                     " the same format as the output produced by"
+                     " GROMACS' function gmx densmap with the -od flag."
+                     " I.e., the input file must be an ASCII file"
+                     " containing a 2-dimensional matrix. The first"
+                     " column must contain the x values and the first"
+                     " row the y values. The upper left corner can have"
+                     " any value, but is usually set to zero. The"
+                     " remaining elements of the matrix must contain the"
+                     " z values for each (x,y) pair. The file may"
+                     " contain comment lines starting with #, which will"
+                     " be ignored. Currently, this script is only"
+                     " working when the edges of the hexagons align with"
+                     " the x axis."
+                 )
+    )
+    
+    parser.add_argument(
+        '-f',
+        dest='INFILE',
+        type=str,
+        required=False,
+        default=None,
+        help="File containing the density matrix."
+    )
+    parser.add_argument(
+        '-o',
+        dest='OUTFILE',
+        type=str,
+        required=True,
+        help="Output filename."
+    )
+    
+    parser.add_argument(
+        '-a',
+        dest='LATCONST',
+        type=float,
+        required=False,
+        default=0.246,
+        help="Lattice constant of the hexagonal lattice. Default: 0.246,"
+             " which is the lattice constant of graphene in nm."
+    )
+    parser.add_argument(
+        '--hex-pos',
+        dest='HEXPOS',
+        nargs=2,
+        type=float,
+        required=False,
+        default=[0.071, 0.123],
+        help="Position of an arbitrary hexagon midpoint. Default: 0.071"
+             " 0.123, which is the midpoint of the first graphene"
+             " hexagon, when the edges of the hexagons align with the x"
+             " axis and a hexagon vertex (C atom) is placed at 0 0."
+    )
+    parser.add_argument(
+        '-w',
+        dest='WIDTH',
+        type=float,
+        required=False,
+        default=0.071,
+        help="Axis width. The cross section along an axis is averaged"
+             " over the width of the axis. Default: 0.071, which is half"
+             " the C-C bond length in graphene in nm."
+    )
+    parser.add_argument(
+        '-n',
+        dest='NSAMPLES',
+        type=int,
+        required=False,
+        default=10,
+        help="How many evenly spaced samples to take for a single cross"
+             " section within the given axis width. Default: 10."
+    )
+    
+    args = parser.parse_args()
+    print(mdt.rti.run_time_info_str())
+    
+    
+    x, y, z = read_matrix(args.INFILE)
+    if args.LATCONST <= 0:
+        raise ValueError("-a must be positive")
+    if args.WIDTH <= 0:
+        raise ValueError("-w must be positive")
+    if args.NSAMPLES <= 0:
+        raise ValueError("-n must be positive")
+    if (args.HEXPOS[0] < np.min(x) or args.HEXPOS[0] > np.max(x) or
+        args.HEXPOS[1] < np.min(y) or args.HEXPOS[1] > np.max(y)):
+        raise ValueError("--hex-pos is outside the data range")
+    
+    
+    # Distance between hexagon midpoints in x and y direction
+    xdist = args.LATCONST * np.cos(np.deg2rad(30))
+    ydist = args.LATCONST / 2
+    # First hexagon row in x and y direction
+    nx = int((np.min(x) - args.HEXPOS[0]) / xdist)
+    ny = int((np.min(y) - args.HEXPOS[1]) / ydist)
+    first_hex = move_hex(pos=[args.HEXPOS[0], args.HEXPOS[1]],
+                         n=[nx, ny],
+                         a=args.LATCONST)
+    # Last hexagon row in x and y direction
+    nx = int((np.max(x) - args.HEXPOS[0]) / xdist)
+    ny = int((np.max(y) - args.HEXPOS[1]) / ydist)
+    last_hex = move_hex(pos=[args.HEXPOS[0], args.HEXPOS[1]],
+                        n=[nx, ny],
+                        a=args.LATCONST)
+    # Number of hexagon rows in x and y direction
+    nx_hex = int((last_hex[0] - first_hex[0]) / xdist)
+    ny_hex = int((last_hex[1] - first_hex[1]) / ydist)
+########################################################################
+    #nx_hex += 1
+    #ny_hex += 1
+    #print("nx_hex =", nx_hex)
+    #print("ny_hex =", ny_hex)
+########################################################################
+    # Total number of hexagons
+    n_hex = nx_hex * ny_hex//2 + (nx_hex//2 + nx_hex%2) * ny_hex%2
+    
+    
+    
+    
+    ### Nearest neighbour axes ###
+    
+    # Angle between the hexagonal axis and the x axis
+    angle = np.deg2rad(30)
+    # Line along which to take the cross section
+    slope = np.tan(angle)
+    intercept_min = first_hex[1] - slope * last_hex[0]  # c = y - mx
+    # Longest possible length of the line
+    lmax = min(np.cos(angle) / np.max(x) - np.min(x),
+               np.sin(angle) / np.max(y) - np.min(y))
+    
+########################################################################
+    # Test image
+    fig, axis = plt.subplots(figsize=(8.27, 8.27),  # Short side of DIN A4 in inches
+                             frameon=False,
+                             clear=True,
+                             tight_layout=True)
+    mdt.plot.pcolormesh(ax=axis,
+                        x=np.append(x, x[-1]+(x[-1]-x[-2])),
+                        y=np.append(y, y[-1]+(y[-1]-y[-2])),
+                        z=z,
+                        xmin=np.min(x)-0.5,
+                        xmax=np.max(x)+0.5,
+                        ymin=np.min(y)-0.5,
+                        ymax=np.max(y)+0.5)
+    axis.axvline(x=first_hex[0], color='red', linestyle='--')
+    axis.axvline(x=last_hex[0], color='red', linestyle='--')
+    axis.axhline(y=first_hex[1], color='red', linestyle='--')
+    axis.axhline(y=last_hex[1], color='red', linestyle='--')
+    
+    for i in range(ny_hex//2 + ny_hex%2 + nx_hex//2 + nx_hex%2):
+        intercept = intercept_min + 2*i*ydist
+        mdt.plot.fill_between(
+           ax=axis,
+           x=x,
+           y1=g(x=x, m=slope, c=intercept+args.WIDTH/2),
+           y2=g(x=x, m=slope, c=intercept-args.WIDTH/2),
+           xmin=np.min(x)-0.5,
+           xmax=np.max(x)+0.5,
+           ymin=np.min(y)-0.5,
+           ymax=np.max(y)+0.5)
+    
+    xsize = abs(axis.get_xlim()[0] - axis.get_xlim()[1])
+    ysize = abs(axis.get_ylim()[0] - axis.get_ylim()[1])
+    axis.set_aspect(ysize / xsize)
+    
+    yticks = np.array(axis.get_yticks())
+    mask = ((yticks >= axis.get_xlim()[0]) &
+            (yticks <= axis.get_xlim()[1]))
+    axis.set_xticks(yticks[mask])
+    
+    plt.show()
+########################################################################
+    
+    fig, axis = plt.subplots(figsize=(8.27, 8.27),  # Short side of DIN A4 in inches
+                             frameon=False,
+                             clear=True,
+                             tight_layout=True)
+    mdt.plot.pcolormesh(ax=axis,
+                        x=np.append(x, x[-1]+(x[-1]-x[-2])),
+                        y=np.append(y, y[-1]+(y[-1]-y[-2])),
+                        z=z,
+                        xmin=np.min(x)-0.5,
+                        xmax=np.max(x)+0.5,
+                        ymin=np.min(y)-0.5,
+                        ymax=np.max(y)+0.5)
+    axis.axvline(x=first_hex[0], color='red', linestyle='--')
+    axis.axvline(x=last_hex[0], color='red', linestyle='--')
+    axis.axhline(y=first_hex[1], color='red', linestyle='--')
+    axis.axhline(y=last_hex[1], color='red', linestyle='--')
+    
+    # Cross section along the hexagonal axis
+    cs = np.zeros(z.shape[1], dtype=np.float64)
+    # Sample points along the hexagonal axis
+    r = np.linspace(0, lmax, z.shape[1])
+    intercept = np.linspace(args.HEXPOS[0]-args.WIDTH/2,
+                            args.HEXPOS[0]+args.WIDTH/2,
+                            args.NSAMPLES)
+    for i in range(args.NSAMPLES):
+        hex_ax = [(np.min(x), g(x=np.min(x), m=slope, c=intercept[i])),
+                  (np.max(x), g(x=np.max(x), m=slope, c=intercept[i]))]
+        cs_tmp, r = mdt.nph.cross_section(z=z, x=x, y=y, line=hex_ax, num=z.shape[1])
+        cs += cs_tmp
+        if i > 0 and not np.allclose(r, r_prev):
+            raise ValueError("The sampling points along the different"
+                             " samples of the same axis do not coincide."
+                             " Try a lower axis width (-w option)")
+        r_prev = r
+    cs /= args.NSAMPLES
+    
+    mdt.plot.plot(ax=axis,
+                  x=x,
+                  y=g(x=x, m=slope, c=args.HEXPOS[0]),
+                  xmin=np.min(x)-0.5,
+                  xmax=np.max(x)+0.5,
+                  ymin=np.min(y)-0.5,
+                  ymax=np.max(y)+0.5)
+    
+    xsize = abs(axis.get_xlim()[0] - axis.get_xlim()[1])
+    ysize = abs(axis.get_ylim()[0] - axis.get_ylim()[1])
+    axis.set_aspect(ysize / xsize)
+    
+    yticks = np.array(axis.get_yticks())
+    mask = ((yticks >= axis.get_xlim()[0]) &
+            (yticks <= axis.get_xlim()[1]))
+    axis.set_xticks(yticks[mask])
+    
+    plt.show()
+    
+    
+    fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                             frameon=False,
+                             clear=True,
+                             tight_layout=True)
+    mdt.plot.plot(ax=axis,
+                  x=r,
+                  y=cs / np.trapz(y=cs, x=r),
+                  xmin=0,
+                  xmax=1,
+                  ymin=0,
+                  ymax=0.45,
+                  xlabel=r'$r$ / nm',
+                  ylabel=r'$\rho_{xy}(r) / \int \rho_{xy}(r) \mathrm{d}r$')
+    plt.show()
+    #mdt.fh.backup(args.OUTFILE + ".pdf")
+    #plt.tight_layout()
+    #plt.savefig(args.OUTFILE + ".pdf")
+    #plt.close(fig)
+    
+    
+    fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                             frameon=False,
+                             clear=True,
+                             tight_layout=True)
+    mdt.plot.plot(ax=axis,
+                  x=r,
+                  y=-np.log(cs / np.trapz(y=cs, x=r)),
+                  xmin=0,
+                  xmax=1,
+                  ymin=0.75,
+                  ymax=3,
+                  xlabel=r'$r$ / nm',
+                  ylabel=r'$-\ln{[\rho_{xy}(r) / \int \rho_{xy}(r) \mathrm{d}r]}$ / $k_B T$')
+    plt.show()
+    #mdt.fh.backup(args.OUTFILE + "_free_energy.pdf")
+    #plt.tight_layout()
+    #plt.savefig(args.OUTFILE + "_free_energy.pdf")
+    #plt.close(fig)
+    
+    
+    
+    
+    ### Second nearest neighbour axes ###
+    
+    
+    
+    
+    print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer_tot),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)

@@ -1,0 +1,426 @@
+# This file is part of MDTools.
+# Copyright (C) 2021, The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
+#
+# MDTools is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# MDTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+import os
+import warnings
+from copy import deepcopy
+from datetime import datetime
+import psutil
+import numpy as np
+from scipy import sparse
+
+
+
+
+def correct_intermittency(list_of_arrays, intermittency,
+        sparse2array=True, inplace=True, verbose=False, debug=False):
+    """
+    Analogue of :func:`MDAnalysis.lib.correlations.correct_intermittency`
+    for lists of arbitrarily shaped arrays (e.g. contact matrices
+    generated with :func:`mdtools.structure.contact_matrix`).
+    
+    Possible use case: Calculating lifetimes from the autocorrelation of
+    contact matrices (autocorrelation of the existence function).
+    Lifetimes may be calculated either with a strict continuous
+    requirement or a less strict intermittency. If calculating the
+    lifetime of a ligand around a metal ion for example, in the former
+    case the ligand must be within a cutoff distance of the metal ion at
+    every frame from :math:`t_0` to :math:`t_0 + \tau` in order for it
+    to be considered present at :math:`t_0 + \tau`. In the intermittent
+    case, the ligand is allowed to leave the region of interest for up
+    to a specified consecutive number of frames whilst still being
+    considered present at :math:`t_0 + \tau`.
+    
+    For example, if a ligand is absent for a number of frames equal to
+    or smaller than the parameter `intermittency`, then this absence
+    will be removed and thus the ligand is considered to have not left.
+    E.g. T,F,F,T with `intermittency=2` will be replaced by T,T,T,T,
+    where T=True=present, F=False=absent. On the other hand, F,T,T,F
+    will be replaced by F,F,F,F. Note the following behaviour when the
+    elements of the arrays in `list_of_arrays` can take more than two
+    different values: 0,1,1,0,1,1,2 will be replaced by 0,0,0,0,1,1,2
+    with `intermittency=2`, since the last 1,1 block is not enclosed by
+    the same value. If you want 0,1,1,0,1,1,2 to be replaced by
+    0,0,0,0,0,0,0, take a look at :func:`replace_short_sequences`.
+    
+    Parameters
+    ----------
+    list_of_arrays : array_like
+        List of arrays, one array per frame. All arrays in the list must
+        have the same shape, what shape this is does not matter. The
+        arrays must either all be :class:`numpy.ndarray`s or scipy
+        sparse matrices. If you want to apply this function on a
+        1-dimensional array, parse the array as
+        ``np.expand_dims(array, axis=0).T`` and convert the output back
+        to a 1-dimensional array via ``np.squeeze(result.T)``.
+    intermittency : int
+        The maximum gap allowed. Must be positive or zero. If less than
+        one, the `list_of_arrays` will be returned without any changes.
+    sparse2array : bool, optional
+        If ``True`` (default), scipy sparse matrices are internally
+        converted to `numpy.ndarray`s and back to scipy sparse matrices
+        with the sliding window method. The window size is determined by
+        the intermittency value. This can considerably increase
+        performance, but may also lead to a higher memory consumption.
+        `sparse2array` is ignored, if `list_of_arrays` is already a list
+        of `numpy.ndarray`s. Back conversion to scipy sparse matrices
+        will always convert back to the format of the first sparse
+        matrix in `list_of_arrays`.
+    inplace : bool, optional
+        If ``True`` (default), modify `list_of_arrays` inplace instead
+        of creating a copy of `list_of_arrays`.
+    verbose : bool, optional
+        If ``True``, print progress information to standard output.
+    debug : bool
+        If ``True``, check the input arguments.
+    
+    Returns
+    -------
+    list_of_arrays : array_like
+        List of arrays with gaps of size ``<=intermittency`` between
+        same values filled with the enclosing value.
+    
+    Note
+    ----
+    `intermittency` must not exceed 65534 (``np.uint16(-1) - 1``). If
+    you really need a higher intermittency value, change the dtype of
+    ``seen_nframes_ago`` in the source code of this function. Be aware
+    that high intermittency values increase the computational cost. Ask
+    yourself if you could not better read in only every
+    ``intermittency/2``-th frame and set `intermittency` to one or even
+    read in only every `intermittency`-th frame and set `intermittency`
+    to zero.
+    
+    See also
+    --------
+    
+    * :func:`replace_short_sequences`
+    * :func:`replace_short_sequences_global`
+    
+    """
+    
+    if debug:
+        if intermittency < 0:
+            warnings.warn("intermittency ({}) is less than zero"
+                          .format(intermittency), RuntimeWarning)
+        elif intermittency > len(list_of_arrays)-2:
+            warnings.warn("intermittency ({}) is greater than"
+                          " len(list_of_arrays)-2 ({})"
+                          .format(intermittency, len(list_of_arrays)-2),
+                          RuntimeWarning)
+        if intermittency > np.uint16(-1) - 1:
+            raise ValueError("intermittency must be less than 65534,"
+                             " which is np.uint16(-1)-1. If you really"
+                             " need a higher intermittency value, change"
+                             " the dtype of seen_nframes_ago in the"
+                             " source code of this function")
+        for a in list_of_arrays:
+            if a.shape == ():
+                raise ValueError("At least one array in list_of_arrays"
+                                 " has a shape of ()")
+            if a.shape != list_of_arrays[0].shape:
+                raise ValueError("All arrays in list_of_arrays must have"
+                                 " the same shape")
+            if type(a) != type(list_of_arrays[0]):
+                raise TypeError("All arrays in list_of_arrays must be of"
+                                " the same type")
+    
+    if not inplace:
+        list_of_arrays = deepcopy(list_of_arrays)
+    
+    if intermittency <= 0:
+        return list_of_arrays
+    
+    if sparse2array and sparse.issparse(list_of_arrays[0]):
+        issparse = True
+        sparse_format = list_of_arrays[0].format
+        stop = min(intermittency+2, len(list_of_arrays))
+        for i in range(0, stop-1):
+            list_of_arrays[i] = list_of_arrays[i].toarray()
+    else:
+        issparse = False
+        sparse2array = False
+    
+    if verbose:
+        timer = datetime.now()
+        proc = psutil.Process(os.getpid())
+    
+    for i, a in enumerate(list_of_arrays):
+        if (verbose and
+            (i % 10**(len(str(i))-1) == 0 or i == len(list_of_arrays)-1)):
+            print("  Array   {:12d} of {:12d}".format(i), flush=True)
+            print("    Elapsed time:             {}"
+                  .format(datetime.now()-timer),
+                  flush=True)
+            print("    Current memory usage: {:18.2f} MiB"
+                  .format(proc.memory_info().rss/2**20),
+                  flush=True)
+            timer = datetime.now()
+        
+        ix_max = i + intermittency + 1
+        if sparse2array and ix_max < len(list_of_arrays):
+            list_of_arrays[ix_max] = list_of_arrays[ix_max].toarray()
+        
+        seen_nframes_ago = np.zeros(a.shape, dtype=np.uint16)
+        stop = min(intermittency+2, len(list_of_arrays)-i)
+        for j in range(1, stop):
+            mask = (list_of_arrays[i+j] != a)
+            seen_nframes_ago += mask
+            if not sparse2array and issparse:
+                mask = mask.toarray()
+            seen_nframes_ago[~mask] = 0
+        for j in range(1, stop-1):
+            mask = (seen_nframes_ago <= stop-2-j)
+            list_of_arrays[i+j][mask] = a[mask]
+        
+        if sparse2array:
+            if sparse_format == 'bsr':
+                list_of_arrays[i] = sparse.bsr_matrix(list_of_arrays[i])
+            elif sparse_format == 'coo':
+                list_of_arrays[i] = sparse.coo_matrix(list_of_arrays[i])
+            elif sparse_format == 'csc':
+                list_of_arrays[i] = sparse.csc_matrix(list_of_arrays[i])
+            elif sparse_format == 'csr':
+                list_of_arrays[i] = sparse.csr_matrix(list_of_arrays[i])
+            elif sparse_format == 'dia':
+                list_of_arrays[i] = sparse.dia_matrix(list_of_arrays[i])
+            elif sparse_format == 'dok':
+                list_of_arrays[i] = sparse.dok_matrix(list_of_arrays[i])
+            elif sparse_format == 'lil':
+                list_of_arrays[i] = sparse.lil_matrix(list_of_arrays[i])
+            else:
+                raise ValueError("Unknown scipy sparse matrix format"
+                                 " ({}). Allowed formats: bsr, coo, csc,"
+                                 " csr, dia, dok, lil"
+                                 .format(sparse_format))
+    
+    return list_of_arrays
+
+
+
+
+def replace_short_sequences(list_of_arrays, min_len, val=0, inplace=True,
+        verbose=False, debug=False):
+    """
+    Replace consecutive occurrences of the same value that are shorter
+    than `min_len` by `val`. E.g. 1,3,3,3,2,2,1 with `min_len=3` and
+    `val=0` will be replaced by 0,3,3,3,0,0,0.
+    
+    Parameters
+    ----------
+    list_of_arrays : array_like
+        List of arrays, one array per frame. All arrays in the list must
+        have the same shape, what shape this is does not matter. The
+        arrays must all be :class:`numpy.ndarray`s. If you want to
+        replace consecutive occurrences in a 1-dimensional array, parse
+        the array as ``np.expand_dims(array, axis=0).T`` and convert the
+        output back to a 1-dimensional array via ``np.squeeze(result.T)``.
+    min_len : int
+        All consecutive occurrences shorter than `min_len` will be
+        replaced by `val`. If less than 2, the `list_of_arrays` will be
+        returned without any changes.
+    val : scalar, optional
+        The value used to replace the values in consecutive occurrences
+        shorter than `min_len`. Be aware that the arrays in
+        `list_of_arrays` must have a suitable dtype to be able to hold
+        `val`.
+    inplace : bool, optional
+        If ``True`` (default), modify `list_of_arrays` inplace instead
+        of creating a copy of `list_of_arrays`.
+    verbose : bool, optional
+        If ``True``, print progress information to standard output.
+    debug : bool
+        If ``True``, check the input arguments.
+    
+    Returns
+    -------
+    list_of_arrays : array_like
+        List of arrays with consecutive occurrences shorter than
+        `min_len` replaced by `val`.
+    
+    Note
+    ----
+    `min_len` must not exceed 65535 (``np.uint16(-1)``). If you really
+    need a higher min_len value, change the dtype of
+    ``seen_continuously_nframes`` in the source code of this function.
+    Be aware that high min_len values increase the computational cost.
+    
+    See also
+    --------
+    
+    * :func:`correct_intermittency`
+    * :func:`replace_short_sequences_global`
+    
+    """
+    
+    if debug:
+        if min_len < 1:
+            warnings.warn("min_len ({}) is less than one"
+                          .format(min_len), RuntimeWarning)
+        elif min_len > len(list_of_arrays):
+            warnings.warn("min_len ({}) is greater than"
+                          " len(list_of_arrays) ({})"
+                          .format(min_len, len(list_of_arrays)),
+                          RuntimeWarning)
+        if min_len > np.uint16(-1):
+            raise ValueError("min_len must be less than 65535,"
+                             " which is np.uint16(-1). If you really"
+                             " need a higher min_len value, change the"
+                             " dtype of seen_continuously_nframes in the"
+                             " source code of this function")
+        for a in list_of_arrays:
+            if a.shape == ():
+                raise ValueError("At least one array in list_of_arrays"
+                                 " has a shape of ()")
+            if a.shape != list_of_arrays[0].shape:
+                raise ValueError("All arrays in list_of_arrays must have"
+                                 " the same shape")
+            if type(a) != type(list_of_arrays[0]):
+                raise TypeError("All arrays in list_of_arrays must be of"
+                                " the same type")
+    
+    if not inplace:
+        list_of_arrays = deepcopy(list_of_arrays)
+    
+    if min_len <= 1:
+        return list_of_arrays
+    
+    if verbose:
+        timer = datetime.now()
+        proc = psutil.Process(os.getpid())
+    
+    i = 0
+    a = list_of_arrays[i]
+    if verbose:
+        print("  Array   {:12d} of {:12d}".format(i), flush=True)
+        print("    Elapsed time:             {}"
+              .format(datetime.now()-timer),
+              flush=True)
+        print("    Current memory usage: {:18.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+        timer = datetime.now()
+    seen_continuously_nframes = np.ones(a.shape, dtype=np.uint16)
+    seen_before = np.ones(a.shape, dtype=bool)
+    for j in range(1, min(min_len, len(list_of_arrays)-i)):
+        seen = (list_of_arrays[i+j] == a)
+        seen_continuously_nframes += (seen & seen_before)
+        seen_before = seen
+    list_of_arrays[i][seen_continuously_nframes<min_len] = val
+    
+    for i, a in enumerate(list_of_arrays[1:], 1):
+        if (verbose and
+            (i % 10**(len(str(i))-1) == 0 or i == len(list_of_arrays)-1)):
+            print("  Array   {:12d} of {:12d}".format(i), flush=True)
+            print("    Elapsed time:             {}"
+                  .format(datetime.now()-timer),
+                  flush=True)
+            print("    Current memory usage: {:18.2f} MiB"
+                  .format(proc.memory_info().rss/2**20),
+                  flush=True)
+            timer = datetime.now()
+        seen_continuously_nframes[a!=list_of_arrays[i-1]] = 1
+        seen_before = np.ones(a.shape, dtype=bool)
+        for j in range(1, min(min_len, len(list_of_arrays)-i)):
+            seen = (list_of_arrays[i+j] == a)
+            seen_continuously_nframes += (seen & seen_before)
+            seen_before = seen
+        a[seen_continuously_nframes<min_len] = val
+    
+    return list_of_arrays
+
+
+
+
+def replace_short_sequences_global(list_of_arrays, min_len, val=0,
+        inplace=True, verbose=False, debug=False):
+    """
+    Like :func:`replace_short_sequences` but compares all values of two
+    arrays in `list_of_arrays`.
+    
+    Note
+    ----
+    `min_len` must not exceed 65535 (``np.uint16(-1)``). If you really
+    need a higher min_len value, change the dtype of
+    ``seen_continuously_nframes`` in the source code of this function.
+    Be aware that high min_len values increase the computational cost.
+    
+    See also
+    --------
+    
+    * :func:`correct_intermittency`
+    * :func:`replace_short_sequences`
+    
+    """
+    
+    if not inplace:
+        list_of_arrays = deepcopy(list_of_arrays)
+    
+    #if min_len <= 1:
+        #return list_of_arrays
+    
+    i = 0
+    a = list_of_arrays[i]
+    init_values = np.unique(a)
+    seen_values_continuously = init_values
+    seen_continuously_nframes = np.ones(init_values.shape,
+                                        dtype=np.uint16)
+    for j in range(1, min(min_len, len(list_of_arrays)-i)):
+        seen_values = np.unique(list_of_arrays[i+j])
+        seen_values_continuously = np.intersect1d(seen_values_continuously,
+                                                  seen_values)
+        mask = np.isin(init_values,
+                       test_elements=seen_values_continuously,
+                       assume_unique=True)
+        seen_continuously_nframes[mask] += 1
+    mask = np.isin(a, init_values[seen_continuously_nframes<min_len])
+    a[mask] = val
+    
+    for i, a in enumerate(list_of_arrays[1:], 1):
+        init_values_prev = init_values
+        seen_continuously_nframes_prev = seen_continuously_nframes
+        init_values = np.unique(a)
+        seen_values_continuously = init_values
+        seen_continuously_nframes = np.ones(init_values.shape,
+                                            dtype=np.uint16)
+        mask = np.isin(init_values,
+                       test_elements=init_values_prev,
+                       assume_unique=True)
+        mask_prev = np.isin(init_values_prev,
+                            test_elements=init_values,
+                            assume_unique=True)
+        mask_prev &= (seen_continuously_nframes_prev >= min_len)
+        #print("seen_continuously_nframes_prev =", seen_continuously_nframes_prev)
+        #print("seen_continuously_nframes      =", seen_continuously_nframes)
+        #print("mask_prev =", mask_prev)
+        #print("mask      =", mask)
+        seen_continuously_nframes[mask] = seen_continuously_nframes_prev[mask_prev]
+        for j in range(1, min(min_len, len(list_of_arrays)-i)):
+            seen_values = np.unique(list_of_arrays[i+j])
+            seen_values_continuously = np.intersect1d(seen_values_continuously,
+                                                      seen_values)
+            mask = np.isin(init_values,
+                           test_elements=seen_values_continuously,
+                           assume_unique=True)
+            seen_continuously_nframes[mask] += 1
+        mask = np.isin(a, init_values[seen_continuously_nframes<min_len])
+        a[mask] = val
+    
+    return list_of_arrays

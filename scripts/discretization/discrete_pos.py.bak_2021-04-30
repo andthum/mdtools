@@ -1,0 +1,444 @@
+#!/usr/bin/env python3
+
+# This file is part of MDTools.
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
+#
+# MDTools is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# MDTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
+
+
+"""
+Create a discrete posotion trajectory.
+
+Discretize the positions of compounds of a MDAnalysis
+:class:`MDAnalysis.core.groups.AtomGroup` in a given spatial direction.
+
+See Also
+--------
+:func:`mdtools.structure.discrete_pos_trj` :
+    Create a discrete posotion trajectory
+:func:`numpy.digitize` :
+    Return the indices of the bins to which each value in the input
+    array belongs
+
+Notes
+-----
+The simulation box must be orthogonal.
+
+Compounds are asigned to bins according to their center of mass position.
+Compounds are made whole before calculating their centers of mass.  The
+centers of mass are wrapped back into the primary unit cell before
+discretizing their positions.
+
+The discretization of the compounds' positions is done in relative box
+coordinates.  The final output is scaled by the average box length in
+the given spatial direction.  Doing so accounts for possible
+fluctuations of the simulation box (e.g. due to pressure scaling).  Note
+that :mod:`MDAnalysis` always sets the origin of the simulation box to
+the origin of the cartesian coordinate system.
+
+All bin intervals are left-closed and right-open, i.e. [a, b) ->
+a <= x < b.  The first bin edge is always zero.  The last bin edge is
+always the (average) box length in the chosen spatial direction (i.e. 1
+in relative box coordinates) plus a small tolerance to account for the
+right-open bin interval.  Thus, the number of bin edges is ``len(bins)``,
+the number of bins is ``len(bins) - 1`` and
+``bins[1:] - np.diff(bins) / 2`` yields in the bin centers.
+
+The bin indices in the returned discretized trajectory start at zero.
+This is different from the output of func:`numpy.digitize`, where the
+index of the first bin is one.
+
+.. todo::
+    
+    * Allow to choose center of mass or center of geometry
+    * Implement this scripts in terms of
+      :func:`mdtools.structure.discrete_pos_trj`.  This means, this
+      script simply has to call
+      :func:`mdtools.structure.discrete_pos_trj`, nothing else.
+    * Finish docstring.
+
+"""
+
+
+__author__ = "Andreas Thum"
+
+
+# Standard libraries
+import sys
+import os
+import warnings
+from datetime import datetime, timedelta
+# Third party libraries
+import psutil
+import argparse
+import numpy as np
+# Local application/library specific imports
+import mdtools as mdt
+
+
+if __name__ == "__main__":
+    timer_tot = datetime.now()
+    proc = psutil.Process(os.getpid())
+    proc.cpu_percent()  # Initiate monitoring of CPU usage
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=(
+"""
+Create a discrete posotion trajectory.
+
+Discretize the positions of compounds of an atom group in a given
+spatial direction.
+"""
+        )
+    )
+    parser.add_argument(
+        '-f',
+        dest='TRJFILE',
+        type=str,
+        required=True,
+        help="Trajectory file.  See supported coordinate formats of"
+             " MDAnalysis."
+    )
+    parser.add_argument(
+        '-s',
+        dest='TOPFILE',
+        type=str,
+        required=True,
+        help="Topology file.  See supported topology formats of"
+             " MDAnalysis."
+    )
+    parser.add_argument(
+        '-o',
+        dest='OUTFILE',
+        type=str,
+        required=True,
+        help="Output filename pattern. There will be created two ouput"
+             " files:"
+             " <OUTFILE>_traj.npy containing a discretized trajectory"
+             " for each compound in the selection group stored as"
+             " numpy.ndarray of type numpy.int32 and shape (n, f) in the"
+             " binary .npy format.  n is the number of compounds and f"
+             " is the number of frames;"
+             " <OUTFILE>_bins.txt containing the (average) bin edges."
+    )
+    parser.add_argument(
+        '-b',
+        dest='BEGIN',
+        type=int,
+        required=False,
+        default=0,
+        help="First frame to read from the trajectory.  Frame numbering"
+             " starts at zero.  Default: %(default)s."
+    )
+    parser.add_argument(
+        '-e',
+        dest='END',
+        type=int,
+        required=False,
+        default=-1,
+        help="Last frame to read from the trajectory.  This is"
+             " exclusive, i.e. the last frame read is actually END-1."
+             "  A value of -1 means to read the very last frame."
+             "  Default: %(default)s."
+    )
+    parser.add_argument(
+        '--every',
+        dest='EVERY',
+        type=int,
+        required=False,
+        default=1,
+        help="Read every n-th frame from the trajectory.  Default:"
+             " %(default)s."
+    )
+    parser.add_argument(
+        '--sel',
+        dest='SEL',
+        type=str,
+        nargs='+',
+        required=True,
+        help="Selection string for selecting the atom group ('selection"
+             " group').  See MDAnalysis' selection syntax for possible"
+             " choices."
+    )
+    parser.add_argument(
+        '--cmp',
+        dest='CMP',
+        type=str,
+        required=False,
+        choices=('group', 'segments', 'residues', 'fragments', 'atoms'),
+        default='atoms',
+        help="Choose the compounds of the selection group whose center"
+             " of mass positions should be discretized.  Compounds can"
+             " be 'group' (the entire atom group), 'segments',"
+             " 'residues', 'fragments' or 'atoms'.  Refer to the"
+             " MDAanalysis user guide for an explanation of these terms."
+             "  Compounds are made whole before calculating their"
+             " centers of mass.  The centers of mass are wrapped back"
+             " into the primary unit cell before discretizing their"
+             " positions.  Note that in any case, even if CMP is e.g."
+             " 'residues', only the atoms belonging to the selection"
+             " group are taken into account, even if the compound might"
+             " comprise additional atoms that are not contained in the"
+             " selection group.  Default: %(default)s"
+    )
+    parser.add_argument(
+        '-d',
+        dest='DIRECTION',
+        type=str,
+        required=False,
+        choices=('x', 'y', 'z'),
+        default='z',
+        help="The spatial direction along which the discretization is"
+             " done.  Default: %(default)s"
+    )
+    parser.add_argument(
+        '--bin-start',
+        dest='START',
+        type=float,
+        required=False,
+        default=0,
+        help="Point (in Angstrom) on the chosen spatial direction to"
+             " start binning.  Note that binning naturally starts at 0"
+             " (origin of the simulation box).  If parsing a start value"
+             " greater than zero, the first bin interval will be"
+             " [0, START).  In this way you can determine the width of"
+             " the first bin independently from the other bins.  Note"
+             " that START must lie within the simulation box obtained"
+             " from the first frame read and it must be smaller than"
+             " STOP.  Default: %(default)s"
+    )
+    parser.add_argument(
+        '--bin-end',
+        dest='STOP',
+        type=float,
+        required=False,
+        default=None,
+        help="Point (in Angstrom) on the chosen spatial direction to"
+             " stop binning.  Note that binning naturally ends at"
+             " lbox+tol (length of the simulation box in the given"
+             " spatial direction plus a small tolerance to account for"
+             " the right-open bin interval).  If parsing a value less"
+             " than lbox, the last bin interval will be"
+             " [STOP, lbox+tol).  In this way you can determine the"
+             " width of the last bin independently from the other bins."
+             "  Note that STOP must lie within the simulation box"
+             " obtained from the first frame read and it must be greater"
+             " than START.  Default: lbox+tol"
+    )
+    parser.add_argument(
+        '--bin-num',
+        dest='NUM',
+        type=int,
+        required=False,
+        default=100,
+        help="Number of equidistant bins (not bin edges!) to use for"
+             " discretizing the given spatial direction between START"
+             " and STOP.  Note that two additional bins, [0, START) and"
+             " [STOP, lbox+tol), are created if START is not zero and"
+             " STOP is not lbox.  Default: %(default)s"
+    )
+    parser.add_argument(
+        '--bins',
+        dest='BINFILE',
+        type=str,
+        required=False,
+        default=None,
+        help="Text file containing custom bin edges (in Angstrom).  Bin"
+             " edges are read from the first column, characters"
+             " following a '#' are ignored.  Bins do not need to be"
+             " equidistant.  All bin edges must lie within the"
+             " simulation box as obtained from the first frame read."
+             "  If --bins is given, it takes precedence over all other"
+             " --bin* flags."
+    )
+    parser.add_argument(
+        '--debug',
+        dest='DEBUG',
+        required=False,
+        default=False,
+        action='store_true',
+        help="Run in debug mode."
+    )
+    args = parser.parse_args()
+    print(mdt.rti.run_time_info_str())
+    dim = {'x': 0, 'y': 1, 'z': 2}
+    ixd = dim[args.DIRECTION]
+    
+    print("\n")
+    u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
+    print("\n")
+    sel = mdt.select.atoms(ag=u, sel=' '.join(args.SEL))
+    print("\n")
+    BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames
+    )
+    if args.DEBUG:
+        print("\n")
+        try:
+            mdt.check.time_step(trj=u.trajectory[BEGIN:END])
+        except ValueError as error:
+            warnings.warn("During checking time step equality, an"
+                          " exception was raised: {}".format(error),
+                          RuntimeWarning)
+    
+    print("\n")
+    print("Creating/checking bins...")
+    timer = datetime.now()
+    lbox = u.trajectory[BEGIN].dimensions[ixd]
+    if lbox <= 0:
+        raise ValueError("Invalid simulation box: The box length ({}) in"
+                         " the given spatial direction ({}) is less than"
+                         " or equal to zero".format(lbox, args.DIRECTION))
+    if args.BINFILE is None:
+        if args.STOP is None:
+            STOP = lbox
+        else:
+            STOP = args.STOP
+        START, STOP, STEP, NUM = mdt.check.bins(start=args.START/lbox,
+                                                stop=STOP/lbox,
+                                                num=args.NUM,
+                                                amin=0,
+                                                amax=1)
+        bins = np.linspace(START, STOP, NUM+1)
+    else:
+        bins = np.loadtxt(args.BINFILE, usecols=0)
+        bins = np.unique(bins) / lbox
+    mdt.check.bin_edges(bins=bins, amin=0, amax=1, tol=1e-6)
+    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20))
+    
+    # Discretized trajectories
+    if args.CMP == 'group':
+        N_CMPS = 1
+    elif args.CMP == 'segments':
+        N_CMPS = sel.n_segments
+    elif args.CMP == 'residues':
+        N_CMPS = sel.n_residues
+    elif args.CMP == 'fragments':
+        N_CMPS = sel.n_fragments
+    elif args.CMP == 'atoms':
+        N_CMPS = sel.n_atoms
+    else:
+        raise ValueError("--cmp must be either 'group', 'segments',"
+                         " 'residues', 'fragments' or 'atoms', but you"
+                         " gave {}".format(args.CMP))
+    if args.CMP != 'atoms':
+        print("\n")
+        mdt.check.masses_new(ag=sel, verbose=True)
+    dtrj = np.zeros((N_FRAMES, N_CMPS), dtype=np.uint32)
+    
+    print("\n")
+    print("Reading trajectory...")
+    print("Total number of frames: {:>8d}".format(u.trajectory.n_frames))
+    print("Frames to read:         {:>8d}".format(N_FRAMES))
+    print("First frame to read:    {:>8d}".format(BEGIN))
+    print("Last frame to read:     {:>8d}".format(END-1))
+    print("Read every n-th frame:  {:>8d}".format(EVERY))
+    print("Time first frame:       {:>12.3f} (ps)"
+          .format(u.trajectory[BEGIN].time))
+    print("Time last frame:        {:>12.3f} (ps)"
+          .format(u.trajectory[END-1].time))
+    print("Time step first frame:  {:>12.3f} (ps)"
+          .format(u.trajectory[BEGIN].dt))
+    print("Time step last frame:   {:>12.3f} (ps)"
+          .format(u.trajectory[END-1].dt))
+    timer = datetime.now()
+    trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
+    lbox_av = 0  # Average box length in the given direction
+    for i, ts in enumerate(trj):
+        mdt.check.box(box=ts.dimensions,
+                      with_angles=True,
+                      orthorhombic=True,
+                      dim=1)
+        lbox_av += ts.dimensions[ixd]
+        if args.CMP == 'atoms':
+            pos = mdt.box.wrap(ag=sel, debug=args.DEBUG)
+        else:
+            pos = mdt.strc.com(ag=sel,
+                               pbc=True,
+                               compound=args.CMP,
+                               make_whole=True,
+                               debug=args.DEBUG)
+        pos = pos[:,ixd]
+        pos /= ts.dimensions[ixd]
+        if args.DEBUG:
+            mdt.check.array(pos, shape=(N_CMPS,), amin=0, amax=1)
+        dtrj[i] = np.digitize(pos, bins=bins)
+        # ProgressBar update:
+        progress_bar_mem = proc.memory_info().rss / 2**20
+        trj.set_postfix_str("{:>7.2f}MiB".format(progress_bar_mem),
+                            refresh=False)
+    trj.close()
+    del pos
+    # Trajectories must be C contiguous for PyEMMA's timescales_msm and
+    # each individual atom/COM needs its individual trajectory.
+    dtrj = np.asarray(dtrj.T, order='C')
+    dtrj -= 1  # Compounds in first bin get index 0
+    lbox_av /= N_FRAMES
+    bins *= lbox_av  # Convert relative box coordinates to real space
+    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20))
+    
+    print("\n")
+    print("Creating output...")
+    timer = datetime.now()
+    # Discrete trajectories
+    outfile = args.OUTFILE + "_traj.npy"
+    mdt.fh.backup(outfile)
+    np.save(outfile, dtrj, allow_pickle=False)
+    print("Created {}".format(outfile))
+    # Bin edges
+    outfile = args.OUTFILE + "_bins.txt"
+    header = ("Bin edges in Angstrom\n"
+              "Number of bin edges:                  {:<d}\n"
+              "Number of bins:                       {:<d}\n"
+              "Discretized spatial dimension:        {:<s}\n"
+              "Average box length in this direction: {:<.9e} A\n"
+              "Trajectory time step (first frane):   {:<.3f} ps\n"
+              .format(len(bins),
+                      len(bins)-1,
+                      args.DIRECTION,
+                      lbox_av,
+                      u.trajectory[BEGIN].dt))
+    mdt.fh.savetxt(fname=outfile, data=bins, header=header)
+    print("Created {}".format(outfile))
+    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20))
+    
+    print("\n")
+    print("Checking output...")
+    timer = datetime.now()
+    if np.any(dtrj < 0) or np.any(dtrj >= len(bins)-1):
+        raise ValueError("At least one center of mass position lies"
+                         " outside the primary unit cell. This should"
+                         " not have happened")
+    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20))
+    
+    print("\n")
+    print("{} done".format(os.path.basename(sys.argv[0])))
+    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("CPU time:             {}"
+          .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
+    print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20))

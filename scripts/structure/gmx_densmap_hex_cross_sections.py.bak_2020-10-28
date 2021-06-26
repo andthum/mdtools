@@ -1,0 +1,688 @@
+#!/usr/bin/env python3
+
+
+# This file is part of MDTools.
+# Copyright (C) 2020  Andreas Thum
+#
+# MDTools is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# MDTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+import os
+import sys
+from datetime import datetime
+import psutil
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import mdtools as mdt
+
+
+
+
+def read_matrix(infile, dtype=np.float32):
+    """
+    Read data file. The file must have the same format as the output
+    produced by GROMACS' function gmx densmap with the -od flag. I.e.,
+    the input file must be an ASCII file containing a 2-dimensional
+    matrix. The first column must contain the x values and the first row
+    the y values. The upper left corner can have any value, but is
+    usually set to zero. The remaining elements of the matrix must
+    contain the z values for each (x,y) pair. The file may contain
+    comment lines starting with #, which will be ignored.
+    
+    Parameters
+    ----------
+    infile : str
+        Name of the data file.
+    dtype : data-type, optional
+        Data-type of the resulting arrays.
+    
+    Returns
+    -------
+    x : numpy.ndarray
+        1-dimensional array containing the x values.
+    y : numpy.ndarray
+        1-dimensional array containing the y values.
+    z : numpy.ndarray
+        2-dimensional array containing the z values for each (x,y) pair.
+    """
+    
+    data = np.loadtxt(infile, dtype=dtype)
+    x = data[1:,0]
+    y = data[0,1:]
+    z = data[1:,1:]
+    
+    # Make the columns corresponding to the x values and the rows to the
+    # y values
+    z = np.ascontiguousarray(z.T)
+    
+    return x, y, z
+
+
+
+
+def hex_center_dist(a):
+    """
+    Get the minimum distance between to hexagon centers in a hexagonal
+    lattive with lattice constant `a`. Works only for hexagonal lattices
+    whose edges align with the x axis.
+    
+    Parameters
+    ----------
+    a : scalar
+        The lattice constant of the hexagonal lattice.
+    
+    Returns
+    -------
+    dist : tuple
+        Minimum x and y distance between two hexagon centers.
+    """
+    
+    xdist = a * np.cos(np.deg2rad(30))
+    # = r0 * 3/2, with r0 being the distance between two hexagon
+    # vertices (= C-C bond length in graphene)
+    ydist = a / 2
+    # = r0 * cos(30)
+    
+    return (xdist, ydist)
+
+
+
+
+def move_hex(pos, n, a):
+    """
+    Given the position `pos` of a hexagon center and the lattice
+    constant `a`, calculate the position of another hexagon center with
+    offset `n` from the initial hexagon center. Works only for hexagonal
+    lattices whose edges align with the x axis.
+    
+    Parameters
+    ----------
+    pos : array_like
+        Array of shape ``(2,)`` containing the x and y position of the
+        initial hexagon center.
+    n : array_like
+        Array of the same shape as `pos` indicating how many hexagons to
+        move in x and y direction.
+    a : scalar
+        The lattice constant of the hexagonal lattice.
+    
+    Returns
+    -------
+    new_pos : numpy.ndarray
+        Array of the same shape as `pos` containing the position of the
+        new hexagon center.
+    """
+    
+    pos = np.asarray(pos)
+    n = np.asarray(n)
+    if pos.shape != (2,):
+        raise ValueError("pos must be of shape (2,)")
+    if n.shape != pos.shape:
+        raise ValueError("n must be of the same shape as pos")
+    
+    return pos + n * np.asarray(hex_center_dist(a=a))
+
+
+
+
+def is_hex_center(test_pos, hex_pos, a):
+    """
+    Given the lattice constant of a hexagonal lattice and a known
+    position of any hexagon center in that lattice, check whether an
+    arbitrary test position is also a hexagon center. Works only for
+    hexagonal lattices whose edges align with the x axis.
+    
+    Parameters
+    ----------
+    test_pos : array_like
+        Array of shape ``(2,)`` containing the x and y position of the
+        test position.
+    hex_pos : array_like
+        Array of shape ``(2,)`` containing the x and y position of any
+        hexagon center in the hexagonal lattice.
+    a : scalar
+        The lattice constant of the hexagonal lattice.
+    
+    Returns
+    -------
+    ``True``, if `test_pos` is located at the center of any hexagon of
+    the hexagonal lattice.
+    ``False`` otherwise.
+    """
+    
+    test_pos = np.asarray(test_pos)
+    hex_pos = np.asarray(hex_pos)
+    if test_pos.shape != (2,):
+        raise ValueError("test_pos must be of shape (2,)")
+    if hex_pos.shape != test_pos.shape:
+        raise ValueError("hex_pos must be of the same shape as test_pos")
+    
+    xdist, ydist = hex_center_dist(a=a)
+    nx = (test_pos[0] - hex_pos[0]) / xdist
+    ny = (test_pos[1] - hex_pos[1]) / ydist
+    
+    if not nx.is_integer() or not ny.is_integer():
+        return False
+    elif nx % 2 == 0 and ny % 2 == 0:
+        return True
+    elif nx % 2 != 0 and ny % 2 != 0:
+        return True
+    else:
+        return False
+
+
+
+
+def g(x, m=1, c=0):
+    """Straight line with slope `m` and intercept `c`."""
+    return m*x + c
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    
+    timer_tot = datetime.now()
+    proc = psutil.Process(os.getpid())
+    
+    
+    parser = argparse.ArgumentParser(
+                 description=(
+                     "Extract cross sections from a 2-dimensional"
+                     " density matrix along hexagonal axes (first"
+                     " nearest neighbour and second nearest neighbour"
+                     " axes). The file containing the matrix must have"
+                     " the same format as the output produced by"
+                     " GROMACS' function gmx densmap with the -od flag."
+                     " I.e., the input file must be an ASCII file"
+                     " containing a 2-dimensional matrix. The first"
+                     " column must contain the x values and the first"
+                     " row the y values. The upper left corner can have"
+                     " any value, but is usually set to zero. The"
+                     " remaining elements of the matrix must contain the"
+                     " z values for each (x,y) pair. The file may"
+                     " contain comment lines starting with #, which will"
+                     " be ignored. Currently, this script is only"
+                     " working when the edges of the hexagons align with"
+                     " the x axis."
+                 )
+    )
+    
+    parser.add_argument(
+        '-f',
+        dest='INFILE',
+        type=str,
+        required=False,
+        default=None,
+        help="File containing the density matrix."
+    )
+    parser.add_argument(
+        '-o',
+        dest='OUTFILE',
+        type=str,
+        required=True,
+        help="Output filename."
+    )
+    
+    parser.add_argument(
+        '-a',
+        dest='LATCONST',
+        type=float,
+        required=False,
+        default=0.246,
+        help="Lattice constant of the hexagonal lattice. Default: 0.246,"
+             " which is the lattice constant of graphene in nm."
+    )
+    parser.add_argument(
+        '--hex-pos',
+        dest='HEXPOS',
+        nargs=2,
+        type=float,
+        required=False,
+        default=[0.071, 0.123],
+        help="Position of an arbitrary hexagon center. Default: 0.071"
+             " 0.123, which is the center of the first graphene hexagon,"
+             " when the edges of the hexagons align with the x axis and"
+             " a hexagon vertex (C atom) is placed at 0 0."
+    )
+    parser.add_argument(
+        '-w',
+        dest='WIDTH',
+        type=float,
+        required=False,
+        default=0.071,
+        help="Axis width. The cross section along an axis is averaged"
+             " over the width of the axis. Default: 0.071, which is half"
+             " the C-C bond length in graphene in nm."
+    )
+    parser.add_argument(
+        '-n',
+        dest='NSAMPLES',
+        type=int,
+        required=False,
+        default=10,
+        help="How many evenly spaced samples to take for a single cross"
+             " section within the given axis width. Default: 10."
+    )
+    
+    args = parser.parse_args()
+    print(mdt.rti.run_time_info_str())
+    
+    if args.LATCONST <= 0:
+        raise ValueError("-a must be positive")
+    if args.WIDTH <= 0:
+        raise ValueError("-w must be positive")
+    if args.NSAMPLES <= 0:
+        raise ValueError("-n must be positive")
+    
+    
+    
+    
+    mdt.fh.backup(args.OUTFILE)
+    with PdfPages(args.OUTFILE) as pdf:
+        
+        
+        
+        
+        print("\n\n\n", flush=True)
+        print("Reading input", flush=True)
+        timer = datetime.now()
+        
+        
+        x, y, z = read_matrix(args.INFILE)
+        z_shape = z.shape
+        xmin, xmax = (np.min(x), np.max(x))
+        ymin, ymax = (np.min(y), np.max(y))
+        if (args.HEXPOS[0] < xmin or args.HEXPOS[0] > xmax or
+            args.HEXPOS[1] < ymin or args.HEXPOS[1] > ymax):
+            raise ValueError("--hex-pos is outside the data range")
+        # Assume perdiodic boundary conditions.
+        # Extend z (and y) in y direction, to simplify the extraction of
+        # cross sections that cross the boundary
+        unit_cell_slice = slice(z_shape[0], 2*z_shape[0])
+        z = np.row_stack([z]*3)
+        y_tmp = np.hstack([y, y[-1] + y[-1]-y[-2] + y])
+        y = np.hstack([y - y[1]-y[0] - ymax, y_tmp])
+        del y_tmp
+        
+        
+        # Minimum distance between hexagon centers in x and y direction.
+        # The hexagon edges must align with the x axis.
+        xdist, ydist = hex_center_dist(a=args.LATCONST)
+        # First hexagon row/column.
+        # Rows are defined horizontally (i.e. in x direction) and
+        # columns vertically (i.e. in y direction). => The first column
+        # contains the hexagon centers with the lowest x values and the
+        # first row contains the hexagon centers with the lowest y values
+        nx = int((xmin - args.HEXPOS[0]) / xdist)
+        ny = int((ymin - args.HEXPOS[1]) / ydist)
+        col0, row0 = move_hex(pos=[args.HEXPOS[0], args.HEXPOS[1]],
+                              n=[nx, ny],
+                              a=args.LATCONST)
+        # Last hexagon row/column
+        nx = int((xmax - args.HEXPOS[0]) / xdist)
+        ny = int((ymax - args.HEXPOS[1]) / ydist)
+        col1, row1 = move_hex(pos=[args.HEXPOS[0], args.HEXPOS[1]],
+                              n=[nx, ny],
+                              a=args.LATCONST)
+        # Number of hexagon rows/colums.
+        # ncols = number of hexagons in x direction
+        # nrows = number of hexagons in y direction
+        ncols = int((col1 - col0) / xdist)
+        nrows = int((row1 - row0) / ydist)
+        # Total number of hexagons
+        nhex = ncols * nrows//2 + (ncols//2 + ncols%2) * nrows%2
+        
+        
+        print("  Creating plot", flush=True)
+        timer_plot = datetime.now()
+        fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                                 frameon=False,
+                                 clear=True,
+                                 tight_layout=True)
+        mdt.plot.pcolormesh(ax=axis,
+                            x=np.append(x, x[-1]+(x[-1]-x[-2])),
+                            y=np.append(y[unit_cell_slice],
+                                        (2*y[unit_cell_slice][-1] -
+                                           y[unit_cell_slice][-2])),
+                            z=z[unit_cell_slice],
+                            xmin=xmin-0.05*(xmax-xmin),
+                            xmax=xmax+0.05*(xmax-xmin),
+                            ymin=ymin-0.05*(ymax-ymin),
+                            ymax=ymax+0.05*(ymax-ymin))
+        axis.axvline(x=col0, color='red', linestyle='--')
+        axis.axvline(x=col1, color='red', linestyle='--')
+        axis.axhline(y=row0, color='red', linestyle='--')
+        axis.axhline(y=row1, color='red', linestyle='--')
+        xsize = abs(axis.get_xlim()[0] - axis.get_xlim()[1])
+        ysize = abs(axis.get_ylim()[0] - axis.get_ylim()[1])
+        axis.set_aspect(ysize / xsize)
+        yticks = np.array(axis.get_yticks())
+        mask = ((yticks >= axis.get_xlim()[0]) &
+                (yticks <= axis.get_xlim()[1]))
+        axis.set_xticks(yticks[mask])
+        plt.tight_layout()
+        #pdf.savefig(bbox_inches='tight')
+        plt.show()
+        plt.close()
+        print("  Elapsed time:         {}"
+              .format(datetime.now()-timer_plot),
+              flush=True)
+        print("  Current memory usage: {:14.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+        
+        
+        print("Elapsed time:         {}"
+              .format(datetime.now()-timer),
+              flush=True)
+        print("Current memory usage: {:.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+        
+        
+        
+        
+        print("\n\n\n", flush=True)
+        print("Extracting nearest neighbour axes", flush=True)
+        timer = datetime.now()
+        timer_axis = datetime.now()
+        
+        
+        # Angle between the hexagonal axis and the x axis
+        angle = 30
+        print(flush=True)
+        print("  Axis 1 of 3", flush=True)
+        print("  Angle to x axis: {}°".format(angle), flush=True)
+        angle = np.deg2rad(angle)
+        # Line along which to take the cross section
+        slope = np.tan(angle)
+        if is_hex_center(test_pos=[col1, row0],
+                         hex_pos=args.HEXPOS,
+                         a=args.LATCONST):
+            intercept_min = row0 - slope * col1  # c = y - mx
+        else:
+            intercept_min = row0 - slope * (col1-xdist)
+        # Cross section
+        cs = np.zeros(z.shape[1], dtype=np.float32)
+        
+        
+        fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                                 frameon=False,
+                                 clear=True,
+                                 tight_layout=True)
+        mdt.plot.pcolormesh(ax=axis,
+                            x=np.append(x, x[-1]+(x[-1]-x[-2])),
+                            y=np.append(y[unit_cell_slice],
+                                        (2*y[unit_cell_slice][-1] -
+                                           y[unit_cell_slice][-2])),
+                            z=z[unit_cell_slice],
+                            xmin=xmin-0.05*(xmax-xmin),
+                            xmax=xmax+0.05*(xmax-xmin),
+                            ymin=ymin-0.05*(ymax-ymin),
+                            ymax=ymax+0.05*(ymax-ymin))
+        axis.axvline(x=col0, color='red', linestyle='--')
+        axis.axvline(x=col1, color='red', linestyle='--')
+        axis.axhline(y=row0, color='red', linestyle='--')
+        axis.axhline(y=row1, color='red', linestyle='--')
+        
+        
+        n_hex_axes = nrows//2 + nrows%2 + ncols//2 + ncols%2
+        for i in range(n_hex_axes):
+            intercept = intercept_min + 2*i*ydist
+            intercept_samples = np.linspace(intercept-args.WIDTH/2,
+                                            intercept+args.WIDTH/2,
+                                            args.NSAMPLES,
+                                            dtype=np.float32)
+            
+            
+            mdt.plot.fill_between(
+                ax=axis,
+                x=x,
+                y1=g(x=x, m=slope, c=intercept_samples[-1]),
+                y2=g(x=x, m=slope, c=intercept_samples[0]),
+                xmin=axis.get_xlim()[0],
+                xmax=axis.get_xlim()[1],
+                ymin=axis.get_ylim()[0],
+                ymax=axis.get_ylim()[1],
+                alpha=0.5)
+            
+            
+            for j, sample in enumerate(intercept_samples):
+                hex_ax = [(xmin, g(x=xmin, m=slope, c=sample)),
+                          (xmax, g(x=xmax, m=slope, c=sample))]
+                cs_tmp, r = mdt.nph.cross_section(z=z, x=x, y=y,
+                                                  line=hex_ax,
+                                                  num=z.shape[1])
+                cs += cs_tmp
+                if (i > 0 or j > 0) and not np.allclose(r, r_prev):
+                    raise ValueError("The sampling points along the"
+                                     " different samples of the same axis do"
+                                     " not coincide. Try a lower axis width"
+                                     " (-w option)")
+                r_prev = r
+        cs /= n_hex_axes * args.NSAMPLES
+        if cs[-1] == 0:
+            cs = cs[:-1]
+            r = r[:-1]
+        print("  Elapsed time:         {}"
+              .format(datetime.now()-timer_axis),
+              flush=True)
+        print("  Current memory usage: {:14.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+        
+        
+        print(flush=True)
+        print("  Creating plot of axes", flush=True)
+        timer_plot = datetime.now()
+        xsize = abs(axis.get_xlim()[0] - axis.get_xlim()[1])
+        ysize = abs(axis.get_ylim()[0] - axis.get_ylim()[1])
+        axis.set_aspect(ysize / xsize)
+        yticks = np.array(axis.get_yticks())
+        mask = ((yticks >= axis.get_xlim()[0]) &
+                (yticks <= axis.get_xlim()[1]))
+        axis.set_xticks(yticks[mask])
+        plt.tight_layout()
+        #pdf.savefig(bbox_inches='tight')
+        plt.show()
+        plt.close()
+        print("  Elapsed time:         {}"
+              .format(datetime.now()-timer_plot),
+              flush=True)
+        print("  Current memory usage: {:14.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+        
+        
+        print(flush=True)
+        print("  Creating plot of cross section", flush=True)
+        timer_plot = datetime.now()
+        fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                                 frameon=False,
+                                 clear=True,
+                                 tight_layout=True)
+        mdt.plot.plot(ax=axis,
+            x=r,
+            y=cs,
+            xlabel=r'$r$ / nm',
+            ylabel=r'$\rho_{xy}(r)$')
+        plt.tight_layout()
+        #pdf.savefig(bbox_inches='tight')
+        plt.show()
+        plt.close()
+        print("  Elapsed time:         {}"
+              .format(datetime.now()-timer_plot),
+              flush=True)
+        print("  Current memory usage: {:14.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+        
+        
+        
+        
+        # Angle between the hexagonal axis and the x axis
+        angle = 180 - 30
+        print(flush=True)
+        print("  Axis 2 of 3", flush=True)
+        print("  Angle to x axis: {}°".format(angle), flush=True)
+        angle = np.deg2rad(angle)
+        # Line along which to take the cross section
+        slope = np.tan(angle)
+        if is_hex_center(test_pos=[col0, row0],
+                         hex_pos=args.HEXPOS,
+                         a=args.LATCONST):
+            intercept_min = row0 - slope * col0  # c = y - mx
+        else:
+            intercept_min = row0 - slope * (col0+xdist)
+        # Cross section
+        cs = np.zeros(z.shape[1], dtype=np.float32)
+        
+        
+        fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                                 frameon=False,
+                                 clear=True,
+                                 tight_layout=True)
+        mdt.plot.pcolormesh(ax=axis,
+                            x=np.append(x, x[-1]+(x[-1]-x[-2])),
+                            y=np.append(y[unit_cell_slice],
+                                        (2*y[unit_cell_slice][-1] -
+                                           y[unit_cell_slice][-2])),
+                            z=z[unit_cell_slice],
+                            xmin=xmin-0.05*(xmax-xmin),
+                            xmax=xmax+0.05*(xmax-xmin),
+                            ymin=ymin-0.05*(ymax-ymin),
+                            ymax=ymax+0.05*(ymax-ymin))
+        axis.axvline(x=col0, color='red', linestyle='--')
+        axis.axvline(x=col1, color='red', linestyle='--')
+        axis.axhline(y=row0, color='red', linestyle='--')
+        axis.axhline(y=row1, color='red', linestyle='--')
+        
+        
+        for i in range(n_hex_axes):
+            intercept = intercept_min + 2*i*ydist
+            intercept_samples = np.linspace(intercept-args.WIDTH/2,
+                                            intercept+args.WIDTH/2,
+                                            args.NSAMPLES,
+                                            dtype=np.float32)
+            
+            
+            mdt.plot.fill_between(
+                ax=axis,
+                x=x,
+                y1=g(x=x, m=slope, c=intercept_samples[-1]),
+                y2=g(x=x, m=slope, c=intercept_samples[0]),
+                xmin=axis.get_xlim()[0],
+                xmax=axis.get_xlim()[1],
+                ymin=axis.get_ylim()[0],
+                ymax=axis.get_ylim()[1],
+                alpha=0.5)
+            
+            
+            for j, sample in enumerate(intercept_samples):
+                hex_ax = [(xmin, g(x=xmin, m=slope, c=sample)),
+                          (xmax, g(x=xmax, m=slope, c=sample))]
+                cs_tmp, r = mdt.nph.cross_section(z=z, x=x, y=y,
+                                                  line=hex_ax,
+                                                  num=z.shape[1])
+                cs += cs_tmp
+                if (i > 0 or j > 0) and not np.allclose(r, r_prev):
+                    raise ValueError("The sampling points along the"
+                                     " different samples of the same axis do"
+                                     " not coincide. Try a lower axis width"
+                                     " (-w option)")
+                r_prev = r
+        cs /= n_hex_axes * args.NSAMPLES
+        if cs[-1] == 0:
+            cs = cs[:-1]
+            r = r[:-1]
+        print("  Elapsed time:         {}"
+              .format(datetime.now()-timer_axis),
+              flush=True)
+        print("  Current memory usage: {:14.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+        
+        
+        print(flush=True)
+        print("  Creating plot of axes", flush=True)
+        timer_plot = datetime.now()
+        xsize = abs(axis.get_xlim()[0] - axis.get_xlim()[1])
+        ysize = abs(axis.get_ylim()[0] - axis.get_ylim()[1])
+        axis.set_aspect(ysize / xsize)
+        yticks = np.array(axis.get_yticks())
+        mask = ((yticks >= axis.get_xlim()[0]) &
+                (yticks <= axis.get_xlim()[1]))
+        axis.set_xticks(yticks[mask])
+        plt.tight_layout()
+        #pdf.savefig(bbox_inches='tight')
+        plt.show()
+        plt.close()
+        print("  Elapsed time:         {}"
+              .format(datetime.now()-timer_plot),
+              flush=True)
+        print("  Current memory usage: {:14.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+        
+        
+        print(flush=True)
+        print("  Creating plot of cross section", flush=True)
+        timer_plot = datetime.now()
+        fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                                 frameon=False,
+                                 clear=True,
+                                 tight_layout=True)
+        mdt.plot.plot(ax=axis,
+            x=r,
+            y=cs,
+            xlabel=r'$r$ / nm',
+            ylabel=r'$\rho_{xy}(r)$')
+        plt.tight_layout()
+        #pdf.savefig(bbox_inches='tight')
+        plt.show()
+        plt.close()
+        print("  Elapsed time:         {}"
+              .format(datetime.now()-timer_plot),
+              flush=True)
+        print("  Current memory usage: {:14.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+        
+        
+        print("Elapsed time:         {}"
+              .format(datetime.now()-timer),
+              flush=True)
+        print("Current memory usage: {:.2f} MiB"
+              .format(proc.memory_info().rss/2**20),
+              flush=True)
+    
+    
+    
+    
+    print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer_tot),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)

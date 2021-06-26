@@ -1,0 +1,1165 @@
+#!/usr/bin/env python3
+
+
+# This file is part of MDTools.
+# Copyright (C) 2020  Andreas Thum
+#
+# MDTools is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# MDTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+import sys
+import os
+import warnings
+from datetime import datetime
+import psutil
+import argparse
+from scipy.signal import find_peaks
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+from matplotlib.ticker import MaxNLocator
+import pyemma
+import mdtools as mdt
+
+
+plt.rc('lines', linewidth=2)
+plt.rc('axes', linewidth=2)
+plt.rc('xtick.major', width=2)
+plt.rc('xtick.minor', width=2)
+plt.rc('ytick.major', width=2)
+plt.rc('ytick.minor', width=2)
+plt.rc('text', usetex=True)
+plt.rcParams['text.latex.preview'] = True
+plt.rc('font',**{'family' : 'serif', 'serif' : 'Times'})
+
+
+
+
+def merge_states(mm, s, n):
+    """
+    Merge `n` states of a Markov model starting from state `s`.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
+    """
+    
+    if n == 1:
+        return mm
+    elif n < 1:
+        raise ValueError("The number of states to merge be one or"
+                         " greater")
+    elif n != int(n):
+        raise TypeError("n must be an integer")
+    elif n > mm.nstates - s:
+        raise ValueError("The number of states to merge ({}) must be"
+                         " smaller than the total number of active"
+                         " states ({}) minus the state number from which"
+                         " to start ({})".format(n, mm.nstates, s))
+    elif n > mm.nstates - 1:
+        raise ValueError("The number of states to merge ({}) must be"
+                         " smaller than the total number of active"
+                         " states ({}) minus one".format(n, mm.nstates))
+    
+    if not np.all(np.diff(mm.active_set[s:s+n]) == 1):
+        print(flush=True)
+        print("  Active states of the input model to merge:", flush=True)
+        print(mm.active_set[s:n+1], flush=True)
+        raise ValueError("This function works only for Markov models"
+                         " where the active states to merge consists of"
+                         " a continuous sequence of states")
+    
+    tm_merged = np.copy(mm.transition_matrix)
+    # Sum columns to merge
+    tm_merged[:,s] = np.sum(tm_merged[:,s:s+n], axis=1)
+    tm_merged[:,s+1:-n+1] = tm_merged[:,s+n:]
+    tm_merged = tm_merged[:,:-n+1]
+    # Average rows to merge (the transition matrix is row-stochastic)
+    tm_merged[s] = np.mean(tm_merged[s:s+n], axis=0)
+    tm_merged[s+1:-n+1] = tm_merged[s+n:]
+    tm_merged = tm_merged[:-n+1]
+    
+    if not np.all(np.isclose(np.sum(tm_merged, axis=1), 1)):
+        raise ValueError("Not all rows of the merged transition matrix"
+                         " sum up to unity")
+    
+    return pyemma.msm.markov_model(P=tm_merged, dt_model=mm.dt_model)
+
+
+
+
+def coarsen_model(mm, fine2coarse, bounds=None):
+    """
+    Coarsen a Markov model by merging every `fine2coarse` states into
+    one state.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
+    """
+    
+    if fine2coarse == 1:
+        return mm
+    elif fine2coarse < 1:
+        raise ValueError("The number of fine states to merge to one"
+                         " coarse state must be one or greater")
+    elif fine2coarse != int(fine2coarse):
+        raise TypeError("fine2coarse must be an integer")
+    elif fine2coarse > int(mm.nstates/2):
+        raise ValueError("The number of fine states to merge to one"
+                         " coarse state must be smaller than half the"
+                         " total number of active states of the input"
+                         " model")
+    
+    if not np.all(np.diff(mm.active_set) == 1):
+        print(flush=True)
+        print("  Active set of states of the input model:", flush=True)
+        print(mm.active_set, flush=True)
+        raise ValueError("This function works only for Markov models"
+                         " where the active set consists of a continuous"
+                         " sequence of states")
+    
+    if bounds is None:
+        bounds = np.zeros(2, dtype=int)
+        bounds[0] = mm.active_set[0]
+        bounds[1] = mm.active_set[-1]
+    elif not isinstance(bounds, (tuple, list, np.ndarray)):
+        raise TypeError("bound must be of an array_like type")
+    elif np.array(bounds).shape != (2,):
+        raise TypeError("bound must be an array_like with shape (2,)")
+    elif bounds[0] != int(bounds[0]) or bounds[1] != int(bounds[1]):
+        raise TypeError("The bounds must be integers")
+    elif bounds[0] == bounds[1]:
+        raise ValueError("The lower and upper bound must not be the same")
+    elif bounds[0] > bounds[1]:
+        upper = bounds[0]
+        bounds[0] = bounds[1]
+        bounds[1] = upper
+    
+    first_state = fine2coarse * bounds[0]
+    last_state = fine2coarse * (bounds[1] + 1) - 1
+    if (first_state > mm.active_set[0] or
+        last_state < mm.active_set[-1]):
+        raise ValueError("The active set of the fine model cannot be"
+                         " matched to the bounds you gave. The"
+                         " boundaries of the matched active set lie"
+                         " within the original active set, but must be"
+                         " the same or lie outside. Consider to change"
+                         " bounds or fine2coarse")
+    
+    if (last_state-first_state+1) % fine2coarse != 0:
+        raise ValueError("The number of fine states to merge to one"
+                         " coarse state is not a multiple of the number"
+                         " of (requested) active states of the model."
+                         " You may want to change fine2coarse or bounds")
+    n_coarse_states = int((last_state-first_state+1) / fine2coarse)
+    
+    prepend = mm.active_set[0] - first_state
+    append = last_state - mm.active_set[-1]
+    if prepend >= fine2coarse or append >= fine2coarse:
+        raise ValueError("There are more states to be added to the model"
+                         " than fine states contained in one coarse"
+                         " state. It seems that fine2coarse ({}) is"
+                         " wrong or that the number of fine states is"
+                         " not a multiple of the number of coarse"
+                         " states".format(fine2coarse))
+    if prepend < 0 or append < 0:
+        raise ValueError("Unexpected error: The number of states to be"
+                         " added is smaller than zero. This should not"
+                         " have happened")
+    
+    tm = np.pad(mm.transition_matrix, (prepend, append))
+    if prepend > 0:
+        tm[:prepend] = np.mean(tm[prepend:fine2coarse], axis=0)
+    if append > 0:
+        tm[-append:] = np.mean(tm[-fine2coarse:-append], axis=0)
+    
+    tm_coarsened = np.zeros((n_coarse_states, n_coarse_states),
+                            dtype=float)
+    for k in range(n_coarse_states):
+        for l in range(n_coarse_states):
+            tm_coarsened[k][l] = np.sum(
+                                     tm[k*fine2coarse:(k+1)*fine2coarse,
+                                        l*fine2coarse:(l+1)*fine2coarse])
+    tm_coarsened /= fine2coarse
+    
+    if not np.all(np.isclose(np.sum(tm_coarsened, axis=1), 1)):
+        raise ValueError("Not all rows of the coarse-grained transition"
+                         " matrix sum up to unity")
+    
+    return pyemma.msm.markov_model(P=tm_coarsened, dt_model=mm.dt_model)
+
+
+
+
+def make_comparable(mm1, mm2, fine2coarse=None, left=True):
+    """
+    TODO
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
+    """
+    
+    if np.all(mm1.active_set == mm2.active_set) and mm1.lag ==  mm2.lag:
+        return [mm1, mm2]
+    
+    mms = [mm1, mm2]
+    lags = [mm1.lag, mm2.lag]
+    lowest_common_lag = np.lcm(lags[0], lags[1])
+    
+    if not np.all(mm1.active_set == mm2.active_set):
+        print(flush=True)
+        print("  The models have different active sets.", flush=True)
+        print(flush=True)
+        print("  This algorithm is not robust and heavily relies on\n"
+              "  appropriate input. But also with appropriate input,\n"
+              "  the results might be inaccurate. So, please CHECK\n"
+              "  your INPUT and OUTPUT carefully, and especially the\n"
+              "  following ASSUMPTIONS!", flush=True)
+        
+        for i in range(len(mms)):
+            if not np.all(np.diff(mms[i].active_set) == 1):
+                print(flush=True)
+                print("    Active set of states of Model {}:"
+                      .format(i),
+                      flush=True)
+                print(mms[i].active_set, flush=True)
+                raise ValueError("Comparing models with different active"
+                                 " sets works only if these sets consist"
+                                 " of a continuous sequence of states")
+        
+        tol = 0.04 * max(mm1.nstates, mm2.nstates)
+        diff = abs(mm2.nstates - mm1.nstates)
+        if np.isclose(diff, 0, atol=tol) and fine2coarse is None:
+            print(flush=True)
+            print("    The number of active states of both models is\n"
+                  "    similar:", flush=True)
+            print("      Number of active states of Model 0: {}"
+                  .format(mm1.nstates),
+                  flush=True)
+            print("      Number of active states of Model 1: {}"
+                  .format(mm2.nstates),
+                  flush=True)
+            print(flush=True)
+            print("    The comparison is made under the assumption\n"
+                  "    that both models were created in exactly the\n"
+                  "    same way, except that the models have different\n"
+                  "    lag times. This means that the discretization\n"
+                  "    must be exactly the same, but because the models\n"
+                  "    were estimated at different lag times, a few\n"
+                  "    edge states were visited in one of the models\n"
+                  "    but not in the other, leading to SLIGHTLY (!)\n"
+                  "    DIFFERENT ACTIVE SETS.", flush=True)
+            
+            diff = abs(mm2.active_set[0] - mm1.active_set[0])
+            if not np.isclose(diff, 0, atol=tol):
+                raise ValueError("The first active states of the models"
+                                 " differ by more than {} states. The"
+                                 " differences between the active sets"
+                                 " of the models are probably too large"
+                                 " to justify the above assumption"
+                                 .format(tol))
+            diff = abs(mm2.active_set[-1] - mm1.active_set[-1])
+            if not np.isclose(diff, 0, atol=tol):
+                raise ValueError("The last active states of the models"
+                                 " differ by more than {} states. The"
+                                 " differences between the active sets"
+                                 " of the models are probably too large"
+                                 " to justify the above assumption"
+                                 .format(tol))
+            
+            if mm1.active_set[0] != mm2.active_set[0]:
+                small = np.argmax([mm.active_set[0] for mm in mms])
+                big = np.argmin([mm.active_set[0] for mm in mms])
+                print(flush=True)
+                print("    The model with the highest first active\n"
+                      "    state is Model {}"
+                      .format(small),
+                      flush=True)
+                if (mms[big].active_set[0] > mms[small].active_set[0]):
+                    raise ValueError("The first state of Model {} is"
+                                     " higher than the first state of"
+                                     " Model {}. This should not have"
+                                     " happened"
+                                     .format(big, small))
+                elif (mms[big].active_set[0] < mms[small].active_set[0]):
+                    mms[big] = merge_states(
+                                   mm=mms[big],
+                                   s=0,
+                                   n=(mms[small].active_set[0] -
+                                      mms[big].active_set[0] +
+                                      1))
+            
+            if mm1.active_set[-1] != mm2.active_set[-1]:
+                small = np.argmin([mm.active_set[-1] for mm in mms])
+                big = np.argmax([mm.active_set[-1] for mm in mms])
+                print(flush=True)
+                print("    The model with the lowest last active state\n"
+                      "    is Model {}"
+                      .format(small),
+                      flush=True)
+                if (mms[big].active_set[-1] < mms[small].active_set[-1]):
+                    raise ValueError("The last state of Model {} is"
+                                     " lower than the last state of"
+                                     " Model {}. This should not have"
+                                     " happened"
+                                     .format(big, small))
+                elif (mms[big].active_set[-1] > mms[small].active_set[-1]):
+                    mms[big] = merge_states(
+                                   mm=mms[big],
+                                   s=0,
+                                   n=(mms[big].active_set[-1] -
+                                      mms[small].active_set[-1] +
+                                      1))
+        
+        else:
+            print(flush=True)
+            print("    The number of active states of both models is\n"
+                  "    very different:", flush=True)
+            print("      Number of active states of Model 0: {}"
+                  .format(mm1.nstates),
+                  flush=True)
+            print("      Number of active states of Model 1: {}"
+                  .format(mm2.nstates),
+                  flush=True)
+            print(flush=True)
+            print("    The comparison is made under the assumption\n"
+                  "    that both models were created in exactly the\n"
+                  "    same way, except that the discretization of one\n"
+                  "    model is coarser. However, the total discretized\n"
+                  "    space region must be the same, the bins must be\n"
+                  "    equidistant and the NUMBER OF FINE BINS must be\n"
+                  "    a MULTIPLE OF the NUMBER OF COARSE BINS so that\n"
+                  "    there is always a mapping of n fine bins to one\n"
+                  "    coarse bin.", flush=True)
+            
+            coarse = np.argmin([mm.nstates for mm in mms])
+            fine = np.argmax([mm.nstates for mm in mms])
+            print(flush=True)
+            print("    The coarse model is Model {}"
+                  .format(coarse),
+                  flush=True)
+            
+            if fine2coarse is None:
+                n_states_coarse = (mms[coarse].nstates +
+                                   mms[coarse].active_set[0])
+                n_states_fine = (mms[fine].nstates +
+                                 mms[fine].active_set[0])
+                if n_states_fine % n_states_coarse != 0:
+                    n_states_fine = (n_states_fine -
+                                     n_states_fine % n_states_coarse +
+                                     n_states_coarse)
+                if n_states_fine >= 1.5*(mms[fine].nstates +
+                                         mms[fine].active_set[0]):
+                    raise RuntimeError("The number of fine bins seems"
+                                       " not to be a multiple of the"
+                                       " number of coarse bins")
+                fine2coarse = int(n_states_fine / n_states_coarse)
+            
+            if fine2coarse < 1:
+                raise ValueError("The number of fine states to merge to"
+                                 " one coarse state must be one or"
+                                 " greater")
+            elif (fine2coarse == 1 and
+                  not np.all(mms[fine].active_set ==
+                             mms[coarse].active_set)):
+                raise ValueError("The fine model and the coarse model"
+                                 " have the same number of states in"
+                                 " their active sets, but the states"
+                                 " are not the same. This means that"
+                                 " the models were not created in"
+                                 " exactly the same way (e.g. the"
+                                 " discretized space region or the"
+                                 " lag time is different). Under"
+                                 " such conditions, a comparison of"
+                                 " the models is not possible")
+            elif fine2coarse != int(fine2coarse):
+                raise TypeError("fine2coarse must be an integer")
+            elif fine2coarse > int(mms[fine].nstates/2):
+                raise ValueError("The number of fine states to merge to"
+                                 " one coarse state must be smaller than"
+                                 " half the total number of active"
+                                 " states of the fine model")
+            elif fine2coarse > 1:
+                print("    {} states of Model {} build one state\n"
+                      "    of Model {}"
+                      .format(fine2coarse, fine, coarse),
+                      flush=True)
+                mms[fine] = coarsen_model(
+                                mm=mms[fine],
+                                fine2coarse=fine2coarse,
+                                bounds=(mms[coarse].active_set[0],
+                                        mms[coarse].active_set[-1]))
+    
+    if mms[0].nstates != mms[1].nstates:
+        raise ValueError("The models have a different number of active"
+                         " states. This should not have happened")
+    
+    for i in range(len(mms)):
+        mms[i] = pyemma.msm.markov_model(
+                     P=np.linalg.matrix_power(
+                           mms[i].transition_matrix,
+                           int(lowest_common_lag/lags[i])
+                       ),
+                     dt_model=mms[i].dt_model
+                 )
+        if lowest_common_lag/lags[i] != int(lowest_common_lag/lags[i]):
+            raise ValueError("The lowest common lag time is not a"
+                             " multiple of the lag time of Model {}."
+                             " This should not have happened".format(i))
+        if not np.all(np.isclose(np.sum(mms[i].transition_matrix,
+                                        axis=1),
+                                 1)):
+            warnings.warn("Not all rows of the exponentiated transition"
+                          " matrix of Model {} sum up to unity"
+                          .format(i), RuntimeWarning)
+    
+    return mms
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    
+    timer_tot = datetime.now()
+    proc = psutil.Process(os.getpid())
+    
+    
+    parser = argparse.ArgumentParser(
+                 description=(
+                     "Read two pyemma.msm.MaximumLikelihoodMSM or"
+                     " pyemma.msm.BayesianMSM objects from file (which"
+                     " must have been created by the object's save"
+                     " method). Exponentiate the transition matrices by"
+                     " the lowest common multiple of the lag times of"
+                     " the two models divided by the model's respective"
+                     " lag time. Then plot the difference of the"
+                     " transition matrices (second minus first), their"
+                     " eigenvalue spectra and their first four"
+                     " eigenvectors. If the two Markov models were"
+                     " estimated from the same system but with different"
+                     " lag times, this corresponds to a simple Chapman-"
+                     "Kolmogorow test. If the estimated models are"
+                     " really Markovian, the exponentiated transition"
+                     " matrices (and all quantities derived therefrom)"
+                     " must be the same within numerical uncertainty."
+                 )
+    )
+    
+    parser.add_argument(
+        '--f1',
+        dest='INFILE1',
+        type=str,
+        required=True,
+        help="Input file 1 containing the first"
+             " pyemma.msm.MaximumLikelihoodMSM or pyemma.msm.BayesianMSM"
+             " object in HDF5 format as created by the object's save"
+             " method."
+    )
+    parser.add_argument(
+        '--f2',
+        dest='INFILE2',
+        type=str,
+        required=True,
+        help="Input file 2 containing the second"
+             " pyemma.msm.MaximumLikelihoodMSM or pyemma.msm.BayesianMSM"
+             " object in HDF5 format as created by the object's save"
+             " method."
+    )
+    parser.add_argument(
+        '-o',
+        dest='OUTFILE',
+        type=str,
+        required=True,
+        help="Output filename pattern. There will be created four files:"
+             " <OUTFILE>_tm_diff.pdf containing a heatmap plot of the"
+             " difference of the exponentiated transition matrices;"
+             " <OUTFILE>_tm_diff_eigval.pdf containing a plot of the"
+             " eigenvalue spectra of the exponentiated transition"
+             " matrices with corresponding implied timescales;"
+             " <OUTFILE>_tm_diff_eigvec.pdf containing a plot of the"
+             " 1st-4th eigenvectors of the exponentiated transition"
+             " matrices."
+             " <OUTFILE>_tm_diff_dist.pdf comparing the final"
+             " distributions when propagating a well-defined initial"
+             " distribution with the exponentiated transition matrices;"
+             " Plots are optimized for PDF format with TeX support."
+    )
+    parser.add_argument(
+        '--plot-exp',
+        dest='PLOT_EXP',
+        required=False,
+        default=False,
+        action='store_true',
+        help="Create additional plots comparing the original models"
+             " to the exponentiated models. The plots are only created,"
+             " if the model was really exponentiated."
+             " <OUTFILE>_tm_diff_tm<i>.pdf containing a heatmap plot of"
+             " the exponentiated transition matrices of the i-th input"
+             " model;"
+             " <OUTFILE>_tm_diff_eigval<i>.pdf containing a plot"
+             " comparing the eigenvalue spectra of the original and"
+             " exponentiated transition matrix;"
+             " <OUTFILE>_tm_diff_eigvec<i>.pdf containing a plot"
+             " comparing the 1st-4th eigenvectors of the original and"
+             " exponentiated transition matrix;"
+    )
+    parser.add_argument(
+        '--right',
+        dest='RIGHT',
+        required=False,
+        default=False,
+        action='store_true',
+        help="Plot right eigenvectors (column vectors) instead of left"
+             " eigenvectors (row vectors) of the transition matrices."
+             " Since transition matrices are row-stochastic, the left"
+             " eigenvectors are real probability densities, whereas the"
+             " right eigenvectors are probability densities reweighted"
+             " by the stationary distribution."
+    )
+    parser.add_argument(
+        '--fine2coarse',
+        dest='FINE2COARSE',
+        type=int,
+        required=False,
+        default=None,
+        help="If the two models to compare were created using different"
+             " discretizations, you can give here the number of states"
+             " of the fine model corresponding to one state of the"
+             " coarse model. Comparing models with a different number of"
+             " states requires that both models were created in exactly"
+             " the same way, except that the discretization of one model"
+             " is coarser. However, the number of bins used for the fine"
+             " model must be an integer multiple of the number of bins"
+             " used for the coarse model. If --fine2coarse is not given"
+             " and the active states of the models differ, a guess for"
+             " this value is made. This function is not robust and you"
+             " should know what you are comparing and what you are"
+             " expecting."
+    )
+    
+    args = parser.parse_args()
+    print(mdt.rti.run_time_info_str())
+    
+    
+    
+    
+    print("\n\n\n", flush=True)
+    print("Loading Markov models", flush=True)
+    timer = datetime.now()
+    
+    infile = [args.INFILE1, args.INFILE2]
+    mms_orig = [None,] * len(infile)
+    lags = np.zeros(len(infile), dtype=int)
+    for i in range(len(mms_orig)):
+        print(flush=True)
+        print("  Model {:>2d}:".format(i), flush=True)
+        mms_orig[i] = pyemma.load(infile[i])
+        lags[i] = mms_orig[i].lag
+        print("    Lag time in trajectory steps:                               {:>6d}".format(mms_orig[i].lag), flush=True)
+        print("    Lag time in real time units:                                {:>11s}".format(str(mms_orig[i].dt_model)), flush=True)
+        print("    Largest implied timescale in trajectory steps:              {:>11.4f}".format(mms_orig[i].timescales()[0]))
+        print("    2nd largest implied timescale in trajectory steps:          {:>11.4f}".format(mms_orig[i].timescales()[1]))
+        print("    Number of active states (reversible connected):             {:>6d}".format(mms_orig[i].nstates), flush=True)
+        print("    First active state:                                         {:>6d}".format(mms_orig[i].active_set[0]), flush=True)
+        print("    Last active state:                                          {:>6d}".format(mms_orig[i].active_set[-1]), flush=True)
+        print("    Total number of states in the discrete trajectories:        {:>6d}".format(mms_orig[i].nstates_full), flush=True)
+        print("    Fraction of states in the largest reversible connected set: {:>11.4f}".format(mms_orig[i].active_state_fraction), flush=True)
+        print("    Fraction of counts in the largest reversible connected set: {:>11.4f}".format(mms_orig[i].active_count_fraction), flush=True)
+        
+        if not np.all(np.isclose(np.sum(mms_orig[i].transition_matrix, axis=1), 1)):
+            raise ValueError("Not all rows of the transition matrix sum up"
+                             " to unity")
+        if not np.isclose(np.sum(mms_orig[i].stationary_distribution), 1):
+            raise ValueError("The sum of the stationary distribution ({})"
+                             " is not unity"
+                             .format(np.sum(mms_orig[i].stationary_distribution)))
+    
+    print(flush=True)
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)
+    
+    
+    
+    
+    print("\n\n\n", flush=True)
+    print("Comparing Markov models", flush=True)
+    timer = datetime.now()
+    
+    lowest_common_lag = np.lcm(lags[0], lags[1])
+    print(flush=True)
+    print("  Lowest common lag time:  {:>6d}"
+          .format(lowest_common_lag),
+          flush=True)
+    mms_comp = make_comparable(mm1=mms_orig[0],
+                               mm2=mms_orig[1],
+                               fine2coarse=args.FINE2COARSE)
+    tm_diff = (mms_comp[1].transition_matrix -
+               mms_comp[0].transition_matrix)
+    print(flush=True)
+    print("  Total absolute difference of the transition\n"
+          "  matrices normalized by the number of states: {}"
+          .format(np.sum(np.abs(tm_diff))/mms_comp[0].nstates),
+          flush=True)
+    
+    neigvecs = 4
+    eigvals_orig = [None for i in range(len(mms_orig))]
+    eigvecs_orig = [[None for i in range(neigvecs)]
+                    for j in range(len(mms_orig))]
+    eigvals_comp = np.full((len(mms_comp), mms_comp[0].nstates),
+                           np.nan,
+                           dtype=np.float32)
+    eigvecs_comp = np.full((len(mms_comp),neigvecs,mms_comp[0].nstates),
+                           np.nan,
+                           dtype=np.float32)
+    
+    old = np.argmax(lags)
+    peak_ix, _ = find_peaks(mms_comp[old].stationary_distribution,
+                            distance=3)
+    ndists = 3 if 3 <= len(peak_ix) else len(peak_ix)
+    if ndists == 0:
+        ndists = 1
+    ix = np.argsort(mms_comp[old].stationary_distribution[peak_ix])[::-1]
+    peak_ix = peak_ix[ix[:ndists-1]]
+    peak_ix = np.append(peak_ix, int(mms_comp[old].nstates/2))
+    test_dists = np.full((len(mms_comp), ndists, mms_comp[old].nstates),
+                         np.nan,
+                         dtype=np.float32)
+    del ix
+    
+    for i in range(len(mms_orig)):
+        if (eigvals_orig[i] is not None or
+            not np.all(np.isnan(eigvals_comp[i]))):
+            raise ValueError("The element [{}] of eigvals is already"
+                             " filled. This should not have happened"
+                             .format(i))
+        eigvals_orig[i] = mms_orig[i].eigenvalues()
+        eigvals_comp[i] = mms_comp[i].eigenvalues()
+        if not np.isclose(eigvals_orig[i][0], 1):
+            warnings.warn("The first eigenvalue ({}) of the original"
+                          "  Model {} is not unity"
+                          .format(eigvals_orig[i][0], i),
+                          RuntimeWarning)
+        if not np.isclose(eigvals_comp[i][0], 1):
+            warnings.warn("The first eigenvalue ({}) of the"
+                          " exponentiated Model {} is not unity"
+                          .format(eigvals_comp[i][0], i),
+                          RuntimeWarning)
+        
+        if (not np.all(np.array(eigvecs_orig[i]) == None) or
+            not np.all(np.isnan(eigvecs_comp[i]))):
+            raise ValueError("The element [{}] of eigvecs is already"
+                             " filled. This should not have happened"
+                             .format(i))
+        if args.RIGHT:
+            eigvecs_orig[i] = mms_orig[i].eigenvectors_right(neigvecs)
+            eigvecs_comp[i] = mms_comp[i].eigenvectors_right(neigvecs)
+        else:
+            eigvecs_orig[i] = mms_orig[i].eigenvectors_left(neigvecs)
+            eigvecs_comp[i] = mms_comp[i].eigenvectors_left(neigvecs)
+        for j in range(len(eigvecs_orig[i])):
+            if not np.isclose(np.sum(eigvecs_orig[i]), 1):
+                raise ValueError("The sum ({}) of eigenvector {} of the"
+                                 " original Model {} is not unity"
+                                 .format(np.sum(eigvecs_orig[i]), j, i))
+        for j in range(len(eigvecs_comp[i])):
+            if not np.isclose(np.sum(eigvecs_comp[i]), 1):
+                raise ValueError("The sum ({}) of eigenvector {} of the"
+                                 " original Model {} is not unity"
+                                 .format(np.sum(eigvecs_comp[i]), j, i))
+        
+        if not np.all(np.isnan(test_dists[i])):
+            raise ValueError("The element [{}] of test_dists is already"
+                             " filled. This should not have happened"
+                             .format(i))
+        for j in range(ndists):
+            test_dists[i][j] = np.zeros(mms_comp[old].nstates,
+                                        dtype=np.float32)
+            test_dists[i][j][peak_ix[j]] = 1
+            if np.sum(test_dists[i][j]) != 1:
+                raise ValueError("The sum ({}) of test distribution {}"
+                                 " of Model {} is not unity"
+                                 .format(np.sum(test_dists[i][j]),j,i))
+            test_dists[i][j] = mms_comp[i].propagate(test_dists[i][j],1)
+            if not np.isclose(np.sum(test_dists[i][j]), 1):
+                raise ValueError("The sum ({}) of the propagated test"
+                                 " distribution {} of Model {} is not"
+                                 " unity"
+                                 .format(np.sum(test_dists[i][j]),j,i))
+    
+    print(flush=True)
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)
+    
+    
+    
+    
+    print("\n\n\n", flush=True)
+    print("Creating plots", flush=True)
+    timer = datetime.now()
+    
+    
+    fontsize_legend = 28
+    
+    
+    small = np.argmin([mm.nstates for mm in mms_orig])
+    states = np.arange(mms_orig[small].active_set[0],
+                       mms_orig[small].active_set[-1]+1)
+    xy = mms_orig[small].active_set - 0.5
+    xy = np.append(xy, mms_orig[small].active_set[-1]+0.5)
+    
+    
+    # Exponentiated transition matrices
+    for i in range(len(mms_comp)):
+        if args.PLOT_EXP and lowest_common_lag/lags[i] > 1:
+            fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                                     frameon=False,
+                                     clear=True,
+                                     tight_layout=True)
+            axis.xaxis.set_major_locator(MaxNLocator(integer=True))
+            axis.yaxis.set_major_locator(MaxNLocator(integer=True))
+            
+            cbarlabel = r'$T_{ij}(' + str("%d" %lags[i]) + r')$'
+            cbarlabel = r'$[$' + cbarlabel
+            cbarlabel += (r'$]^{' +
+                          str("%d" %(lowest_common_lag/lags[i])) +
+                          r'}$')
+            
+            mdt.plot.pcolormesh(
+                ax=axis,
+                x=xy,
+                y=xy,
+                z=mms_comp[i].transition_matrix,
+                xmin=states[0]-0.5,
+                xmax=states[-1]+0.5,
+                ymin=states[0]-0.5,
+                ymax=states[-1]+0.5,
+                xlabel=r'State $j$',
+                ylabel=r'State $i$',
+                cbarlabel=cbarlabel)
+            
+            axis.invert_yaxis()
+            axis.xaxis.set_label_position('top')
+            axis.xaxis.labelpad = 22
+            axis.xaxis.tick_top()
+            axis.tick_params(axis='x', which='both', pad=6)
+            
+            mdt.fh.backup(args.OUTFILE+"_tm_diff_tm"+str(i+1)+".pdf")
+            plt.tight_layout()
+            plt.savefig(args.OUTFILE+"_tm_diff_tm"+str(i+1)+".pdf")
+            plt.close(fig)
+            print("  Created "+args.OUTFILE+"_tm_diff_tm"+str(i+1)+".pdf",
+                  flush=True)
+    
+    
+    # Difference of exponentiated transition matrices
+    fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                             frameon=False,
+                             clear=True,
+                             tight_layout=True)
+    axis.xaxis.set_major_locator(MaxNLocator(integer=True))
+    axis.yaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    cbarlabel = [None, None]
+    for i in range(len(cbarlabel)):
+        cbarlabel[i] = r'$T_{ij}(' + str("%d" %lags[i]) + r')$'
+        if lowest_common_lag/lags[i] > 1:
+            cbarlabel[i] = r'$[$' + cbarlabel[i]
+            cbarlabel[i] += (r'$]^{' +
+                             str("%d" %(lowest_common_lag/lags[i])) +
+                             r'}$')
+    cbarlabel = cbarlabel[1] + r'$ - $' + cbarlabel[0]
+    
+    # TODO: Update matplotlib and remove the first if clause (only keep
+    # else clause)
+    import matplotlib
+    if matplotlib.__version__ <= '3.1.0':
+        warnings.warn("Your matplotlib version ({}) is less than 3.1.0"
+                      .format(matplotlib.__version__),
+                      DeprecationWarning)
+        mdt.plot.pcolormesh(
+            ax=axis,
+            x=xy,
+            y=xy,
+            z=tm_diff,
+            xmin=states[0]-0.5,
+            xmax=states[-1]+0.5,
+            ymin=states[0]-0.5,
+            ymax=states[-1]+0.5,
+            xlabel=r'State $j$',
+            ylabel=r'State $i$',
+            cmap='bwr',
+            norm=mdt.plot.MidpointNormalize(midpoint=0.0),
+            cbarlabel=cbarlabel)
+    else:
+        if np.min(tm_diff) < 0 and np.max(tm_diff) > 0:
+            colors.DivergingNorm(vmin=np.min(tm_diff),
+                                 vcenter=0.0,
+                                 vmax=np.max(tm_diff))
+        mdt.plot.pcolormesh(
+            ax=axis,
+            x=xy,
+            y=xy,
+            z=tm_diff,
+            xmin=states[0]-0.5,
+            xmax=states[-1]+0.5,
+            ymin=states[0]-0.5,
+            ymax=states[-1]+0.5,
+            vmin=np.min(tm_diff),
+            vmax=np.max(tm_diff),
+            xlabel=r'State $j$',
+            ylabel=r'State $i$',
+            cmap='bwr',
+            cbarlabel=cbarlabel)
+    
+    axis.invert_yaxis()
+    axis.xaxis.set_label_position('top')
+    axis.xaxis.labelpad = 22
+    axis.xaxis.tick_top()
+    axis.tick_params(axis='x', which='both', pad=6)
+    
+    mdt.fh.backup(args.OUTFILE+"_tm_diff.pdf")
+    plt.tight_layout()
+    plt.savefig(args.OUTFILE+"_tm_diff.pdf")
+    plt.close(fig)
+    print("  Created "+args.OUTFILE+"_tm_diff.pdf", flush=True)
+    
+    
+    # Eigenvalue spectrum
+    # Compare exponentiated models with each other
+    fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                             frameon=False,
+                             clear=True,
+                             tight_layout=True)
+    axis.xaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    axis.axhline(y=1, color='black', linestyle='--')
+    axis.axhline(color='black')
+    for i in range(len(mms_comp)):
+        label = r'$\mathbf{T}(' + str("%d" %lags[i]) + r')$'
+        if lowest_common_lag/lags[i] > 1:
+            label = r'$[$' + label
+            label += (r'$]^{' +
+                      str("%d" %(lowest_common_lag/lags[i])) +
+                      r'}$')
+        mdt.plot.plot(ax=axis,
+                      x=np.arange(1, len(eigvals_comp[i])+1),
+                      y=eigvals_comp[i],
+                      linestyle='--',
+                      marker='o',
+                      xlabel=r'Index $i$',
+                      ylabel=r'Eigenvalue $\lambda_i$',
+                      label=label)
+    
+    img, ax2 = mdt.plot.plot_2nd_yaxis(
+                   ax=axis,
+                   x=np.arange(1, len(eigvals_comp[0])+1),
+                   y=eigvals_comp[0],
+                   ylabel=r'Implied timescale $t_i$ / steps',
+                   alpha=0)
+    ax2.axhline(y=1, color='black', linestyle='--', alpha=0)
+    ax2.axhline(color='black', alpha=0)
+    if np.min(np.concatenate(eigvals_comp)) >= 0:
+        axis.set_ylim(ymin=0)
+    ax2.set_ylim(ymin=axis.get_ylim()[0], ymax=axis.get_ylim()[1])
+    mask = np.logical_and(axis.get_yticks()>0, axis.get_yticks()<1)
+    labels = -lowest_common_lag / np.log(axis.get_yticks(), where=mask)
+    labels = np.around(labels).astype(int).astype(str)
+    labels[np.logical_not(mask)] = ""
+    labels[axis.get_yticks()==0] = 0
+    labels[axis.get_yticks()==1] = r'$\infty$'
+    ax2.set_yticklabels(labels)
+    
+    mdt.fh.backup(args.OUTFILE+"_tm_diff_eigval.pdf")
+    plt.tight_layout()
+    plt.savefig(args.OUTFILE+"_tm_diff_eigval.pdf")
+    plt.close(fig)
+    print("  Created "+args.OUTFILE+"_tm_diff_eigval.pdf", flush=True)
+    
+    
+    # Eigenvalue spectrum
+    # Compare exponentiated models with original models
+    for i in range(len(mms_comp)):
+        if args.PLOT_EXP and lowest_common_lag/lags[i] > 1:
+            fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                                     frameon=False,
+                                     clear=True,
+                                     tight_layout=True)
+            axis.xaxis.set_major_locator(MaxNLocator(integer=True))
+            
+            label_orig = r'$\mathbf{T}(' + str("%d" %lags[i]) + r')$'
+            label_comp = r'$[$' + label_orig
+            label_comp += (r'$]^{' +
+                           str("%d" %(lowest_common_lag/lags[i])) +
+                           r'}$')
+            
+            axis.axhline(y=1, color='black', linestyle='--')
+            axis.axhline(color='black')
+            mdt.plot.plot(ax=axis,
+                          x=np.arange(1, len(eigvals_orig[i])+1),
+                          y=eigvals_orig[i],
+                          linestyle='--',
+                          marker='o',
+                          label=label_orig)
+            mdt.plot.plot(ax=axis,
+                          x=np.arange(1, len(eigvals_comp[i])+1),
+                          y=eigvals_comp[i],
+                          linestyle='--',
+                          marker='o',
+                          xlabel=r'Index $i$',
+                          ylabel=r'Eigenvalue $\lambda_i$',
+                          label=label_comp)
+            
+            mdt.fh.backup(args.OUTFILE+"_tm_diff_eigval"+str(i+1)+".pdf")
+            plt.tight_layout()
+            plt.savefig(args.OUTFILE+"_tm_diff_eigval"+str(i+1)+".pdf")
+            plt.close(fig)
+            print("  Created "+args.OUTFILE+"_tm_diff_eigval"+str(i+1)+".pdf",
+                  flush=True)
+    
+    
+    # Eigenvectors
+    # Compare exponentiated models with each other
+    fig, axes = plt.subplots(nrows=neigvecs,
+                             squeeze=False,
+                             sharex=True,
+                             sharey=True,
+                             figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                             frameon=False,
+                             clear=True)
+    axes = axes[:,0]
+    
+    for i in range(neigvecs):
+        if args.RIGHT:
+            ylabel = r'$\psi_{'+str(i+1)+r'}$/\%'
+        else:
+            ylabel = r'$\phi_{'+str(i+1)+r'}$/\%'
+        if i == neigvecs-1:
+            xlabel = r'State $i$'
+        else:
+            xlabel = ''
+        axes[i].xaxis.set_major_locator(MaxNLocator(integer=True))
+        for j in range(len(mms_comp)):
+            if i == 0:
+                label = r'$\mathbf{T}(' + str("%d" %lags[j]) + r')$'
+                if lowest_common_lag/lags[j] > 1:
+                    label = r'$[$' + label
+                    label += (r'$]^{' +
+                          str("%d" %(lowest_common_lag/lags[j])) +
+                          r'}$')
+            else:
+                label = ''
+            axes[i].fill_between(x=states,
+                                 y1=eigvecs_comp[j][i]*100,  # *100 to convert to %
+                                 alpha=0.5)
+            mdt.plot.plot(ax=axes[i],
+                          x=states,
+                          y=eigvecs_comp[j][i]*100,  # *100 to convert to %
+                          xmin=states[0]-0.5,
+                          xmax=states[-1]+0.5,
+                          xlabel=xlabel,
+                          ylabel=ylabel,
+                          label=label)
+        axes[i].legend(ncol=len(mms_comp),
+                       loc='lower center',
+                       numpoints=1,
+                       frameon=False,
+                       fontsize=fontsize_legend)
+    
+    mdt.fh.backup(args.OUTFILE+"_tm_diff_eigvec.pdf")
+    plt.tight_layout(h_pad=0)
+    plt.savefig(args.OUTFILE+"_tm_diff_eigvec.pdf")
+    plt.close(fig)
+    print("  Created "+args.OUTFILE+"_tm_diff_eigvec.pdf", flush=True)
+    
+    # Eigenvectors
+    # Compare exponentiated models with original models
+    for j in range(len(mms_comp)):
+        if args.PLOT_EXP and lowest_common_lag/lags[j] > 1:
+            fig, axes = plt.subplots(nrows=neigvecs,
+                                     squeeze=False,
+                                     sharex=True,
+                                     sharey=True,
+                                     figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                                     frameon=False,
+                                     clear=True)
+            axes = axes[:,0]
+            
+            for i in range(neigvecs):
+                if args.RIGHT:
+                    ylabel = r'$\psi_{'+str(i+1)+r'}$/\%'
+                else:
+                    ylabel = r'$\phi_{'+str(i+1)+r'}$/\%'
+                if i == neigvecs-1:
+                    xlabel = r'State $i$'
+                else:
+                    xlabel = ''
+                axes[i].xaxis.set_major_locator(MaxNLocator(integer=True))
+                if i == 0:
+                    label_orig = r'$\mathbf{T}(' + str("%d" %lags[i]) + r')$'
+                    label_comp = r'$[$' + label_orig
+                    label_comp += (r'$]^{' +
+                                   str("%d" %(lowest_common_lag/lags[i])) +
+                                   r'}$')
+                else:
+                    label_orig = None
+                    label_comp = None
+                axes[i].fill_between(x=mms_orig[j].active_set,
+                                     y1=eigvecs_orig[j][i]*100,  # *100 to convert to %
+                                     alpha=0.5)
+                mdt.plot.plot(ax=axes[i],
+                              x=mms_orig[j].active_set,
+                              y=eigvecs_orig[j][i]*100,  # *100 to convert to %
+                              xmin=states[0]-0.5,
+                              xmax=states[-1]+0.5,
+                              xlabel=xlabel,
+                              ylabel=ylabel,
+                              label=label_orig)
+                axes[i].fill_between(x=states,
+                                     y1=eigvecs_comp[j][i]*100,  # *100 to convert to %
+                                     alpha=0.5)
+                mdt.plot.plot(ax=axes[i],
+                              x=states,
+                              y=eigvecs_comp[j][i]*100,  # *100 to convert to %
+                              xmin=states[0]-0.5,
+                              xmax=states[-1]+0.5,
+                              xlabel=xlabel,
+                              ylabel=ylabel,
+                              label=label_comp)
+                axes[i].legend(ncol=len(mms_comp),
+                               loc='lower center',
+                               numpoints=1,
+                               frameon=False,
+                               fontsize=fontsize_legend)
+            
+            mdt.fh.backup(args.OUTFILE+"_tm_diff_eigvec"+str(j+1)+".pdf")
+            plt.tight_layout() #h_pad=0
+            plt.savefig(args.OUTFILE+"_tm_diff_eigvec"+str(j+1)+".pdf")
+            plt.close(fig)
+            print("  Created "+args.OUTFILE+"_tm_diff_eigvec"+str(j+1)+".pdf",
+                  flush=True)
+    
+    
+    # Test distributions
+    fig, axes = plt.subplots(nrows=ndists+1,
+                             squeeze=False,
+                             sharex=True,
+                             figsize=(11.69, 8.27),  # DIN A4 landscape in inches
+                             frameon=False,
+                             clear=True)
+    axes = axes[:,0]
+    
+    mdt.plot.plot(ax=axes[0],
+                  x=states,
+                  y=mms_comp[old].stationary_distribution*100,  # *100 to convert to %
+                  xmin=states[0]-0.5,
+                  xmax=states[-1]+0.5,
+                  ymin=0,
+                  xlabel='',
+                  ylabel=r'$\mathbf{\pi}$/\%',
+                  label=r'$\mathbf{T}(' + str("%d" %lags[old]) + r')$')
+    mdt.plot.plot(ax=axes[0],
+                  x=states[peak_ix],
+                  y=mms_comp[old].stationary_distribution[peak_ix]*100,  # *100 to convert to %
+                  xmin=states[0]-0.5,
+                  xmax=states[-1]+0.5,
+                  ymin=0,
+                  xlabel='',
+                  ylabel=r'$\mathbf{\pi}$/\%',
+                  marker='x',
+                  markersize=12,
+                  markeredgewidth=2,
+                  linestyle='')
+    
+    for i in range(1, ndists+1):
+        ylabel = (r'$p_{' +
+                  str("%d" %states[peak_ix[i-1]]) +
+                  r'\rightarrow i}$/\%')
+        if i == ndists:
+            xlabel = r'State $i$'
+        else:
+            xlabel = ''
+        axes[i].xaxis.set_major_locator(MaxNLocator(integer=True))
+        for j in range(len(mms_comp)):
+            if i == 1:
+                label = r'$\mathbf{T}(' + str("%d" %lags[j]) + r')$'
+                if lowest_common_lag/lags[j] > 1:
+                    label = r'$[$' + label
+                    label += (r'$]^{' +
+                          str("%d" %(lowest_common_lag/lags[j])) +
+                          r'}$')
+            else:
+                label = ''
+            mdt.plot.plot(ax=axes[i],
+                          x=states,
+                          y=test_dists[j][i-1]*100,  # *100 to convert to %
+                          xmin=states[0]-0.5,
+                          xmax=states[-1]+0.5,
+                          ymin=0,
+                          xlabel=xlabel,
+                          ylabel=ylabel,
+                          label=label)
+    
+    mdt.fh.backup(args.OUTFILE+"_tm_diff_dist.pdf")
+    plt.tight_layout() #h_pad=0
+    plt.savefig(args.OUTFILE+"_tm_diff_dist.pdf")
+    plt.close(fig)
+    print("  Created "+args.OUTFILE+"_tm_diff_dist.pdf", flush=True)
+    
+    
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)
+    
+    
+    
+    
+    print("\n\n\n", flush=True)
+    print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer_tot),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)

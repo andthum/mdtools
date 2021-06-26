@@ -1,0 +1,31 @@
+# This file is part of MDTools.
+# Copyright (C) 2021, The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
+#
+# MDTools is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# MDTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# Files to include in the source distribution.  See
+# https://packaging.python.org/guides/using-manifest-in/
+
+include AUTHORS.rst
+include LICENSE.txt
+include README.rst
+include requirements*.txt
+
+# graft <pattern> = include all files under directories matching <pattern>
+# graft docs
+# graft examples
+# graft scripts
+# graft tests

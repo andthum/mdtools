@@ -1,0 +1,346 @@
+#!/usr/bin/env python3
+
+
+# This file is part of MDTools.
+# Copyright (C) 2020  Andreas Thum
+#
+# MDTools is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# MDTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+import sys
+import os
+from datetime import datetime
+import psutil
+import argparse
+import numpy as np
+from scipy import optimize
+import mdtools as mdt
+
+
+
+
+def exp_decay(t, k=1):
+    """
+    Exponential decay fuction:
+    
+    .. math:
+        f(t) = e^{-kt}
+    
+    Parameters
+    ----------
+    t : scalar or array_like
+        Time(s) at which to evaluate :math:`f(t)`.
+    k : scalar
+        Rate constant.
+    
+    Returns
+    -------
+    decay : scalar or numpy.ndarray
+        :math:`f(t)`.
+    """
+    
+    return np.exp(-k * t)
+
+
+
+
+def state_decay(dtraj, restart=1, negative_invalid=True):
+    """
+    Take a discretized trajectory as input and calculate the propability
+    that a compound, whose discrete states are tracked in this
+    trajectory, is still in the state, in which it was at time
+    :math:`t_0`, after a lag time :math:`\tau`.
+    
+    Parameters
+    ----------
+    dtraj : array_like
+        The discretized trajectory. Array of shape ``(m, n)`` where ``m``
+        is the number of compounds and ``n`` is the number of frames.
+        The elements of `dtraj` must be the indices of the states in
+        which a given compound is at a given frame.
+    restart : int, optional
+        Number of frames between restarting points :math:`t_0`.
+    negative_invalid : bool, optional
+        If ``True`` (default), negative state indices are treated as
+        invalid states. Invalid states are discarded and do not enter
+        the calculation.
+    
+    Returns
+    -------
+    decay : numpy.ndarray
+        Array of shape ``(n,)``. The `i`-th element of `decay` is the
+        propability that a compound is still in its initial state after
+        `i` frames.
+    n_stay : int
+        Number of compounds that never leave their state during the
+        entire trajectory.
+    """
+    
+    dtraj = np.asarray(dtraj.T, order='C')
+    if dtraj.ndim != 2:
+        raise ValueError("dtraj must have two dimensions")
+    
+    n_frames = dtraj.shape[0]
+    n_compounds = dtraj.shape[1]
+    transitions = (np.diff(dtraj, axis=0) != 0)
+    transitions = np.insert(transitions, 0, np.zeros(n_compounds), axis=0)
+    n_stay = np.sum(np.all(transitions == 0, axis=0))
+    n_trans = np.zeros(n_compounds, dtype=np.uint32)
+    decay = np.zeros(n_frames, dtype=np.float32)
+    if negative_invalid:
+        valid = np.zeros(n_compounds, dtype=bool)
+        norm = np.zeros(n_frames, dtype=np.uint32)
+    
+    proc = psutil.Process(os.getpid())
+    timer = datetime.now()
+    for lag in range(1, n_frames):
+        if lag % 10**(len(str(lag))-1) == 0 or lag == n_frames-1:
+            print("  Lag     {:12d} of {:12d}"
+                  .format(lag, n_frames-1),
+                  flush=True)
+            print("    Elapsed time:             {}"
+                  .format(datetime.now()-timer),
+                  flush=True)
+            print("    Current memory usage: {:18.2f} MiB"
+                  .format(proc.memory_info().rss/2**20),
+                  flush=True)
+            timer = datetime.now()
+        
+        for t0 in range(0, n_frames-lag, restart):
+            np.sum(transitions[t0+1:t0+1+lag], axis=0, out=n_trans)
+            if negative_invalid:
+                np.greater_equal(dtraj[t0], 0, out=valid)
+                norm[lag] += np.count_nonzero(valid)
+                decay[lag] += np.count_nonzero(n_trans[valid] == 0)
+            else:
+                decay[lag] += np.count_nonzero(n_trans == 0)
+    
+    del dtraj, transitions, n_trans
+    
+    if negative_invalid:
+        if norm[0] != 0:
+            raise ValueError("The first element of norm is not zero."
+                             " This should not have happened")
+        norm[0] = 1
+        decay /= norm
+    else:
+        n_restarts = n_frames - np.arange(n_frames, dtype=np.float32)
+        n_restarts /= restart
+        np.ceil(n_restarts, out=n_restarts)
+        decay /= n_restarts
+        decay /= n_compounds
+    
+    if decay[0] != 0:
+        raise ValueError("The first element of decay is not zero. This"
+                         " should not have happened")
+    decay[0] = 1
+    if np.any(decay > 1):
+        raise ValueError("At least one element of decay is greater than"
+                         " one. This should not have happened")
+    if np.any(decay < 0):
+        raise ValueError("At least one element of decay is less than"
+                         " zero. This should not have happened")
+    
+    return decay, n_stay
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    
+    timer_tot = datetime.now()
+    proc = psutil.Process(os.getpid())
+    
+    
+    parser = argparse.ArgumentParser(
+                 description=(
+                     "Read a discretized trajectory, as e.g. generated"
+                     " by discrete_coord.py or discrete_hex.py, and"
+                     " calculate the propability that a compound, whose"
+                     " discrete states are tracked in this trajectory,"
+                     " is still in the state, in which it was at time"
+                     " t0, after a lag time tau."
+                     )
+    )
+    
+    parser.add_argument(
+        '-f',
+        dest='TRJFILE',
+        type=str,
+        required=True,
+        help="File containing the discretized trajectory stored as"
+             " integer numpy.ndarray in .npy format. The array must be"
+             " of shape ``(m, n)`` where ``m`` is the number of"
+             " compounds and ``n`` is the number of frames. The elements"
+             " of the array must be the indices of the states in which a"
+             " given compound is at a given frame."
+    )
+    parser.add_argument(
+        '-o',
+        dest='OUTFILE',
+        type=str,
+        required=True,
+        help="Output filename."
+    )
+    
+    parser.add_argument(
+        '--restart',
+        dest='RESTART',
+        type=int,
+        default=100,
+        help="Number of frames between restarting points for calculating"
+             " the decay function. Default: 100"
+    )
+    parser.add_argument(
+        '--neg-inval',
+        dest='NEG_INVAL',
+        required=False,
+        default=False,
+        action='store_true',
+        help="If set, negative state indices in TRJFILE are treated as"
+             " invalid states. Invalid states are discarded and do not"
+             " enter the calculation."
+    )
+    
+    
+    args = parser.parse_args()
+    print(mdt.rti.run_time_info_str())
+    
+    
+    
+    
+    print("\n\n\n", flush=True)
+    print("Reading input", flush=True)
+    timer = datetime.now()
+    
+    dtrajs = np.load(args.TRJFILE)
+    
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)
+    
+    
+    
+    
+    print("\n\n\n", flush=True)
+    print("Calculating decay function", flush=True)
+    timer = datetime.now()
+    
+    decay, n_stay = state_decay(dtraj=dtrajs,
+                                restart=args.RESTART,
+                                negative_invalid=args.NEG_INVAL)
+    lag_times = np.arange(dtrajs.shape[1], dtype=np.uint32)
+    
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)
+    
+    
+    
+    print("\n\n\n", flush=True)
+    print("Fitting decay function", flush=True)
+    timer = datetime.now()
+    
+    try:
+        popt, pcov = optimize.curve_fit(f=exp_decay,
+                                        xdata=lag_times,
+                                        ydata=decay)
+    except (ValueError, RuntimeError, optimize.OptimizeWarning) as err:
+        print(flush=True)
+        print("An error has occurred during fitting:", flush=True)
+        print("{}".format(err), flush=True)
+        print("Setting fit parameters to numpy.nan", flush=True)
+        print(flush=True)
+        popt = np.nan
+        pcov = np.array([[np.nan]])
+    
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)
+    
+    
+    
+    
+    print("\n\n\n", flush=True)
+    print("Creating output", flush=True)
+    timer = datetime.now()
+    
+    header = (
+        "Propability that a compound is still in the state, in which\n"
+        "it was at time t0, after a lag time tau.\n"
+        "\n"
+        "\n"
+        "Total number of compounds:                               {:>9d}\n"
+        "Number of compounds that never leave their state:        {:>9d}\n"
+        "Number of compounds that are always in a negative state: {:>9d}\n"
+        "Number of frames per compound:                           {:>9d}\n"
+        "Total number of frames with negative states:             {:>9d}\n"
+        "\n"
+        "\n"
+        "The columns contain:\n"
+        "  1 Lag time tau (in trajectory steps)\n"
+        "  2 Decay function\n"
+        "  3 Exponential fit of the decay function: f(tau) = exp(-k*tau)\n"
+        "\n"
+        "Column number:\n"
+        "{:>14d} {:>16d} {:>16d}\n"
+        "\n"
+        "Fit:\n"
+        "Rate constant k (in 1/step): {:>19.9e}\n"
+        "Std. dev. of  k (in 1/step): {:>19.9e}\n"
+        .format(dtrajs.shape[0], n_stay, np.sum(np.all(dtrajs < 0, axis=1)),
+                dtrajs.shape[1], np.count_nonzero(dtrajs < 0),
+                1, 2, 3,
+                popt[0], np.sqrt(np.diag(pcov)[0])
+        )
+    )
+    
+    mdt.fh.savetxt(fname=args.OUTFILE,
+                   data=np.column_stack((lag_times,
+                                         decay,
+                                         exp_decay(t=lag_times, k=popt))),
+                   header=header)
+    
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)
+    
+    
+    
+    
+    print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
+    print("Elapsed time:         {}"
+          .format(datetime.now()-timer_tot),
+          flush=True)
+    print("Current memory usage: {:.2f} MiB"
+          .format(proc.memory_info().rss/2**20),
+          flush=True)
