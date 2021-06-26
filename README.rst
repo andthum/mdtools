@@ -7,9 +7,6 @@ MDTools
 
 |GPLv3 license| |made-with-python| |made-with-sphinx-doc| |mdanalysis|
 
-.. contents::
-    :local:
-
 
 Introduction
 ============
