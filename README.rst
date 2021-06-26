@@ -1,7 +1,9 @@
 .. Keep REAMD.rst synchronized with index.rst (documentation)
 
 
-|MDTools_writing|
+#######
+MDTools
+#######
 
 |GPLv3 license| |made-with-python| |made-with-sphinx-doc| |mdanalysis|
 
