@@ -1,0 +1,7 @@
+# Date: 2021/06/26
+# Requirements build MDTools' documentation
+# Additional to the install requirements of MDTools
+
+sphinx==3.5.2
+sphinx_rtd_theme==0.5.1
+readthedocs-sphinx-search==0.1.0

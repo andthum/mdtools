@@ -1,6 +1,6 @@
+# Date: 2021/05/10
 # Install requirements for MDTools
 # Tested on Ubuntu 20.04.2
-# Date: 2021/05/10
 
 astunparse==1.6.3
 bhmm==0.6.3
