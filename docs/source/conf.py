@@ -98,6 +98,7 @@ extensions = [
     'sphinx.ext.todo',  # Support for todo items
     'sphinx.ext.viewcode',  # Add links to highlighted source code
     'sphinx_rtd_theme',  # Read the Docs Sphinx Theme
+    'sphinx_search.extension',  # Enable "search-as-you-type" on Read the Docs
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -236,7 +237,7 @@ def setup(app):
     See
     https://stackoverflow.com/questions/40641252/how-can-i-avoid-the-horizontal-scrollbar-in-a-rest-table
     """
-    app.add_stylesheet('custom.css')
+    app.add_css_file('custom.css')
 
 
 # If this is not None, a "Last updated on:" timestamp is inserted at
