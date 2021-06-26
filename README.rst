@@ -30,8 +30,13 @@ Gromacs_ trajectories but you can read and analyze a variety of
 different `trajectory and topology formats`_.  You also benefit from
 MDAnalysis' rich `selection syntax`_.
 
+
+Documentation
+=============
+
 The complete documentation of MDTools including installation_ and usage_
 instructions can be found `here <TODO>`_.
+
 
 .. _Python: https://www.python.org/
 .. _Gromacs: https://manual.gromacs.org/
