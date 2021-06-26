@@ -33,17 +33,6 @@ MDAnalysis' rich `selection syntax`_.
 The complete documentation of MDTools including installation_ and usage_
 instructions can be found `here <TODO>`_.
 
-.. note::
-    
-    **This project is at the beginning**.  At the moment it is mainly
-    intended for my personal use and will evolve according to my
-    personal needs.  However, everybody is welcome to use it and to
-    contribute to it and to write scripts for his/her own purposes.  As
-    mentioned above, the aim of this project is to build up a collection
-    of generic Python scripts to prepare and analyze MD simulations.  If
-    you want to contribute, please read the
-    `Developers guide`_.
-
 .. _Python: https://www.python.org/
 .. _Gromacs: https://manual.gromacs.org/
 .. _MDAnalysis: https://www.mdanalysis.org/
