@@ -17,6 +17,12 @@ Introduction
 MDTools is a collection of ready-to-use Python_ scripts to prepare and
 analyze molecular dynamics (MD) simulations.
 
+The main feature of this package is not the package itself, but the
+Python scripts shipped along with this package in the ``scripts/``
+directory.  These Python scripts are fully functional and directly
+executable (provided you have installed Python_) without the need to go
+into the source code.
+
 The idea is to provide you with a collection of scripts to prepare and
 analyze MD simulations similar to the command-line tools shipped along
 with Gromacs_.  For instance, the script
