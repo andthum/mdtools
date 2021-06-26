@@ -36,7 +36,8 @@ Documentation
 =============
 
 The complete documentation of MDTools including installation_ and usage_
-instructions can be found `here <TODO>`_.
+instructions can be found
+`here <https://mdtools.readthedocs.io/en/latest/>`_.
 
 
 License
@@ -58,9 +59,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 .. _MDAnalysis: https://www.mdanalysis.org/
 .. _trajectory and topology formats: https://userguide.mdanalysis.org/stable/formats/index.html
 .. _selection syntax: https://userguide.mdanalysis.org/stable/selections.html
-.. _installation: TODO
-.. _usage: TODO
-.. _Developers guide: TODO
+.. _installation: https://mdtools.readthedocs.io/en/latest/doc_pages/general_docs/installation.html
+.. _usage: https://mdtools.readthedocs.io/en/latest/doc_pages/general_docs/usage.html
+.. _Developers guide: https://mdtools.readthedocs.io/en/latest/doc_pages/developers_guide/developers_guide.html
 .. _GNU General Public License: https://www.gnu.org/licenses/gpl-3.0.html
 
 .. |GPLv3 license| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
