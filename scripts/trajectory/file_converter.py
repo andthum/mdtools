@@ -85,4 +85,4 @@ if __name__ == '__main__':
     conv_strc_file(args.STRCFILE, args.OUTFILE)
     
     print()
-    print("{} done".format(os.path.basename(sys.argv[0])). flush=True)
+    print("{} done".format(os.path.basename(sys.argv[0])), flush=True)

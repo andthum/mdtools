@@ -278,7 +278,7 @@ if __name__ == '__main__':
                 stopfit = 2
             fit_stop[i] = min(endfit, stopfit)
             popt[i], perr[i] = mdt.func.fit_kww(
-                                   xdata=lag_times[fit_start[i]:fit_stop[i]],
+                                   xdata=times[fit_start[i]:fit_stop[i]],
                                    ydata=autocorr[:,i][fit_start[i]:fit_stop[i]])
         tau = popt[:,0]
         beta = popt[:,1]

@@ -515,7 +515,7 @@ if __name__ == '__main__':
         raise ValueError("--bin-width ({}) must be greater than zero"
                          .format(args.BIN_WIDTH))
     elif args.BIN_WIDTH > A0:
-        warnigns.warn("--bin-width ({}) should not exceed {}"
+        warnings.warn("--bin-width ({}) should not exceed {}"
                       " (=R0*sqrt(3))"
                       .format(args.BIN_WIDTH, A0),
                       RuntimeWarning)

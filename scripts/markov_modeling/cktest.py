@@ -496,7 +496,7 @@ if __name__ == "__main__":
                               textcolors=["red", "red"])
     
     filename = args.OUTFILE+"_cktest_tm_diff.pdf"
-    mdt.fh.backup(fname)
+    mdt.fh.backup(filename)
     plt.tight_layout()
     plt.savefig(filename)
     plt.close()
@@ -571,7 +571,7 @@ if __name__ == "__main__":
             #ax2.set_yticklabels(labels)
     
     #filename = args.OUTFILE+"_cktest_eigval_overview.pdf"
-    #mdt.fh.backup(fname)
+    #mdt.fh.backup(filename)
     #plt.tight_layout()
     #plt.savefig(filename)
     #plt.close()
@@ -581,7 +581,7 @@ if __name__ == "__main__":
     # Eigenvalue spectrum
     # Compare exponentiated models with each other
     filename = args.OUTFILE+"_cktest_eigval_comp.pdf"
-    mdt.fh.backup(fname)
+    mdt.fh.backup(filename)
     with PdfPages(filename) as pdf:
         for i in range(1, len(lags)):
             fig, axis = plt.subplots(figsize=(11.69, 8.27),
@@ -648,7 +648,7 @@ if __name__ == "__main__":
     # Eigenvalue spectrum
     # Compare exponentiated models with original models
     filename = args.OUTFILE+"_cktest_eigval_self.pdf"
-    mdt.fh.backup(fname)
+    mdt.fh.backup(filename)
     with PdfPages(filename) as pdf:
         for i in range(len(lags)-1):
             fig, axis = plt.subplots(figsize=(11.69, 8.27),
@@ -701,7 +701,7 @@ if __name__ == "__main__":
             ylabel = r'Eigenvector $\phi_{'+str(i+1)+r'}$ / \%'
         
         filename = args.OUTFILE+"_cktest_eigvec_comp"+str(i+1)+".pdf"
-        mdt.fh.backup(fname)
+        mdt.fh.backup(filename)
         with PdfPages(filename) as pdf:
             for j in range(1, len(lags)):
                 fig, axis = plt.subplots(figsize=(11.69, 8.27),
@@ -755,7 +755,7 @@ if __name__ == "__main__":
             ylabel = r'Eigenvector $\phi_{'+str(i+1)+r'}$ / \%'
         
         filename = args.OUTFILE+"_cktest_eigvec_self"+str(i+1)+".pdf"
-        mdt.fh.backup(fname)
+        mdt.fh.backup(filename)
         with PdfPages(filename) as pdf:
             for j in range(len(lags)-1):
                 fig, axis = plt.subplots(figsize=(11.69, 8.27),
@@ -808,7 +808,7 @@ if __name__ == "__main__":
                   r'\rightarrow i}$ / \%')
         
         filename = args.OUTFILE+"_cktest_dist"+str(i+1)+".pdf"
-        mdt.fh.backup(fname)
+        mdt.fh.backup(filename)
         with PdfPages(filename) as pdf:
             fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                      frameon=False,
