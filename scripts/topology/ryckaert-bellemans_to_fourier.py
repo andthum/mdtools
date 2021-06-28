@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -29,12 +29,29 @@
 # (2019)
 
 
+import argparse
 import numpy as np
 
-# Enter here the six Ryckaert-Bellemans dihedral coefficients (the last
+parser = argparse.ArgumentParser(
+    description = (
+        "Convert Ryckaert-Bellemans dihedral coefficients"
+        "  to Fourier dihedral coefficients."
+    )
+)
+parser.add_argument(
+    '-c',
+    dest='C',
+    type=float,
+    nargs=6,
+    required=True,
+    help="The six Ryckaert-Bellemans dihedral coefficients"
+)
+args = parser.parse_args()
+
+# The six Ryckaert-Bellemans dihedral coefficients from CLI (the last
 # one is actually not needed in the computations and the first one is
 # only needed for consistency checks)
-rb = np.array([C0, C1, C2, C3, C4, C5])
+rb = np.array(args.C)
 if len(rb) != 6:
     raise ValueError("rb must have length 6")
 
