@@ -13,6 +13,7 @@ The MDTools Development Team
 The MDTools Development Team consists of:
 
     * Andreas Thum
+    * Len Kimms
 
 
 Release-wise list of authors
@@ -28,3 +29,4 @@ Upcoming release (0.1.0)
       release.  Additionally, append your name in the author string in
       :data:`mdtools._metadata.__author__`
     * Andras Thum
+    * Len Kimms

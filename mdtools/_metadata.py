@@ -36,7 +36,7 @@ __title__ = "mdtools"
 #: by commas.  Append your name, if you have contributed to MDTools
 #: (either to the core package or the scripts or the documetation).
 #: Additionally, append your name in the authors list in AUTHORS.rst
-__author__ = "Andreas Thum"
+__author__ = "Andreas Thum, Len Kimms"
 # Remove possible dublicates but keep order
 author_list = list(dict.fromkeys(__author__.split(', ')))
 __author__ = ', '.join(author_list)
