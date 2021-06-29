@@ -69,6 +69,9 @@ class MidpointNormalize(colors.Normalize):
         colors.Normalize.__init__(self, vmin, vmax, clip)
     
     def __call__(self, value, clip=None):
+        """
+        Map value to the interval [0, 1]. The clip argument is unused.
+        """
         # Including masked values, but ignoring clipping and other edge
         # cases
         result, is_scalar = self.process_value(value)
