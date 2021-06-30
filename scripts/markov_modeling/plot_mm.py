@@ -301,7 +301,7 @@ if __name__ == "__main__":
     axis.tick_params(axis='x', which='both', pad=6)
     
     filename = args.OUTFILE+"_tm.pdf"
-    mdt.fh.backup(fname)
+    mdt.fh.backup(filename)
     plt.tight_layout()
     plt.savefig(filename)
     plt.close()

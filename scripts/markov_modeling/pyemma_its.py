@@ -222,7 +222,7 @@ if __name__ == "__main__":
             data[:,0::2] = its.sample_mean
             data[:,1::2] = its.sample_std
         else:
-            data = np.column_stack((ts.sample_mean, its.sample_std))
+            data = np.column_stack((its.sample_mean, its.sample_std))
         header_sd = ("\n"
                      "     Lag time and standard deviation alternating\n"
                      "     Number of transition matrix samples: {}"

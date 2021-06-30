@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -518,6 +518,7 @@ if __name__ == "__main__":
                 alpha=0.5)
         
         
+        r_prev = None # Avoid flake8: F821 undefined name 'r_prev'
         for j, sample in enumerate(intercept_samples):
             hex_ax = [(xmin, g(x=xmin, m=slope, c=sample)),
                       (xmax, g(x=xmax, m=slope, c=sample))]

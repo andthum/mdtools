@@ -322,7 +322,7 @@ if __name__ == "__main__":
     axis.set_yticklabels([])
     
     filename = args.OUTFILE
-    mdt.fh.backup(fname)
+    mdt.fh.backup(filename)
     plt.tight_layout()
     plt.savefig(filename)
     plt.close()

@@ -130,7 +130,7 @@ if __name__ == '__main__':
         keywords="molecular dynamics simulation analysis preparation chemistry physics materials science",
         packages=setuptools.find_packages(include=['mdtools']),
         include_package_data=True,
-        python_requires=">=3.6, <4.0",
+        python_requires=">=3.6, <=3.8",
         install_requires=["psutil >=5.7, <6.0",
                           "numpy >=1.18, <2.0",
                           "scipy >=1.5, <2.0",
