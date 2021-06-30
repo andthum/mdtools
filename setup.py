@@ -43,7 +43,7 @@ import setuptools
 def get_varstring(fname="mdtools/version.py", varname="__version__"):
     """
     Read the string assigned to a specific variable in a given file.
-    
+
     Parameters
     ----------
     fname : str, optional
@@ -52,18 +52,18 @@ def get_varstring(fname="mdtools/version.py", varname="__version__"):
     varname : str, optional
         Name of the variable whose value should be read.  The value must
         be a simple string.
-    
+
     Returns
     -------
     varstring : str
         The string assigned to `varname`.
-    
+
     Notes
     -----
     If `varname` is assigned multiple times, only the first assignment
     will be considered.
     """
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         for line in f:
             if line.startswith(varname):
                 if '"' in line:
@@ -71,70 +71,75 @@ def get_varstring(fname="mdtools/version.py", varname="__version__"):
                 elif "'" in line:
                     delimiter = "'"
                 else:
-                    raise RuntimeError("The line starting with '{}' does"
-                                       " not contain a string"
-                                       .format(varname))
+                    raise RuntimeError(
+                        "The line starting with '{}' does"
+                        " not contain a string".format(varname)
+                    )
                 return line.split(delimiter)[1]
 
 
 def get_content(fname="README.rst"):
     """
-    Read a file.
-    
+    Read a text file.
+
     Parameters
     ----------
     fname : str, optional
         Path to the file to read.
-    
+
     Returns
     -------
     content : str
         The whole content of the file as one long string.
     """
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         return f.read()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     setuptools.setup(
         name=get_varstring("mdtools/_metadata.py", "__title__"),
         version=get_varstring("mdtools/version.py", "__version__"),
         author="Andreas Thum",
         author_email="andr.thum@gmail.com",
-        maintainer=get_varstring("mdtools/_metadata.py", "__maintainer__"),
-        maintainer_email=get_varstring("mdtools/_metadata.py", "__email__"),
+        maintainer=get_varstring(
+            "mdtools/_metadata.py", "__maintainer__"
+        ),
+        maintainer_email=get_varstring(
+            "mdtools/_metadata.py", "__email__"
+        ),
         url="https://github.com/andthum/mdtools",
         project_urls={
-            'Source': "https://github.com/andthum/mdtools",
-            'Documentation': "https://mdtools.readthedocs.io/en/latest/",
-            'Issue Tracker': "TODO",
-            'Feature Requests': "TODO",
+            "Source": "https://github.com/andthum/mdtools",
+            "Documentation": "https://mdtools.readthedocs.io/en/latest/",
+            "Issue Tracker": "https://github.com/andthum/mdtools/issues",
+            "Feature Requests": "https://github.com/andthum/mdtools/issues",
         },
         description="Python scripts to prepare and analyze molecular dynamics simulations",
         long_description=get_content("README.rst"),
-        long_description_content_type='text/x-rst',
+        long_description_content_type="text/x-rst",
         license=get_varstring("mdtools/_metadata.py", "__license__"),
         classifiers=[
-            "Programming Language :: Python :: 3 :: Only",
-            "Operating System :: Unix",
             "Development Status :: 3 - Alpha",
+            "Environment :: Console",
+            "Intended Audience :: Science/Research",
             "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
             "Natural Language :: English",
-            "Intended Audience :: Science/Research",
+            "Operating System :: Unix",
+            "Programming Language :: Python :: 3 :: Only",
+            "Programming Language :: Python :: 3.6",
+            "Programming Language :: Python :: 3.7",
+            "Programming Language :: Python :: 3.8",
             "Topic :: Scientific/Engineering",
             "Topic :: Scientific/Engineering :: Chemistry",
             "Topic :: Scientific/Engineering :: Physics",
             "Topic :: Scientific/Engineering :: Bio-Informatics",
+            "Topic :: Software Development :: Libraries :: Python Modules",
             "Topic :: Utilities",
         ],
         keywords="molecular dynamics simulation analysis preparation chemistry physics materials science",
-        packages=setuptools.find_packages(include=['mdtools']),
+        packages=setuptools.find_packages(include=["mdtools"]),
         include_package_data=True,
-        python_requires=">=3.6, <=3.8",
-        install_requires=["psutil >=5.7, <6.0",
-                          "numpy >=1.18, <2.0",
-                          "scipy >=1.5, <2.0",
-                          "matplotlib >=3.2, <3.3",
-                          "MDAnalysis >=1.0, <2.0",
-                          "pyemma >=2.5, <3.0"]
+        python_requires=">=3.6, <3.9",
+        install_requires=get_content("requirements.txt").splitlines(),
     )
