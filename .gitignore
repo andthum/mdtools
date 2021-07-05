@@ -1,5 +1,50 @@
+*.pdf
+*.pptx
+
+
+########################################################################
+# Ignore files that stem from the era before this project was version
+# controlled by Git
+########################################################################
+*.bak
+*.bak_*
+*.wrong
+*.wrong_*
+*.redundant
+*.redundant_*
+*.deprecated
+*.deprecated_*
+*deprecated*
+
+
+# Ignore files that are not used, have to be revised completely and
+# where it is foreseeable that this revision will not be done in the
+# near future
+
+# From the core package
+markov_state_modeling.py
+
+scripts/markov_modeling/
+
+# From scripts/discretization
+state_decay.py
+plot_state_decay.py
+state_decay_discrete.py
+plot_state_decay_discrete.py
+state_lifetime_autocorr.py
+plot_state_lifetime_autocorr.py
+state_lifetime_autocorr_discrete.py
+plot_state_lifetime_autocorr_discrete.py
+
+# From scripts/dynamics
+lifetime_hist_serial.py
+lifetime_hist_parallel.py
+
+
+########################################################################
 # Some common .gitignore configurations from octocat
 # https://gist.github.com/octocat/9257657
+########################################################################
 
 # Compiled source
 *.com
@@ -35,12 +80,12 @@
 ehthumbs.db
 Thumbs.db
 
-# End of https://gist.github.com/octocat/9257657
 
-
+########################################################################
 # Some common .gitignore configurations for Python projects
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
+########################################################################
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -72,7 +117,8 @@ share/python-wheels/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+#  before PyInstaller builds the exe, so as to inject date/other infos
+#  into it.
 *.manifest
 *.spec
 
@@ -181,5 +227,3 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-
-# End of https://www.toptal.com/developers/gitignore/api/python
