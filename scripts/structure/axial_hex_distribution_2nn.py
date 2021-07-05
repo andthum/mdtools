@@ -19,11 +19,7 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 __author__ = "Andreas Thum"
-
-
 
 
 # Standard libraries
@@ -40,9 +36,6 @@ import numpy as np
 # Local application/library specific imports
 import mdtools as mdt
 from axial_hex_distribution_1nn import check_hex_lattice, hex_verts2faces
-
-
-
 
 
 def get_1st_hex_face_cols(verts, r0, box, tol):
@@ -107,17 +100,10 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
     return np.asarray([hex_face_col1, hex_face_col2])
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -294,10 +280,8 @@ if __name__ == '__main__':
         help="Run in debug mode."
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
 
     if args.ZMIN < 0:
         raise ValueError("--zmin ({}) must not be negative"
@@ -331,16 +315,10 @@ if __name__ == '__main__':
                       .format(args.TOL),
                       RuntimeWarning)
 
-
-
-
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
@@ -385,18 +363,12 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
     LAST_FRAME = u.trajectory[END - 1].frame
-
-
-
 
     # Term definitions:
     # x/y axis:       Cartesian x or y axis (enclose 90° with each
@@ -462,9 +434,6 @@ if __name__ == '__main__':
     # Histograms for axes with 60°, 120° and 0° to x axis
     hists = np.zeros((len(hex_ax_slopes) + 1, len(bins) - 1),
                      dtype=np.uint32)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
@@ -658,9 +627,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
@@ -781,9 +747,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -31,13 +29,10 @@ from matplotlib.ticker import MaxNLocator
 import mdtools as mdt
 
 
-
-
 if __name__ == "__main__":
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -114,9 +109,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
 
-
-
-
     print("\n\n\n", flush=True)
     print("Loading discrete trajectories", flush=True)
     timer = datetime.now()
@@ -156,9 +148,6 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Generating y-axis", flush=True)
@@ -219,9 +208,6 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating plots", flush=True)
@@ -287,9 +273,6 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)

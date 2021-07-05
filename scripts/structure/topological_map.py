@@ -26,8 +26,6 @@
 # * O. Borodin, G.D. Smith, Macromolecules, 2007, 40, 1252-1258
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -37,13 +35,10 @@ import numpy as np
 import mdtools as mdt
 
 
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -156,18 +151,13 @@ if __name__ == '__main__':
         help="Run in debug mode."
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
-
-
 
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-
 
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
@@ -192,7 +182,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
     if ref.n_atoms > 1:
         print("\n\n\n", flush=True)
         print("The reference group contain more than one atom. Using\n"
@@ -200,14 +189,12 @@ if __name__ == '__main__':
         print(flush=True)
         mdt.check.masses(ag=ref, flash_test=False)
 
-
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
     last_frame = u.trajectory[END - 1].frame
-
 
     seg_types = np.unique(sel.segids)
     res_types = np.unique(sel.resnames)
@@ -223,9 +210,6 @@ if __name__ == '__main__':
     res_ix = [[[] for j in range(n_seg_types)] for i in range(n_frames)]
     atm_ix = [[[] for j in range(n_seg_types)] for i in range(n_frames)]
     pos = np.full((n_frames, 3), np.nan, dtype=np.float32)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
@@ -337,9 +321,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
@@ -473,9 +454,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)

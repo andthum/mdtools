@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import warnings
@@ -29,8 +27,6 @@ import argparse
 import numpy as np
 import mdtools as mdt
 from msd_serial import get_COMs
-
-
 
 
 # This function is also used by: msd_layer_parallel.py
@@ -225,8 +221,6 @@ def parse_user_input(add_description=""):
     return args
 
 
-
-
 # This function is also used by: msd_layer_parallel.py
 def msd_layer(pos, bins, direction='z', restart=1, debug=False):
     """
@@ -369,24 +363,14 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
     return md, msd, bins
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
 
-
     args = parse_user_input()
     dim = {'x': 0, 'y': 1, 'z': 2}
     d = dim[args.DIRECTION]
-
-
-
 
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
@@ -402,9 +386,6 @@ if __name__ == '__main__':
     if args.COM is not None:
         print("\n\n\n", flush=True)
         mdt.check.masses(ag=sel, flash_test=False)
-
-
-
 
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
         start=args.BEGIN,
@@ -422,9 +403,6 @@ if __name__ == '__main__':
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
-
-
-
 
     print("\n\n\n", flush=True)
     print("Checking bins", flush=True)
@@ -461,9 +439,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
@@ -507,8 +482,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
 
     print("\n\n\n", flush=True)
     print("Calculating MSD", flush=True)
@@ -561,9 +534,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
@@ -607,7 +577,6 @@ if __name__ == '__main__':
                 len(sel.fragments)
                 )
     )
-
 
     # MSDs
     prefix = (
@@ -672,7 +641,6 @@ if __name__ == '__main__':
                                   header=prefix + header + suffix)
             print("  Created {}".format(args.OUTFILE + "_msd" + x + "_layer_sd.txt"))
 
-
     # MDs
     for i, x in enumerate(['x', 'y', 'z']):
         prefix = (
@@ -712,9 +680,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import warnings
@@ -30,8 +28,6 @@ import numpy as np
 from scipy import optimize
 from scipy import special
 import mdtools as mdt
-
-
 
 
 # This function is also used by: lifetime_autocorr_parallel.py
@@ -256,8 +252,6 @@ def parse_user_input(add_description=""):
     return args
 
 
-
-
 # This function is also used by: liftime_hist_serial.py
 def unbound_compounds(contact_matrix, axis, debug=False):
     """
@@ -300,8 +294,6 @@ def unbound_compounds(contact_matrix, axis, debug=False):
     unbound = contact_matrix.sum(axis=axis)
     unbound = np.squeeze(np.asarray(unbound))
     return unbound == 0
-
-
 
 
 # This function is also used by: lifetime_autocorr_parallel.py
@@ -398,8 +390,6 @@ def autocorr_bound(cms, restart=1, debug=False):
             autocorr[lag] = corr / norm
 
     return autocorr
-
-
 
 
 # This function is also used by: lifetime_autocorr_parallel.py
@@ -507,8 +497,6 @@ def autocorr_unbound(cms, axis, restart=1, debug=False):
     return autocorr
 
 
-
-
 # This function is also used by: lifetime_autocorr_parallel.py
 def kww(t, tau, beta):
     """
@@ -531,8 +519,6 @@ def kww(t, tau, beta):
     """
 
     return np.exp(-(t / tau)**beta)
-
-
 
 
 # This function is also used by: lifetime_autocorr_parallel.py
@@ -595,28 +581,17 @@ def fit_kww(xdata, ydata, ysd=None):
     return tau, tau_sd, beta, beta_sd
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
 
-
     args = parse_user_input()
-
-
-
 
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-
 
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
@@ -646,9 +621,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
@@ -665,9 +637,6 @@ if __name__ == '__main__':
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
@@ -715,9 +684,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     if args.INTERMITTENCY > 0:
         print("\n\n\n", flush=True)
         print("Correcting for intermittency", flush=True)
@@ -735,9 +701,6 @@ if __name__ == '__main__':
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss / 2**20),
               flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Calculating autocorrelation function", flush=True)
@@ -838,9 +801,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Fitting autocorrelation function", flush=True)
     timer = datetime.now()
@@ -857,7 +817,6 @@ if __name__ == '__main__':
                                          args.ENDFIT,
                                          return_index=True,
                                          debug=args.DEBUG)
-
 
     stopfit = np.nonzero(acorr_bound < args.STOPFIT)[0]
     if stopfit.size == 0:
@@ -880,7 +839,6 @@ if __name__ == '__main__':
                       special.gamma(1 / fit_bound[2]))
     kww_bound = kww(t=lag_times, tau=fit_bound[0], beta=fit_bound[2])
     kww_bound[~valid] = np.nan
-
 
     stopfit = np.nonzero(acorr_unbound_ref < args.STOPFIT)[0]
     if stopfit.size == 0:
@@ -906,7 +864,6 @@ if __name__ == '__main__':
                           beta=fit_unbound_ref[2])
     kww_unbound_ref[~valid] = np.nan
 
-
     stopfit = np.nonzero(acorr_unbound_sel < args.STOPFIT)[0]
     if stopfit.size == 0:
         stopfit = len(acorr_unbound_sel)
@@ -931,7 +888,6 @@ if __name__ == '__main__':
                           beta=fit_unbound_sel[2])
     kww_unbound_sel[~valid] = np.nan
 
-
     del acorr_bound_sd_fit
     del acorr_unbound_ref_sd_fit
     del acorr_unbound_sel_sd_fit
@@ -944,9 +900,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
@@ -1171,9 +1124,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)

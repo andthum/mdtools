@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import os
 import sys
 from datetime import datetime
@@ -32,13 +30,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
 
 
-
-
 if __name__ == "__main__":
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -180,10 +175,8 @@ if __name__ == "__main__":
              " by this factor. Default: 1"
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
 
     if len(args.COLS) < 2:
         raise ValueError("You must give at least two columns")
@@ -200,9 +193,6 @@ if __name__ == "__main__":
     if args.LABELS is not None and len(args.LABELS) != len(args.COLS) - 1:
         raise ValueError("You have to give exactly as many labels as"
                          " MSDs to plot")
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
@@ -223,9 +213,6 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     if args.BEGINFIT is None:
         beginfit = np.full(len(msds[0]), int(0.1 * len(times)))
@@ -265,9 +252,6 @@ if __name__ == "__main__":
     if args.LABELS is None:
         args.LABELS = [None, ] * len(msds[0])
 
-
-
-
     print("\n\n\n", flush=True)
     print("Fitting curve(s)", flush=True)
     timer = datetime.now()
@@ -301,9 +285,6 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Writing output", flush=True)
@@ -348,9 +329,6 @@ if __name__ == "__main__":
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Creating plots", flush=True)
     timer = datetime.now()
@@ -358,7 +336,6 @@ if __name__ == "__main__":
     outfile = args.OUTFILE + ".pdf"
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
-
 
         # Loglog plot without fit
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
@@ -387,7 +364,6 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-
 
         # Loglog plot with fit
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
@@ -431,7 +407,6 @@ if __name__ == "__main__":
         pdf.savefig()
         plt.close()
 
-
         # Loglog plot with fit, zoomed in fitted region
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -473,9 +448,6 @@ if __name__ == "__main__":
         pdf.savefig()
         plt.close()
 
-
-
-
         # Fit residuals
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -496,9 +468,6 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-
-
-
 
         # Semi log plot without fit
         for i in range(len(msds[0])):
@@ -535,7 +504,6 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-
 
         # Semi log plot with fit
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
@@ -584,7 +552,6 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-
 
         # Semi log plot with fit, zoomed in fitted region
         ymin_fit_semilog = np.min(msds[np.min(beginfit):np.max(endfit[i])])
@@ -643,9 +610,6 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)

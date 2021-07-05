@@ -18,14 +18,10 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 # Take a look at the notes from 17.10.2020 and 24.01.2021 when writing
 # the documentation of this script.
 
 # TODO: add intermittency flag
-
-
 
 
 import sys
@@ -37,8 +33,6 @@ import argparse
 import numpy as np
 from scipy.special import gamma
 import mdtools as mdt
-
-
 
 
 # Also used by state_lifetime_discrete.py
@@ -132,8 +126,6 @@ def dtraj_transition_info(dtraj):
 
     return (n_stay, always_neg, never_neg, n_frames_neg,
             n_trans, pos2pos, pos2neg, neg2pos, neg2neg)
-
-
 
 
 def remain_prob(dtraj, restart=1, continuous=False,
@@ -303,17 +295,10 @@ def remain_prob(dtraj, restart=1, continuous=False,
     return p
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -455,12 +440,8 @@ if __name__ == '__main__':
              " happens earlier: --end-fit or --stop-fit. Default: 0.01"
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
@@ -505,9 +486,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Calculating remain probability", flush=True)
     timer = datetime.now()
@@ -549,9 +527,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Fitting remain probability", flush=True)
     timer = datetime.now()
@@ -592,9 +567,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
@@ -696,9 +668,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

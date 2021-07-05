@@ -25,8 +25,6 @@
 #   L.J. Gallego, L.M. Varela, PCCP, 2018, 20, 30412-30427
 
 
-
-
 import os
 import sys
 import warnings
@@ -45,8 +43,6 @@ plt.rc('ytick.minor', width=2)
 plt.rc('text', usetex=True)
 plt.rcParams['text.latex.preview'] = True
 plt.rc('font', **{'family': 'serif', 'serif': 'Times'})
-
-
 
 
 def read_matrix(infile):
@@ -85,8 +81,6 @@ def read_matrix(infile):
     z = np.ascontiguousarray(z.T[::-1])
 
     return x, y, z
-
-
 
 
 def plot_rgb_matrix(ax, z, xmin=None, xmax=None, ymin=None, ymax=None,
@@ -159,12 +153,6 @@ def plot_rgb_matrix(ax, z, xmin=None, xmax=None, ymin=None, ymax=None,
                    pad=tick_pad)
 
     return img
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
@@ -281,14 +269,11 @@ if __name__ == "__main__":
         help="Upper limit for plotting on y axis."
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
 
-
     rgb_args = np.array([args.RED, args.GREEN, args.BLUE])
     rgb_code = {0: 'red', 1: 'green', 2: 'blue'}
-
 
     if np.all(rgb_args == None):
         raise RuntimeError("Neither -r, nor -g, nor -b is set")
@@ -298,9 +283,6 @@ if __name__ == "__main__":
     if args.OTSU and args.CUTOFF > 0:
         warnings.warn("-c {} will be ignored, because --Otsu is set"
                       .format(args.CUTOFF), RuntimeWarning)
-
-
-
 
     x = []
     y = []
@@ -330,7 +312,6 @@ if __name__ == "__main__":
     x = x[0]
     y = y[0]
 
-
     # Create RGB matrix from the input matrices. The three RGB channels
     # can each take a value from 0 to 255 because they are stored as
     # 8-bit unsigned integer. But matplotlib.pyplot.imshow() also
@@ -341,7 +322,6 @@ if __name__ == "__main__":
         if rgb_channel_used[i]:
             rgb[..., i] = z[j]
             j += 1
-
 
     # Eliminate values below a certain cutoff to suppress noise.
     if args.OTSU:
@@ -367,7 +347,6 @@ if __name__ == "__main__":
     else:
         rgb[rgb < args.CUTOFF] = 0
 
-
     print("\n\n\n", flush=True)
     for i in range(len(rgb_channel_used)):
         if rgb_channel_used[i]:
@@ -375,7 +354,6 @@ if __name__ == "__main__":
             print("Amount of surface covered by {:>5} pixels: {:>6.4f}"
                   .format(rgb_code[i], surf_cov), flush=True)
     print("\n\n", flush=True)
-
 
     fig, axis = plt.subplots(figsize=(8.27, 8.27),  # Short side of DIN A4 in inches
                              frameon=False,
@@ -396,7 +374,6 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig(args.OUTFILE)
     plt.close(fig)
-
 
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)

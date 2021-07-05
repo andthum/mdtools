@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -28,13 +26,10 @@ import argparse
 import mdtools as mdt
 
 
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -166,12 +161,8 @@ if __name__ == '__main__':
         help="Run in debug mode."
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
-
-
 
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
@@ -183,16 +174,12 @@ if __name__ == '__main__':
                            sel=' '.join(args.SEL),
                            verbose=True)
 
-
-
-
     _, END, _, n_frames = mdt.check.frame_slicing(
         start=0,
         stop=args.END,
         step=1,
         n_frames_tot=u.trajectory.n_frames)
     last_frame = u.trajectory[END - 1].frame
-
 
     print("\n\n\n", flush=True)
     print("Unwrapping trajectory", flush=True)
@@ -234,9 +221,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

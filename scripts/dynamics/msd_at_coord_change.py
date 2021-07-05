@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import warnings
@@ -28,8 +26,6 @@ import psutil
 import argparse
 import numpy as np
 import mdtools as mdt
-
-
 
 
 # This function is also used by: extract_renewal_events.py
@@ -91,8 +87,6 @@ def get_pos(universe, atm_grp, frame, compound='atoms', debug=False):
                             compound=compound,
                             make_whole=False,
                             debug=debug)
-
-
 
 
 def msd_at_coordination_change(universe, ref, cms, compound='atoms',
@@ -330,17 +324,10 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
     return dt_counts, msd
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -515,10 +502,8 @@ if __name__ == '__main__':
         help="Run in debug mode."
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
 
     if args.CUTOFF <= 0:
         raise ValueError("-c must be greater than zero, but you gave {}"
@@ -544,14 +529,10 @@ if __name__ == '__main__':
                          " than zero, but you gave {}"
                          .format(args.INTERMITTENCY))
 
-
-
-
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-
 
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
@@ -581,9 +562,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
@@ -594,9 +572,6 @@ if __name__ == '__main__':
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
-
-
-
 
     print("\n\n\n", flush=True)
     print("Calculating contact matrices", flush=True)
@@ -644,9 +619,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     if args.INTERMITTENCY > 0:
         print("\n\n\n", flush=True)
         print("Correcting for intermittency", flush=True)
@@ -664,9 +636,6 @@ if __name__ == '__main__':
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss / 2**20),
               flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Calculating lifetime histograms and MSDs", flush=True)
@@ -840,9 +809,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
@@ -989,9 +955,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

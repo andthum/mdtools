@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -32,13 +30,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
 
 
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -225,10 +220,8 @@ if __name__ == '__main__':
         help="Lengh unit. Default: A"
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
 
     if (args.DCOLOR is not None and
         args.DCOLOR != 'x' and
@@ -237,9 +230,6 @@ if __name__ == '__main__':
         raise ValueError("--dcolor must be either 'x', 'y' or 'z', but"
                          " you gave {}".format(args.DCOLOR))
     dim = {'x': 0, 'y': 1, 'z': 2}
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
@@ -328,9 +318,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Fitting histograms", flush=True)
     timer = datetime.now()
@@ -376,9 +363,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
@@ -416,9 +400,6 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-
-
-
 
         # Displacements vs renewal time
         ylabel = ('x', 'y', 'z')
@@ -529,7 +510,6 @@ if __name__ == '__main__':
             pdf.savefig()
             plt.close()
 
-
         # Statistics
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
@@ -596,7 +576,6 @@ if __name__ == '__main__':
                      s=r'${:>16d}$'.format(np.count_nonzero(data == 0)),
                      fontsize=fontsize)
 
-
         # Histogram parameters
         xpos = 0.05
         ypos -= 0.10
@@ -637,9 +616,6 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-
-
-
 
         # Displacements vs renewal time, Gaussian fit parameters
         ylabel = ('x', 'y', 'z')
@@ -740,7 +716,6 @@ if __name__ == '__main__':
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-
 
         # Fit parameters
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
@@ -860,7 +835,6 @@ if __name__ == '__main__':
         pdf.savefig()
         plt.close()
 
-
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
                                  clear=True,
@@ -979,7 +953,6 @@ if __name__ == '__main__':
         pdf.savefig()
         plt.close()
 
-
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now() - timer),
@@ -987,9 +960,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

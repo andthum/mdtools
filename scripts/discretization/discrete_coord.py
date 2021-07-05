@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import warnings
@@ -28,8 +26,6 @@ import psutil
 import argparse
 import numpy as np
 import mdtools as mdt
-
-
 
 
 def discrete_coord(cms, verbose=False, debug=False):
@@ -78,7 +74,6 @@ def discrete_coord(cms, verbose=False, debug=False):
                 raise TypeError("All arrays in cms must be of the same"
                                 " type")
 
-
     refix2refix_t0 = -np.ones(cms[0].shape[0], dtype=np.int32)
     # If refix2refix_t0[rix] < 0, reference compound rix was not bound
     # to any selection compound
@@ -86,7 +81,6 @@ def discrete_coord(cms, verbose=False, debug=False):
     selix_t0 = []
     t0 = []
     trenew = []
-
 
     if verbose:
         timer = datetime.now()
@@ -113,7 +107,6 @@ def discrete_coord(cms, verbose=False, debug=False):
     selix_t0.extend(selix)
     t0.extend(np.uint32(0) for i in refix_t0)
     trenew.extend(np.int32(-1) for i in refix_t0)
-
 
     for i, cm in enumerate(cms[1:], 1):
         if (verbose and
@@ -180,7 +173,6 @@ def discrete_coord(cms, verbose=False, debug=False):
                 else:
                     selix_t0[rix_t0] = selix_t0[rix_t0][remain]
 
-
     del refix, selix, refix_unique, refix2refix_t0
     del cm, bound_now_and_before, attached, detached
 
@@ -196,7 +188,6 @@ def discrete_coord(cms, verbose=False, debug=False):
         raise ValueError("The number of renewal times does not match the"
                          " number of reference indices. This should not"
                          " have happened")
-
 
     refix_t0 = np.asarray(refix_t0, dtype=np.uint32)
     selix_t0 = np.asarray(selix_t0, dtype=object)
@@ -229,17 +220,10 @@ def discrete_coord(cms, verbose=False, debug=False):
     return traj
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -390,10 +374,8 @@ if __name__ == '__main__':
         help="Run in debug mode."
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
 
     if args.CUTOFF <= 0:
         raise ValueError("-c must be greater than zero, but you gave {}"
@@ -419,14 +401,10 @@ if __name__ == '__main__':
                          " than zero, but you gave {}"
                          .format(args.INTERMITTENCY))
 
-
-
-
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-
 
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
@@ -456,18 +434,12 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
     last_frame = u.trajectory[END - 1].frame
-
-
-
 
     print("\n\n\n", flush=True)
     print("Calculating contact matrices", flush=True)
@@ -515,9 +487,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     if args.INTERMITTENCY > 0:
         print("\n\n\n", flush=True)
         print("Correcting for intermittency", flush=True)
@@ -536,9 +505,6 @@ if __name__ == '__main__':
               .format(proc.memory_info().rss / 2**20),
               flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Extracting renewal events", flush=True)
     timer = datetime.now()
@@ -554,9 +520,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
@@ -571,9 +534,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

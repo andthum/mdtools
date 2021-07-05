@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import warnings
@@ -29,8 +27,6 @@ import argparse
 import numpy as np
 import MDAnalysis as mda
 import mdtools as mdt
-
-
 
 
 # This function is also used by: msd_parallel.py
@@ -171,8 +167,6 @@ def parse_user_input(add_description=""):
     return args
 
 
-
-
 # This function is also used by: msd_parallel.py, msd_layer_serial.py
 def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
     """
@@ -253,8 +247,6 @@ def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
     return pos
 
 
-
-
 # This function is also used by: msd_parallel.py
 def calc_msd(pos, restart=1, debug=False):
     """
@@ -329,22 +321,12 @@ def calc_msd(pos, restart=1, debug=False):
     return msd
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
 
-
     args = parse_user_input()
-
-
-
 
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
@@ -360,9 +342,6 @@ if __name__ == '__main__':
     if args.COM is not None:
         print("\n\n\n", flush=True)
         mdt.check.masses(ag=sel, flash_test=False)
-
-
-
 
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
         start=args.BEGIN,
@@ -380,9 +359,6 @@ if __name__ == '__main__':
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
@@ -426,8 +402,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
 
     print("\n\n\n", flush=True)
     print("Calculating MSD", flush=True)
@@ -473,9 +447,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
@@ -571,9 +542,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

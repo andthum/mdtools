@@ -18,16 +18,12 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import argparse
 import numpy as np
 import MDAnalysis as mda
 import mdtools as mdt
-
-
 
 
 def number_atom_names_ignore_residues_and_atom_types(atoms):
@@ -47,8 +43,6 @@ def number_atom_names_ignore_residues_and_atom_types(atoms):
                               np.arange(1, atoms.n_atoms + 1).astype(str))
 
 
-
-
 def number_atom_names_ignore_atom_type(atoms):
     """
     Number atom names in a MDAnalysis atom group consecutively with no
@@ -64,8 +58,6 @@ def number_atom_names_ignore_atom_type(atoms):
 
     for res in atoms.residues:
         number_atom_names_ignore_residues_and_atom_types(res.atoms)
-
-
 
 
 def number_atom_names_ignore_residues(atoms):
@@ -93,8 +85,6 @@ def number_atom_names_ignore_residues(atoms):
                               atom_numbers.astype(str))
 
 
-
-
 def number_atom_names(atoms):
     """
     Number atom names in a MDAnalysis atom group consecutively. Each
@@ -111,8 +101,6 @@ def number_atom_names(atoms):
         number_atom_names_ignore_residues(res.atoms)
 
 
-
-
 def unnumber_atom_names(atoms):
     """
     Remove all digits from all atom names of a MDAnalysis atom group.
@@ -126,12 +114,6 @@ def unnumber_atom_names(atoms):
 
     for atom in atoms:
         atom.name = ''.join(i for i in atom.name if not i.isdigit())
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
@@ -188,7 +170,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
 
-
     u = mda.Universe(args.STRCFILE)
 
     if (not args.IGNORE_RES and
@@ -218,7 +199,6 @@ if __name__ == '__main__':
     mdt.fh.backup(args.OUTFILE)
     with mda.Writer(args.OUTFILE) as W:
         W.write(u)
-
 
     print()
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)

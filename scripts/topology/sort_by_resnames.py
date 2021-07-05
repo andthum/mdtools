@@ -18,16 +18,12 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import argparse
 import numpy as np
 import MDAnalysis as mda
 import mdtools as mdt
-
-
 
 
 def sort_by_resnames(strcfile, outfile, residue_order):
@@ -67,12 +63,6 @@ def sort_by_resnames(strcfile, outfile, residue_order):
                 resid_counter += sel.n_residues
                 u_new += sel
             W.write(u_new)
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

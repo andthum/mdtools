@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -32,13 +30,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
 
 
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -167,12 +162,8 @@ if __name__ == '__main__':
         help="Time unit. Default: 'steps'"
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
@@ -252,9 +243,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     if args.REFIT:
         print("\n\n\n", flush=True)
         print("Re-fitting remain probabilities", flush=True)
@@ -297,9 +285,6 @@ if __name__ == '__main__':
               .format(proc.memory_info().rss / 2**20),
               flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
@@ -334,9 +319,6 @@ if __name__ == '__main__':
         mdt.fh.savetxt(fname=outfile, data=data, header=header)
         print("  Created {}".format(outfile))
 
-
-
-
     fontsize_legend = 24
 
     if args.XMIN is None:
@@ -346,7 +328,6 @@ if __name__ == '__main__':
     # Line style "cycler"
     ls = ['-', '--', '-.', ':']
     ls *= (1 + len(states) // len(ls))
-
 
     outfile = args.OUTFILE + ".pdf"
     mdt.fh.backup(outfile)
@@ -509,9 +490,6 @@ if __name__ == '__main__':
         plt.close()
     print("  Created {}".format(outfile))
 
-
-
-
     outfile = args.OUTFILE + "_fit.pdf"
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
@@ -587,16 +565,12 @@ if __name__ == '__main__':
             plt.close()
     print("  Created {}".format(outfile))
 
-
     print("Elapsed time:         {}"
           .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

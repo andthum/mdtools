@@ -1199,8 +1199,6 @@ def ceil_divide(x1, x2, **kwargs):
     return y
 
 
-
-
 def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
     """
     Split an array into its subarrays of consecutive numbers.
@@ -1232,8 +1230,6 @@ def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
         a = np.sort(a)
 
     return np.split(a, np.flatnonzero((np.diff(a) != step)) + 1)
-
-
 
 
 def sequenize(a, step=1, start=0):
@@ -1276,8 +1272,6 @@ def sequenize(a, step=1, start=0):
     np.cumsum(d, out=d)
     u -= d
     return u[ix].reshape(a.shape, order='A')
-
-
 
 
 def group_by(keys, values, assume_sorted=False, return_keys=False,
@@ -1331,8 +1325,6 @@ def group_by(keys, values, assume_sorted=False, return_keys=False,
         return np.split(values, sections)
 
 
-
-
 def get_middle(a, n=1, debug=False):
     """
     Get the `n` innermost elements of a 1-dimensional array.
@@ -1368,8 +1360,6 @@ def get_middle(a, n=1, debug=False):
     return b
 
 
-
-
 def symmetrize(a, lower=True, debug=False):
     """
     Create a symmetrized copy of a 2-dimensional array.
@@ -1400,8 +1390,6 @@ def symmetrize(a, lower=True, debug=False):
         a_sym = np.triu(a)
     a_sym += a_sym.T
     return a_sym - np.diag(np.diagonal(a))
-
-
 
 
 def tilt_diagonals(a, clockwise=True, diagpos=None, debug=False):
@@ -1457,8 +1445,6 @@ def tilt_diagonals(a, clockwise=True, diagpos=None, debug=False):
         return np.roll(diags[::-1], shift=diagpos, axis=0)
 
 
-
-
 def extend(a, length, axis=-1, fill_value=0):
     """
     Extend an axis of an array to a given length by padding a given
@@ -1498,8 +1484,6 @@ def extend(a, length, axis=-1, fill_value=0):
                   pad_width,
                   mode='constant',
                   constant_values=fill_value)
-
-
 
 
 def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
@@ -1562,8 +1546,6 @@ def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
     b_new[slice_b] = b
 
     return a_new, b_new
-
-
 
 
 def cross_section(z, x, y, line, num=None, order=1):
@@ -1646,8 +1628,6 @@ def cross_section(z, x, y, line, num=None, order=1):
     cs = map_coordinates(z, np.vstack((rows, cols)), order=order)
 
     return cs, r
-
-
 
 
 def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
@@ -1747,8 +1727,6 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
             cross_sec[i] = np.trapz(zz[mask], var[mask]) / (width)
 
     return cross_sec
-
-
 
 
 def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
@@ -1859,8 +1837,6 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
         trapz = np.trapz(y=yint[mask], x=x[mask])
 
     return trapz
-
-
 
 
 def find_linear_region(data, window_length, polyorder=2, delta=1,

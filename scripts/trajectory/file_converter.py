@@ -18,15 +18,11 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import argparse
 import MDAnalysis as mda
 import mdtools as mdt
-
-
 
 
 def conv_strc_file(strcfile, outfile):
@@ -47,12 +43,6 @@ def conv_strc_file(strcfile, outfile):
     with mda.Writer(outfile) as W:
         for ts in u.trajectory:
             W.write(ts)
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

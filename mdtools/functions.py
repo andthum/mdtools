@@ -24,8 +24,6 @@ import numpy as np
 from scipy import optimize
 
 
-
-
 def g(x, m=1, c=0):
     """
     Straight line:
@@ -54,8 +52,6 @@ def g(x, m=1, c=0):
     broadcastable.
     """
     return m * x + c
-
-
 
 
 def g_inverse(y, m=1, c=0):
@@ -88,8 +84,6 @@ def g_inverse(y, m=1, c=0):
     return (y - c) / m
 
 
-
-
 def exp_decay(t, k=1):
     """
     Normalized exponential decay fuction:
@@ -113,8 +107,6 @@ def exp_decay(t, k=1):
     """
 
     return np.exp(-k * t)
-
-
 
 
 def exp_decay_log(t, k=1):
@@ -141,8 +133,6 @@ def exp_decay_log(t, k=1):
     """
 
     return -k * t
-
-
 
 
 def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
@@ -240,8 +230,6 @@ def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
         return popt, perr
 
 
-
-
 def kww(t, tau=1, beta=1):
     """
     Stretched exponential function, also known as Kohlrausch-Williams-
@@ -285,8 +273,6 @@ def kww(t, tau=1, beta=1):
     """
 
     return np.exp(-(t / tau)**beta)
-
-
 
 
 def fit_kww(xdata, ydata, ysd=None, return_valid=False):

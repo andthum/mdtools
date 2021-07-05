@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -29,8 +27,6 @@ import numpy as np
 from scipy.spatial import distance_matrix
 import MDAnalysis.lib.distances as mdadist
 import mdtools as mdt
-
-
 
 
 # A "copy" of this function is used in structure/axial_hex_distribution.py
@@ -123,17 +119,10 @@ def hex_verts2faces(verts, r0=None, flatside='x', box=None):
     return faces
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -301,10 +290,8 @@ if __name__ == '__main__':
         help="Run in debug mode."
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
 
     if (args.COM is not None and
         args.COM != 'group' and
@@ -322,16 +309,10 @@ if __name__ == '__main__':
         raise ValueError("--flat-side must be either 'x', or 'y', but"
                          " you gave {}".format(args.FLATSIDE))
 
-
-
-
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
@@ -365,18 +346,12 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
     last_frame = u.trajectory[END - 1].frame
-
-
-
 
     # xy-positions of hexagon centers
     u.trajectory[BEGIN]
@@ -385,9 +360,6 @@ if __name__ == '__main__':
                               flatside=args.FLATSIDE,
                               box=surf.dimensions)
     lattice = lattice[:, :2]
-
-
-
 
     # Discretized single-particle trajectories compatible with PyEMMA's
     # MSM model
@@ -406,9 +378,6 @@ if __name__ == '__main__':
     elif args.COM == 'fragments':
         dtrajs = -np.ones((n_frames, sel.n_fragments), dtype=np.int32)
         n_particles = sel.n_fragments
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
@@ -521,9 +490,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
@@ -553,9 +519,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

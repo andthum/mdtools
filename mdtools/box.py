@@ -447,8 +447,6 @@ def make_whole(
                      debug=debug)
 
 
-
-
 def dist_vecs(coords1, coords2, box=None, result=None, debug=False):
     """
     Calculate the distance vectors between two sets of coordinates. If
@@ -504,8 +502,6 @@ def dist_vecs(coords1, coords2, box=None, result=None, debug=False):
         dist_vecs -= np.floor(dist_vecs / box + 0.5) * box
 
     return dist_vecs
-
-
 
 
 def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
@@ -596,8 +592,6 @@ def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
         return coord_unwrapped_prev
     else:
         return coord_unwrapped_prev + displacement
-
-
 
 
 def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,

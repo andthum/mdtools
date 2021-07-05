@@ -37,8 +37,6 @@ plt.rcParams['text.latex.preview'] = True
 plt.rc('font', **{'family': 'serif', 'serif': 'Times'})
 
 
-
-
 # Deprecated ###########################################################
 class MidpointNormalize(colors.Normalize):
     """
@@ -78,8 +76,6 @@ class MidpointNormalize(colors.Normalize):
                            mask=result.mask,
                            copy=False)
 # Deprecated ###########################################################
-
-
 
 
 def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
@@ -169,8 +165,6 @@ def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
                   fontsize=fontsize_legend)
 
     return img
-
-
 
 
 def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
@@ -274,8 +268,6 @@ def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
     return img
 
 
-
-
 def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
              ymin=None, ymax=None, logx=False, logy=False, xlabel=r'$x$',
              ylabel=r'$y$', legend_loc='best', **kwargs):
@@ -373,8 +365,6 @@ def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
     return img
 
 
-
-
 def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
          xlabel=r'$x$', ylabel=r'$y$', legend_loc='best', **kwargs):
     """
@@ -457,8 +447,6 @@ def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
     return img
 
 
-
-
 def hlines(ax, y, start, stop, xmin=None, xmax=None, ymin=None,
            ymax=None, legend_loc='best', **kwargs):
     """
@@ -530,8 +518,6 @@ def hlines(ax, y, start, stop, xmin=None, xmax=None, ymin=None,
     return img
 
 
-
-
 def vlines(ax, x, start, stop, xmin=None, xmax=None, ymin=None,
            ymax=None, legend_loc='best', **kwargs):
     """
@@ -601,8 +587,6 @@ def vlines(ax, x, start, stop, xmin=None, xmax=None, ymin=None,
                   fontsize=fontsize_legend)
 
     return img
-
-
 
 
 def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
@@ -683,8 +667,6 @@ def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
                    fontsize=fontsize_legend)
 
     return img, ax2
-
-
 
 
 def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
@@ -768,8 +750,6 @@ def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
                    fontsize=fontsize_legend)
 
     return img, ax2
-
-
 
 
 def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
@@ -864,8 +844,6 @@ def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
     return img
 
 
-
-
 def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
                   ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
                   legend_loc='best', **kwargs):
@@ -957,8 +935,6 @@ def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
                   fontsize=fontsize_legend)
 
     return img
-
-
 
 
 def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
@@ -1072,8 +1048,6 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
     return heatmap
 
 
-
-
 def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
            xlabel=r'$x$', ylabel=r'$y$', cbarlabel=r'$z$', **kwargs):
     """
@@ -1166,8 +1140,6 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
     return heatmap
 
 
-
-
 def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
             cbarlabel=r'$z$', **kwargs):
     """
@@ -1252,8 +1224,6 @@ def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
                         labelsize=0.8 * fontsize_ticks)
 
     return heatmap
-
-
 
 
 def annotate_heatmap(im, data, xpos, ypos, fmt='{x:.1f}',

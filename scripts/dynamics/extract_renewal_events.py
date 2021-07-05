@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import warnings
@@ -29,8 +27,6 @@ import argparse
 import numpy as np
 import mdtools as mdt
 from msd_at_coord_change import get_pos
-
-
 
 
 def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
@@ -168,7 +164,6 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
             raise ValueError("every must be positive")
         mdt.check.time_step(trj=universe.trajectory[begin:len(cms) * every])
 
-
     refix2refix_t0 = -np.ones(cms[0].shape[0], dtype=np.int32)
     # If refix2refix_t0[rix] < 0, reference compound rix was not bound
     # to any selection compound
@@ -180,7 +175,6 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
     selpos_t0 = []
     refdispl = []
     seldispl = []
-
 
     if verbose:
         timer = datetime.now()
@@ -223,7 +217,6 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
                     for i in refix_t0)
     seldispl.extend(np.full(3, np.nan, dtype=np.float32)
                     for i in refix_t0)
-
 
     for i, cm in enumerate(cms[1:], 1):
         if (verbose and
@@ -322,7 +315,6 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
                     selix_t0[rix_t0] = selix_t0[rix_t0][remain]
                     selpos_t0[rix_t0] = selpos_t0[rix_t0][remain]
 
-
     del refix, selix, refix_unique, refix2refix_t0, refpos, selpos
     del cm, bound_now_and_before, attached, detached
 
@@ -363,7 +355,6 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
     selpos_t0 = np.asarray(selpos_t0, dtype=object)
     refdispl = np.row_stack(refdispl)
     seldispl = np.row_stack(seldispl)
-
 
     # Remove the first renewal event for each reference compound since
     # you cannot say what is t0 for these events. Also remove the last
@@ -465,7 +456,6 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
     seldispl = seldispl[ix_sort]
     del ix_sort
 
-
     if coord_traj:
         return (refix_t0,
                 selix_t0,
@@ -487,17 +477,10 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
                 seldispl)
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -673,10 +656,8 @@ if __name__ == '__main__':
         help="Run in debug mode."
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
 
     if args.CUTOFF <= 0:
         raise ValueError("-c must be greater than zero, but you gave {}"
@@ -702,14 +683,10 @@ if __name__ == '__main__':
                          " than zero, but you gave {}"
                          .format(args.INTERMITTENCY))
 
-
-
-
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-
 
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
@@ -739,9 +716,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
@@ -753,9 +727,6 @@ if __name__ == '__main__':
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
     start_time = u.trajectory[BEGIN].time
-
-
-
 
     print("\n\n\n", flush=True)
     print("Calculating contact matrices", flush=True)
@@ -805,9 +776,6 @@ if __name__ == '__main__':
           .format(proc.memory_info().rss / 2**20),
           flush=True)
 
-
-
-
     if args.INTERMITTENCY > 0:
         print("\n\n\n", flush=True)
         print("Correcting for intermittency", flush=True)
@@ -825,9 +793,6 @@ if __name__ == '__main__':
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss / 2**20),
               flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Extracting renewal events", flush=True)
@@ -868,9 +833,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
@@ -1040,9 +1002,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

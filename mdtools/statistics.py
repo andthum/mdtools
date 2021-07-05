@@ -16,11 +16,7 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import numpy as np
-
-
 
 
 def gaussian(x, mu=0, sigma=1):
@@ -47,8 +43,6 @@ def gaussian(x, mu=0, sigma=1):
 
     s2 = 2 * sigma**2
     return np.exp(-(x - mu)**2 / s2) / np.sqrt(np.pi * s2)
-
-
 
 
 def non_gaussian_parameter(x, d=1, is_squared=False, axis=None):
@@ -97,8 +91,6 @@ def non_gaussian_parameter(x, d=1, is_squared=False, axis=None):
     return x4 / ((1 + 2 / d) * x2**2) - 1
 
 
-
-
 def exp_dist(x, rate=1):
     """
     Exponential distribution:
@@ -124,8 +116,6 @@ def exp_dist(x, rate=1):
     return rate * np.exp(-rate * x)
 
 
-
-
 def exp_dist_log(x, rate):
     """
     Logarithm of the exponential distribution (see also :func:`exp_dist`):
@@ -147,8 +137,6 @@ def exp_dist_log(x, rate):
     """
 
     return np.log(rate) - rate * x
-
-
 
 
 def var_weighted(a, weights=None, axis=None, return_average=True):
@@ -199,7 +187,6 @@ def var_weighted(a, weights=None, axis=None, return_average=True):
     average = np.average(a, axis=axis, weights=weights)
     var = np.average(np.abs(a - average)**2, axis=axis, weights=weights)
     return average, var
-
 
 
 def std_weighted(a, weights=None, axis=None, return_average=True):
@@ -256,8 +243,6 @@ def std_weighted(a, weights=None, axis=None, return_average=True):
     return average, std
 
 
-
-
 def running_average(a, axis=None, out=None):
     """
     Calculate the running average
@@ -296,8 +281,6 @@ def running_average(a, axis=None, out=None):
         norm = np.arange(1, a.shape[axis] + 1, dtype=np.uint32).reshape(s)
     rav /= norm
     return rav
-
-
 
 
 def block_average(data, axis=0, ddof=0, dtype=np.float64):

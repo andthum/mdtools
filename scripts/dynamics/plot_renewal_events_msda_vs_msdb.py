@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -32,13 +30,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
 
 
-
-
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -195,10 +190,8 @@ if __name__ == '__main__':
         help="Lengh unit. Default: A"
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
 
     if (args.DIRECTION1 != 'x' and
         args.DIRECTION1 != 'y' and
@@ -217,9 +210,6 @@ if __name__ == '__main__':
         raise ValueError("--d3 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION3))
     dim = {'x': 0, 'y': 1, 'z': 2}
-
-
-
 
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
@@ -272,9 +262,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
@@ -363,7 +350,6 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-
 
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
@@ -506,9 +492,6 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"

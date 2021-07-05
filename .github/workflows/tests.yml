@@ -33,7 +33,7 @@ jobs:
     - name: Lint code with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E1,E2,E4,E9,F63,F4,F7,F82,W1 --show-source --statistics
+        flake8 . --count --select=E1,E2,E3,E4,E9,F63,F4,F7,F82,W1,W3 --show-source --statistics
         # exit-zero treats all errors as warnings
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=79 --statistics
     - name: Lint docstrings with flake8

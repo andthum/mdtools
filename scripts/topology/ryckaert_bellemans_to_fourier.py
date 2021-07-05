@@ -18,7 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 # Convert Ryckaert-Bellemans dihedral coefficients (as used internally
 # by Gromacs) to Fourier dihedral coefficients (as used by the OPLS-AA
 # force field)
@@ -31,6 +30,7 @@
 
 import argparse
 import numpy as np
+
 
 def calc_f_coeff(rb):
     if len(rb) != 6:
@@ -48,6 +48,7 @@ def calc_f_coeff(rb):
                          " ({})".format(rb[0], f[1] + 0.5 * (f[0] + f[2])))
 
     return f
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

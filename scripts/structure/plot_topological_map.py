@@ -26,8 +26,6 @@
 # * O. Borodin, G.D. Smith, Macromolecules, 2007, 40, 1252-1258
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -62,13 +60,10 @@ fontsize_ticks = 32
 tick_length = 10
 
 
-
-
 if __name__ == "__main__":
 
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -303,10 +298,8 @@ if __name__ == "__main__":
         help="Run in debug mode."
     )
 
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
 
     if (args.DIRECTION is not None and
         args.DIRECTION != 'x' and
@@ -316,13 +309,9 @@ if __name__ == "__main__":
                          " gave {}".format(args.DIRECTION))
     pos_col = {'x': 1, 'y': 2, 'z': 3}
 
-
-
-
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-
 
     with open(args.INFILE, 'r') as f:
         headers = None
@@ -341,7 +330,6 @@ if __name__ == "__main__":
     headers = headers.split()
     headers = np.array(headers[4:], dtype=str)
     ix_cols = np.arange(4, len(headers) + 4)
-
 
     times = np.genfromtxt(fname=args.INFILE, usecols=0, dtype=np.float32)
     if len(times) <= 1:
@@ -365,13 +353,11 @@ if __name__ == "__main__":
     times = times[BEGIN:END:EVERY]
     times *= args.TIME_CONV
 
-
     ix = np.genfromtxt(fname=args.INFILE, usecols=ix_cols, dtype=str)
     seg_cols = np.any(np.char.isalpha(ix), axis=0)
     atm_cols = np.all(np.char.isnumeric(ix), axis=0)
     res_cols = np.equal(seg_cols, atm_cols)
     ix = ix[BEGIN:END:EVERY]
-
 
     if args.DIRECTION is None:
         pos = None
@@ -427,16 +413,12 @@ if __name__ == "__main__":
             cmap = args.CMAP
             spacing = 'uniform'
 
-
     print("Elapsed time:         {}"
           .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
@@ -749,9 +731,6 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20),
           flush=True)
-
-
-
 
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
