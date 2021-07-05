@@ -27,7 +27,6 @@ from datetime import datetime
 import psutil
 import argparse
 import numpy as np
-import MDAnalysis as mda
 import mdtools as mdt
 from msd_serial import get_COMs
 

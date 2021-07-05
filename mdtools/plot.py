@@ -19,8 +19,10 @@
 """General plotting functions on the basis of :mod:`matplotlib.pyplot`"""
 
 import numpy as np
+import matplotlib
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-import mdtools as mdt
+import warnings
 
 
 plt.rc('axes', linewidth=2)
@@ -38,10 +40,6 @@ plt.rc('font',**{'family' : 'serif', 'serif' : 'Times'})
 
 
 # Deprecated ###########################################################
-import warnings
-import matplotlib
-import matplotlib.colors as colors
-
 class MidpointNormalize(colors.Normalize):
     """
     Deprecated!

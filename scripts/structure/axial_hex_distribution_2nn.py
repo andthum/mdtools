@@ -36,7 +36,6 @@ import argparse
 # Third party libraries
 import psutil
 import numpy as np
-import MDAnalysis.lib.distances as mdadist
 
 # Local application/library specific imports
 import mdtools as mdt

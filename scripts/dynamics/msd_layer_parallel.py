@@ -22,12 +22,9 @@
 
 import sys
 import os
-import warnings
 from datetime import datetime
 import psutil
-import argparse
 import numpy as np
-import MDAnalysis as mda
 import mdtools as mdt
 from msd_serial import get_COMs
 from msd_layer_serial import parse_user_input, msd_layer

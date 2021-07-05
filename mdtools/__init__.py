@@ -49,17 +49,39 @@ from mdtools._metadata import (
     __copyright__,
     __copyright_notice__,
 )
-import mdtools.box
-import mdtools.check
-import mdtools.dtrj
-import mdtools.dynamics as dyn
-import mdtools.file_handler as fh
-import mdtools.functions as func
-import mdtools.numpy_helper_functions as nph
-import mdtools.parallel
-import mdtools.plot
-import mdtools.run_time_info as rti
-import mdtools.scipy_helper_functions as sph
-import mdtools.select
-import mdtools.statistics as stats
-import mdtools.structure as strc
+from mdtools import box
+from mdtools import check
+from mdtools import dtrj
+from mdtools import dynamics as dyn
+from mdtools import file_handler as fh
+from mdtools import functions as func
+from mdtools import numpy_helper_functions as nph
+from mdtools import parallel
+from mdtools import plot
+from mdtools import run_time_info as rti
+from mdtools import scipy_helper_functions as sph
+from mdtools import select
+from mdtools import statistics as stats
+from mdtools import structure as strc
+
+__all__ = [
+    "__version__",
+    "__title__",
+    "__author__",
+    "__copyright__",
+    "__copyright_notice__",
+    "box",
+    "check",
+    "dtrj",
+    "dyn",
+    "fh",
+    "func",
+    "nph",
+    "parallel",
+    "plot",
+    "rti",
+    "sph",
+    "select",
+    "stats",
+    "strc",
+]

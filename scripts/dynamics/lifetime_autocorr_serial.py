@@ -27,10 +27,8 @@ from datetime import datetime
 import psutil
 import argparse
 import numpy as np
-from scipy import sparse
 from scipy import optimize
 from scipy import special
-import MDAnalysis as mda
 import mdtools as mdt
 
 
