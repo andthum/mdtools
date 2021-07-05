@@ -34,9 +34,9 @@ import mdtools as mdt
 def box_volume(box, debug=False):
     """
     Calculate the volume of a (triclinic) box.
-    
+
     The box can be triclinic or orthogonal.
-    
+
     Parameters
     ----------
     box : array_like
@@ -46,28 +46,28 @@ def box_volume(box, debug=False):
         ``[lx, ly, lz, alpha, beta, gamma]``.
     debug : bool, optional
         If ``True``, check the input arguments.
-        
+
         .. deprecated:: 0.0.0.dev0
             This argument is without functionality and will be removed
             in a future release.
-    
+
     Returns
     -------
     volume : scalar
         The volume of the box.
-    
+
     Raises
     ------
     ValueError
         If the volume of the box is equal to or less than zero.
-    
+
     See Also
     --------
     :func:`volume` :
         Calculate the volume of (multiple) orthogonal box(es)
     :func:`~MDAnalysis.lib.mdamath.box_volume` :
         Calculate the volume of a single (triclinic) box
-    
+
     Notes
     -----
     This function is just a wrapper around
@@ -85,7 +85,7 @@ def box_volume(box, debug=False):
 def volume(box, debug=False, **kwargs):
     """
     Calculate the volume of orthogonal boxes.
-    
+
     Parameters
     ----------
     box : array_like
@@ -100,23 +100,23 @@ def volume(box, debug=False, **kwargs):
         the volume(s).
     debug : bool, optional
         If ``True``, check the input arguments.
-        
+
         .. deprecated:: 0.0.0.dev0
             This argument is without functionality and will be removed
             in a future release.
-        
+
     **kwargs : dict, optional
         Additional keyword arguments to parse to :func:`numpy.prod`.
         See there for possible choices.  Note that the keyword `axis`
         will be ignored.
-    
+
     Returns
     -------
     volume : scalar or numpy.ndarray
         The volume of the box.  If `box` was provided as an array of
         boxes, `volume` will be an array containing the volume for each
         box.
-    
+
     See Also
     --------
     :func:`box_volume` :
@@ -125,7 +125,7 @@ def volume(box, debug=False, **kwargs):
         Calculate the volume of a single (triclinic) box
     :func:`numpy.prod` :
         Calculate the product of array elements over a given axis
-    
+
     Notes
     -----
     This function calculates the box volume by multiplying all box
@@ -139,7 +139,7 @@ def volume(box, debug=False, **kwargs):
 def diagonal(box, dtype=None, debug=False):
     """
     Calculate the length of the diagonal of an orthogonal box.
-    
+
     Parameters
     ----------
     box : array_like
@@ -157,11 +157,11 @@ def diagonal(box, dtype=None, debug=False):
         (default), infer the data type from `box`.
     debug : bool, optional
         If ``True``, check the input arguments. Default: ``False``
-        
+
         .. deprecated:: 0.0.0.dev0
             This argument is without functionality and will be removed
             in a future release.
-    
+
     Returns
     -------
     diagonal : scalar or numpy.ndarray
@@ -181,13 +181,13 @@ def wrap(
     Shift compounds of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` back into the primary
     unit cell.
-    
+
     .. todo::
         Include a `make_whole` argument that makes compounds whole after
         the wrapping, even if this implies that some
         :class:`Atoms <MDAnalysis.core.groups.Atom>` might lie outside
         the primary unit cell again.
-    
+
     Parameters
     ----------
     ag : MDAnalysis.core.groups.AtomGroup instance
@@ -213,9 +213,9 @@ def wrap(
         additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
         not contained in `ag`.  Also note that broken compounds are
         note made whole by this function.
-        
+
         .. _explanation of the terms: https://userguide.mdanalysis.org/stable/groups_of_atoms.html
-        
+
     center : {'cog', 'com'}, optional
         How to define the center of a compound.  Parse ``'cog'`` for
         center of geometry or ``'com'`` for center of mass.  If compound
@@ -233,14 +233,14 @@ def wrap(
         If ``True``, coordinates are modified in place.
     debug : bool, optional
         If ``True``, run in debug mode.
-    
+
     Returns
     -------
     wrapped_pos : numpy.ndarray
         Array of wrapped :class:`~MDAnalysis.core.groups.Atom`
         coordinates of dtype `numpy.float32` and shape
         ``(ag.n_atoms, 3)``.
-    
+
     See Also
     --------
     :meth:`MDAnalysis.core.groups.AtomGroup.wrap` :
@@ -256,7 +256,7 @@ def wrap(
     :func:`make_whole` :
         Make compounds of a MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` whole
-    
+
     Notes
     -----
     This function is just a wrapper around
@@ -266,13 +266,13 @@ def wrap(
     :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` when `center`
     is set to ``'com'`` and `compound` is not ``'atoms'``.  See
     :func:`mdtools.check.masses_new` for further information.
-    
+
     When calling this function with `compounds` set to something
     different than ``'atoms'``, make sure that the respective compounds
     are whole.  Broken compounds will not be made whole by this
     function.  See :func:`make_whole` for a possibility to make
     compounds whole that are split across periodic boundaries.
-    
+
     Because :mod:`MDAnalysis` will pull
     :attr:`~MDAnalysis.core.universe.Universe.trajectory` data directly
     from the file it is reading from, changes to
@@ -287,7 +287,7 @@ def wrap(
     every :attr:`~MDAnalysis.coordinates.base.Timestep.frame`.  See the
     MDAnalysis user guide about trajectories_ (second last
     paragraph) and `in-memory trajectories`_.
-    
+
     .. _trajectories: https://userguide.mdanalysis.org/stable/trajectories/trajectories.html
     .. _in-memory trajectories: https://userguide.mdanalysis.org/stable/reading_and_writing.html#in-memory-trajectories
     """
@@ -310,11 +310,11 @@ def make_whole(
     Make compounds of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` whole that are split
     across periodic boundaries.
-    
+
     Note that all :class:`Atoms <MDAnalysis.core.groups.Atom>` of the
     input :class:`~MDAnalysis.core.groups.AtomGroup` are wrapped back
     into the primary unit cell before making compounds whole.
-    
+
     Parameters
     ----------
     ag : MDAnalysis.core.groups.AtomGroup instance
@@ -346,9 +346,9 @@ def make_whole(
         whole, make sure that all
         :class:`Atoms <MDAnalysis.core.groups.Atom>` of these molecules
         are part of `ag`.
-        
+
         .. _MDAnalysis user guide: https://userguide.mdanalysis.org/stable/groups_of_atoms.html
-        
+
     reference : {'cog', 'com', None}, optional
         If 'cog' (center of geometry) or 'com' (center of mass), the
         compounds that were made whole will be shifted such that their
@@ -358,14 +358,14 @@ def make_whole(
         If ``True``, coordinates are modified in place.
     debug : bool, optional
         If ``True``, check the input arguments. Default: ``False``
-    
+
     Returns
     -------
     pos : numpy.ndarray
         Array of shape ``(ag.n_atoms, 3)`` containing the coordinates of
         all :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` after
         the specifed compouds of `ag` were made whole.
-    
+
     See Also
     --------
     :meth:`~MDAnalysis.core.groups.AtomGroup.unwrap` :
@@ -381,7 +381,7 @@ def make_whole(
         Shift compounds of a MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` back into the primary
         unit cell`
-    
+
     Notes
     -----
     This function is just a wrapper around the
@@ -391,7 +391,7 @@ def make_whole(
     :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` when `reference`
     is set to ``'com'``.  See :func:`mdtools.check.masses_new` for
     further information.
-    
+
     Before making any compound whole, all
     :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
     back into the primary unit cell.  This is done to make sure that the
@@ -401,16 +401,16 @@ def make_whole(
     :attr:`~MDAnalysis.core.universe.Universe.trajectory` while keeping
     the :attr:`~MDAnalysis.core.universe.Universe.trajectory` unwrapped
     is not possible with this function.
-    
+
     .. todo::
-        
+
         Check if it is really necessary to wrap all
         :class:`Atoms <MDAnalysis.core.groups.Atom>` back into the
         primary unit before calling
         :meth:`~MDAnalysis.core.groups.AtomGroup.unwrap`.  This is a
         serious problem, because it implies an inplace change of the
         :class:`~MDAnalysis.core.groups.Atom` coordinates.
-    
+
     Because :mod:`MDAnalysis` will pull
     :attr:`~MDAnalysis.core.universe.Universe.trajectory` data directly
     from the file it is reading from, changes to
@@ -425,7 +425,7 @@ def make_whole(
     every :attr:`~MDAnalysis.coordinates.base.Timestep.frame`.  See the
     MDAnalysis user guide about trajectories_ (second last
     paragraph) and `in-memory trajectories`_.
-    
+
     .. _trajectories: https://userguide.mdanalysis.org/stable/trajectories/trajectories.html
     .. _in-memory trajectories: https://userguide.mdanalysis.org/stable/reading_and_writing.html#in-memory-trajectories
     """
@@ -456,10 +456,10 @@ def dist_vecs(coords1, coords2, box=None, result=None, debug=False):
     the distance vectors), consider using
     :func:`MDAnalysis.lib.distances.calc_bonds` or
     :func:`MDAnalysis.analysis.distances.dist` instead.
-    
+
     If the optional argument box is supplied, the minimum image
     convention is applied. Works currently only for orthorhombic boxes.
-    
+
     Parameters
     ----------
     coords1 : array_like
@@ -478,22 +478,22 @@ def dist_vecs(coords1, coords2, box=None, result=None, debug=False):
         time when the function is called repeatedly.
     debug : bool, optional
         If ``True``, check the input arguments. Default: ``False``
-    
+
     returns
     -------
     dist_vecs : numpy.ndarray
         Distance array of the same shape as `coords1`. The i-th element
         is ``coords1[i] - coords2[i]``.
     """
-    
+
     if debug:
         mdt.check.pos_array(coords1)
         mdt.check.pos_array(coords2, shape=coords1.shape)
         if result is not None:
             mdt.check.pos_array(result,
-                                  shape=coords1.shape,
-                                  dtype=np.float64)
-    
+                                shape=coords1.shape,
+                                dtype=np.float64)
+
     dist_vecs = np.subtract(coords1,
                             coords2,
                             out=result,
@@ -502,29 +502,29 @@ def dist_vecs(coords1, coords2, box=None, result=None, debug=False):
         mdt.check.box(box, with_angles=True, orthorhombic=True, dim=1)
         box = np.asarray(box[:3])
         dist_vecs -= np.floor(dist_vecs/box + 0.5) * box
-    
+
     return dist_vecs
 
 
 
 
 def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
-        inplace=False, debug=False):
+           inplace=False, debug=False):
     """
     Unwrap the atoms of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` out of the primary unit
     cell, i.e. calculate their coordinates in real space.
-    
+
     This function uses the algorithm proposed by von Bülow et al. in
     J. Chem. Phys., 2020, 153, 021101. Basically it calculates the atom
     displacements from frame to frame and adds these displacements to
     the previous atom positions to build the unwraped trajectory.
-    
+
     The main difference to :func:`unwrap_trj` is that :func:`unwrap_trj`
     unwraps the complete trajectory while this function only unwraps a
     single frame based on the unwrapped coordinates of the previous
     frame.
-    
+
     Note
     ----
     If you want to change the
@@ -538,7 +538,7 @@ def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
     memory, e.g., when the
     :method:`~MDAnalysis.core.universe.Universe.transfer_to_memory`
     method was used.
-    
+
     Parameters
     ----------
     atm_grp : MDAnalysis.core.groups.AtomGroup
@@ -570,22 +570,22 @@ def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
         unwrapped coordinates of the current frame
     debug : bool, optional
         If ``True``, check the input arguments. Default: ``False``
-    
+
     Returns
     -------
     coord_unwrapped : numpy.ndarray
         The unwrapped coordinates of `atm_grp` at the current frame,
         nominally ``coord_unwrapped_prev + displacement``.
     """
-    
+
     if debug:
         mdt.check.pos_array(coord_unwrapped_prev,
-                              shape=atm_grp.positions.shape)
+                            shape=atm_grp.positions.shape)
         if displacement is not None:
             mdt.check.pos_array(displacement,
-                                  shape=atm_grp.positions.shape,
-                                  dtype=np.float64)
-    
+                                shape=atm_grp.positions.shape,
+                                dtype=np.float64)
+
     displacement = mdt.box.dist_vecs(coords1=atm_grp.positions,
                                      coords2=coord_unwrapped_prev,
                                      box=atm_grp.dimensions,
@@ -601,23 +601,23 @@ def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
 
 
 def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
-        make_whole=False, keep_whole=False, compound='fragments',
-        reference='com', verbose=False, debug=False):
+               make_whole=False, keep_whole=False, compound='fragments',
+               reference='com', verbose=False, debug=False):
     """
     Unwrap the atoms of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` out of the primary unit
     cell, i.e. calculate their coordinates in real space. The
     coordinates are changed inplace.
-    
+
     This function uses the algorithm proposed by von Bülow et al. in
     J. Chem. Phys., 2020, 153, 021101. Basically it calculates the atom
     displacements from frame to frame and adds these displacements to
     the previous atom positions to build the unwraped trajectory.
-    
+
     The main difference to :func:`unwrap` is that :func:`unwrap` only
     unwraps a single frame while this function unwraps the complete
     trajectory.
-    
+
     Parameters
     ----------
     topfile, trjfile : str
@@ -682,10 +682,10 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
         If ``True``, print progress information to standard output.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     .. _MDAnalysis user guide: https://userguide.mdanalysis.org/1.0.0/formats/index.html
     """
-    
+
     if debug:
         if isinstance(atm_grp, mda.core.groups.UpdatingAtomGroup):
             raise TypeError("atm_grp must not be an"
@@ -695,7 +695,7 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
             compound != 'segments' and
             compound != 'residues' and
             compound != 'molecules' and
-            compound != 'fragments'):
+                compound != 'fragments'):
             raise ValueError("compound must be either 'group',"
                              " 'segments', 'residues', 'molecules' or"
                              " 'fragments', but you gave '{}'"
@@ -703,23 +703,23 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
         if (make_whole and
             reference != 'com' and
             reference != 'cog' and
-            reference is not None):
+                reference is not None):
             raise ValueError("reference must be either 'com', 'cog' or"
                              " None, but you gave {}".format(reference))
         if make_whole and reference == 'com':
             mdt.check.masses(ag=atm_grp, flash_test=False)
         if make_whole and len(atm_grp.bonds) <= 0:
             raise ValueError("The AtomGroup contains no bonds")
-    
+
     if end < 0:
         end = universe.trajectory.n_frames
     _, end, _, _ = mdt.check.frame_slicing(
-                       start=0,
-                       stop=end,
-                       step=1,
-                       n_frames_tot=universe.trajectory.n_frames)
+        start=0,
+        stop=end,
+        step=1,
+        n_frames_tot=universe.trajectory.n_frames)
     displacement = np.zeros(atm_grp.positions.shape, dtype=np.float64)
-    
+
     ts = universe.trajectory[0]
     if verbose:
         timer = datetime.now()
@@ -749,7 +749,7 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
         coord_unwrapped = mdt.box.wrap(ag=atm_grp,
                                        inplace=True,
                                        debug=debug)
-    
+
     mdt.fh.backup(topfile)
     atm_grp.write(topfile)
     mdt.fh.backup(trjfile)
@@ -785,7 +785,7 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
                            debug=debug)
             atm_grp.positions = coord_unwrapped
             w.write(atm_grp)
-    
+
     if verbose:
         print(flush=True)
         print("  Created {}".format(topfile), flush=True)

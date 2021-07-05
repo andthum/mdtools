@@ -42,9 +42,9 @@ def parse_user_input(add_description=""):
                  " usually apllied to anisotropic systems where it might"
                  " happen that the net-displacement might not be zero.")
     parser = argparse.ArgumentParser(
-                 description=description+add_description
+        description=description+add_description
     )
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -84,7 +84,7 @@ def parse_user_input(add_description=""):
              " If --nblocks is greater than one eight additional files"
              " are created containing the respective standard deviations."
     )
-    
+
     parser.add_argument(
         '--sel',
         dest='SEL',
@@ -112,7 +112,7 @@ def parse_user_input(add_description=""):
              " (https://userguide.mdanalysis.org/groups_of_atoms.html)"
              " for the definition of the terms. Default is 'None'"
     )
-    
+
     parser.add_argument(
         '-d',
         dest='DIRECTION',
@@ -146,7 +146,7 @@ def parse_user_input(add_description=""):
              " starting with '#' are ignored. Bins do not need to be"
              " equidistant.  --bins takes precedence over --bin-num."
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -195,7 +195,7 @@ def parse_user_input(add_description=""):
              " the MD and MSD. This must be an integer multiply of"
              " --every. Default: 100"
     )
-    
+
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -204,24 +204,24 @@ def parse_user_input(add_description=""):
         action='store_true',
         help="Run in debug mode."
     )
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
+
     if (args.COM is not None and
         args.COM != 'group' and
         args.COM != 'segments' and
         args.COM != 'residues' and
-        args.COM != 'fragments'):
+            args.COM != 'fragments'):
         raise ValueError("--com must be either 'group', 'segments',"
                          " 'residues' or 'fragments', but you gave {}"
                          .format(args.COM))
     if (args.DIRECTION != 'x' and
         args.DIRECTION != 'y' and
-        args.DIRECTION != 'z'):
+            args.DIRECTION != 'z'):
         raise ValueError("-d must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION))
-    
+
     return args
 
 
@@ -231,19 +231,19 @@ def parse_user_input(add_description=""):
 def msd_layer(pos, bins, direction='z', restart=1, debug=False):
     """
     Calculate the mean displacement (MD)
-    
+
     .. math:
         \langle \Delta r_i(\Delta t, z) \rangle = \langle [r_i(t_0 + \Delta t) - r_i(t_0)] \cdot \delta[z0 - z_i(t_0)]\rangle
-    
+
     and the mean square displacement (MSD) as function of the initial
     particle position :math:`z_0`:
-    
+
     .. math:
         \langle \Delta r_i^2(\Delta t, z) \rangle = \langle |r_i(t_0 + \Delta t) - r_i(t_0)|^2 \cdot \delta[z0 - z_i(t_0)]\rangle
-    
+
     The brackets :math:`\langle ... \rangle` denote averaging over all
     particles :math:`i` and over all possible starting times :math:`t_0`.
-    
+
     Parameters
     ----------
     pos : array_like
@@ -259,7 +259,7 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
         Number of frames between restarting points :math:`t_0`.
     debug : bool
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     md : numpy.ndarray
@@ -279,7 +279,7 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
         spatial direction, then `bins` is extended by the corresponding
         value(s).
     """
-    
+
     if debug:
         mdt.check.pos_array(pos, dim=3)
         mdt.check.array(bins, dim=1)
@@ -291,11 +291,11 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
                           " points ({}) is equal to or larger than the"
                           " total number of frames in pos ({})"
                           .format(restart, len(pos)), RuntimeWarning)
-    
+
     proc = psutil.Process(os.getpid())
     pos = np.asarray(pos)
     bins = np.unique(bins)
-    
+
     dim = {'x': 0, 'y': 1, 'z': 2}
     d = dim[direction]
     pos_min = np.min(pos[:,:,d])
@@ -317,7 +317,7 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
         print("Note: Appending new last bin edge: {}"
               .format(bins[-1]),
               flush=True)
-    
+
     n_frames = pos.shape[0]
     n_particles = pos.shape[1]
     md = np.zeros((n_frames, len(bins)-1, 3), dtype=np.float32)
@@ -325,7 +325,7 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
     norm = np.zeros((n_frames, len(bins)-1), dtype=np.uint32)
     displ = np.full((n_particles, 3), np.nan, dtype=np.float32)
     mask = np.zeros(n_particles, dtype=bool)
-    
+
     timer = datetime.now()
     for t0 in range(0, n_frames-1, restart):
         if t0 % 10**(len(str(t0))-1) == 0 or t0 == n_frames-2:
@@ -339,7 +339,7 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
                   .format(proc.memory_info().rss/2**20),
                   flush=True)
             timer = datetime.now()
-        
+
         bin_ix = np.digitize(pos[t0][:,d], bins=bins)
         bin_ix -= 1
         bin_ix_u, counts = np.unique(bin_ix, return_counts=True)
@@ -357,7 +357,7 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
                 np.equal(bin_ix, b, out=mask)
                 md[lag][b] += np.sum(displ[mask], axis=0)
                 msd[lag][b] += np.sum(displ[mask]**2, axis=0)
-    
+
     del displ, mask
     if not np.all(norm[0] == 0):
         raise ValueError("The first element of norm is not zero. This"
@@ -365,7 +365,7 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
     norm[0] = 1
     md /= norm[:,None:,None]
     msd /= norm[:,None:,None]
-    
+
     return md, msd, bins
 
 
@@ -376,23 +376,23 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     args = parse_user_input()
     dim = {'x': 0, 'y': 1, 'z': 2}
     d = dim[args.DIRECTION]
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
+
     print("\n\n\n", flush=True)
     sel = mdt.select.atoms(ag=u,
                            sel=' '.join(args.SEL),
@@ -402,34 +402,34 @@ if __name__ == '__main__':
     if args.COM is not None:
         print("\n\n\n", flush=True)
         mdt.check.masses(ag=sel, flash_test=False)
-    
-    
-    
-    
+
+
+
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
     NBLOCKS, blocksize = mdt.check.block_averaging(n_blocks=args.NBLOCKS,
                                                    n_frames=n_frames)
     RESTART, effective_restart = mdt.check.restarts(
-                                     restart_every_nth_frame=args.RESTART,
-                                     read_every_nth_frame=EVERY,
-                                     n_frames=blocksize)
+        restart_every_nth_frame=args.RESTART,
+        read_every_nth_frame=EVERY,
+        n_frames=blocksize)
     last_frame = u.trajectory[END-1].frame
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Checking bins", flush=True)
     timer = datetime.now()
-    
+
     lbox_max = [ts.dimensions[d] for ts in u.trajectory[BEGIN:END:EVERY]]
     lbox_max = np.max(lbox_max)
     if args.BINFILE is None:
@@ -454,17 +454,17 @@ if __name__ == '__main__':
         print("  Appending new last bin edge: {}"
               .format(bins[-1]),
               flush=True)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -474,7 +474,7 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-    
+
     pos = get_COMs(topfile=args.TOPFILE,
                    trjfile=args.TRJFILE,
                    sel=args.SEL,
@@ -483,12 +483,12 @@ if __name__ == '__main__':
                    end=END,
                    every=EVERY,
                    debug=args.DEBUG)
-    
+
     if len(pos) != n_frames:
         raise ValueError("The number of position arrays does not equal"
                          " the number of frames to read. This should not"
                          " have happened")
-    
+
     print(flush=True)
     print("Frames read: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -507,14 +507,14 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
+
+
+
     print("\n\n\n", flush=True)
     print("Calculating MSD", flush=True)
     timer = datetime.now()
     timer_block = datetime.now()
-    
+
     md = [None,] * NBLOCKS
     msd = [None,] * NBLOCKS
     for block in range(NBLOCKS):
@@ -531,16 +531,16 @@ if __name__ == '__main__':
                   flush=True)
             timer_block = datetime.now()
         md[block], msd[block], _ = msd_layer(
-                                       pos=pos[block*blocksize:(block+1)*blocksize],
-                                       bins=bins,
-                                       direction=args.DIRECTION,
-                                       restart=effective_restart,
-                                       debug=args.DEBUG)
-    
+            pos=pos[block*blocksize:(block+1)*blocksize],
+            bins=bins,
+            direction=args.DIRECTION,
+            restart=effective_restart,
+            debug=args.DEBUG)
+
     del pos
     md = np.asarray(md)
     msd = np.asarray(msd)
-    
+
     if NBLOCKS > 1:
         md, md_sd = mdt.stats.block_average(md)
         msd, msd_sd = mdt.stats.block_average(msd)
@@ -553,21 +553,21 @@ if __name__ == '__main__':
                           timestep*blocksize*EVERY,
                           timestep*EVERY,
                           dtype=np.float32)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     header = (
         "The brackets <...> denote averaging over all particles and\n"
         "over all possible restarting points t0. d[...] stands for the\n"
@@ -605,10 +605,10 @@ if __name__ == '__main__':
                 len(np.unique(sel.types)),
                 '\' \''.join(i for i in np.unique(sel.types)),
                 len(sel.fragments)
-        )
+                )
     )
-    
-    
+
+
     # MSDs
     prefix = (
         "Total mean square displacement (MSD) as function of the\n"
@@ -639,7 +639,7 @@ if __name__ == '__main__':
                               upper_left=bins[0],
                               header=prefix+header+suffix)
         print("  Created {}".format(args.OUTFILE+"_msd_layer_sd.txt"))
-    
+
     for i, x in enumerate(['x', 'y', 'z']):
         prefix = (
             "{}-component of the mean square displacement (MSD) as function\n"
@@ -671,8 +671,8 @@ if __name__ == '__main__':
                                   upper_left=bins[0],
                                   header=prefix+header+suffix)
             print("  Created {}".format(args.OUTFILE+"_msd"+x+"_layer_sd.txt"))
-    
-    
+
+
     # MDs
     for i, x in enumerate(['x', 'y', 'z']):
         prefix = (
@@ -705,17 +705,17 @@ if __name__ == '__main__':
                                   upper_left=bins[0],
                                   header=prefix+header+suffix)
             print("  Created {}".format(args.OUTFILE+"_md"+x+"_layer_sd.txt"))
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

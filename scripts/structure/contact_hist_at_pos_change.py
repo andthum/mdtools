@@ -267,7 +267,7 @@ if __name__ == '__main__':
         mdabackend = 'OpenMP'
     else:
         mdabackend = 'serial'
-    
+
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
     print("\n")
@@ -293,7 +293,7 @@ if __name__ == '__main__':
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames
     )
-    
+
     print("\n")
     print("Creating/checking bins...")
     timer = datetime.now()
@@ -323,7 +323,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     natms_per_refcmp = mdt.strc.natms_per_cmp(ag=ref,
                                               compound=args.REFCMP,
                                               check_contiguos=True)
@@ -350,7 +350,7 @@ if __name__ == '__main__':
                          .format(args.REFCMP))
     print("\n")
     mdt.check.masses_new(ag=refcmp, verbose=True)
-    
+
     expected_max_contacts = 16  # Will be increased if necessary
     # Histogram for refatm_selatm:
     hist_refatm_selatm = [np.zeros(expected_max_contacts, dtype=np.uint32)
@@ -363,7 +363,7 @@ if __name__ == '__main__':
     n_cmps = np.zeros_like(n_atms)
     n_pairs = np.zeros((len(refatm_motion), len(hists_cmp[0])),
                        dtype=np.uint32)
-    
+
     print("\n")
     print("Reading trajectory...")
     print("Total number of frames: {:>8d}".format(u.trajectory.n_frames))
@@ -478,7 +478,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     if np.any(n_atms[0] == 0):
         warnings.warn("The total number of reference or selection atoms"
                       " that stayed in their initial bin is zero. This"
@@ -491,7 +491,7 @@ if __name__ == '__main__':
         warnings.warn("At least one of the pair histograms is void."
                       " This histogram will be meaningless",
                       RuntimeWarning)
-    
+
     # Average contact numbers:
     # Averages of pure atom-atom histogram (refatm_selatm):
     avs_refatm_selatm = np.zeros((len(hist_refatm_selatm), 2),
@@ -530,7 +530,7 @@ if __name__ == '__main__':
             tot_contacts = np.sum(hists_cmp[m][i][-1] *
                                   np.arange(len(hists_cmp[m][i][-1])))
             avs_pair[m][i] = tot_contacts / n
-    
+
     # Normalization:
     for m, hist in enumerate(hist_refatm_selatm):
         hist_refatm_selatm[m] = hist / n_atms[m][0]
@@ -544,7 +544,7 @@ if __name__ == '__main__':
     for m, n_ps in enumerate(n_pairs):
         for i, n in enumerate(n_ps):
             hists_cmp[m][i][-1] /= n
-    
+
     # Bring all histograms to the same length:
     max_length = np.zeros(len(hist_refatm_selatm), dtype=np.uint32)
     for m, hist in enumerate(hist_refatm_selatm):
@@ -559,7 +559,7 @@ if __name__ == '__main__':
             hists_cmp[m][i] = mdt.nph.extend(hists,
                                              max_length[m],
                                              axis=-1)
-    
+
     # Find the last non-zero value up to which to write the histograms
     # to file:
     last_nonzero = np.zeros(len(hist_refatm_selatm), dtype=np.uint32)
@@ -572,7 +572,7 @@ if __name__ == '__main__':
             if np.any(hists != 0):
                 last_nonzero[m] = max(last_nonzero[m],
                                       np.max(np.nonzero(hists)[1]))
-    
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -724,7 +724,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Checking output for consistency...")
     timer = datetime.now()
@@ -861,7 +861,7 @@ if __name__ == '__main__':
                             " 'avs_cmp[{}][{}][{}][1]' ({})"
                             .format(m, i, j, av[0], m, i, j, av[1])
                         )
-    
+
     for m, hist_a in enumerate(hist_refatm_selatm):
         hist_refatm_same_selatm = np.array([hist_a[0], 1-hist_a[0]])
         hist_refatm_same_selatm = mdt.nph.extend(hist_refatm_same_selatm,
@@ -940,7 +940,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
     print("Totally elapsed time: {}".format(datetime.now()-timer_tot))

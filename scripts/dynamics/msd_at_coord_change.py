@@ -38,12 +38,12 @@ def get_pos(universe, atm_grp, frame, compound='atoms', debug=False):
     Get the positions of the compounds of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` at a given frame in the
     :attr:`~MDAnalysis.core.universe.Universe.trajectory`.
-    
+
     Note
     ----
     Broken molecules are not made whole before center of mass
     calculation!
-    
+
     Parameters
     ----------
     universe : MDAnalysis.core.universe.Universe
@@ -62,26 +62,26 @@ def get_pos(universe, atm_grp, frame, compound='atoms', debug=False):
         returned.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     pos : numpy.ndarray
         Position vector(s) of the compounds of `atm_grp` at the given
         `frame`.
     """
-    
+
     if debug:
         if (compound != 'atoms' and
             compound != 'group' and
             compound != 'segments' and
             compound != 'residues' and
             compound != 'molecules' and
-            compound != 'fragments'):
+                compound != 'fragments'):
             raise ValueError("compound must be either 'atoms', 'group',"
                              " 'segments', 'residues', 'molecules' or"
                              " 'fragments', but you gave '{}'"
                              .format(compound))
-    
+
     universe.trajectory[frame]
     if compound == 'atoms':
         return atm_grp.positions
@@ -96,15 +96,15 @@ def get_pos(universe, atm_grp, frame, compound='atoms', debug=False):
 
 
 def msd_at_coordination_change(universe, ref, cms, compound='atoms',
-        coord_change='any', n_det=1, n_att=1, begin=0, every=1,
-        verbose=False, debug=False):
+                               coord_change='any', n_det=1, n_att=1, begin=0, every=1,
+                               verbose=False, debug=False):
     """
     Calculate lifetime histograms of reference compounds until their
     coordination to selection compounds changes. Additionally, the mean
     square displacements (MSDs) of the reference compounds are computed
     as a function of these lifetimese. MSDs are calculated from the
     center of  mass of the reference compounds.
-    
+
     Parameters
     ----------
     universe : MDAnalysis.core.universe.Universe
@@ -150,7 +150,7 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
         If ``True``, print progress information to standard output.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     dt_counts : numpy.ndarray
@@ -163,7 +163,7 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
         corresponding MSDs of these reference compounds during their
         lifetime.
     """
-    
+
     if debug:
         for i, cm in enumerate(cms):
             if cm.ndim != 2:
@@ -180,7 +180,7 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
         if (compound != 'atoms' and
             compound != 'segments' and
             compound != 'residues' and
-            compound != 'fragments'):
+                compound != 'fragments'):
             raise ValueError("compound must be either 'atoms',"
                              " 'segments', 'residues' or 'fragments',"
                              " but you gave '{}'"
@@ -188,14 +188,14 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
         if ((compound == 'atoms' and ref.n_atoms != cms[0].shape[0]) or
             (compound == 'segments' and ref.n_segments != cms[0].shape[0]) or
             (compound == 'residues' and ref.n_residues != cms[0].shape[0]) or
-            (compound == 'fragments' and ref.n_fragments != cms[0].shape[0])):
+                (compound == 'fragments' and ref.n_fragments != cms[0].shape[0])):
             raise ValueError("The number of reference compounds does not"
                              " fit to the number of columns of the"
                              " contact matrices")
         if (coord_change != 'any' and
             coord_change != 'detachment' and
             coord_change != 'attachment' and
-            coord_change != 'exchange'):
+                coord_change != 'exchange'):
             raise ValueError("coord_change must be either 'any',"
                              " 'detachment', 'attachment' or 'exchange',"
                              " but you gave '{}'"
@@ -219,7 +219,7 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
         if every <= 0:
             raise ValueError("every must be positive")
         mdt.check.time_step(trj=universe.trajectory[begin:len(cms)*every])
-    
+
     if verbose:
         timer = datetime.now()
         proc = psutil.Process(os.getpid())
@@ -233,7 +233,7 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
               .format(proc.memory_info().rss/2**20),
               flush=True)
         timer = datetime.now()
-    
+
     msd = np.zeros(len(cms), dtype=np.float32)
     dt = np.ones(cms[0].shape[0], dtype=np.uint32)
     dt_counts = np.zeros(len(cms), dtype=np.uint32)
@@ -242,10 +242,10 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
                      frame=begin,
                      compound=compound,
                      debug=debug)
-    
+
     for i, cm in enumerate(cms[1:], 1):
         if (verbose and
-            (i % 10**(len(str(i))-1) == 0 or i == len(cms)-1)):
+                (i % 10**(len(str(i))-1) == 0 or i == len(cms)-1)):
             print("  Frame   {:12d} of {:12d}"
                   .format(i, len(cms)-1),
                   flush=True)
@@ -256,7 +256,7 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
                   .format(proc.memory_info().rss/2**20),
                   flush=True)
             timer = datetime.now()
-        
+
         if coord_change == 'any':
             # Consider any change in the reference-selection coordination
             changes = (cm != cms[i-1])
@@ -288,12 +288,12 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
             detached = cms[i-1] - bound_in_both
             attached = cm - bound_in_both
             affected_ref = np.intersect1d(
-                               np.flatnonzero(detached.sum(axis=1) >= n_det),
-                               np.flatnonzero(attached.sum(axis=1) >= n_att))
+                np.flatnonzero(detached.sum(axis=1) >= n_det),
+                np.flatnonzero(attached.sum(axis=1) >= n_att))
             if affected_ref.size == 0:
                 dt += 1
                 continue
-        
+
         newpos = get_pos(universe=universe,
                          atm_grp=ref,
                          frame=begin+i*every,
@@ -314,19 +314,19 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
         msd[dt_unique] += msd_affected_ref
         dt[affected_ref] = 0
         dt += 1
-    
+
     if dt_counts[0] != 0:
         raise ValueError("The number of counts with zero diffusion time"
                          " is not zero. This should not have happened")
     if msd[0] != 0:
         raise ValueError("The MSD at zero diffusion time is not zero."
                          " This should not have happened")
-    
+
     valid = (dt_counts != 0)
     np.divide(msd, dt_counts, where=valid, out=msd)
     msd[~valid] = np.nan
     msd[0] = 0
-    
+
     return dt_counts, msd
 
 
@@ -337,31 +337,31 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Calculate the lifetime of reference compounds"
-                     " until their coordination to selection compounds"
-                     " changes from lifetime histograms. Additionally,"
-                     " the mean square displacements (MSDs) of the"
-                     " reference compounds during these lifetimes is"
-                     " computed. MSDs are calculated from the center of"
-                     " mass of the reference compounds. The following"
-                     " four changes in the reference-selection"
-                     " coordination are tracked: Any change; detachment"
-                     " of at least --ndet selection compounds at once;"
-                     " attachment of at least --natt selection compounds"
-                     " at once; detachment of at least --ndet selection"
-                     " compounds and attachment of at least --natt"
-                     " selection compounds at once. 'At once' means here"
-                     " from one trajectory frame to the next frame."
-                     )
+        description=(
+            "Calculate the lifetime of reference compounds"
+            " until their coordination to selection compounds"
+            " changes from lifetime histograms. Additionally,"
+            " the mean square displacements (MSDs) of the"
+            " reference compounds during these lifetimes is"
+            " computed. MSDs are calculated from the center of"
+            " mass of the reference compounds. The following"
+            " four changes in the reference-selection"
+            " coordination are tracked: Any change; detachment"
+            " of at least --ndet selection compounds at once;"
+            " attachment of at least --natt selection compounds"
+            " at once; detachment of at least --ndet selection"
+            " compounds and attachment of at least --natt"
+            " selection compounds at once. 'At once' means here"
+            " from one trajectory frame to the next frame."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -389,7 +389,7 @@ if __name__ == '__main__':
         required=True,
         help="Output filename."
     )
-    
+
     parser.add_argument(
         '--ref',
         dest='REF',
@@ -477,7 +477,7 @@ if __name__ == '__main__':
         help="How many selection compounds must be attached at once, to"
              " count the change as attachment event. Default: 1"
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -505,7 +505,7 @@ if __name__ == '__main__':
         default=1,
         help="Read every n-th frame. Default: 1"
     )
-    
+
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -514,19 +514,19 @@ if __name__ == '__main__':
         action='store_true',
         help="Run in debug mode."
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if args.CUTOFF <= 0:
         raise ValueError("-c must be greater than zero, but you gave {}"
                          .format(args.CUTOFF))
     if (args.COMPOUND != 'atoms' and
         args.COMPOUND != 'segments' and
         args.COMPOUND != 'residues' and
-        args.COMPOUND != 'fragments'):
+            args.COMPOUND != 'fragments'):
         raise ValueError("--compound must be either 'atoms', 'segments',"
                          " 'residues' or 'fragments', but you gave {}"
                          .format(args.COMPOUND))
@@ -543,20 +543,20 @@ if __name__ == '__main__':
         raise ValueError("--intermittency must be equal to or greater"
                          " than zero, but you gave {}"
                          .format(args.INTERMITTENCY))
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
-    
+
+
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
     timer = datetime.now()
-    
+
     ref = u.select_atoms(' '.join(args.REF))
     sel = u.select_atoms(' '.join(args.SEL))
     print("  Reference group: '{}'"
@@ -568,36 +568,36 @@ if __name__ == '__main__':
           .format(' '.join(args.SEL)),
           flush=True)
     print(mdt.rti.ag_info_str(ag=sel, indent=4))
-    
+
     if ref.n_atoms <= 0:
         raise ValueError("The reference atom group contains no atoms")
     if sel.n_atoms <= 0:
         raise ValueError("The selection atom group contains no atoms")
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
     last_frame = u.trajectory[END-1].frame
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Calculating contact matrices", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -607,7 +607,7 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-    
+
     cms = mdt.strc.contact_matrices(topfile=args.TOPFILE,
                                     trjfile=args.TRJFILE,
                                     ref=args.REF,
@@ -624,7 +624,7 @@ if __name__ == '__main__':
         raise ValueError("The number of contact matrices does not equal"
                          " the number of frames to read. This should not"
                          " have happened")
-    
+
     print(flush=True)
     print("Frames read: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -643,56 +643,56 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     if args.INTERMITTENCY > 0:
         print("\n\n\n", flush=True)
         print("Correcting for intermittency", flush=True)
         timer = datetime.now()
-        
+
         cms = mdt.dyn.correct_intermittency(
-                  list_of_arrays=cms,
-                  intermittency=args.INTERMITTENCY,
-                  verbose=True,
-                  debug=args.DEBUG)
-        
+            list_of_arrays=cms,
+            intermittency=args.INTERMITTENCY,
+            verbose=True,
+            debug=args.DEBUG)
+
         print("Elapsed time:         {}"
               .format(datetime.now()-timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss/2**20),
               flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Calculating lifetime histograms and MSDs", flush=True)
     timer = datetime.now()
-    
+
     print(flush=True)
     print("  Lifetimes and MSDs until any change in the reference-\n"
           "  selection coordination", flush=True)
     timer_msd = datetime.now()
     hist_any, msd_any = msd_at_coordination_change(
-                            universe=u,
-                            ref=ref,
-                            cms=cms,
-                            compound=args.COMPOUND,
-                            coord_change='any',
-                            begin=BEGIN,
-                            every=EVERY,
-                            verbose=True,
-                            debug=args.DEBUG)
+        universe=u,
+        ref=ref,
+        cms=cms,
+        compound=args.COMPOUND,
+        coord_change='any',
+        begin=BEGIN,
+        every=EVERY,
+        verbose=True,
+        debug=args.DEBUG)
     print("  Elapsed time:         {}"
           .format(datetime.now()-timer_msd),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
+
     print(flush=True)
     print("  Lifetimes and MSDs until detachment of at least {}\n"
           "  selection compound(s) at once"
@@ -700,23 +700,23 @@ if __name__ == '__main__':
           flush=True)
     timer_msd = datetime.now()
     hist_det, msd_det = msd_at_coordination_change(
-                            universe=u,
-                            ref=ref,
-                            cms=cms,
-                            compound=args.COMPOUND,
-                            coord_change='detachment',
-                            n_det=args.NDET,
-                            begin=BEGIN,
-                            every=EVERY,
-                            verbose=True,
-                            debug=args.DEBUG)
+        universe=u,
+        ref=ref,
+        cms=cms,
+        compound=args.COMPOUND,
+        coord_change='detachment',
+        n_det=args.NDET,
+        begin=BEGIN,
+        every=EVERY,
+        verbose=True,
+        debug=args.DEBUG)
     print("  Elapsed time:         {}"
           .format(datetime.now()-timer_msd),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
+
     print(flush=True)
     print("  Lifetimes and MSDs until attachment of at least {}\n"
           "  selection compound(s) at once"
@@ -724,23 +724,23 @@ if __name__ == '__main__':
           flush=True)
     timer_msd = datetime.now()
     hist_att, msd_att = msd_at_coordination_change(
-                            universe=u,
-                            ref=ref,
-                            cms=cms,
-                            compound=args.COMPOUND,
-                            coord_change='attachment',
-                            n_att=1,
-                            begin=BEGIN,
-                            every=EVERY,
-                            verbose=True,
-                            debug=args.DEBUG)
+        universe=u,
+        ref=ref,
+        cms=cms,
+        compound=args.COMPOUND,
+        coord_change='attachment',
+        n_att=1,
+        begin=BEGIN,
+        every=EVERY,
+        verbose=True,
+        debug=args.DEBUG)
     print("  Elapsed time:         {}"
           .format(datetime.now()-timer_msd),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
+
     print(flush=True)
     print("  Lifetimes and MSDs until detachment of at least {}\n"
           "  and attachment of at least {} selection compound(s) at\n"
@@ -749,31 +749,31 @@ if __name__ == '__main__':
           flush=True)
     timer_msd = datetime.now()
     hist_exc, msd_exc = msd_at_coordination_change(
-                            universe=u,
-                            ref=ref,
-                            cms=cms,
-                            compound=args.COMPOUND,
-                            coord_change='exchange',
-                            n_det=1,
-                            n_att=1,
-                            begin=BEGIN,
-                            every=EVERY,
-                            verbose=True,
-                            debug=args.DEBUG)
+        universe=u,
+        ref=ref,
+        cms=cms,
+        compound=args.COMPOUND,
+        coord_change='exchange',
+        n_det=1,
+        n_att=1,
+        begin=BEGIN,
+        every=EVERY,
+        verbose=True,
+        debug=args.DEBUG)
     print("  Elapsed time:         {}"
           .format(datetime.now()-timer_msd),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
+
     del cms
-    
+
     lag_times = np.arange(0,
                           timestep*n_frames*EVERY,
                           timestep*EVERY,
                           dtype=np.float32)
-    
+
     tot_counts_any = np.sum(hist_any)
     tot_counts_det = np.sum(hist_det)
     tot_counts_att = np.sum(hist_att)
@@ -806,32 +806,32 @@ if __name__ == '__main__':
         raise ValueError("The total number of exchange events is higher"
                          " than the total number of attachment events"
                          " This should not have happend")
-    
+
     hist_any = hist_any / tot_counts_any
     hist_det = hist_det / tot_counts_det
     hist_att = hist_att / tot_counts_att
     hist_exc = hist_exc / tot_counts_exc
-    
+
     mean_any = np.sum(lag_times * hist_any)
     mean_det = np.sum(lag_times * hist_det)
     mean_att = np.sum(lag_times * hist_att)
     mean_exc = np.sum(lag_times * hist_exc)
-    
+
     sd_any = np.sum((lag_times-mean_any)**2 * hist_any)
     sd_det = np.sum((lag_times-mean_det)**2 * hist_det)
     sd_att = np.sum((lag_times-mean_att)**2 * hist_att)
     sd_exc = np.sum((lag_times-mean_exc)**2 * hist_exc)
-    
+
     mean_msd_any = np.nansum(msd_any * hist_any)
     mean_msd_det = np.nansum(msd_det * hist_det)
     mean_msd_att = np.nansum(msd_att * hist_att)
     mean_msd_exc = np.nansum(msd_exc * hist_exc)
-    
+
     sd_msd_any = np.nansum((msd_any-mean_msd_any)**2 * hist_any)
     sd_msd_det = np.nansum((msd_det-mean_msd_det)**2 * hist_det)
     sd_msd_att = np.nansum((msd_att-mean_msd_att)**2 * hist_att)
     sd_msd_exc = np.nansum((msd_exc-mean_msd_exc)**2 * hist_exc)
-    
+
     print(flush=True)
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -839,14 +839,14 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     header = (
         "Lifetime of reference compounds until their coordination to\n"
         "selection compounds changes. Additionally, the mean square\n"
@@ -920,7 +920,7 @@ if __name__ == '__main__':
                 args.COMPOUND,
                 args.MINCONTACTS,
                 args.INTERMITTENCY,
-                
+
                 ' '.join(args.REF),
                 ref.n_segments,
                 len(np.unique(ref.segids)),
@@ -934,7 +934,7 @@ if __name__ == '__main__':
                 len(np.unique(ref.types)),
                 '\' \''.join(i for i in np.unique(ref.types)),
                 len(ref.fragments),
-                
+
                 ' '.join(args.SEL),
                 sel.n_segments,
                 len(np.unique(sel.segids)),
@@ -948,13 +948,13 @@ if __name__ == '__main__':
                 len(np.unique(sel.types)),
                 '\' \''.join(i for i in np.unique(sel.types)),
                 len(sel.fragments),
-                
+
                 args.NDET,
                 args.NATT,
                 args.NDET, args.NATT,
-                
+
                 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                
+
                 "Lifetime (ps)", "MSD (A^2)",
                 "Lifetime (ps)", "MSD (A^2)",
                 "Lifetime (ps)", "MSD (A^2)",
@@ -971,9 +971,9 @@ if __name__ == '__main__':
                 tot_counts_det,
                 tot_counts_att,
                 tot_counts_exc
-        )
+                )
     )
-    
+
     mdt.fh.savetxt(fname=args.OUTFILE,
                    data=np.column_stack([lag_times,
                                          hist_any, msd_any,
@@ -981,7 +981,7 @@ if __name__ == '__main__':
                                          hist_att, msd_att,
                                          hist_exc, msd_exc]),
                    header=header)
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -989,10 +989,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

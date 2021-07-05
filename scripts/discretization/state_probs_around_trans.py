@@ -89,7 +89,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-"""
+            """
 Compute the probability to be in the same state as directly before or
 after a state transition as function of time passed since the transition.
 
@@ -195,7 +195,7 @@ probability
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     # Given that at time t0 a state transition occurred...
     # prob_sym:    Probability that a compound is at time t0-dt in the
     #              same state as at time t0+dt.
@@ -215,7 +215,7 @@ probability
     prob_a_as_a = np.zeros_like(prob_b_as_b)
     prob_a_as_b = np.zeros_like(prob_a_as_a)
     norm_a = np.zeros_like(prob_a_as_a)
-    
+
     print("\n")
     print("Reading trajectory...")
     print("Number of compounds:    {:>8d}".format(N_CMPS))
@@ -256,7 +256,7 @@ probability
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -309,7 +309,7 @@ probability
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Creating output for consistency...")
     timer = datetime.now()
@@ -330,7 +330,7 @@ probability
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
     print("Totally elapsed time: {}".format(datetime.now()-timer_tot))

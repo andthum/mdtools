@@ -65,28 +65,28 @@ tick_length = 10
 
 
 if __name__ == "__main__":
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Plot the outcome of topological_map.py. Different"
-                     " segment types are plotted on separate pages,"
-                     " different residue types in separate subplots and"
-                     " different atom types in separate subsubplots."
-                     " Different residues of the same type are separated"
-                     " by dashed lines in the respective subplot. The"
-                     " atoms are renumbered to give a continuous"
-                     " sequence starting at one. The y labels of the"
-                     " plots are read from the column headers of the"
-                     " input file. If you want to change the y labels,"
-                     " change the column headers (but white space is"
-                     " not allowed)"
-                 )
+        description=(
+            "Plot the outcome of topological_map.py. Different"
+            " segment types are plotted on separate pages,"
+            " different residue types in separate subplots and"
+            " different atom types in separate subsubplots."
+            " Different residues of the same type are separated"
+            " by dashed lines in the respective subplot. The"
+            " atoms are renumbered to give a continuous"
+            " sequence starting at one. The y labels of the"
+            " plots are read from the column headers of the"
+            " input file. If you want to change the y labels,"
+            " change the column headers (but white space is"
+            " not allowed)"
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         help="Output filename. Plots are optimized for PDF format with"
              " TeX support."
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -162,7 +162,7 @@ if __name__ == "__main__":
              " integer multiple of --every. Only frames that are"
              " actually read in are considered. Default: 1"
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TIME_CONV',
@@ -225,7 +225,7 @@ if __name__ == "__main__":
              " and the corresponding column header from the input file."
              " Default prefix: 'Coordinating'"
     )
-    
+
     parser.add_argument(
         '-d',
         dest='DIRECTION',
@@ -285,7 +285,7 @@ if __name__ == "__main__":
              " the colormap. Useful for diverging colormaps to set the"
              " point of divergence. Meaningless if -d is not set."
     )
-    
+
     parser.add_argument(
         '--verbose',
         dest='VERBOSE',
@@ -302,28 +302,28 @@ if __name__ == "__main__":
         action='store_true',
         help="Run in debug mode."
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.DIRECTION is not None and
         args.DIRECTION != 'x' and
         args.DIRECTION != 'y' and
-        args.DIRECTION != 'z'):
+            args.DIRECTION != 'z'):
         raise ValueError("-d must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION))
     pos_col = {'x': 1, 'y': 2, 'z': 3}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
-    
+
+
     with open(args.INFILE, 'r') as f:
         headers = None
         for line in f:
@@ -331,48 +331,48 @@ if __name__ == "__main__":
                 break
             else:
                 headers = line[1:]
-    
+
     if headers is None:
         raise ValueError("Could not read headers")
     if len(headers) <= 4:
         raise ValueError("headers does not contain segment, residue or"
                          " atom type names")
-    
+
     headers = headers.split()
     headers = np.array(headers[4:], dtype=str)
     ix_cols = np.arange(4, len(headers)+4)
-    
-    
+
+
     times = np.genfromtxt(fname=args.INFILE, usecols=0, dtype=np.float32)
     if len(times) <= 1:
         raise ValueError("The input file must contain at least two"
                          " frames")
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=len(times))
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=len(times))
     PLOTEVERY, effective_plotevery = mdt.check.restarts(
-                                         restart_every_nth_frame=args.PLOTEVERY,
-                                         read_every_nth_frame=EVERY,
-                                         n_frames=n_frames)
+        restart_every_nth_frame=args.PLOTEVERY,
+        read_every_nth_frame=EVERY,
+        n_frames=n_frames)
     MINBOUND, effective_minbound = mdt.check.restarts(
-                                       restart_every_nth_frame=args.MINBOUND,
-                                       read_every_nth_frame=EVERY,
-                                       n_frames=n_frames)
+        restart_every_nth_frame=args.MINBOUND,
+        read_every_nth_frame=EVERY,
+        n_frames=n_frames)
     times -= times[0]
     times += args.T0
     times = times[BEGIN:END:EVERY]
     times *= args.TIME_CONV
-    
-    
+
+
     ix = np.genfromtxt(fname=args.INFILE, usecols=ix_cols, dtype=str)
     seg_cols = np.any(np.char.isalpha(ix), axis=0)
     atm_cols = np.all(np.char.isnumeric(ix), axis=0)
     res_cols = np.equal(seg_cols, atm_cols)
     ix = ix[BEGIN:END:EVERY]
-    
-    
+
+
     if args.DIRECTION is None:
         pos = None
         vmin = None
@@ -426,22 +426,22 @@ if __name__ == "__main__":
         else:
             cmap = args.CMAP
             spacing='uniform'
-    
-    
+
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         seg_blocks = np.append(np.nonzero(seg_cols)[0], len(seg_cols))
@@ -453,8 +453,8 @@ if __name__ == "__main__":
                   flush=True)
             sb_ix = ix[:,seg_blocks[sb]:seg_blocks[sb+1]]
             #sb_seg_ix = np.array([mdt.nph.excel_colnum(i)  # not needed
-                                  #for i in sb_ix[:,0]],
-                                 #dtype=np.float16)
+            #for i in sb_ix[:,0]],
+            #dtype=np.float16)
             sb_seg_cols = seg_cols[seg_blocks[sb]:seg_blocks[sb+1]]
             sb_atm_cols = np.all(np.char.isnumeric(sb_ix), axis=0)
             sb_atm_cols &= atm_cols[seg_blocks[sb]:seg_blocks[sb+1]]
@@ -468,7 +468,7 @@ if __name__ == "__main__":
                 res_blocks = res_blocks[[0, -1]]
             else:
                 res_blocks = np.delete(res_blocks, res_blocks_same)
-            
+
             if pos is None:
                 nrows = len(res_blocks) - 1
                 grid_heights = np.ones(nrows)
@@ -490,7 +490,7 @@ if __name__ == "__main__":
                                            ncols=1,
                                            figure=fig,
                                            height_ratios=grid_heights)
-            
+
             for rb in range(len(res_blocks)-1):
                 rb_headers = sb_headers[res_blocks[rb]:res_blocks[rb+1]]
                 print("    Residue: {:>10s}"
@@ -499,11 +499,11 @@ if __name__ == "__main__":
                 rb_ix = sb_ix[:,res_blocks[rb]:res_blocks[rb+1]].astype(np.float32)
                 rb_res_ix = -rb_ix[:,sb_res_cols[res_blocks[rb]:res_blocks[rb+1]]]
                 rb_res_ix = mdt.dyn.replace_short_sequences_global(
-                                list_of_arrays=rb_res_ix,
-                                min_len=effective_minbound,
-                                val=0,
-                                verbose=args.VERBOSE,
-                                debug=args.DEBUG)
+                    list_of_arrays=rb_res_ix,
+                    min_len=effective_minbound,
+                    val=0,
+                    verbose=args.VERBOSE,
+                    debug=args.DEBUG)
                 rb_res_ix_sorted = np.unique(rb_res_ix[rb_res_ix>0])
                 rb_atm_cols = np.all(rb_ix >= 0, axis=0)
                 rb_atm_cols &= atm_cols[res_blocks[rb]:res_blocks[rb+1]]
@@ -512,18 +512,18 @@ if __name__ == "__main__":
                                       dtype=bool)
                 for i, at in enumerate(atm_types):
                     atm_blocks[i][rb_headers==at] = True
-                
+
                 if pos is None:
                     grid_cell = rb
                 else:
                     grid_cell = rb + 1
                 grid_inner = gridspec.GridSpecFromSubplotSpec(
-                                 nrows=len(atm_types),
-                                 ncols=1,
-                                 subplot_spec=grid_outer[grid_cell],
-                                 hspace=0)
+                    nrows=len(atm_types),
+                    ncols=1,
+                    subplot_spec=grid_outer[grid_cell],
+                    hspace=0)
                 axis_prev = None
-                
+
                 for i, ab in enumerate(atm_blocks):
                     ab_headers = rb_headers[ab]
                     print("      Atom type: {:>6s}"
@@ -532,9 +532,9 @@ if __name__ == "__main__":
                     ab_ix = rb_ix[:,ab]
                     rb_res_ix_invalid = np.equal(rb_res_ix, 0)
                     rb_res_ix_invalid = np.repeat(
-                                            rb_res_ix_invalid,
-                                            len(ab_ix[0])//len(rb_res_ix[0]),
-                                            axis=1)
+                        rb_res_ix_invalid,
+                        len(ab_ix[0])//len(rb_res_ix[0]),
+                        axis=1)
                     ab_ix[rb_res_ix_invalid] = 0
                     ab_ix_valid = ab_ix > 0
                     if np.any(ab_ix_valid):
@@ -553,16 +553,16 @@ if __name__ == "__main__":
                     for j, r in enumerate(rb_res_ix_sorted):
                         r_mask = np.equal(rb_res_ix, r)
                         r_mask = np.repeat(
-                                     r_mask,
-                                     len(ab_ix[0])//len(rb_res_ix[0]),
-                                     axis=1)
+                            r_mask,
+                            len(ab_ix[0])//len(rb_res_ix[0]),
+                            axis=1)
                         ab_ix_in_r = np.unique(ab_ix[r_mask])
                         if not np.all(ab_ix_in_r == 0):
                             ab_ix_in_r_min[j] = ab_ix_in_r[ab_ix_in_r>0][0]
                     ab_ix_in_r_min = np.unique(ab_ix_in_r_min[ab_ix_in_r_min>0])
                     ab_ix_max = np.max(ab_ix)
                     ab_ix[np.logical_not(ab_ix_valid)] = np.nan
-                    
+
                     axis = fig.add_subplot(grid_inner[i],
                                            sharex=axis_prev)
                     axis.yaxis.set_major_locator(MaxNLocator(integer=True))
@@ -572,7 +572,7 @@ if __name__ == "__main__":
                                 xmin=times[0],
                                 xmax=times[-1],
                                 linestyles='--')
-                    
+
                     for a_ix in ab_ix.T:
                         mdt.plot.scatter(
                             ax=axis,
@@ -604,15 +604,15 @@ if __name__ == "__main__":
                                               scilimits=(0,0),
                                               useOffset=False)
                     axis_prev = axis
-            
+
             if pos is not None:
                 if data is not None:
                     grid_inner = gridspec.GridSpecFromSubplotSpec(
-                                     nrows=2,
-                                     ncols=1,
-                                     subplot_spec=grid_outer[0],
-                                     hspace=0.1,
-                                     height_ratios=[0.7, 0.3])
+                        nrows=2,
+                        ncols=1,
+                        subplot_spec=grid_outer[0],
+                        hspace=0.1,
+                        height_ratios=[0.7, 0.3])
                     axis = fig.add_subplot(grid_inner[0])
                     _, vmin_ix = mdt.nph.find_nearest(data[:,0],
                                                       val=vmin,
@@ -665,11 +665,11 @@ if __name__ == "__main__":
                 if data is None:
                     cbar.ax.xaxis.set_ticks_position('top')
                     cbar.ax.xaxis.set_label_position('top')
-            
+
             grid_outer.tight_layout(fig)
             pdf.savefig()
             plt.close()
-        
+
         # Parameters for creating the plot(s)
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -739,7 +739,7 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print(flush=True)
     print("  Created {}".format(args.OUTFILE))
     print(flush=True)
@@ -749,10 +749,10 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"

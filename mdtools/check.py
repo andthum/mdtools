@@ -36,9 +36,9 @@ def array(
         dtype=None):
     """
     Check if the input array satisfies the given conditions.
-    
+
     The array must meet the following requirements:
-        
+
         * Must be of an `array_like` type, i.e. a type that can be
           convertet to a :class:`numpy.ndarray`.
         * Must have a shape equal to the supplied `shape`.
@@ -49,7 +49,7 @@ def array(
         * All array elements must be less than or equal to `amax` (if
           supplied).
         * Must have a data type equal to the supplied `dtype`.
-    
+
     Parameters
     ----------
     a : array_like
@@ -76,12 +76,12 @@ def array(
     dtype : type, optional
         The data type expected for `a`.  Default is ``None``, which
         means that the data type of `a` is not checked.
-    
+
     Returns
     -------
     a : numpy.ndarray
         The input array as :class:`numpy.ndarray`.
-    
+
     Raises
     ------
     ValueError
@@ -90,7 +90,7 @@ def array(
         `dim` is not ``None`` and the dimension of `a` is not `dim`;
         `a` contains elements that are less than `amin`;
         `a` contains elements that are greater than `amax`.
-        
+
         Or if
         the given combination of `shape`, `dim` and `axis` is
         satisfiable by any array;
@@ -102,7 +102,7 @@ def array(
         `dtype`.
     RuntimeError
         If all arguments (except `a`) are ``None``.
-    
+
     See Also
     --------
     :func:`mdtools.check.pos_array` :
@@ -119,7 +119,7 @@ def array(
         axis is None and
         amin is None and
         amax is None and
-        dtype is None):
+            dtype is None):
         raise RuntimeError("No arguments provided to check 'a'")
     if dim is not None and shape is not None and dim != len(shape):
         raise ValueError("The given combination of 'dim' ({}) and"
@@ -171,16 +171,16 @@ def pos_array(
     """
     Check if the input array satisfies the conditions for a position
     array.
-    
+
     Arrays that contain positions (spatial coordinates) of particles
     must meet the following requirements:
-        
+
         * Must be of an `array_like` type, i.e. a type that can be
           convertet to a :class:`numpy.ndarray`.
         * Must be of shape ``(3,)`` or ``(n, 3)`` or ``(k, n, 3)``,
           where ``n`` is the number of particles and ``k`` is the number
           of frames.
-    
+
     Parameters
     ----------
     pos_array : array_like
@@ -205,27 +205,27 @@ def pos_array(
     dtype : type, optional
         The data type expected for `pos_array`.  The default is ``None``,
         which means that the data type of `pos_array` is not checked.
-    
+
     Returns
     -------
     pos_array : numpy.ndarray
         The input array as :class:`numpy.ndarray`.
-    
+
     Raises
     ------
     ValueError
         If
         the last dimension of `pos_array` is not of shape ``(3,)``;
         The dimension of `pos_array` is neither one, two or three.
-        
+
         Or if
         `shape` is not ``None`` and the length of `shape` is neither
         one, two or three;
         `dim` is not ``None`` and neither one, two or three.
-        
+
         See :func:`mdtools.check.array` for further potentially raised
         exceptions.
-    
+
     See Also
     --------
     :func:`mdtools.check.array` :
@@ -237,7 +237,7 @@ def pos_array(
     # Check input parameters:
     if (shape is not None and
         (len(shape) < 1 or len(shape) > 3) and
-        shape[-1] != 3):
+            shape[-1] != 3):
         raise ValueError("'shape' ({}) must be either (3,) or (n, 3) or"
                          " (k, n, 3)".format(shape))
     if dim is not None and dim not in (1, 2, 3):
@@ -255,7 +255,7 @@ def pos_array(
         dim is not None or
         amin is not None or
         amax is not None or
-        dtype is not None):
+            dtype is not None):
         mdt.check.array(a=pos_array,
                         shape=shape,
                         dim=dim,
@@ -270,23 +270,23 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
     """
     Check if the input array satisfies the conditions for a simulation
     box array.
-    
+
     Arrays that contain the dimensions of simulation boxes must meet the
     following requirements:
-        
+
         * Must be of an `array_like` type, i.e. a type that can be
           convertet to a :class:`numpy.ndarray`.
         * Must have a data type equal to the supplied `dtype`.
         * If the array does not contain the box angles:
-            
+
             * Must be of shape ``(3,)`` or ``(k, 3)``, where ``k`` is
               the number of frames.
-        
+
         * If the array contains the box angles:
-            
+
             * Must be of shape ``(6,)`` or ``(k, 6)``.
             * The angles must be greater than 0 and less than 180°.
-    
+
     Parameters
     ----------
     box : array_like
@@ -302,11 +302,11 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
     orthorhombic : bool, optional
         If ``True`` and `with_angles` evaluates to ``True``, all angles
         of `box` must be 90°.
-        
+
         .. deprecated:: 0.0.0.dev0
             This argument will be renamed to `orthogonal` in a future
             release.
-        
+
     allow_negative : bool, optional
         If ``True``, allow negative box lengths (but not zero).
     allow_zero : bool, optional
@@ -320,12 +320,12 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
     dtype : type, optional
         The data type expected for `box`.  Default is ``None``, which
         means that the data type of `box` is not checked.
-    
+
     Returns
     -------
     box : numpy.ndarray
         The input array as :class:`numpy.ndarray`.
-    
+
     Raises
     ------
     ValueError
@@ -334,12 +334,12 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
         incorrect dimensionality;
         an invalid angle;
         an invalid box length.
-        
+
         Or if `dim` is not ``None`` and neither one or two.
-        
+
         See :func:`mdtools.check.array` for further potentially raised
         exceptions.
-    
+
     See Also
     --------
     :func:`mdtools.check.array` :
@@ -351,7 +351,7 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
     # Check input parameters:
     if dim is not None and dim not in (1, 2):
         raise ValueError("'dim' ({}) must be 1 or 2".format(dim))
-    
+
     # Check box array:
     if with_angles is None:
         if box.shape[-1] == 3:
@@ -372,7 +372,7 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
     if box.ndim not in (1, 2):
         raise ValueError("'box' has dimension {} but must have dimension"
                          " 1 or 2".format(box.ndim))
-    
+
     if with_angles:
         slc_angle = [slice(None)] * box.ndim
         slc_angle[box.ndim-1] = slice(3, 6)
@@ -384,9 +384,9 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
             raise ValueError("At least one angle is greater than or"
                              " equal to 180 degrees")
         if (orthorhombic and
-            not np.all(np.isclose(box[slc_angle], 90, rtol=0))):
+                not np.all(np.isclose(box[slc_angle], 90, rtol=0))):
             raise ValueError("At least one angle is not 90 degrees")
-    
+
     slc_length = [slice(None)] * box.ndim
     slc_length[box.ndim-1] = slice(0, 3)
     slc_length = tuple(slc_length)
@@ -394,7 +394,7 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
         raise ValueError("At least box length is negative")
     if not allow_zero and np.any(np.isclose(box[slc_length], 0)):
         raise ValueError("At least box length is zero")
-    
+
     if dim is not None or dtype is not None:
         array(a=box, dim=dim, dtype=dtype)
     return box
@@ -404,10 +404,10 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     """
     Check if the input array satisfies the conditions for a discrete
     trajectory.
-    
+
     Arrays that serve as discrete trajectory must meet the following
     requirements:
-        
+
         * Must be of an `array_like` type, i.e. a type that can be
           convertet to a :class:`numpy.ndarray`.
         * Must be of shape ``(f,)`` or ``(n, f)``, where ``n`` is the
@@ -416,7 +416,7 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
           zero, because the elements of a discrete trajectory are
           interpreted as the indices of the states in which a given
           compound is at a given frame.
-    
+
     Parameters
     ----------
     dtrj : array_like
@@ -437,30 +437,30 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     dtype : type, optional
         The data type expected for `dtrj`.  The default is ``None``,
         which means that the data type of `dtrj` is not checked.
-    
+
     Returns
     -------
     dtrj : numpy.ndarray
         The input array as :class:`numpy.ndarray` with two dimensions.
-    
+
     Raises
     ------
     ValueError
         If
         `dtrj` has more than two dimensions;
         Any element of `dtrj` is not an integer.
-        
+
         Or if
         `shape` is not ``None`` and the length of `shape` is not two.
-        
+
         See :func:`mdtools.check.array` for further potentially raised
         exceptions.
-    
+
     See Also
     --------
     :func:`mdtools.check.array` :
         Check if an array meets given requirements
-    
+
     Notes
     -----
     If the input array has only shape ``(f,)``, it is expanded to shape
@@ -483,7 +483,7 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     if (shape is not None or
         amin is not None or
         amax is not None or
-        dtype is not None):
+            dtype is not None):
         array(a=dtrj,
               shape=shape,
               amin=amin,
@@ -496,9 +496,9 @@ def list_of_cms(
         cms, shape=None, dim=None, amin=None, amax=None, dtype=None):
     """
     Check if the input is a sequence of contact matrices (or arrays).
-    
+
     A sequence of contact matrices must meet the following requirements:
-        
+
         * The sequence must be a tuple, list or :class:`numpy.ndarray`
           instance containing the contact matrices either as
           :class:`NumPy arrays <numpy.ndarray>` or as
@@ -515,7 +515,7 @@ def list_of_cms(
           supplied; usually 1 for contact matrices).
         * All arrays in the sequence must have a data type equal to the
           supplied `dtype`.
-    
+
     Parameters
     ----------
     cms : tuple or list or numpy.ndarray
@@ -542,12 +542,12 @@ def list_of_cms(
     dtype : type, optional
         The data type expected for the arrays in `cms`.  Default is
         ``None``, which means that the data type is not checked.
-    
+
     Returns
     -------
     cms : tuple or list or numpy.ndarray
         The unmodified input.
-    
+
     Raises
     ------
     ValueError
@@ -558,7 +558,7 @@ def list_of_cms(
         is not `dim`;
         The arrays in `cms` contain elements that are less than `amin`;
         The arrays in `cms` contain elements that are greater than `amax`.
-        
+
         Or if
         the given combination of `shape` and `dim` is not satisfiable by
         any array;
@@ -625,17 +625,17 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
     """
     Check if start point, end point and step width or number of bins are
     chosen properly for creating bin edges.
-    
+
     `start`, `stop`, `step` and `num` must meet the following
     requirements:
-        
+
         * `start` must not be less than `amin` (if supplied).
         * `stop` must be greater than `start`, but not greater than
           `amax` (if supplied).
         * `step` must be greater than zero, but not greater than
           ``stop - start``.
         * `num` must be an integer and greater than zero.
-    
+
     Parameters
     ----------
     start : scalar
@@ -658,7 +658,7 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
     verbose : bool, optional
         If ``True`` (default), any changes of the input parameters are
         printed to standard output.
-    
+
     Returns
     -------
     start : float
@@ -671,12 +671,12 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
         The input or a corrected number of bins.  Note: If both, `step`
         and `num`, are given, `step` is tried to be kept fixed while
         `num` is changed according to ``stop - start == num * step``.
-    
+
     Raises
     ------
     ValueError
         If a corrected value cannot be inferred from the given input.
-    
+
     See Also
     --------
     :func:`mdtools.check.distance_bins` :
@@ -685,12 +685,12 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
     :func:`mdtools.check.bin_edges` :
         Check if bin edges are chosen properly for binning a given
         interval
-    
+
     Notes
     -----
     To check whether the binning also fulfills the minimum image
     convention, use :func:`mdtools.check.distance_bins`.
-    
+
     If you want to ensure that **all** bins are equidistant, do not
     parse `step` but only `num`.  If you parse `step`, this function
     tries to keep the input `step` fixed, even if this requires that the
@@ -783,21 +783,21 @@ def distance_bins(
     Check if start point, end point and step width or number of bins are
     chosen properly for binning distances that obey the minimum image
     convention.
-    
+
     `start`, `stop`, `step` and `num` must meet the following
     requirements:
-        
+
         * `start` must be equal to or greater than zero.
         * `stop` must be greater than `start`, but less than half the
           box diagonal.
         * `step` must be greater than zero, but not greater than
           ``stop - start``.
         * `num` must be an integer and greater than zero.
-    
+
     .. todo::
-        
+
         This function is not implemented, yet!
-    
+
     Parameters
     ----------
     box : array_like, optional
@@ -817,7 +817,7 @@ def distance_bins(
     verbose : bool, optional
         If ``True`` (default), any changes of the input parameters are
         printed to standard output.
-    
+
     Returns
     -------
     start : float
@@ -830,16 +830,16 @@ def distance_bins(
         The input or a corrected number of bins.  Note: If both, `step`
         and `num`, are given, `step` is tried to be kept fixed while
         `num` is changed according to ``stop - start == num * step``.
-    
+
     Raises
     ------
     ValueError
         If a corrected value cannot be inferred from the given input.
-    
+
     Warnings
     --------
     Works currently only for orthogonal simulation boxes.
-    
+
     See Also
     --------
     :func:`mdtools.check.bins` :
@@ -847,12 +847,12 @@ def distance_bins(
     :func:`mdtools.check.bin_edges` :
         Check if bin edges are chosen properly for binning a given
         interval
-    
+
     Notes
     -----
     To check binning that does not need to fulfill the minimum image
     convention, use :func:`mdtools.check.bins`.
-    
+
     If you want to ensure that **all** bins are equidistant, do not
     parse `step` but only `num`.  If you parse `step`, this function
     tries to keep the input `step` fixed, even if this implies that the
@@ -864,13 +864,13 @@ def distance_bins(
 def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     """
     Check if bin edges are chosen properly for binning a given interval.
-    
+
     The bin edges must meet the following requirements:
-        
+
         * There must be at least one bin edge.
         * The first bin edge must not be less than `amin`.
         * The last bin edge must not be greater than `amax`.
-    
+
     Parameters
     ----------
     bins : array_like
@@ -917,7 +917,7 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
         If ``len(bins)`` is zero;
         ``bins[0]`` is less than ``amin - tol``;
         ``bins[-1]`` is greater than ``amax + tol``.
-    
+
     See Also
     --------
     :func:`mdtools.check.bins` :
@@ -928,7 +928,7 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     :func:`numpy.digitize` :
         Return the indices of the bins to which each value in the input
         array belongs
-    
+
     Notes
     -----
     The bin edges returned by this function can for instance be used to
@@ -980,23 +980,23 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
 def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
     """
     Check if the input parameters are suitable for slicing |mda_trjs|.
-    
+
     Bassically, the same rules as for `slicing numpy arrays`_ apply with
     the following limitations:
-    
+
         * `start` must be positive or zero, but smaller than `stop`.
         * `stop` must be positive and greater than `start` but not
           greater than `n_frames_tot` (if supplied).
         * `step` must be positive but not greater than ``stop - start``.
         * `n_frames_tot` must be positive (if supplied).
-    
+
     In fact, the limitations for `slicing MDAnalysis trajectories`_ are
     not that strict, but to ensure consistent user input for MDTools
     scripts, we have set up the above limitations.
-    
+
     .. _slicing numpy arrays: https://docs.scipy.org/doc/numpy/reference/arrays.indexing.html
     .. _slicing MDAnalysis trajectories: https://userguide.mdanalysis.org/stable/trajectories/slicing_trajectories.html
-    
+
     Parameters
     ----------
     start : int
@@ -1013,7 +1013,7 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
     verbose : bool, optional
         If ``True`` (default), any changes of the input parameters are
         printed to standard output.
-    
+
     Returns
     -------
     start : int
@@ -1024,7 +1024,7 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
         The input or a corrected step width.
     n_frames : int
         The number of selected frames.
-    
+
     See Also
     --------
     :func:`mdtools.check.block_averaging` :
@@ -1094,10 +1094,10 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
 def block_averaging(n_blocks, n_frames, check_CPUs=False, verbose=True):
     """
     Check if the number of blocks for block averaging is chosen properly.
-    
+
     The number of blocks must be greater than zero, but less than the
     number of available frames.
-    
+
     Parameters
     ----------
     n_blocks : int
@@ -1113,20 +1113,20 @@ def block_averaging(n_blocks, n_frames, check_CPUs=False, verbose=True):
     verbose : bool, optional
         If ``True`` (default), any changes to `n_blocks` are printed to
         standard output.
-    
+
     Returns
     -------
     n_blocks : int
         The input or a corrected number of blocks.
     block_size : int
         The number of frames available for analysis per block.
-    
+
     Warns
     -----
     RuntimeWarning
         If `check_CPUs` is ``True`` and the number of available CPUs is
         not an integer multiple of `n_blocks` (or the other way round).
-    
+
     See Also
     --------
     :func:`mdtools.check.frame_slicing` :
@@ -1161,7 +1161,7 @@ def block_averaging(n_blocks, n_frames, check_CPUs=False, verbose=True):
     if check_CPUs:
         num_CPUs = mdt.rti.get_num_CPUs()
         if ((num_CPUs < n_blocks and n_blocks % num_CPUs != 0) or
-            (num_CPUs > n_blocks and num_CPUs % n_blocks != 0)):
+                (num_CPUs > n_blocks and num_CPUs % n_blocks != 0)):
             warnings.warn(
                 "The number of available CPUs ({}) is not a multiple of"
                 " the number of blocks for block averaging ({}). This"
@@ -1177,16 +1177,16 @@ def restarts(
     """
     Check if the number of frames between restarting points is chosen
     properly.
-    
+
     .. deprecated:: 0.0.dev0
         :func:`mdtools.check.restarts` might be removed in a future
         version due to dublicate functionality.  Use
         :func:`mdtools.check.frame_lag` instead.
-    
+
     Different restarting points are usually used when calculating time
     averaged quantities (like mean square displacements or
     autocorrelation functions)
-    
+
     Parameters
     ----------
     restart_every_nth_frame : int
@@ -1203,7 +1203,7 @@ def restarts(
     verbose : bool, optional
         If ``True`` (default), any changes of the input parameters are
         printed to standard output.
-    
+
     Returns
     -------
     restart_every_nth_frame : int
@@ -1213,7 +1213,7 @@ def restarts(
         e.g. only every tenth frame of the trajectory is read and you
         want restarts every fifty frames, you effectively restart every
         fifths frame of the read frames.
-    
+
     See Also
     --------
     :func:`mdtools.check.frame_lag` :
@@ -1262,18 +1262,18 @@ def frame_lag(
         lag, every, n_frames_tot=None, allow_zero=False, verbose=True):
     """
     Check if a frame lag ('lag time') is chosen properly.
-    
+
     Check if a frame lag ('lag time') is chosen properly with respect to
     the total number of frames in the trajectory and the interval
     between frames that are/were actually read.
-    
+
     The frame lag must meet the following requirements:
-        
+
         * Must be greater than zero (if `allow_zero` is ``True``, zero
           is also possible)
         * Must not be greater than `n_frames_tot` (if supplied).
         * Must be an integer multiple of `every`.
-    
+
     Parameters
     ----------
     lag : int
@@ -1289,7 +1289,7 @@ def frame_lag(
     verbose : bool, optional
         If ``True`` (default), any changes to `lag` are printed to
         standard output.
-    
+
     Returns
     -------
     lag : int
@@ -1298,7 +1298,7 @@ def frame_lag(
         An effective frame lag.  If e.g. only every tenth frame of the
         trajectory is read and you want a frame lag of fifty, the
         effective frame lag is five.
-    
+
     See Also
     --------
     :func:`mdtools.check.frame_slicing` :
@@ -1321,7 +1321,7 @@ def frame_lag(
         raise ValueError("'every' ({}) must not be greater than"
                          " 'n_frames_tot' ({})"
                          .format(every, n_frames_tot))
-    
+
     # Check frame lag:
     if allow_zero and lag == 0:
         return lag, 0
@@ -1345,7 +1345,7 @@ def frame_lag(
         raise ValueError("'lag' ist not an integer")
     if effective_lag != int(effective_lag):
         raise ValueError("'effective_lag' ist not an integer")
-    
+
     return int(lag), int(effective_lag)
 
 
@@ -1353,14 +1353,14 @@ def time_step(trj, verbose=True):
     """
     Check whether all frames in a |mda_trj| have the same
     :attr:`time step <MDAnalysis.coordinates.base.Timestep.dt>`.
-    
+
     Parameters
     ----------
     trj : MDAnalysis.coordinates.base.ReaderBase or MDAnalysis.coordinates.base.FrameIteratorBase
         The |mda_trj| to check.
     verbose : bool, optional
         If ``True``, print progress information to standard output.
-    
+
     Raises
     ------
     ValueError
@@ -1386,20 +1386,20 @@ def time_step(trj, verbose=True):
 def masses(ag, flash_test=True):
     """
     Check atom masses.
-    
+
     .. deprecated:: 0.0.0.dev0
         :func:`mdtools.check.masses` will be replaced by
         :func:`mdtools.check.masses_new` in a future release.
-    
+
     `MDAnalysis always guesses atom masses`_ from the atom type, even if
     the input file contains the masses.  This might result in wrong mass
     assignments.  If the mass cannot be guessed at all, a mass of 0 is
     assigned.  Hence, it is important to check the correct assignment of
     masses before calculating mass dependent quantities like the center
     of mass.
-    
+
     .. _MDAnalysis always guesses atom masses: https://userguide.mdanalysis.org/formats/guessing.html
-    
+
     Parameters
     ----------
     ag : MDAnalysis.core.groups.AtomGroup
@@ -1411,12 +1411,12 @@ def masses(ag, flash_test=True):
         different atom types in `ag` with their corresponding masses
         guessed by MDAnalysis so that the user can check whether the
         masses were guessed correctly.
-    
+
     Raises
     ------
     ValueError
         If one or more atoms of `ag` have zero mass.
-    
+
     Note
     ----
     This function only checks if any atom type was assigned a zero mass.
@@ -1447,25 +1447,25 @@ def masses(ag, flash_test=True):
 def masses_new(ag, verbose=False):
     """
     Check :attr:`atom masses <MDAnalysis.core.groups.AtomGroup.masses>`.
-    
+
     .. note::
-        
+
         :func:`mdtools.check.masses_new` will replace
         :func:`mdtools.check.masses` in a future release.  When doing
         so, :func:`masses_new` will be renamed to
         :func:`mdtools.check.masses` (hence lines containing
         :func:`mdtools.check.masses_new` can have 76 characters instead
         of 72).
-    
+
     `MDAnalysis always guesses atom masses`_ from the atom types, even
     if the input file contains the masses.  This might result in wrong
     mass assignments.  If the mass cannot be guessed at all, a mass of 0
     is assigned.  Hence, it is important to check the correct assignment
     of masses before calculating mass dependent quantities like the
     center of mass.
-    
+
     .. _MDAnalysis always guesses atom masses: https://userguide.mdanalysis.org/formats/guessing.html
-    
+
     Parameters
     ----------
     ag : MDAnalysis.core.groups.AtomGroup
@@ -1476,13 +1476,13 @@ def masses_new(ag, verbose=False):
         with their corresponding masses as guessed by MDAnalysis to
         standard output so that the user can check whether the masses
         were guessed correctly.
-    
+
     Raises
     ------
     ValueError
         If at least one :class:`~MDAnalysis.core.groups.Atom` of `ag`
         has a mass equal to or less than zero.
-    
+
     Note
     ----
     This function only checks if any atom type was assigned a mass less

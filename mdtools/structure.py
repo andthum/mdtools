@@ -44,7 +44,7 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
     """
     Calculate the center of mass of (compounds of) a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     ag : MDAnalysis.core.groups.AtomGroup
@@ -86,7 +86,7 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
         the trajectory unwrapped is not possible with this function.
     debug : bool, optional
         If ``True``, run in debug mode.
-    
+
     Returns
     -------
     center : numpy.ndarray
@@ -94,21 +94,21 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
         was set to ``'group'``, the output will be a single position
         vector.  Else, the output will be a 2d array of shape ``(n, 3)``
         where ``n`` is the number of compounds in `ag`.
-    
+
     See Also
     --------
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
         Center of mass of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center` :
         Weighted center of (compounds of) the group
-    
+
     Notes
     -----
     This function uses the
     :meth:`~MDAnalysis.core.groups.AtomGroup.center_of_mass` method of
     the input :class:`~MDAnalysis.core.groups.AtomGroup` to calculate
     the center of mass.
-    
+
     If `make_whole` is ``True``, all
     :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
     back into the primary unit cell using :func:`mdtools.box.wrap`
@@ -120,9 +120,9 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
     properly.  This means that making compounds whole in an unwrapped
     trajectory while keeping the trajectory unwrapped is not possible
     with this function.
-    
+
     .. todo::
-        
+
         Check if it is really necessary to wrap all
         :class:`Atoms <MDAnalysis.core.groups.Atom>` back into the
         primary unit cell before calling
@@ -130,11 +130,11 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
         `unwrap` set to ``True``.  The currently done back-wrapping is a
         serious problem, because it implies an inplace change of the
         :class:`~MDAnalysis.core.groups.Atom` coordinates.
-        
+
         If the no wrapping is necessary, we can mark this function as
         deprecated and instead recommend the direct use of
         :meth:`~MDAnalysis.core.groups.AtomGroup.center_of_mass`.
-    
+
     """
     mdt.check.masses_new(ag=ag, verbose=debug)
     if make_whole:
@@ -157,15 +157,15 @@ def discrete_pos_trj(
         verbose=True, debug=False, **sel_kwargs):
     """
     Create a discrete posotion trajectory.
-    
+
     Discretize the positions of compounds of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` in a given spatial
     direction.
-    
+
     .. todo::
-        
+
         Allow to choose between center of mass and center of geometry.
-    
+
     Parameters
     ----------
     sel : MDAnalysis.core.groups.AtomGroup or str
@@ -284,7 +284,7 @@ def discrete_pos_trj(
         the number of compounds in this
         :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` must stay
         constant.  Ignored if `trj` is not ``None``.
-    
+
     Returns
     -------
     dtrj : numpy.ndarray
@@ -302,7 +302,7 @@ def discrete_pos_trj(
         :attr:`Time step <MDAnalysis.coordinates.base.Timestep.dt>` of
         the discrete position trajectory in ps.  Only returned if
         `return_dt` is ``True``.
-    
+
     See Also
     --------
     :mod:`discrete_pos` :
@@ -310,7 +310,7 @@ def discrete_pos_trj(
     :func:`numpy.digitize` :
         Return the indices of the bins to which each value in the input
         array belongs
-    
+
     Notes
     -----
     The simulation box must be orthogonal.
@@ -352,7 +352,7 @@ def discrete_pos_trj(
                          " but you gave {}".format(direction))
     dim = {'x': 0, 'y': 1, 'z': 2}
     ixd = dim[direction]
-    
+
     if trj is None:
         if verbose:
             print()
@@ -393,7 +393,7 @@ def discrete_pos_trj(
                           " exception was raised: {}".format(error),
                           RuntimeWarning)
     time_step = trj[BEGIN].dt * EVERY
-    
+
     if verbose:
         print()
         print("Creating/checking bins...")
@@ -426,7 +426,7 @@ def discrete_pos_trj(
         print("Elapsed time:         {}".format(datetime.now()-timer))
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss/2**20))
-    
+
     # Prepare discrete trajectory:
     if compound == 'group':
         N_CMPS = 1
@@ -447,7 +447,7 @@ def discrete_pos_trj(
             print()
         mdt.check.masses_new(ag=sel, verbose=verbose)
     dtrj = np.zeros((N_FRAMES, N_CMPS), dtype=dtype)
-    
+
     # Read trajectory:
     if verbose:
         print()
@@ -504,13 +504,13 @@ def discrete_pos_trj(
         print("Elapsed time:         {}".format(datetime.now()-timer))
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss/2**20))
-    
+
     # Internal consistency check
     if np.any(dtrj < 0) or np.any(dtrj >= len(bins)-1):
         raise ValueError("At least one compound position lies outside"
                          " the primary unit cell. This should not have"
                          " happened")
-    
+
     if verbose:
         print()
         print("mdtools.structure.discrete_pos_trj() done")
@@ -520,7 +520,7 @@ def discrete_pos_trj(
         print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss/2**20))
-    
+
     if not np.any([return_bins, return_lbox, return_dt]):
         return dtrj
     else:
@@ -536,7 +536,7 @@ def natms_per_cmp(
     Get the number of :class:`Atoms <MDAnalysis.core.groups.Atom>` of
     each compound in an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     ag : MDAnalysis.core.groups.AtomGroup
@@ -580,7 +580,7 @@ def natms_per_cmp(
         important when constructing compound contact matrices from
         :class:`~MDAnalysis.core.groups.Atom` contact matrices with
         :func:`mdtools.structure.cmp_contact_matrix`.
-    
+
     Returns
     -------
     natms_per_cmp : int or numpy.ndarray
@@ -597,7 +597,7 @@ def natms_per_cmp(
     cmp_ix : array_like
         Unique compound indices as assigned by MDAnalysis.  Only
         returned if `return_cmp_ix` is ``True``.
-    
+
     See Also
     --------
     :func:`mdtools.structure.cmp_contact_matrix` :
@@ -646,7 +646,7 @@ def natms_per_cmp(
     cmp_ix, natms_per_cmp = np.unique(cmp_ix, return_counts=True)
     if (not return_array and
         len(natms_per_cmp) > 0 and
-        np.all(natms_per_cmp == natms_per_cmp[0])):
+            np.all(natms_per_cmp == natms_per_cmp[0])):
         natms_per_cmp = natms_per_cmp[0]
     if return_cmp_ix:
         return natms_per_cmp, cmp_ix
@@ -660,7 +660,7 @@ def cmp_contact_count_matrix(
     Take an :class:`~MDAnalysis.core.groups.Atom` contact matrix and sum
     the contacts of all :class:`Atoms <MDAnalysis.core.groups.Atom>`
     belonging to the same compound.
-    
+
     A compound is usually a chemically meaningfull subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
@@ -674,7 +674,7 @@ def cmp_contact_count_matrix(
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
     in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -700,7 +700,7 @@ def cmp_contact_count_matrix(
         against ``cm.shape[1]``).
     dtype : dtype, optional
         Data type of the output array.
-    
+
     Returns
     -------
     cmp_ccm : numpy.ndarray
@@ -710,7 +710,7 @@ def cmp_contact_count_matrix(
         reference and selection compound.  If both `natms_per_refcmp`
         and `natms_per_selcmp` are ``1``, the input contact matrix is
         returned instead with its data type converted to `dtype`.
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -729,17 +729,17 @@ def cmp_contact_count_matrix(
     :meth:`numpy.ufunc.reduceat` :
         Perform a (local) :meth:`~numpy.ufunc.reduce` with specified
         slices over a single axis
-    
+
     Notes
     -----
     :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the same
     compound must form a contiguous set in the input contact matrix,
     otherwise the result will be wrong.
-    
+
     If both `natms_per_refcmp` and `natms_per_selcmp` are ``1``,
     ``cmp_contact_count_matrix(cm, dtype=dtype)`` is equivalent to
     ``np.asarray(cm, dtype=dtype)``.
-    
+
     Examples
     --------
     >>> cm = np.array([[ True,  True, False, False],
@@ -762,24 +762,24 @@ def cmp_contact_count_matrix(
     ...                                   dtype=np.uint32)
     array([[2, 0],
            [1, 3]], dtype=uint32)
-    
+
     If both `natms_per_refcmp` and `natms_per_selcmp` are ``1``,
     ``cmp_contact_count_matrix(cm, dtype=dtype)`` is equivalent to
     ``np.asarray(cm, dtype=dtype)``:
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm, dtype=bool) is cm
     True
     >>> mdt.strc.cmp_contact_count_matrix(cm, dtype=int) is cm
     False
-    
+
     Edge cases:
-    
+
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
     >>> mdt.strc.cmp_contact_count_matrix(cm, natms_per_refcmp=[])
     array([], shape=(0, 4), dtype=int64)
     >>> mdt.strc.cmp_contact_count_matrix(cm, natms_per_refcmp=1)
     array([], shape=(0, 4), dtype=int64)
-    
+
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
     >>> mdt.strc.cmp_contact_count_matrix(cm,
     ...                                   natms_per_refcmp=3,
@@ -836,7 +836,7 @@ def cmp_contact_matrix(
     """
     Convert an :class:`~MDAnalysis.core.groups.Atom` contact matrix to a
     compound contact matrix.
-    
+
     First sum the contacts of all
     :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the same
     compound.  Then decide based on the number of contacts between the
@@ -845,7 +845,7 @@ def cmp_contact_matrix(
     are considered to be in contact if the summed number of contacts
     between their :class:`Atoms <MDAnalysis.core.groups.Atom>` is equal
     to or higher than `min_contacts`.
-    
+
     A compound is usually a chemically meaningfull subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
@@ -859,7 +859,7 @@ def cmp_contact_matrix(
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
     in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -890,7 +890,7 @@ def cmp_contact_matrix(
         higher than `min_contacts`.  Must be greater than zero.
         `min_contacts` is ignored if both `natms_per_refcmp` and
         `natms_per_selcmp` are ``1``.
-    
+
     Returns
     -------
     cmp_cm : numpy.ndarray
@@ -900,7 +900,7 @@ def cmp_contact_matrix(
         `natms_per_selcmp` are ``1``, the input contact matrix is
         returned instead with its data type converted to bool (if it was
         not already bool before).
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -915,17 +915,17 @@ def cmp_contact_matrix(
         sum the contacts of all
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the
         same compound
-    
+
     Notes
     -----
     :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the same
     compound must form a contiguous set in the input contact matrix,
     otherwise the result will be wrong.
-    
+
     If both `natms_per_refcmp` and `natms_per_selcmp` are ``1``,
     ``cmp_contact_matrix(cm)`` is equivalent to
     ``np.asarray(cm, dtype=bool)``.
-    
+
     Examples
     --------
     >>> cm = np.array([[ True,  True, False, False],
@@ -948,24 +948,24 @@ def cmp_contact_matrix(
     ...                             natms_per_selcmp=2)
     array([[ True, False],
            [ True,  True]])
-    
+
     If both `natms_per_refcmp` and `natms_per_selcmp` are ``1``,
     ``cmp_contact_matrix(cm)`` is equivalent to
     ``np.asarray(cm, dtype=bool)``.
-    
+
     >>> mdt.strc.cmp_contact_matrix(cm) is cm
     True
     >>> mdt.strc.cmp_contact_matrix(cm, min_contacts=2) is cm
     True
-    
+
     Edge cases:
-    
+
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
     >>> mdt.strc.cmp_contact_matrix(cm, natms_per_refcmp=[])
     array([], shape=(0, 4), dtype=bool)
     >>> mdt.strc.cmp_contact_matrix(cm, natms_per_refcmp=1)
     array([], shape=(0, 4), dtype=bool)
-    
+
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
     >>> mdt.strc.cmp_contact_matrix(cm,
     ...                             natms_per_refcmp=3,
@@ -975,9 +975,9 @@ def cmp_contact_matrix(
     """
     cm = np.asarray(cm, dtype=bool)
     if (np.any(np.not_equal(natms_per_refcmp, 1)) or
-        np.any(np.not_equal(natms_per_selcmp, 1))):
+            np.any(np.not_equal(natms_per_selcmp, 1))):
         if (np.size(natms_per_refcmp) > 0 and
-            np.size(natms_per_selcmp) > 0):
+                np.size(natms_per_selcmp) > 0):
             # np.max([]) raises an exception
             max_contacts = np.prod([np.max(natms_per_refcmp),
                                     np.max(natms_per_selcmp)])
@@ -1006,9 +1006,9 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
     """
     Insert elements in a contact matrix at missing *intermediate*
     compound indices.
-    
+
     The inserted matrix elements will evaluate to ``False``.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -1022,7 +1022,7 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
         reference/selection compounds contained in `cm`.  If the indices
         contain gaps, these gaps will be filled by this function.
         Indices must not be negative, dublicate indices will be removed.
-    
+
     Returns
     -------
     cm : numpy.ndarray
@@ -1031,7 +1031,7 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
         selection compound indices in `selix`.  If both `refix` and
         `selix` do not have any gaps (i.e. the indices are contiguous),
         the input matrix is returned instead as :class:`numpy.ndarray`.
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -1040,7 +1040,7 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
     :func:`mdtools.structure.cmp_contact_matrix` :
         Convert an :class:`~MDAnalysis.core.groups.Atom` contact matrix
         to a compound contact matrix
-    
+
     Examples
     --------
     >>> cm = np.array([[ True,  True, False],
@@ -1052,11 +1052,11 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
     >>> mdt.strc.cm_fill_missing_cmp_ix(cm, selix=[0, 1, 4])  # 2, 3 missing
     array([[ True,  True, False, False, False],
            [False,  True, False, False,  True]])
-    
+
     If both `refix` and `selix` do not have any gaps, the input contact
     matrix is returned as :class:`numpy.ndarray`.  If it already was a
     :class:`numpy.ndarray` before, no copy is made.
-    
+
     >>> result = mdt.strc.cm_fill_missing_cmp_ix(cm,
     ...                                          refix=[2, 3],
     ...                                          selix=[1, 2, 3])
@@ -1099,7 +1099,7 @@ def contact_matrix(
     """
     Construct a contact matrix for two MDAnalysis
     :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>`.
-    
+
     Construct a boolean matrix whose elements indicate whether a contact
     exists between a given reference and selection compound or not.  The
     matrix element ``cm[i][j]`` will be ``True``, if compound ``j`` of
@@ -1109,7 +1109,7 @@ def contact_matrix(
     as two :class:`Atoms <MDAnalysis.core.groups.Atom>` from different
     :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>` whose
     distance is less than or equal to a given cutoff distance.
-    
+
     Parameters
     ----------
     ref, sel : MDAnalysis.core.groups.AtomGroup
@@ -1175,11 +1175,11 @@ def contact_matrix(
         further information.
     debug : bool, optional
         If ``True``, run in :ref:`debug mode <debug-mode-label>`.
-        
+
         .. deprecated:: 0.0.0.dev0
             This argument is without use and will be removed in a future
             release.
-    
+
     Returns
     -------
     cm : numpy.ndarray
@@ -1187,7 +1187,7 @@ def contact_matrix(
         Matrix elements evaluating to ``True`` indicate a contact
         between the respective compounds of the reference and selection
         :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrices` :
@@ -1215,7 +1215,7 @@ def contact_matrix(
         coordinates and another configuration
     :mod:`scipy.sparse` :
         SciPy 2-D sparse matrix package
-    
+
     Notes
     -----
     When holding multiply contact matrices in memory at once, you might
@@ -1232,7 +1232,7 @@ def contact_matrix(
         if ag.unique != ag:
             raise ValueError("The {} group must not contain dublicate"
                              " atoms".format(ag_names[i]))
-    
+
     for i, ag in enumerate(ags):
         if ag.n_atoms == 0:
             cm = np.array([], dtype=bool)
@@ -1275,7 +1275,7 @@ def contact_matrix(
         cm = cm_fill_missing_cmp_ix(cm=cm,
                                     refix=cmp_ix[0],
                                     selix=cmp_ix[1])
-    
+
     return cm
 
 
@@ -1288,7 +1288,7 @@ def contact_matrices(
     Construct a contact matrix for two MDAnalysis
     :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>` for each
     frame in a trajectory.
-    
+
     Parameters
     ----------
     ref, sel : MDAnalysis.core.groups.AtomGroup or str
@@ -1380,7 +1380,7 @@ def contact_matrices(
         further information.
     verbose : bool, optional
         If ``True``, print progress information to standard output.
-    
+
     Returns
     -------
     cms : list
@@ -1390,7 +1390,7 @@ def contact_matrices(
         many rows as reference compounds and as many columns as
         selection compounds.  See
         :func:`mdtools.structure.contact_matrix` for more details.
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -1417,7 +1417,7 @@ def contact_matrices(
     if len(compound) != 2:
         raise ValueError("'compound' must either be a string or a 1d"
                          " array containing 2 strings")
-    
+
     if trj is None:
         if verbose:
             print()
@@ -1461,7 +1461,7 @@ def contact_matrices(
             raise ValueError("'sel' is a string, but if 'trj' is given,"
                              " 'sel' must be a"
                              " MDAnalysis.core.groups.AtomGroup instance")
-    
+
     cms = [None,] * N_FRAMES
     if not updating_ref:
         natms_per_refcmp, refcmp_ix = mdt.strc.natms_per_cmp(
@@ -1483,7 +1483,7 @@ def contact_matrices(
                                  dtype=np.float64)
     else:
         dist_array_tmp = None
-    
+
     if verbose:
         print()
         print("Reading trajectory...")
@@ -1550,14 +1550,14 @@ def contact_matrices(
         print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss/2**20))
-    
+
     return cms
 
 
 def cms_n_common_contacts(cms):
     """
     Get the number of contancts common in all contact matrices.
-    
+
     Parameters
     ----------
     cms : tuple or list
@@ -1568,14 +1568,14 @@ def cms_n_common_contacts(cms):
         :mod:`SciPy sparse matrices <scipy.sparse>`.  A mix of
         :class:`NumPy arrays <numpy.ndarray>` and
         :mod:`SciPy sparse matrices <scipy.sparse>` is not possible.
-    
+
     Returns
     -------
     n_bound_in_all_cms : int
         Number of non-zero elements of the product of all arrays in
         `cms` (i.e. the number of non-zero elements that are common in
         all arrays in `cms`).
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -1586,11 +1586,11 @@ def cms_n_common_contacts(cms):
     :func:`mdtools.structure.cms_n_contacts` :
         Get the number of contancts per contact matrix and the number of
         contacts common in all contact matrices
-    
+
     Examples
     --------
     :class:`NumPy arrays <numpy.ndarray>` as input:
-    
+
     >>> cm0 = np.array([[ True,  True, False],
     ...                 [False,  True,  True]])
     >>> cm1 = np.array([[ True, False, False],
@@ -1602,9 +1602,9 @@ def cms_n_common_contacts(cms):
     >>> cms = [cm0, cm1, cm2]
     >>> mdt.strc.cms_n_common_contacts(cms)
     2
-    
+
     :mod:`SciPy sparse matrices <scipy.sparse>` as input:
-    
+
     >>> from scipy import sparse
     >>> cms = [sparse.csr_matrix(cm) for cm in cms]
     >>> mdt.strc.cms_n_common_contacts([cms[0],])
@@ -1629,7 +1629,7 @@ def cms_n_contacts(cms, dtype=int):
     """
     Get the number of contancts per contact matrix and the number of
     contacts common in all contact matrices.
-    
+
     Parameters
     ----------
     cms : tuple or list
@@ -1642,7 +1642,7 @@ def cms_n_contacts(cms, dtype=int):
         :mod:`SciPy sparse matrices <scipy.sparse>` is not possible.
     dtype : dtype, optional
         Data type of the output array.
-    
+
     Returns
     -------
     n_contacts : numpy.ndarray
@@ -1651,7 +1651,7 @@ def cms_n_contacts(cms, dtype=int):
         `n_contacts` is the number of non-zero elements of the product
         of all arrays in `cms` (i.e. the number of non-zero elements
         that are common in all arrays in `cms`).
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -1661,11 +1661,11 @@ def cms_n_contacts(cms, dtype=int):
         Construct a contact matrix for each frame in a trajectory
     :func:`mdtools.structure.cms_n_common_contacts` :
         Get the number of contancts common in all contact matrices
-    
+
     Examples
     --------
     :class:`NumPy arrays <numpy.ndarray>` as input:
-    
+
     >>> cm0 = np.array([[ True,  True, False],
     ...                 [False,  True,  True]])
     >>> cm1 = np.array([[ True, False, False],
@@ -1682,9 +1682,9 @@ def cms_n_contacts(cms, dtype=int):
     array([4, 2, 3])
     >>> np.array_equal(n_contacts, mdt.strc.cms_n_contacts(cms)[:-1])
     True
-    
+
     :mod:`SciPy sparse matrices <scipy.sparse>` as input:
-    
+
     >>> from scipy import sparse
     >>> cms = [sparse.csr_matrix(cm) for cm in cms]
     >>> mdt.strc.cms_n_contacts([cms[0],])
@@ -1714,7 +1714,7 @@ def cm_selix_stats(cm, unbound_nan=False):
     """
     Get statistics about the indices of selection compounds bound to
     reference compounds for each reference compound.
-    
+
     Parameters
     ----------
     cm : array_like or :mod:`SciPy sparse matrix <scipy.sparse>`
@@ -1729,26 +1729,26 @@ def cm_selix_stats(cm, unbound_nan=False):
         be zero, which can be misinterpreted, because if a reference
         compound is only bound by the selection compound with index
         zero, all output values will be zero, too.
-    
+
     Returns
     -------
     selix_stats : numpy.ndarray
         Array of shape ``(m, 5)``.  The five columns contain for each
         reference compound
-            
+
             1. the number
             2. the mean of the indices
             3. the variance of the indices
             4. the minimum of the indices
             5. the maximum of the indices
-        
+
         of selection compounds that are in contact with the given
         reference compound.
-    
+
     Examples
     --------
     :class:`NumPy array <numpy.ndarray>` as input:
-    
+
     >>> cm = np.eye(5, 4, -1, dtype=bool) + np.eye(5, 4, -2, dtype=bool)
     >>> cm
     array([[False, False, False, False],
@@ -1777,9 +1777,9 @@ def cm_selix_stats(cm, unbound_nan=False):
            [2.  , 0.5 , 0.25, 0.  , 1.  ],
            [2.  , 1.5 , 0.25, 1.  , 2.  ],
            [2.  , 2.5 , 0.25, 2.  , 3.  ]])
-    
+
     :mod:`SciPy sparse matrices <scipy.sparse>` as input:
-    
+
     >>> from scipy import sparse
     >>> cm = sparse.csr_matrix(cm)
     >>> mdt.strc.cm_selix_stats(cm)
@@ -1857,7 +1857,7 @@ def contact_hist_refcmp_diff_selcmp(
     """
     Bin the number of contacts that reference compounds establish to
     **different** selection compounds into a histogram.
-    
+
     A compound is usually a chemically meaningfull subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
@@ -1871,7 +1871,7 @@ def contact_hist_refcmp_diff_selcmp(
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
     in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -1908,7 +1908,7 @@ def contact_hist_refcmp_diff_selcmp(
         information.
     dtype : dtype, optional
         Data type of the output array.
-    
+
     Returns
     -------
     hist_refcmp_diff_selcmp : numpy.ndarray
@@ -1916,7 +1916,7 @@ def contact_hist_refcmp_diff_selcmp(
         establish to **different** selection compounds.  Multiple
         contacts with the same selection compound are not taken into
         account.
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -1944,15 +1944,15 @@ def contact_hist_refcmp_diff_selcmp(
     :func:`numpy.bincount` :
         Count the number of occurrences of each value in an array of
         non-negative ints
-    
+
     Notes
     -----
     :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the same
     compound must form a contiguous set in the input contact matrix,
     otherwise the result will be wrong.
-    
+
     About the output array:
-    
+
     `hist_refcmp_diff_selcmp`
         The first element is the number of reference compounds having no
         contact with any selection compound, the second element is the
@@ -1960,13 +1960,13 @@ def contact_hist_refcmp_diff_selcmp(
         selection compound, the third element is the number of reference
         compounds having contact with exactly two **different**
         selection compounds, and so on.
-    
+
     If both `natms_per_refcmp` and `natms_per_selcmp` are ``1`` and `cm`
     is a true boolean contact matrix,
     :func:`mdtools.structure.contact_hist_refcmp_diff_selcmp` and
     :func:`mdtools.structure.contact_hist_refcmp_selcmp_tot` return the
     same result.
-    
+
     Examples
     --------
     >>> cm = np.tril(np.ones((5,4), dtype=bool), -1)
@@ -1985,7 +1985,7 @@ def contact_hist_refcmp_diff_selcmp(
     array([1, 1, 2, 0, 1])
     >>> mdt.strc.contact_hist_refcmp_diff_selcmp(cm=cm, dtype=np.uint32)
     array([1, 1, 2, 0, 1], dtype=uint32)
-    
+
     >>> mdt.strc.cmp_contact_matrix(cm=cm, natms_per_refcmp=[2, 2, 1])
     array([[ True, False, False, False],
            [ True,  True,  True, False],
@@ -1995,7 +1995,7 @@ def contact_hist_refcmp_diff_selcmp(
     ...     natms_per_refcmp=[2, 2, 1]
     ... )
     array([0, 1, 0, 1, 1])
-    
+
     >>> mdt.strc.cmp_contact_matrix(cm=cm, natms_per_selcmp=2)
     array([[False, False],
            [ True, False],
@@ -2005,7 +2005,7 @@ def contact_hist_refcmp_diff_selcmp(
     >>> mdt.strc.contact_hist_refcmp_diff_selcmp(cm=cm,
     ...                                          natms_per_selcmp=2)
     array([1, 2, 2])
-    
+
     >>> mdt.strc.cmp_contact_matrix(cm=cm,
     ...                             natms_per_refcmp=[2, 2, 1],
     ...                             natms_per_selcmp=2)
@@ -2018,9 +2018,9 @@ def contact_hist_refcmp_diff_selcmp(
     ...     natms_per_selcmp=2
     ... )
     array([0, 1, 2])
-    
+
     Edge cases:
-    
+
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
     >>> mdt.strc.contact_hist_refcmp_diff_selcmp(cm, natms_per_refcmp=[])
     array([], dtype=int64)
@@ -2031,7 +2031,7 @@ def contact_hist_refcmp_diff_selcmp(
     ...                                          minlength=2,
     ...                                          dtype=np.uint32)
     array([0, 0], dtype=uint32)
-    
+
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
     >>> mdt.strc.contact_hist_refcmp_diff_selcmp(cm,
     ...                                          natms_per_refcmp=3,
@@ -2052,7 +2052,7 @@ def contact_hist_refcmp_same_selcmp(
     """
     Bin the number of contacts that reference compounds establish to
     the **same** selection compound into a histogram.
-    
+
     A compound is usually a chemically meaningfull subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
@@ -2066,7 +2066,7 @@ def contact_hist_refcmp_same_selcmp(
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
     in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -2100,7 +2100,7 @@ def contact_hist_refcmp_same_selcmp(
         longer if necessary.
     dtype : dtype, optional
         Data type of the output array.
-    
+
     Returns
     -------
     hist_refcmp_same_selcmp : numpy.ndarray
@@ -2111,7 +2111,7 @@ def contact_hist_refcmp_same_selcmp(
         (:class:`~MDAnalysis.core.groups.Atom`-
         :class:`~MDAnalysis.core.groups.Atom` contacts) are not taken
         into account.
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -2134,15 +2134,15 @@ def contact_hist_refcmp_same_selcmp(
         Bin the number of "bonds" (:class:`~MDAnalysis.core.groups.Atom`-
         :class:`~MDAnalysis.core.groups.Atom` contacts) between pairs of
         reference and selection compounds
-    
+
     Notes
     -----
     :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the same
     compound must form a contiguous set in the input contact matrix,
     otherwise the result will be wrong.
-    
+
     About the output array:
-    
+
     `hist_refcmp_same_selcmp`
         The first element is the number of reference compounds having no
         contact with any selection compound, the second element is the
@@ -2151,7 +2151,7 @@ def contact_hist_refcmp_same_selcmp(
         is the number of reference compounds having contact with
         **at least** one selection compound via exactly two "bonds", and
         so on.
-        
+
         Important: Different selection compounds that are connected to
         the same reference compound via the same number of "bonds" are
         not taken into account.  For instance, if a reference compound
@@ -2160,7 +2160,7 @@ def contact_hist_refcmp_same_selcmp(
         However, if the reference compound is connected to the first
         selection compound via one "bond" and to the second selection
         compound via two "bonds", both selection compounds are counted.
-        
+
         The sum of all histogram elements might therefore exceed the
         number of reference compounds, because a single reference
         compound can be connected to different selection compounds with
@@ -2169,20 +2169,20 @@ def contact_hist_refcmp_same_selcmp(
         because different selection compounds that are connected to the
         same reference compound via the same number of "bonds" are not
         taken into account.
-        
+
         Hence it is e.g. possible to say that 100 % of the reference
         compounds are coordinated monodentately by selection compounds
         while at the same time 50 % of the reference compounds are
         additionally coordinated bidentately.
-        
+
         This behavior is complementary to the histogram returned by
         :func:`mdtools.structure.contact_hist_refcmp_selcmp_pair`.
-    
+
     If both `natms_per_refcmp` and `natms_per_selcmp` are ``1`` and `cm`
     is a true boolean contact matrix, `hist_refcmp_same_selcmp` is
     equal to ``[x, cm.shape[0]-x]``, where ``x`` is the number of
     reference compounds having no contact with any selection compound.
-    
+
     Examples
     --------
     >>> cm = np.tril(np.ones((5,4), dtype=bool), -1)
@@ -2204,7 +2204,7 @@ def contact_hist_refcmp_same_selcmp(
     >>> hist = mdt.strc.contact_hist_refcmp_same_selcmp(cm)
     >>> hist[1] == cm.shape[0] - hist[0]
     True
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
     ...                                   natms_per_refcmp=[2, 2, 1])
     array([[1, 0, 0, 0],
@@ -2215,7 +2215,7 @@ def contact_hist_refcmp_same_selcmp(
     ...     natms_per_refcmp=[2, 2, 1]
     ... )
     array([0, 3, 1])
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm, natms_per_selcmp=2)
     array([[0, 0],
            [1, 0],
@@ -2225,7 +2225,7 @@ def contact_hist_refcmp_same_selcmp(
     >>> mdt.strc.contact_hist_refcmp_same_selcmp(cm=cm,
     ...                                          natms_per_selcmp=2)
     array([1, 2, 2])
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
     ...                                   natms_per_refcmp=[2, 2, 1],
     ...                                   natms_per_selcmp=2)
@@ -2238,9 +2238,9 @@ def contact_hist_refcmp_same_selcmp(
     ...     natms_per_selcmp=2
     ... )
     array([0, 2, 1, 1])
-    
+
     Edge cases:
-    
+
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
     >>> mdt.strc.contact_hist_refcmp_same_selcmp(cm, natms_per_refcmp=[])
     array([], dtype=int64)
@@ -2251,7 +2251,7 @@ def contact_hist_refcmp_same_selcmp(
     ...                                          minlength=2,
     ...                                          dtype=np.uint32)
     array([0, 0], dtype=uint32)
-    
+
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
     >>> mdt.strc.contact_hist_refcmp_same_selcmp(cm,
     ...                                          natms_per_refcmp=3,
@@ -2299,7 +2299,7 @@ def contact_hist_refcmp_same_selcmp(
     # Internal consistency check:
     if (np.issubdtype(cm_dtype, bool) and
         np.all(np.equal(natms_per_refcmp, 1)) and
-        np.all(np.equal(natms_per_selcmp, 1))):
+            np.all(np.equal(natms_per_selcmp, 1))):
         # refcmp == refatm and selcmp == selatm
         np.equal(cm, 0, out=pair_has_n_contacts)
         # any_pair_has_n_contacts should now be called
@@ -2321,7 +2321,7 @@ def contact_hist_refcmp_selcmp_tot(
     """
     Bin the **total** number of contacts that reference compounds
     establish to selection compounds into a histogram.
-    
+
     A compound is usually a chemically meaningfull subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
@@ -2335,7 +2335,7 @@ def contact_hist_refcmp_selcmp_tot(
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
     in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -2370,14 +2370,14 @@ def contact_hist_refcmp_selcmp_tot(
         information.
     dtype : dtype, optional
         Data type of the output array.
-    
+
     Returns
     -------
     hist_refcmp_selcmp_tot : numpy.ndarray
         Histogram of the **total** number of contacts that reference
         compounds establish to selection compounds.  All contacts are
         taken into account.
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -2403,15 +2403,15 @@ def contact_hist_refcmp_selcmp_tot(
     :func:`numpy.bincount` :
         Count the number of occurrences of each value in an array of
         non-negative ints
-    
+
     Notes
     -----
     :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the same
     compound must form a contiguous set in the input contact matrix,
     otherwise the result will be wrong.
-    
+
     About the output array:
-    
+
     `hist_refcmp_selcmp_tot`
         The first element is the number of reference compounds having no
         contact with any selection compound, the second element is the
@@ -2419,17 +2419,17 @@ def contact_hist_refcmp_selcmp_tot(
         selection compounds, the third element is the number of
         reference compounds having exactly two contacts with selection
         compounds, and so on.
-    
+
     If both `natms_per_refcmp` and `natms_per_selcmp` are ``1`` and `cm`
     is a true boolean contact matrix,
     :func:`mdtools.structure.contact_hist_refcmp_diff_selcmp` and
     :func:`mdtools.structure.contact_hist_refcmp_selcmp_tot` return the
     same result.
-    
+
     The total number of contacts is given by::
-        
+
         np.sum(hist_refcmp_selcmp_tot * np.arange(len(hist_refcmp_selcmp_tot)))
-    
+
     Note that this is equal to the total number of refatm-selatm pairs,
     when every reference and selection compound contains only one
     :class:`~MDAnalysis.core.groups.Atom`, because a given
@@ -2438,7 +2438,7 @@ def contact_hist_refcmp_selcmp_tot(
     :class:`Atoms <MDAnalysis.core.groups.Atom>` cannot have multiple
     contacts with each other.  See also
     :func:`mdtools.structure.contact_hist_refcmp_selcmp_pair`.
-    
+
     Examples
     --------
     >>> cm = np.tril(np.ones((5,4), dtype=bool), -1)
@@ -2457,7 +2457,7 @@ def contact_hist_refcmp_selcmp_tot(
     array([1, 1, 2, 0, 1])
     >>> mdt.strc.contact_hist_refcmp_selcmp_tot(cm=cm, dtype=np.uint32)
     array([1, 1, 2, 0, 1], dtype=uint32)
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
     ...                                   natms_per_refcmp=[2, 2, 1])
     array([[1, 0, 0, 0],
@@ -2468,7 +2468,7 @@ def contact_hist_refcmp_selcmp_tot(
     ...     natms_per_refcmp=[2, 2, 1]
     ... )
     array([0, 1, 0, 0, 2])
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm, natms_per_selcmp=2)
     array([[0, 0],
            [1, 0],
@@ -2478,7 +2478,7 @@ def contact_hist_refcmp_selcmp_tot(
     >>> mdt.strc.contact_hist_refcmp_selcmp_tot(cm=cm,
     ...                                         natms_per_selcmp=2)
     array([1, 1, 2, 0, 1])
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
     ...                                   natms_per_refcmp=[2, 2, 1],
     ...                                   natms_per_selcmp=2)
@@ -2491,9 +2491,9 @@ def contact_hist_refcmp_selcmp_tot(
     ...     natms_per_selcmp=2
     ... )
     array([0, 1, 0, 0, 2])
-    
+
     Edge cases:
-    
+
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
     >>> mdt.strc.contact_hist_refcmp_selcmp_tot(cm, natms_per_refcmp=[])
     array([], dtype=int64)
@@ -2504,7 +2504,7 @@ def contact_hist_refcmp_selcmp_tot(
     ...                                         minlength=2,
     ...                                         dtype=np.uint32)
     array([0, 0], dtype=uint32)
-    
+
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
     >>> mdt.strc.contact_hist_refcmp_selcmp_tot(cm,
     ...                                         natms_per_refcmp=3,
@@ -2527,7 +2527,7 @@ def contact_hist_refcmp_selcmp_pair(
     Bin the number of "bonds" (:class:`~MDAnalysis.core.groups.Atom`-
     :class:`~MDAnalysis.core.groups.Atom` contacts) between pairs of
     reference and selection compounds.
-    
+
     A compound is usually a chemically meaningfull subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
@@ -2541,7 +2541,7 @@ def contact_hist_refcmp_selcmp_pair(
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
     in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -2576,7 +2576,7 @@ def contact_hist_refcmp_selcmp_pair(
         information.
     dtype : dtype, optional
         Data type of the output array.
-    
+
     Returns
     -------
     hist_refcmp_selcmp_pair : numpy.ndarray
@@ -2587,7 +2587,7 @@ def contact_hist_refcmp_selcmp_pair(
         refcmp-selcmp pair is defined as a reference and selection
         compound that are connected with each other via at least one
         "bond".
-    
+
     See Also
     --------
     :func:`mdtools.structure.contact_matrix` :
@@ -2608,22 +2608,22 @@ def contact_hist_refcmp_selcmp_pair(
     :func:`numpy.bincount` :
         Count the number of occurrences of each value in an array of
         non-negative ints
-    
+
     Notes
     -----
     :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the same
     compound must form a contiguous set in the input contact matrix,
     otherwise the result will be wrong.
-    
+
     About the output array:
-    
+
     `hist_refcmp_selcmp_pair`
         The first element is meaningless (a refcmp-selcmp pair with zero
         "bonds" is not a pair) and therefore set to zero.  The second
         element is the number of refcmp-selcmp pairs connected via
         exactly one "bond", the third element is the number of
         refcmp-selcmp pairs connected via exactly two "bonds", and so on.
-        
+
         The sum of all histogram elements might exceed the number of
         reference compounds, because a single reference compound can be
         connected to different selection compounds via different numbers
@@ -2631,21 +2631,21 @@ def contact_hist_refcmp_selcmp_pair(
         the number of reference compounds, because a single reference
         compound can be connected to different selection compounds via
         the same number of "bonds".
-        
+
         Hence, this histogram should be normalized by the number of
         refcmp-selcmp pairs and not by the number of reference compounds.
         Then it is e.g. possible to say that 100 % of the refcmp-selcmp
         connections are monodentate while at the same time 50 % of the
         refcmp-selcmp connections are bidentate.
-        
+
         This behavior is complementary to the histogram returned by
         :func:`mdtools.structure.contact_hist_refcmp_same_selcmp`
-    
+
     If both `natms_per_refcmp` and `natms_per_selcmp` are ``1`` and `cm`
     is a true boolean contact matrix, `hist_refcmp_selcmp_pair` is
     equal to ``[0, y]``, where ``y`` is the number of refatm-selatm
     pairs.
-    
+
     Examples
     --------
     >>> cm = np.tril(np.ones((5,4), dtype=bool), -1)
@@ -2667,7 +2667,7 @@ def contact_hist_refcmp_selcmp_pair(
     >>> hist = mdt.strc.contact_hist_refcmp_selcmp_pair(cm)
     >>> hist[1] == np.count_nonzero(cm)
     True
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
     ...                                   natms_per_refcmp=[2, 2, 1])
     array([[1, 0, 0, 0],
@@ -2678,7 +2678,7 @@ def contact_hist_refcmp_selcmp_pair(
     ...     natms_per_refcmp=[2, 2, 1]
     ... )
     array([0, 7, 1])
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm, natms_per_selcmp=2)
     array([[0, 0],
            [1, 0],
@@ -2688,7 +2688,7 @@ def contact_hist_refcmp_selcmp_pair(
     >>> mdt.strc.contact_hist_refcmp_selcmp_pair(cm=cm,
     ...                                          natms_per_selcmp=2)
     array([0, 3, 3])
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
     ...                                   natms_per_refcmp=[2, 2, 1],
     ...                                   natms_per_selcmp=2)
@@ -2701,9 +2701,9 @@ def contact_hist_refcmp_selcmp_pair(
     ...     natms_per_selcmp=2
     ... )
     array([0, 2, 2, 1])
-    
+
     Edge cases:
-    
+
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
     >>> mdt.strc.contact_hist_refcmp_selcmp_pair(cm, natms_per_refcmp=[])
     array([], dtype=int64)
@@ -2714,7 +2714,7 @@ def contact_hist_refcmp_selcmp_pair(
     ...                                          minlength=2,
     ...                                          dtype=np.uint32)
     array([0, 0], dtype=uint32)
-    
+
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
     >>> mdt.strc.contact_hist_refcmp_selcmp_pair(cm,
     ...                                          natms_per_refcmp=3,
@@ -2737,7 +2737,7 @@ def contact_hist_refcmp_selcmp_pair(
     if (np.issubdtype(cm_dtype, bool) and
         not np.any(np.equal(cm.shape, 0)) and
         np.all(np.equal(natms_per_refcmp, 1)) and
-        np.all(np.equal(natms_per_selcmp, 1))):
+            np.all(np.equal(natms_per_selcmp, 1))):
         # refcmp == refatm and selcmp == selatm
         hist_test = np.array([0, np.count_nonzero(cm)])
         hist_test = mdt.nph.extend(hist_test,
@@ -2754,7 +2754,7 @@ def contact_hists(
     """
     Bin the number of contacts between reference and selection compounds
     into histograms.
-    
+
     A compound is usually a chemically meaningfull subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
@@ -2768,7 +2768,7 @@ def contact_hists(
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
     in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -2803,7 +2803,7 @@ def contact_hists(
         the same length.
     dtype : dtype, optional
         Data type of the output array.
-    
+
     Returns
     -------
     hist_refcmp_diff_selcmp : numpy.ndarray
@@ -2831,7 +2831,7 @@ def contact_hists(
         refcmp-selcmp pair is defined as a reference and selection
         compound that are connected with each other via at least one
         "bond".
-    
+
     See Also
     --------
     :mod:`contact_hist` :
@@ -2856,22 +2856,22 @@ def contact_hists(
         Bin the number of "bonds" (:class:`~MDAnalysis.core.groups.Atom`-
         :class:`~MDAnalysis.core.groups.Atom` contacts) between pairs of
         reference and selection compounds
-    
+
     Notes
     -----
     :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the same
     compound must form a contiguous set in the input contact matrix,
     otherwise the result will be wrong.
-    
+
     This function gathers the output of
-        
+
         * :func:`mdtools.structure.contact_hist_refcmp_diff_selcmp`
         * :func:`mdtools.structure.contact_hist_refcmp_same_selcmp`
         * :func:`mdtools.structure.contact_hist_refcmp_selcmp_tot`
         * :func:`mdtools.structure.contact_hist_refcmp_selcmp_pair`
-    
+
     See there for further details about the returned histograms.
-    
+
     If both `natms_per_refcmp` and `natms_per_selcmp` are ``1`` and `cm`
     is a true boolean contact matrix, `hist_refcmp_same_selcmp` and
     `hist_refcmp_selcmp_pair` are rather meaningless and
@@ -2879,7 +2879,7 @@ def contact_hists(
     Thus, in this case it might be better to call
     :func:`mdtools.structure.contact_hist_refcmp_diff_selcmp` or
     :func:`mdtools.structure.contact_hist_refcmp_selcmp_tot` directly.
-    
+
     Examples
     --------
     >>> cm = np.tril(np.ones((5,4), dtype=bool), -1)
@@ -2905,7 +2905,7 @@ def contact_hists(
     True
     >>> hists[3][1] == np.count_nonzero(cm)
     True
-    
+
     >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
     ...                                   natms_per_refcmp=[2, 2, 1],
     ...                                   natms_per_selcmp=2)
@@ -2923,15 +2923,15 @@ def contact_hists(
     array([0, 1, 0, 0, 2])
     >>> hists[3]
     array([0, 2, 2, 1, 0])
-    
+
     Edge cases:
-    
+
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
     >>> mdt.strc.contact_hists(cm, natms_per_refcmp=[])
     (array([], dtype=int64), array([], dtype=int64), array([], dtype=int64), array([], dtype=int64))
     >>> mdt.strc.contact_hists(cm, natms_per_refcmp=1)
     (array([], dtype=int64), array([], dtype=int64), array([], dtype=int64), array([], dtype=int64))
-    
+
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
     >>> mdt.strc.contact_hists(cm,
     ...                        natms_per_refcmp=3,
@@ -2964,7 +2964,7 @@ def contact_hists(
         minlength=minlength,
         dtype=dtype
     )
-    
+
     length = max(len(hist_refcmp_diff_selcmp),
                  len(hist_refcmp_same_selcmp),
                  len(hist_refcmp_selcmp_tot),
@@ -2978,11 +2978,11 @@ def contact_hists(
                                             length)
     hist_refcmp_selcmp_pair = mdt.nph.extend(hist_refcmp_selcmp_pair,
                                              length)
-    
+
     # Internal consistency check:
     if (np.issubdtype(cm_dtype, bool) and
         np.all(np.equal(natms_per_refcmp, 1)) and
-        np.all(np.equal(natms_per_selcmp, 1))):
+            np.all(np.equal(natms_per_selcmp, 1))):
         # refcmp == refatm and selcmp == selatm
         if not np.array_equal(hist_refcmp_diff_selcmp,
                               hist_refcmp_selcmp_tot):
@@ -3003,7 +3003,7 @@ def contact_hists(
                 raise ValueError("refcmp == refatm and selcmp == selatm,"
                                  " but 'hist_refcmp_selcmp_pair' !="
                                  " [0, y]")
-    
+
     return (hist_refcmp_diff_selcmp,
             hist_refcmp_same_selcmp,
             hist_refcmp_selcmp_tot,

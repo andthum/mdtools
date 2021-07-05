@@ -31,25 +31,25 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Unwrap a trajectory, i.e. unpack the atoms out of"
-                     " the pimary unit cell and calculate their"
-                     " positions in real space. This script uses the"
-                     " algorithm proposed by von Bülow et al. in"
-                     " J. Chem. Phys., 2020, 153, 021101. Basically it"
-                     " calculates the atom displacements of the wrapped"
-                     " atoms from frame to frame and adds these"
-                     " displacements to the previous unwrapped atom"
-                     " positions to build the unwraped trajectory."
-                     )
+        description=(
+            "Unwrap a trajectory, i.e. unpack the atoms out of"
+            " the pimary unit cell and calculate their"
+            " positions in real space. This script uses the"
+            " algorithm proposed by von Bülow et al. in"
+            " J. Chem. Phys., 2020, 153, 021101. Basically it"
+            " calculates the atom displacements of the wrapped"
+            " atoms from frame to frame and adds these"
+            " displacements to the previous unwrapped atom"
+            " positions to build the unwraped trajectory."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         required=True,
         help="Output topology."
     )
-    
+
     parser.add_argument(
         "--sel",
         dest="SEL",
@@ -145,7 +145,7 @@ if __name__ == '__main__':
              " because the unwrapping might start from a slightly"
              " different configuration. Default: com"
     )
-    
+
     parser.add_argument(
         "-e",
         dest="END",
@@ -156,7 +156,7 @@ if __name__ == '__main__':
              " unwrap is actually END-1). Default: -1 (means unwrap the"
              " the complete trajectory)"
     )
-    
+
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -165,35 +165,35 @@ if __name__ == '__main__':
         action='store_true',
         help="Run in debug mode."
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
+
     print("\n\n\n", flush=True)
     sel = mdt.select.atoms(ag=u,
                            sel=' '.join(args.SEL),
                            verbose=True)
-    
-    
-    
-    
+
+
+
+
     _, END, _, n_frames = mdt.check.frame_slicing(
-                              start=0,
-                              stop=args.END,
-                              step=1,
-                              n_frames_tot=u.trajectory.n_frames)
+        start=0,
+        stop=args.END,
+        step=1,
+        n_frames_tot=u.trajectory.n_frames)
     last_frame = u.trajectory[END-1].frame
-    
-    
+
+
     print("\n\n\n", flush=True)
     print("Unwrapping trajectory", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -203,7 +203,7 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-    
+
     mdt.box.unwrap_trj(topfile=args.TOPFILE_OUT,
                        trjfile=args.TRJFILE_OUT,
                        universe=u,
@@ -215,7 +215,7 @@ if __name__ == '__main__':
                        center=args.CENTER,
                        verbose=True,
                        debug=args.DEBUG)
-    
+
     print(flush=True)
     print("Frames unwrapped: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -234,10 +234,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

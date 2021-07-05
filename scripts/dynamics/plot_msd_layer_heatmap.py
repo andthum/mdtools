@@ -33,18 +33,18 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Plot the output of msd_layer_serial.py (or"
-                     " msd_layer_parallel.py) as heatmap."
-                     )
+        description=(
+            "Plot the output of msd_layer_serial.py (or"
+            " msd_layer_parallel.py) as heatmap."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         help="The spatial direction used to dicretize the MSD. Must be"
              " either x, y or z. Default: z"
     )
-    
+
     parser.add_argument(
         '--f2',
         dest='INFILE2',
@@ -103,7 +103,7 @@ if __name__ == '__main__':
              " determines the column containing the x values, the second"
              " is for the y values. Default: '0 1'"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -156,7 +156,7 @@ if __name__ == '__main__':
         help="Maximum data range of the colorbar. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -191,56 +191,56 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.MSD_DIRECTION != '3' and
         args.MSD_DIRECTION != 'x' and
         args.MSD_DIRECTION != 'y' and
-        args.MSD_DIRECTION != 'z'):
+            args.MSD_DIRECTION != 'z'):
         raise ValueError("--d1 must be either 'r, 'x', 'y' or 'z', but"
                          " you gave {}".format(args.MSD_DIRECTION))
     if (args.BIN_DIRECTION != 'x' and
         args.BIN_DIRECTION != 'y' and
-        args.BIN_DIRECTION != 'z'):
+            args.BIN_DIRECTION != 'z'):
         raise ValueError("--d2 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.BIN_DIRECTION))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     msd = np.loadtxt(fname=args.INFILE)
     bins = msd[0] * args.LCONV
     times = msd[1:,0] * args.TCONV
     msd = msd[1:,1:] * args.LCONV**2
-    
+
     if args.INFILE2 is not None:
         data = np.loadtxt(fname=args.INFILE2,
                           comments=['#', '@'],
                           usecols=args.COLS)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     if args.INFILE2 is None:
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -255,7 +255,7 @@ if __name__ == '__main__':
                                  constrained_layout=True,
                                  gridspec_kw={'height_ratios': [1/5, 1]})
         axis = axes[1]
-    
+
     times = np.append(times, times[-1]+(times[-1]-times[-2]))
     dt = np.append(np.diff(times), times[-1]-times[-2])
     times -= dt/2
@@ -272,7 +272,7 @@ if __name__ == '__main__':
         ylabel=r'$\Delta t$ / {}'.format(args.TUNIT),
         cbarlabel=r'$\langle \Delta '+args.BIN_DIRECTION+r'^2(\Delta t) \rangle$ / '+args.LUNIT+r'$^2$'+args.TUNIT+r'$^{-1}$',
         cmap='plasma')
-    
+
     if args.INFILE2 is not None:
         mdt.plot.plot(ax=axes[0],
                       x=data[:,0],
@@ -288,13 +288,13 @@ if __name__ == '__main__':
         axes[0].spines['top'].set_visible(False)
         axes[0].spines['left'].set_visible(False)
         axes[0].spines['right'].set_visible(False)
-    
+
     mdt.fh.backup(args.OUTFILE)
     if args.INFILE2 is None:
         plt.tight_layout()
     plt.savefig(args.OUTFILE)
     plt.close(fig)
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -302,10 +302,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

@@ -34,23 +34,23 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Plot cross sections as function of the layer"
-                     " position at constant MSDs from the output of"
-                     " msd_layer_serial.py (or msd_layer_parallel.py)"
-                     " for all three spatial components x, y and z in"
-                     " one plot. In other words, plot the time needed to"
-                     " reach a given MSD value as function of the layer."
-                     )
+        description=(
+            "Plot cross sections as function of the layer"
+            " position at constant MSDs from the output of"
+            " msd_layer_serial.py (or msd_layer_parallel.py)"
+            " for all three spatial components x, y and z in"
+            " one plot. In other words, plot the time needed to"
+            " reach a given MSD value as function of the layer."
+        )
     )
     group = parser.add_mutually_exclusive_group()
-    
+
     parser.add_argument(
         '-f',
         dest='INFILES',
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         help="The spatial direction used to dicretize the MSD. Must be"
              " either x, y or z. Default: z"
     )
-    
+
     parser.add_argument(
         '--f2',
         dest='INFILE2',
@@ -136,7 +136,7 @@ if __name__ == '__main__':
              " determines the column containing the x values, the second"
              " is for the y values. Default: '0 1'"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         action='store_true',
         help="Use logarithmic scale for y-axis."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -214,26 +214,26 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.BIN_DIRECTION != 'x' and
         args.BIN_DIRECTION != 'y' and
-        args.BIN_DIRECTION != 'z'):
+            args.BIN_DIRECTION != 'z'):
         raise ValueError("--d2 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.BIN_DIRECTION))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     msd = [None,] * len(args.INFILES)
     times = [None,] * len(args.INFILES)
     bins = [None,] * len(args.INFILES)
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     times = np.asarray(times)
     bins = bins[0]
     msd = np.asarray(msd)
-    
+
     if args.MDFILES is not None:
         md = [None,] * len(args.MDFILES)
         for i, mdfile in enumerate(args.MDFILES):
@@ -283,7 +283,7 @@ if __name__ == '__main__':
         np.square(md, out=md)
         msd -= md
         del md
-    
+
     if args.MSD_EQ_BINS:
         args.MSD = np.diff(bins)**2
     msd, ix = mdt.nph.find_nearest(msd,
@@ -291,35 +291,35 @@ if __name__ == '__main__':
                                    axis=1,
                                    return_index=True)
     times = np.take_along_axis(times, ix, axis=1)
-    
+
     if args.INFILE2 is not None:
         data = np.loadtxt(fname=args.INFILE2,
                           comments=['#', '@'],
                           usecols=args.COLS)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fontsize_legend = 24
     labels = [r'$x$', r'$y$', r'$z$']
     markers = ['s', 'D', 'o']
-    
+
     if args.XMIN is None:
         args.XMIN = np.min(bins)
     if args.XMAX is None:
         args.XMAX = np.max(bins)
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         if args.INFILE2 is None:
@@ -336,7 +336,7 @@ if __name__ == '__main__':
                                      constrained_layout=True,
                                      gridspec_kw={'height_ratios': [1/5, 1]})
             axis = axes[1]
-        
+
         if args.YMIN is None:
             args.YMIN = np.nanmin(times)
         if args.YMAX is None:
@@ -389,7 +389,7 @@ if __name__ == '__main__':
                     handletextpad = 0.5,
                     frameon=True,
                     fancybox=False)
-        
+
         if args.INFILE2 is not None:
             mdt.plot.plot(ax=axes[0],
                           x=data[:,0],
@@ -405,13 +405,13 @@ if __name__ == '__main__':
             axes[0].spines['top'].set_visible(False)
             axes[0].spines['left'].set_visible(False)
             axes[0].spines['right'].set_visible(False)
-        
+
         if args.INFILE2 is None:
             plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         if args.INFILE2 is None:
             fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                      frameon=False,
@@ -426,7 +426,7 @@ if __name__ == '__main__':
                                      constrained_layout=True,
                                      gridspec_kw={'height_ratios': [1/5, 1]})
             axis = axes[1]
-        
+
         if args.MDFILES is not None:
             ylabel = (r'True Var$[\Delta a(\Delta t)]$ / ' +
                       args.LUNIT + r'$^2$')
@@ -467,7 +467,7 @@ if __name__ == '__main__':
                     frameon=True,
                     fancybox=False)
         axis.ticklabel_format(axis='y', useOffset=False)
-        
+
         if args.INFILE2 is not None:
             mdt.plot.plot(ax=axes[0],
                           x=data[:,0],
@@ -483,12 +483,12 @@ if __name__ == '__main__':
             axes[0].spines['top'].set_visible(False)
             axes[0].spines['left'].set_visible(False)
             axes[0].spines['right'].set_visible(False)
-        
+
         if args.INFILE2 is None:
             plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -496,10 +496,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

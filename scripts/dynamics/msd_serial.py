@@ -38,9 +38,9 @@ def parse_user_input(add_description=""):
     description=("Calculate the mean square displacement (MSD) for"
                  " compounds of a selection group.")
     parser = argparse.ArgumentParser(
-                 description=description+add_description
+        description=description+add_description
     )
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -69,7 +69,7 @@ def parse_user_input(add_description=""):
         required=True,
         help="Output filename."
     )
-    
+
     parser.add_argument(
         '--sel',
         dest='SEL',
@@ -97,7 +97,7 @@ def parse_user_input(add_description=""):
              " (https://userguide.mdanalysis.org/groups_of_atoms.html)"
              " for the definition of the terms. Default is 'None'"
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -146,7 +146,7 @@ def parse_user_input(add_description=""):
              " the MSD. This must be an integer multiply of --every."
              " Default: 100"
     )
-    
+
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -155,19 +155,19 @@ def parse_user_input(add_description=""):
         action='store_true',
         help="Run in debug mode."
     )
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
+
     if (args.COM is not None and
         args.COM != 'group' and
         args.COM != 'segments' and
         args.COM != 'residues' and
-        args.COM != 'fragments'):
+            args.COM != 'fragments'):
         raise ValueError("--com must be either 'group', 'segments',"
                          " 'residues' or 'fragments', but you gave {}"
                          .format(args.COM))
-    
+
     return args
 
 
@@ -178,14 +178,14 @@ def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
     """
     Read the trajectory and calculate for each frame the center of mass
     positions of the selection compounds.
-    
+
     Parameters
     ----------
     See the help texts of the arguments added to
     :class:`argparse.ArgumentParser` in :func:`parse_user_input` or call
     this script with the -h option to print the help texts to standard
     output.
-    
+
     Returns
     -------
     pos : numpy.ndarray
@@ -193,17 +193,17 @@ def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
         ``m`` is the number of frames and ``n`` is the number of
         selection compounds.
     """
-    
+
     proc = psutil.Process(os.getpid())
     u = mda.Universe(topfile, trjfile)
     sel = u.select_atoms(' '.join(sel))
-    
+
     begin, end, every, n_frames = mdt.check.frame_slicing(
-                                      start=begin,
-                                      stop=end,
-                                      step=every,
-                                      n_frames_tot=u.trajectory.n_frames)
-    
+        start=begin,
+        stop=end,
+        step=every,
+        n_frames_tot=u.trajectory.n_frames)
+
     if com is None:
         pos = np.full((n_frames, sel.n_atoms, 3),
                       np.nan,
@@ -227,12 +227,12 @@ def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
                       np.nan,
                       dtype=np.float32)
         n_particles = sel.n_fragments
-    
+
     timer_frame = datetime.now()
     for i, ts in enumerate(u.trajectory[begin:end:every]):
         if (ts.frame % 10**(len(str(ts.frame))-1) == 0 or
             ts.frame == begin or
-            ts.frame == end-1):
+                ts.frame == end-1):
             print("  Frame   {:12d}".format(ts.frame), flush=True)
             print("    Step: {:>12}    Time: {:>12} (ps)"
                   .format(ts.data['step'], ts.data['time']),
@@ -244,12 +244,12 @@ def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
                   .format(proc.memory_info().rss/2**20),
                   flush=True)
             timer_frame = datetime.now()
-        
+
         if com is None:
             pos[i] = sel.positions
         else:
             pos[i] = mdt.strc.com(ag=sel, compound=com, debug=debug)
-    
+
     return pos
 
 
@@ -259,13 +259,13 @@ def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
 def calc_msd(pos, restart=1, debug=False):
     """
     Calculate the mean square displacement (MSD):
-    
+
     .. math:
         \langle \Delta r_i^2(\Delta t) \rangle = \langle |r_i(t_0 + \Delta t) - r_i(t_0)|^2 \rangle
-    
+
     The brackets :math:`\langle ... \rangle` denote averaging over all
     particles :math:`i` and over all possible starting times :math:`t_0`.
-    
+
     Parameters
     ----------
     pos : array_like
@@ -275,7 +275,7 @@ def calc_msd(pos, restart=1, debug=False):
         Number of frames between restarting points :math:`t_0`.
     debug : bool
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     msd : numpy.ndarray
@@ -283,7 +283,7 @@ def calc_msd(pos, restart=1, debug=False):
         components of :math:`\langle \Delta r_i^2(\Delta t) \rangle`
         for all possible lag times :math:`\Delta t`.
     """
-    
+
     if debug:
         mdt.check.pos_array(pos, dim=3)
         if restart >= len(pos):
@@ -291,14 +291,14 @@ def calc_msd(pos, restart=1, debug=False):
                           " points ({}) is equal to or larger than the"
                           " total number of frames in pos ({})"
                           .format(restart, len(pos)), RuntimeWarning)
-    
+
     proc = psutil.Process(os.getpid())
     pos = np.asarray(pos)
     n_frames = pos.shape[0]
     n_particles = pos.shape[1]
     msd = np.zeros((n_frames, 3), dtype=np.float32)
     msd_tmp = np.full((n_particles, 3), np.nan, dtype=np.float32)
-    
+
     timer_lag = datetime.now()
     for lag in range(1, n_frames):
         if lag % 10**(len(str(lag))-1) == 0 or lag == n_frames-1:
@@ -312,20 +312,20 @@ def calc_msd(pos, restart=1, debug=False):
                   .format(proc.memory_info().rss/2**20),
                   flush=True)
             timer_lag = datetime.now()
-        
+
         for t0 in range(0, n_frames-lag, restart):
             np.subtract(pos[t0+lag], pos[t0], out=msd_tmp)
             np.square(msd_tmp, out=msd_tmp)
             np.sum(msd_tmp, axis=0, out=msd_tmp[0])
             msd[lag] += msd_tmp[0]
-    
+
     del msd_tmp
     n_restarts = n_frames - np.arange(n_frames, dtype=np.float32)
     n_restarts /= restart
     np.ceil(n_restarts, out=n_restarts)
     msd /= n_restarts[:,None]
     msd /= n_particles
-    
+
     return msd
 
 
@@ -336,21 +336,21 @@ def calc_msd(pos, restart=1, debug=False):
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     args = parse_user_input()
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
+
     print("\n\n\n", flush=True)
     sel = mdt.select.atoms(ag=u,
                            sel=' '.join(args.SEL),
@@ -360,30 +360,30 @@ if __name__ == '__main__':
     if args.COM is not None:
         print("\n\n\n", flush=True)
         mdt.check.masses(ag=sel, flash_test=False)
-    
-    
-    
-    
+
+
+
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
     NBLOCKS, blocksize = mdt.check.block_averaging(n_blocks=args.NBLOCKS,
                                                    n_frames=n_frames)
     RESTART, effective_restart = mdt.check.restarts(
-                                     restart_every_nth_frame=args.RESTART,
-                                     read_every_nth_frame=EVERY,
-                                     n_frames=blocksize)
+        restart_every_nth_frame=args.RESTART,
+        read_every_nth_frame=EVERY,
+        n_frames=blocksize)
     last_frame = u.trajectory[END-1].frame
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -393,7 +393,7 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-    
+
     pos = get_COMs(topfile=args.TOPFILE,
                    trjfile=args.TRJFILE,
                    sel=args.SEL,
@@ -402,12 +402,12 @@ if __name__ == '__main__':
                    end=END,
                    every=EVERY,
                    debug=args.DEBUG)
-    
+
     if len(pos) != n_frames:
         raise ValueError("The number of positions arrays does not equal"
                          " the number of frames to read. This should not"
                          " have happened")
-    
+
     print(flush=True)
     print("Frames read: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -426,14 +426,14 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
+
+
+
     print("\n\n\n", flush=True)
     print("Calculating MSD", flush=True)
     timer = datetime.now()
     timer_block = datetime.now()
-    
+
     msd = [None,] * NBLOCKS
     for block in range(NBLOCKS):
         if block % 10**(len(str(block))-1) == 0 or block == NBLOCKS-1:
@@ -449,13 +449,13 @@ if __name__ == '__main__':
                   flush=True)
             timer_block = datetime.now()
         msd[block] = calc_msd(
-                         pos=pos[block*blocksize:(block+1)*blocksize],
-                         restart=effective_restart,
-                         debug=args.DEBUG)
-    
+            pos=pos[block*blocksize:(block+1)*blocksize],
+            restart=effective_restart,
+            debug=args.DEBUG)
+
     del pos
     msd = np.asarray(msd)
-    
+
     if NBLOCKS > 1:
         msd, msd_sd = mdt.stats.block_average(msd)
         msd_tot_sd = np.sqrt(np.sum(msd_sd**2, axis=1))  # Assuming x,y,z are uncorrelated
@@ -466,21 +466,21 @@ if __name__ == '__main__':
                           timestep*blocksize*EVERY,
                           timestep*EVERY,
                           dtype=np.float32)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     header = (
         "Mean square displacement (MSD):\n"
         "  <r^2(t)> = <|r(t0 + t) - r(t0)|^2>\n"
@@ -516,9 +516,9 @@ if __name__ == '__main__':
                 len(np.unique(sel.types)),
                 '\' \''.join(i for i in np.unique(sel.types)),
                 len(sel.fragments)
-        )
+                )
     )
-    
+
     if NBLOCKS == 1:
         columns = (
             "The columns contain:\n"
@@ -559,11 +559,11 @@ if __name__ == '__main__':
                                 msd_sd[:,1],
                                 msd[:,2],
                                 msd_sd[:,2]])
-    
+
     mdt.fh.savetxt(fname=args.OUTFILE,
                    data=data,
                    header=header+columns)
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -571,10 +571,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

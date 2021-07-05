@@ -104,7 +104,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-"""
+            """
 Calculate how many selection atoms and compounds stay attached to a
 reference compound that changed its position.
 
@@ -352,7 +352,7 @@ their position at time t0.
         mdabackend = 'OpenMP'
     else:
         mdabackend = 'serial'
-    
+
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
     print("\n")
@@ -392,7 +392,7 @@ their position at time t0.
     if args.DEBUG:
         print("\n")
         mdt.check.time_step(trj=u.trajectory[BEGIN:END])
-    
+
     print("\n")
     print("Creating/checking bins...")
     timer = datetime.now()
@@ -419,7 +419,7 @@ their position at time t0.
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Step 1/3:")
     # Creating contact matrices...
@@ -437,7 +437,7 @@ their position at time t0.
     # TODO
     print()
     print("cms[0].shape =", cms[0].shape)
-    
+
     print("\n")
     print("Step 2/3:")
     # Creating discrete position trajectory...
@@ -479,7 +479,7 @@ their position at time t0.
                                            verbose=True,
                                            debug=args.DEBUG)
     dtrj = np.asarray(dtrj.T, order='C')
-    
+
     print("\n")
     print("Step 3/3:")
     print("Comparing coordination environments...")
@@ -629,14 +629,14 @@ their position at time t0.
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     # Compute averages:
     N_FRAMES_EFF = N_FRAMES-1 - 2*LAG_EFF
     n_contacts = n_contacts / n_refcmps_tot[:,None]
     selix_var_min_max_b /= n_refcmps_bound_b[:,None]
     selix_var_min_max_a /= n_refcmps_bound_a[:,None]
     selix_diff /= n_refcmps_bound_ba[:,None]
-    
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -750,7 +750,7 @@ their position at time t0.
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Checking output for consistency...")
     timer = datetime.now()
@@ -762,7 +762,7 @@ their position at time t0.
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
     print("Totally elapsed time: {}".format(datetime.now()-timer_tot))

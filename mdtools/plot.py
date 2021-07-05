@@ -43,29 +43,29 @@ plt.rc('font',**{'family' : 'serif', 'serif' : 'Times'})
 class MidpointNormalize(colors.Normalize):
     """
     Deprecated!
-    
+
     Class to define your own colorbar normalization. This is e.g. useful
     when you want that a diverging colorbar is centerd at zero. Just
     parse ``norm = mdt.plot.MidpointNormalize(midpoint=0.0)`` to the
     plotting function.
-    
+
     Needs ``import matplotlib.colors as colors``. See
     `Colormap Normalization`_ for more information.
-    
+
     .. _Colormap Normalization: https://matplotlib.org/users/colormapnorms.html#custom-normalization-two-linear-ranges
     """
-    
+
     warnings.warn("This class is deprecated. If your version of"
                   " matplotlib is 3.2, consider using"
                   " matplotlib.colors.TwoSlopeNorm instead. If your"
                   " version is 3.1, consider using"
                   " matplotlib.colors.DivergingNorm instead.",
                   DeprecationWarning)
-    
+
     def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
         self.midpoint = midpoint
         colors.Normalize.__init__(self, vmin, vmax, clip)
-    
+
     def __call__(self, value, clip=None):
         """
         Map value to the interval [0, 1]. The clip argument is unused.
@@ -83,12 +83,12 @@ class MidpointNormalize(colors.Normalize):
 
 
 def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
-        logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
-        legend_loc='best', **kwargs):
+         logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
+         legend_loc='best', **kwargs):
     """
     Plot data to a :class:`matplotlib.axes.Axes` object using
     :func:`matplotlib.axes.Axes.plot`.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -120,21 +120,21 @@ def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
     kwargs : dict, optional
         Keyword arguments to pass to :func:`matplotlib.axes.Axes.plot`.
         Look there for possible keyword arguments.
-    
+
     Returns
     -------
     img : list
         A list of :class:`matplotlib.lines.Line2D` objects representing
         the plotted data.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     img = ax.plot(x, y, **kwargs)
     if logx:
         ax.set_xscale('log', basex=10, subsx=np.arange(2, 10))
@@ -167,19 +167,19 @@ def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
                   numpoints=1,
                   frameon=False,
                   fontsize=fontsize_legend)
-    
+
     return img
 
 
 
 
 def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
-        ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
-        legend_loc='best', **kwargs):
+            ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
+            legend_loc='best', **kwargs):
     """
     Add a scatter plot to a :class:`matplotlib.axes.Axes` object using
     :func:`matplotlib.axes.Axes.scatter`.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -217,27 +217,27 @@ def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
     kwargs : dict, optional
         Keyword arguments to pass to :func:`matplotlib.axes.Axes.scatter`.
         Look there for possible keyword arguments.
-    
+
     Returns
     -------
     img : matplotlib.collections.PathCollection
         A :class:`matplotlib.collections.PathCollection`.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     if kwargs.get('cmap') is None:
         kwargs['cmap'] = 'Greys'
     if kwargs.get('vmin') is None:
         kwargs['vmin'] = np.nanmin(c)
     if kwargs.get('vmax') is None:
         kwargs['vmax'] = np.nanmax(c)
-    
+
     img = ax.scatter(x=x, y=y, s=s, c=c, **kwargs)
     if logx:
         ax.set_xscale('log', basex=10, subsx=np.arange(2, 10))
@@ -270,19 +270,19 @@ def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
                   numpoints=1,
                   frameon=False,
                   fontsize=fontsize_legend)
-    
+
     return img
 
 
 
 
 def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
-        ymin=None, ymax=None, logx=False, logy=False, xlabel=r'$x$',
-        ylabel=r'$y$', legend_loc='best', **kwargs):
+             ymin=None, ymax=None, logx=False, logy=False, xlabel=r'$x$',
+             ylabel=r'$y$', legend_loc='best', **kwargs):
     """
     Plot data to a :class:`matplotlib.axes.Axes` object with errorbars
     using :func:`matplotlib.axes.Axes.errorbar`.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -317,20 +317,20 @@ def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
         Keyword arguments to pass to
         :func:`matplotlib.axes.Axes.errorbar`. Look there for possible
         keyword arguments.
-    
+
     Returns
     -------
     img : ErrorbarContainer
         A :class:`matplotlib.container.ErrorbarContainer`.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     img = ax.errorbar(x=x,
                       y=y,
                       xerr=xerr,
@@ -369,7 +369,7 @@ def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
                   numpoints=1,
                   frameon=False,
                   fontsize=fontsize_legend)
-    
+
     return img
 
 
@@ -380,7 +380,7 @@ def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
     """
     Plot a histogram to a :class:`matplotlib.axes.Axes` object using
     :func:`matplotlib.axes.Axes.hist`.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -406,7 +406,7 @@ def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
     kwargs : dict, optional
         Keyword arguments to pass to :func:`matplotlib.axes.Axes.hist`.
         Look there for possible keyword arguments.
-    
+
     Returns
     -------
     n : numpy.ndarray or list of numpy.ndarrays
@@ -417,14 +417,14 @@ def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
         Silent list of individual patches used to create the histogram
         or list of such list if multiple input datasets.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     img = ax.hist(x=x, **kwargs)
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
@@ -453,19 +453,19 @@ def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
                   numpoints=1,
                   frameon=False,
                   fontsize=fontsize_legend)
-    
+
     return img
 
 
 
 
 def hlines(ax, y, start, stop, xmin=None, xmax=None, ymin=None,
-        ymax=None, legend_loc='best', **kwargs):
+           ymax=None, legend_loc='best', **kwargs):
     """
     Plot horizontal lines at each `y` from `start` to `stop` into a
     :class:`matplotlib.axes.Axes` object using
     :func:`matplotlib.axes.Axes.hlines`.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -490,18 +490,18 @@ def hlines(ax, y, start, stop, xmin=None, xmax=None, ymin=None,
     kwargs : dict, optional
         Keyword arguments to pass to :func:`matplotlib.axes.Axes.hlines`.
         Look there for possible keyword arguments.
-    
+
     Returns
     -------
     img : matplotlib.collections.LineCollection
         A :class:`matplotlib.collections.LineCollection`.
     """
-    
+
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     tick_pad = 12
-    
+
     img = ax.hlines(y=y, xmin=start, xmax=stop, **kwargs)
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
@@ -526,19 +526,19 @@ def hlines(ax, y, start, stop, xmin=None, xmax=None, ymin=None,
                   numpoints=1,
                   frameon=False,
                   fontsize=fontsize_legend)
-    
+
     return img
 
 
 
 
 def vlines(ax, x, start, stop, xmin=None, xmax=None, ymin=None,
-        ymax=None, legend_loc='best', **kwargs):
+           ymax=None, legend_loc='best', **kwargs):
     """
     Plot vertical lines at each `x` from `start` to `stop` into a
     :class:`matplotlib.axes.Axes` object using
     :func:`matplotlib.axes.Axes.vlines`.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -563,18 +563,18 @@ def vlines(ax, x, start, stop, xmin=None, xmax=None, ymin=None,
     kwargs : dict, optional
         Keyword arguments to pass to :func:`matplotlib.axes.Axes.vlines`.
         Look there for possible keyword arguments.
-    
+
     Returns
     -------
     img : matplotlib.collections.LineCollection
         A :class:`matplotlib.collections.LineCollection`.
     """
-    
+
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     tick_pad = 12
-    
+
     img = ax.vlines(x=x, ymin=start, ymax=stop, **kwargs)
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
@@ -599,20 +599,20 @@ def vlines(ax, x, start, stop, xmin=None, xmax=None, ymin=None,
                   numpoints=1,
                   frameon=False,
                   fontsize=fontsize_legend)
-    
+
     return img
 
 
 
 
 def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
-        legend_loc='best', **kwargs):
+                   legend_loc='best', **kwargs):
     """
     Create a twin :class:`~matplotlib.axes.Axes` of an existing
     :class:`matplotlib.axes.Axes` object sharing the x-axis using
     :func:`matplotlib.axes.Axes.twiny` and plot data to that second
     x-axis using :func:`matplotlib.axes.Axes.plot`.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -637,7 +637,7 @@ def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
     kwargs : dict, optional
         Keyword arguments to pass to :func:`matplotlib.axes.Axes.plot`.
         Look there for possible keyword arguments.
-    
+
     Returns
     -------
     img : list
@@ -646,16 +646,16 @@ def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
     ax2 : matplotlib.axes.Axes
         The twin axis.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     label_pad = 16
-    
+
     if kwargs.get('color') is None:
         kwargs['color'] = 'black'
-    
+
     ax2 = ax.twiny()
     img = ax2.plot(x, y, **kwargs)
     ax2.set_xlim(xmin, xmax)
@@ -681,20 +681,20 @@ def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
                    numpoints=1,
                    frameon=False,
                    fontsize=fontsize_legend)
-    
+
     return img, ax2
 
 
 
 
 def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
-        legend_loc='best', **kwargs):
+                   legend_loc='best', **kwargs):
     """
     Create a twin :class:`~matplotlib.axes.Axes` of an existing
     :class:`matplotlib.axes.Axes` object sharing the x-axis using
     :func:`matplotlib.axes.Axes.twinx` and plot data to that second
     y-axis using :func:`matplotlib.axes.Axes.plot`.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -719,7 +719,7 @@ def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
     kwargs : dict, optional
         Keyword arguments to pass to :func:`matplotlib.axes.Axes.plot`.
         Look there for possible keyword arguments.
-    
+
     Returns
     -------
     img : list
@@ -728,17 +728,17 @@ def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
     ax2 : matplotlib.axes.Axes
         The twin axis.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     if kwargs.get('color') is None:
         kwargs['color'] = 'black'
-    
+
     ax2 = ax.twinx()
     img = ax2.plot(x, y, **kwargs)
     ax2.set_ylim(ymin, ymax)
@@ -766,19 +766,19 @@ def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
                    numpoints=1,
                    frameon=False,
                    fontsize=fontsize_legend)
-    
+
     return img, ax2
 
 
 
 
 def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
-        ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
-        legend_loc='best', **kwargs):
+                 ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
+                 legend_loc='best', **kwargs):
     """
     Fill the area between two curves `y1` and `y2` using
     :func:`matplotlib.axes.Axes.fill_between`
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -814,20 +814,20 @@ def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
         Keyword arguments to pass to
         :func:`matplotlib.axes.Axes.fill_between`. Look there for
         possible keyword arguments.
-    
+
     Returns
     -------
     img : matplotlib.collections.PolyCollection
         A :class:`matplotlib.collections.PolyCollection`.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     img = ax.fill_between(x=x, y1=y1, y2=y2, **kwargs)
     if logx:
         ax.set_xscale('log', basex=10, subsx=np.arange(2, 10))
@@ -860,20 +860,20 @@ def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
                   numpoints=1,
                   frameon=False,
                   fontsize=fontsize_legend)
-    
+
     return img
 
 
 
 
 def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
-        ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
-        legend_loc='best', **kwargs):
+                  ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
+                  legend_loc='best', **kwargs):
     """
     Fill the area between two vertical curves `x1` and `x2` using
     :func:`matplotlib.axes.Axes.fill_betweenx`. The two curves `x1` and
     `x2` are functions of `y`.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -909,20 +909,20 @@ def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
         Keyword arguments to pass to
         :func:`matplotlib.axes.Axes.fill_betweenx`. Look there for
         possible keyword arguments.
-    
+
     Returns
     -------
     img : matplotlib.collections.PolyCollection
         A :class:`matplotlib.collections.PolyCollection`.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     img = ax.fill_betweenx(y=y, x1=x1, x2=x2, **kwargs)
     if logx:
         ax.set_xscale('log', basex=10, subsx=np.arange(2, 10))
@@ -955,19 +955,19 @@ def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
                   numpoints=1,
                   frameon=False,
                   fontsize=fontsize_legend)
-    
+
     return img
 
 
 
 
 def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
-        ymax=None, xlabel=r'$x$', ylabel=r'$y$', cbarlabel=r'$z$',
-        **kwargs):
+               ymax=None, xlabel=r'$x$', ylabel=r'$y$', cbarlabel=r'$z$',
+               **kwargs):
     """
     Plot two dimensional data as heatmap with
     :func:`matplotlib.axes.Axes.pcolormesh`
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -1004,19 +1004,19 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
         Keyword arguments to pass to
         :func:`matplotlib.axes.Axes.pcolormesh`. See there for possible
         keyword arguments.
-    
+
     Returns
     -------
     heatmap : matplotlib.collections.QuadMesh
         A :class:`matplotlib.collections.QuadMesh`.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     if xmin is None:
         xmin = np.nanmin(x)
     if xmax is None:
@@ -1031,7 +1031,7 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
         kwargs['vmin'] = np.nanmin(z)
     if kwargs.get('vmax') is None:
         kwargs['vmax'] = np.nanmax(z)
-    
+
     heatmap = ax.pcolormesh(x, y, z, **kwargs)
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
@@ -1055,7 +1055,7 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
                    length=0.5*tick_length,
                    labelsize=0.8*fontsize_ticks,
                    pad=tick_pad)
-    
+
     cbar = plt.colorbar(heatmap, cax=cax, ax=ax)
     cbar.set_label(label=cbarlabel, fontsize=fontsize_labels)
     cbar.ax.yaxis.labelpad = label_pad
@@ -1068,18 +1068,18 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
                         direction='out',
                         length=0.5*tick_length,
                         labelsize=0.8*fontsize_ticks)
-    
+
     return heatmap
 
 
 
 
 def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
-        xlabel=r'$x$', ylabel=r'$y$', cbarlabel=r'$z$', **kwargs):
+           xlabel=r'$x$', ylabel=r'$y$', cbarlabel=r'$z$', **kwargs):
     """
     Plot two dimensional data as heatmap with
     :func:`matplotlib.axes.Axes.imshow`
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -1106,26 +1106,26 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
         Keyword arguments to pass to
         :func:`matplotlib.axes.Axes.imshow`. See there for possible
         keyword arguments.
-    
+
     Returns
     -------
     heatmap : matplotlib.image.AxesImage
         A :class:`matplotlib.image.AxesImage`.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     if kwargs.get('cmap') is None:
         kwargs['cmap'] = 'Greys'
     if kwargs.get('vmin') is None:
         kwargs['vmin'] = np.nanmin(x)
     if kwargs.get('vmax') is None:
         kwargs['vmax'] = np.nanmax(x)
-    
+
     heatmap = ax.imshow(x, **kwargs)
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
@@ -1149,7 +1149,7 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
                    length=0.5*tick_length,
                    labelsize=0.8*fontsize_ticks,
                    pad=tick_pad)
-    
+
     cbar = plt.colorbar(heatmap, cax=cax, ax=ax)
     cbar.set_label(label=cbarlabel, fontsize=fontsize_labels)
     cbar.ax.yaxis.labelpad = label_pad
@@ -1162,18 +1162,18 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
                         direction='out',
                         length=0.5*tick_length,
                         labelsize=0.8*fontsize_ticks)
-    
+
     return heatmap
 
 
 
 
 def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
-        cbarlabel=r'$z$', **kwargs):
+            cbarlabel=r'$z$', **kwargs):
     """
     Plot a two dimensional matrix as heatmap with
     :func:`matplotlib.axes.Axes.matshow`
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -1195,26 +1195,26 @@ def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
         Keyword arguments to pass to
         :func:`matplotlib.axes.Axes.matshow`. See there for possible
         keyword arguments.
-    
+
     Returns
     -------
     heatmap : matplotlib.image.AxesImage
         A :class:`matplotlib.image.AxesImage`.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     if (kwargs.get('cmap') is None):
         kwargs['cmap'] = 'Greys'
     if (kwargs.get('vmin') is None):
         kwargs['vmin'] = np.nanmin(z)
     if (kwargs.get('vmax') is None):
         kwargs['vmax'] = np.nanmax(z)
-    
+
     heatmap = ax.matshow(z, **kwargs)
     ax.set_xlabel(xlabel=xlabel, fontsize=fontsize_labels)
     ax.set_ylabel(ylabel=ylabel, fontsize=fontsize_labels)
@@ -1237,7 +1237,7 @@ def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
                    length=0.5*tick_length,
                    labelsize=0.8*fontsize_ticks,
                    pad=tick_pad)
-    
+
     cbar = plt.colorbar(heatmap, cax=cax, ax=ax)
     cbar.set_label(label=cbarlabel, fontsize=fontsize_labels)
     cbar.ax.yaxis.labelpad = label_pad
@@ -1250,18 +1250,18 @@ def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
                         direction='out',
                         length=0.5*tick_length,
                         labelsize=0.8*fontsize_ticks)
-    
+
     return heatmap
 
 
 
 
 def annotate_heatmap(im, data, xpos, ypos, fmt='{x:.1f}',
-        textcolors=["black", "white"], threshold=None, **kwargs):
+                     textcolors=["black", "white"], threshold=None, **kwargs):
     """
     A function to annotate a heatmap. See `Creating annotated heatmaps`_
     and `how to annotate heatmap with text in matplotlib?`_
-    
+
     .. _Creating annotated heatmaps: https://matplotlib.org/gallery/images_contours_and_fields/image_annotated_heatmap.html#sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
     .. _how to annotate heatmap with text in matplotlib?: https://stackoverflow.com/questions/11917547/how-to-annotate-heatmap-with-text-in-matplotlib
 
@@ -1290,30 +1290,30 @@ def annotate_heatmap(im, data, xpos, ypos, fmt='{x:.1f}',
         Keyword arguments to pass to
         :func:`matplotlib.image.AxesImage.axes.text()`. See there for
         possible keyword arguments.
-    
+
     Returns
     -------
     texts : list
         List of :class:`matplotlib.text.Text` objects.
     """
-    
+
     # Normalize the threshold to the images color range.
     if threshold is not None:
         threshold = im.norm(threshold)
     else:
         threshold = im.norm(np.nanmax(data)) / 2.0
-    
+
     # Set default alignment to center, but allow it to be overwritten by
     # kwargs.
     kw = dict(horizontalalignment="center",
               verticalalignment="center",
               size=14)
     kw.update(kwargs)
-    
+
     # Get the formatter in case a string is supplied
     if isinstance(fmt, str):
         fmt = matplotlib.ticker.StrMethodFormatter(fmt)
-    
+
     # Loop over the data and create a `Text` for each "pixel".
     # Change the text's color depending on the data.
     texts = []
@@ -1322,5 +1322,5 @@ def annotate_heatmap(im, data, xpos, ypos, fmt='{x:.1f}',
             kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
             text = im.axes.text(x, y, fmt(data[i, j], None), **kw)
             texts.append(text)
-    
+
     return texts

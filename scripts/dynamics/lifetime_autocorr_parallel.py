@@ -37,11 +37,11 @@ from lifetime_autocorr_serial import (parse_user_input,
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     additional_description = (
         " This script is parallelized. The number of CPUs to use is"
         " specified (in decreasing precedence) by either one of the"
@@ -54,20 +54,20 @@ if __name__ == '__main__':
     num_CPUs = mdt.rti.get_num_CPUs()
     print("\n\n\n", flush=True)
     print("Available CPUs: {}".format(num_CPUs), flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
-    
+
+
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
     timer = datetime.now()
-    
+
     ref = u.select_atoms(' '.join(args.REF))
     sel = u.select_atoms(' '.join(args.SEL))
     print("  Reference group: '{}'"
@@ -79,43 +79,43 @@ if __name__ == '__main__':
           .format(' '.join(args.SEL)),
           flush=True)
     print(mdt.rti.ag_info_str(ag=sel, indent=4))
-    
+
     if ref.n_atoms <= 0:
         raise ValueError("The reference group contains no atoms")
     if sel.n_atoms <= 0:
         raise ValueError("The selection group contains no atoms")
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
     last_frame = u.trajectory[END-1].frame
     NBLOCKS, blocksize = mdt.check.block_averaging(n_blocks=args.NBLOCKS,
                                                    n_frames=n_frames,
                                                    check_CPUs=True)
     RESTART, effective_restart = mdt.check.restarts(
-                                     restart_every_nth_frame=args.RESTART,
-                                     read_every_nth_frame=EVERY,
-                                     n_frames=blocksize)
+        restart_every_nth_frame=args.RESTART,
+        read_every_nth_frame=EVERY,
+        n_frames=blocksize)
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -125,19 +125,19 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-    
+
     nchunks = num_CPUs
     if nchunks > int(n_frames/10):
         nchunks = int(n_frames/10)
     pool = mdt.parallel.ProcessPool(nprocs=nchunks)
-    
+
     chunk_size = int((END-BEGIN) / nchunks)
     chunk_size -= chunk_size % EVERY
     if chunk_size: # !=0
         nchunks = int((END-BEGIN) / chunk_size)
     else:
         nchunks = 1
-    
+
     for chunk in range(nchunks):
         pool.submit_task(func=mdt.strc.contact_matrices,
                          args=(args.TOPFILE,
@@ -170,19 +170,19 @@ if __name__ == '__main__':
     elif BEGIN+(chunk+1)*chunk_size > END:
         raise ValueError("I've read more frames than given with -e. This"
                          " should not have happened")
-    
+
     cms = []
     for result in pool.get_results():
         cms += result
     del result
     pool.close()
     pool.join()
-    
+
     if len(cms) != n_frames:
         raise ValueError("The number of contact matrices does not equal"
                          " the number of frames to read. This should not"
                          " have happened")
-    
+
     print(flush=True)
     print("Frames read: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -201,35 +201,35 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     if args.INTERMITTENCY > 0:
         print("\n\n\n", flush=True)
         print("Correcting for intermittency", flush=True)
         timer = datetime.now()
-        
+
         cms = mdt.dyn.correct_intermittency(
-                  list_of_arrays=cms,
-                  intermittency=args.INTERMITTENCY,
-                  verbose=True,
-                  debug=args.DEBUG)
-        
+            list_of_arrays=cms,
+            intermittency=args.INTERMITTENCY,
+            verbose=True,
+            debug=args.DEBUG)
+
         print("Elapsed time:         {}"
               .format(datetime.now()-timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss/2**20),
               flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Calculating autocorrelation function", flush=True)
     timer = datetime.now()
-    
+
     pool = mdt.parallel.ProcessPool(nprocs=num_CPUs)
     for block in range(NBLOCKS):
         pool.submit_task(func=autocorr_bound,
@@ -247,7 +247,7 @@ if __name__ == '__main__':
                                effective_restart,
                                args.DEBUG))
     del cms
-    
+
     acorr_bound = []
     acorr_unbound_ref = []
     acorr_unbound_sel = []
@@ -261,7 +261,7 @@ if __name__ == '__main__':
     del result
     pool.close()
     pool.join()
-    
+
     if len(acorr_bound) != NBLOCKS:
         raise ValueError("The number of autocorrelation functions for"
                          " bound reference-selection complexes does not"
@@ -277,11 +277,11 @@ if __name__ == '__main__':
                          " unbound selection compounds does not equal"
                          " the number of blocks for block averaging."
                          " This should not have happened")
-    
+
     acorr_bound = np.vstack(acorr_bound)
     acorr_unbound_ref = np.vstack(acorr_unbound_ref)
     acorr_unbound_sel = np.vstack(acorr_unbound_sel)
-    
+
     if NBLOCKS > 1:
         acorr_bound, acorr_bound_sd = mdt.stats.block_average(acorr_bound)
         acorr_bound_sd_fit = np.copy(acorr_bound_sd)
@@ -299,21 +299,21 @@ if __name__ == '__main__':
         acorr_unbound_ref_sd_fit = None
         acorr_unbound_sel = np.squeeze(acorr_unbound_sel)
         acorr_unbound_sel_sd_fit = None
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Fitting autocorrelation function", flush=True)
     timer = datetime.now()
-    
+
     lag_times = np.arange(0,
                           timestep*blocksize*EVERY,
                           timestep*EVERY,
@@ -326,8 +326,8 @@ if __name__ == '__main__':
                                          args.ENDFIT,
                                          return_index=True,
                                          debug=args.DEBUG)
-    
-    
+
+
     stopfit = np.nonzero(acorr_bound < args.STOPFIT)[0]
     if stopfit.size == 0:
         stopfit = len(acorr_bound)
@@ -349,8 +349,8 @@ if __name__ == '__main__':
                       special.gamma(1/fit_bound[2]))
     kww_bound = kww(t=lag_times, tau=fit_bound[0], beta=fit_bound[2])
     kww_bound[~valid] = np.nan
-    
-    
+
+
     stopfit = np.nonzero(acorr_unbound_ref < args.STOPFIT)[0]
     if stopfit.size == 0:
         stopfit = len(acorr_unbound_ref)
@@ -374,8 +374,8 @@ if __name__ == '__main__':
                           tau=fit_unbound_ref[0],
                           beta=fit_unbound_ref[2])
     kww_unbound_ref[~valid] = np.nan
-    
-    
+
+
     stopfit = np.nonzero(acorr_unbound_sel < args.STOPFIT)[0]
     if stopfit.size == 0:
         stopfit = len(acorr_unbound_sel)
@@ -399,28 +399,28 @@ if __name__ == '__main__':
                           tau=fit_unbound_sel[0],
                           beta=fit_unbound_sel[2])
     kww_unbound_sel[~valid] = np.nan
-    
-    
+
+
     del acorr_bound_sd_fit
     del acorr_unbound_ref_sd_fit
     del acorr_unbound_sel_sd_fit
     del valid
     del ysd
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     header = (
         "Average lifetime of reference-selection complexes and unbound\n"
         "reference and selection compounds\n"
@@ -508,7 +508,7 @@ if __name__ == '__main__':
                 args.INTERMITTENCY,
                 args.ENDFIT,
                 args.STOPFIT,
-                
+
                 ' '.join(args.REF),
                 ref.n_segments,
                 len(np.unique(ref.segids)),
@@ -522,7 +522,7 @@ if __name__ == '__main__':
                 len(np.unique(ref.types)),
                 '\' \''.join(i for i in np.unique(ref.types)),
                 len(ref.fragments),
-                
+
                 ' '.join(args.SEL),
                 sel.n_segments,
                 len(np.unique(sel.segids)),
@@ -536,9 +536,9 @@ if __name__ == '__main__':
                 len(np.unique(sel.types)),
                 '\' \''.join(i for i in np.unique(sel.types)),
                 len(sel.fragments),
-        )
+                )
     )
-    
+
     if NBLOCKS == 1:
         columns = (
             "The columns contain:\n"
@@ -560,7 +560,7 @@ if __name__ == '__main__':
             "Stretching exponent beta:        {:>15.9e} {:>33.9e} {:>33.9e}\n"
             "Standard deviation of beta:      {:>15.9e} {:>33.9e} {:>33.9e}\n"
             .format(1, 2, 3, 4, 5, 6, 7,
-                    
+
                     lifetime_bound,
                     lifetime_unbound_ref,
                     lifetime_unbound_sel,
@@ -568,19 +568,19 @@ if __name__ == '__main__':
                     fit_bound[1], fit_unbound_ref[1], fit_unbound_sel[1],
                     fit_bound[2], fit_unbound_ref[2], fit_unbound_sel[2],
                     fit_bound[3], fit_unbound_ref[3], fit_unbound_sel[3]
-            )
+                    )
         )
         data = np.column_stack([lag_times,
-                                
+
                                 acorr_bound,
                                 kww_bound,
-                                
+
                                 acorr_unbound_ref,
                                 kww_unbound_ref,
-                                
+
                                 acorr_unbound_sel,
                                 kww_unbound_sel])
-        
+
     else:
         columns = (
             "The columns contain:\n"
@@ -605,7 +605,7 @@ if __name__ == '__main__':
             "Stretching exponent beta:        {:>32.9e} {:>50.9e} {:>50.9e}\n"
             "Standard deviation of beta:      {:>32.9e} {:>50.9e} {:>50.9e}\n"
             .format(1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                    
+
                     lifetime_bound,
                     lifetime_unbound_ref,
                     lifetime_unbound_sel,
@@ -613,26 +613,26 @@ if __name__ == '__main__':
                     fit_bound[1], fit_unbound_ref[1], fit_unbound_sel[1],
                     fit_bound[2], fit_unbound_ref[2], fit_unbound_sel[2],
                     fit_bound[3], fit_unbound_ref[3], fit_unbound_sel[3]
-            )
+                    )
         )
         data = np.column_stack([lag_times,
-                                
+
                                 acorr_bound,
                                 acorr_bound_sd,
                                 kww_bound,
-                                
+
                                 acorr_unbound_ref,
                                 acorr_unbound_ref_sd,
                                 kww_unbound_ref,
-                                
+
                                 acorr_unbound_sel,
                                 acorr_unbound_sel_sd,
                                 kww_unbound_sel])
-    
+
     mdt.fh.savetxt(fname=args.OUTFILE,
                    data=data,
                    header=header+columns)
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -640,10 +640,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"

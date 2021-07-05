@@ -35,21 +35,21 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py and plot"
-                     " the renewal time histogram (renewal time"
-                     " distribution). The histogram is fitted by an"
-                     " exponential distribution"
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py and plot"
+            " the renewal time histogram (renewal time"
+            " distribution). The histogram is fitted by an"
+            " exponential distribution"
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -66,7 +66,7 @@ if __name__ == '__main__':
         help="Output filename. Plots are optimized for PDF format with"
              " TeX support."
     )
-    
+
     parser.add_argument(
         '--bin-start',
         dest='START',
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         default=50,
         help="Number of bins to use. Default: 50"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -126,7 +126,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -144,42 +144,42 @@ if __name__ == '__main__':
         default="ps",
         help="Time unit. Default: ps"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     trenew = np.loadtxt(fname=args.INFILE, usecols=3)
     trenew *= args.TCONV
-    
+
     if args.STOP is None:
         args.STOP = np.max(trenew)
     hist, bins = np.histogram(trenew,
                               bins=args.NUM,
                               range=(args.START, args.STOP),
                               density=True)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Fitting histogram", flush=True)
     timer = datetime.now()
-    
+
     x = bins[1:] - np.diff(bins)/2
     valid = (hist > 0)
     if not np.any(valid):
@@ -191,21 +191,21 @@ if __name__ == '__main__':
                            bounds=(0, np.inf))
     popt = popt[0]
     pcov = np.diag(pcov)[0]
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         # Renewal time histogram, counts
@@ -227,8 +227,8 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         # Renewal time histogram, density
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -259,8 +259,8 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         # Statistics
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -268,7 +268,7 @@ if __name__ == '__main__':
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         xpos = 0.05
         ypos = 0.95
         plt.text(x=xpos, y=ypos, s="Statistics:", fontsize=fontsize)
@@ -285,7 +285,7 @@ if __name__ == '__main__':
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos, y=ypos, s="Tot. counts", fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos, y=ypos, s=r'$\tau_{renew}$', fontsize=fontsize)
@@ -304,8 +304,8 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16d}$'.format(len(trenew)),
                  fontsize=fontsize)
-        
-        
+
+
         # Histogram parameters
         xpos = 0.05
         ypos -= 0.10
@@ -342,8 +342,8 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16d}$'.format(args.NUM),
                  fontsize=fontsize)
-        
-        
+
+
         # Fit parameters
         xpos = 0.05
         ypos -= 0.10
@@ -364,7 +364,7 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'Std. dev. / '+args.TUNIT+r'$^{-1}$',
                  fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos, y=ypos, s=r'$\lambda$', fontsize=fontsize)
@@ -378,11 +378,11 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16.9e}$'.format(np.sqrt(pcov)),
                  fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -390,10 +390,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

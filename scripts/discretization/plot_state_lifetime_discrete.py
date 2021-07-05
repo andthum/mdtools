@@ -35,18 +35,18 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Plot selected columns from the output of"
-                     " state_lifetime_discrete.py."
-                     )
+        description=(
+            "Plot selected columns from the output of"
+            " state_lifetime_discrete.py."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -82,7 +82,7 @@ if __name__ == '__main__':
              " plot all columns. Column 0 contains the lag times and is"
              " therefore always selected automatically."
     )
-    
+
     parser.add_argument(
         '--refit',
         dest='REFIT',
@@ -115,7 +115,7 @@ if __name__ == '__main__':
              " happens earlier: --end-fit or --stop-fit. Is meaningless"
              " if --refit is not given. Default: 0.01"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -148,7 +148,7 @@ if __name__ == '__main__':
         default=1,
         help="Maximum y-range of the plot. Default: 1"
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -166,18 +166,18 @@ if __name__ == '__main__':
         default="steps",
         help="Time unit. Default: 'steps'"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     if args.COLS is not None:
         args.COLS = np.unique(args.COLS)
         if 0 not in args.COLS:
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     times = p[1:,0] * args.TCONV
     states = p[0,1:]
     p = p[1:,1:]
-    
+
     if np.any(p > 1):
         raise ValueError("At least one element of the remain probability"
                          " is greater than one. This means your input is"
@@ -198,12 +198,12 @@ if __name__ == '__main__':
         raise ValueError("At least one element of the remain probability"
                          " is less than zero. This means your input is"
                          " not a proper probability function")
-    
+
     fractional_part = np.modf(states)[0]
     if np.all(fractional_part == 0):
         states = states.astype(np.int32)
     del fractional_part
-    
+
     if not args.REFIT:
         if args.COLS is None:
             args.COLS = np.arange(len(states)+1)
@@ -244,22 +244,22 @@ if __name__ == '__main__':
         #   tau_sd    [in the unit given by --time-unit]
         #   beta
         #   beta_sd
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     if args.REFIT:
         print("\n\n\n", flush=True)
         print("Re-fitting remain probabilities", flush=True)
         timer = datetime.now()
-        
+
         if args.ENDFIT is None:
             endfit = int(0.9 * len(times))
         else:
@@ -267,7 +267,7 @@ if __name__ == '__main__':
                                              args.ENDFIT,
                                              return_index=True)
         endfit += 1  # To make args.ENDFIT inclusive
-        
+
         fit_start = np.zeros(len(states), dtype=np.uint32)  # inclusive
         fit_stop = np.zeros(len(states), dtype=np.uint32)   # exclusive
         popt = np.full((len(states), 2), np.nan, dtype=np.float32)
@@ -280,8 +280,8 @@ if __name__ == '__main__':
                 stopfit = 2
             fit_stop[i] = min(endfit, stopfit)
             popt[i], perr[i] = mdt.func.fit_kww(
-                                   xdata=times[fit_start[i]:fit_stop[i]],
-                                   ydata=p[:,i][fit_start[i]:fit_stop[i]])
+                xdata=times[fit_start[i]:fit_stop[i]],
+                ydata=p[:,i][fit_start[i]:fit_stop[i]])
         tau = popt[:,0]
         beta = popt[:,1]
         tau_mean = tau/beta * gamma(1/beta)
@@ -289,21 +289,21 @@ if __name__ == '__main__':
                     tau_mean,
                     tau, perr[:,0],
                     beta, perr[:,1]]
-        
+
         print("Elapsed time:         {}"
               .format(datetime.now()-timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss/2**20),
               flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     if args.REFIT:
         header = (
             "Refitting of the remain probabilities from the input file\n"
@@ -333,12 +333,12 @@ if __name__ == '__main__':
         outfile = args.OUTFILE + "_fit.txt"
         mdt.fh.savetxt(fname=outfile, data=data, header=header)
         print("  Created {}".format(outfile))
-    
-    
-    
-    
+
+
+
+
     fontsize_legend = 24
-    
+
     if args.XMIN is None:
         args.XMIN = np.nanmin(times)
     if args.XMAX is None:
@@ -346,8 +346,8 @@ if __name__ == '__main__':
     # Line style "cycler"
     ls = ['-', '--', '-.', ':']
     ls *= (1 + len(states)//len(ls))
-    
-    
+
+
     outfile = args.OUTFILE + ".pdf"
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
@@ -381,7 +381,7 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
+
         # ln(p) vs lag time
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -415,7 +415,7 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
+
         # Remain probability vs log(lag time)
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -449,7 +449,7 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
+
         # Mean relaxation time vs secondary state
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -466,7 +466,7 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
+
         # Fit parameter tau and bete vs secondary state
         ylabels = (r'$\tau$ / '+args.TUNIT, r'$\beta$')
         for i, j in enumerate([3, 5]):
@@ -486,7 +486,7 @@ if __name__ == '__main__':
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-        
+
         # Fit start and stop vs secondary state
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -508,10 +508,10 @@ if __name__ == '__main__':
         pdf.savefig()
         plt.close()
     print("  Created {}".format(outfile))
-    
-    
-    
-    
+
+
+
+
     outfile = args.OUTFILE + "_fit.pdf"
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
@@ -521,7 +521,7 @@ if __name__ == '__main__':
                                beta=fit_data[5][i])
             fit_region = np.zeros_like(fit, dtype=bool)
             fit_region[fit_data[0][i]:fit_data[1][i]] = True
-            
+
             # ln(p) vs lag time with fit
             fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                      frameon=False,
@@ -551,7 +551,7 @@ if __name__ == '__main__':
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-            
+
             # Remain probability vs log(lag time)
             fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                      frameon=False,
@@ -586,18 +586,18 @@ if __name__ == '__main__':
             pdf.savefig()
             plt.close()
     print("  Created {}".format(outfile))
-    
-    
+
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

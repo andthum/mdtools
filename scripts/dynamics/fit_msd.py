@@ -35,20 +35,20 @@ import mdtools as mdt
 
 
 if __name__ == "__main__":
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Fit mean square displacements with MSD(t)=2d*D*t,"
-                     " where D is the fitting parameter (diffusion"
-                     " coefficient) and d is the dimensionalitiy of the"
-                     " diffusive motion."
-                 )
+        description=(
+            "Fit mean square displacements with MSD(t)=2d*D*t,"
+            " where D is the fitting parameter (diffusion"
+            " coefficient) and d is the dimensionalitiy of the"
+            " diffusive motion."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -77,7 +77,7 @@ if __name__ == "__main__":
              " values), all other columns as MSDs (y values)."
              " Default: '0 1'"
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGINFIT',
@@ -109,7 +109,7 @@ if __name__ == "__main__":
         default=3,
         help="Number of dimensions of the diffusive motion. Default: 3"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         help="Space separated list of labels, one for each MSD column"
              " given with -c"
     )
-    
+
     parser.add_argument(
         '--t-unit',
         dest='TUNIT',
@@ -179,35 +179,35 @@ if __name__ == "__main__":
         help="Length convertion factor. All lengths will be multiplied"
              " by this factor. Default: 1"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if len(args.COLS) < 2:
         raise ValueError("You must give at least two columns")
     if (args.BEGINFIT is not None and
         len(args.BEGINFIT) != 1 and
-        len(args.BEGINFIT) != len(args.COLS)-1):
+            len(args.BEGINFIT) != len(args.COLS)-1):
         raise ValueError("You have to give either one start time for"
                          " fitting or exactly as many as MSDs to plot")
     if (args.ENDFIT is not None and 
         len(args.ENDFIT) != 1 and
-        len(args.ENDFIT) != len(args.COLS)-1):
+            len(args.ENDFIT) != len(args.COLS)-1):
         raise ValueError("You have to give either one end time for"
                          " fitting or exactly as many as MSDs to plot")
     if args.LABELS is not None and len(args.LABELS) != len(args.COLS)-1:
         raise ValueError("You have to give exactly as many labels as"
                          " MSDs to plot")
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     msds = np.loadtxt(fname=args.INFILE,
                       comments=['#', '@'],
                       usecols=args.COLS,
@@ -216,17 +216,17 @@ if __name__ == "__main__":
     msds = msds[:,1:] * args.LCONV**2
     if len(times) < 2:
         raise ValueError("The input must contain at least two rows")
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     if args.BEGINFIT is None:
         beginfit = np.full(len(msds[0]), int(0.1 * len(times)))
     else:
@@ -243,7 +243,7 @@ if __name__ == "__main__":
             endfit = np.full(len(msds[0]), endfit[0])
     if np.any(endfit > len(times)):
         endfit[endfit>len(times)] = len(times)
-    
+
     if args.XMIN is None:
         args.XMIN = np.min(times)
     if args.XMAX is None:
@@ -252,7 +252,7 @@ if __name__ == "__main__":
         args.YMIN = np.min(msds)
     if args.YMAX is None:
         args.YMAX = np.max(msds)
-    
+
     if args.XMIN <= 0:
         xmin_log = np.min(times[times>0])
     else:
@@ -261,17 +261,17 @@ if __name__ == "__main__":
         ymin_log = np.min(msds[msds>0])
     else:
         ymin_log = args.YMIN
-    
+
     if args.LABELS is None:
         args.LABELS = [None,] * len(msds[0])
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Fitting curve(s)", flush=True)
     timer = datetime.now()
-    
+
     popt = np.zeros(len(msds[0]))
     pcov = np.zeros(len(msds[0]))
     fit = [None,] * len(msds[0])
@@ -294,21 +294,21 @@ if __name__ == "__main__":
     xmax_fit = np.max(times[np.min(beginfit):np.max(endfit)])
     ymin_fit = np.min(ymin_fit)
     ymax_fit = np.max(ymax_fit)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Writing output", flush=True)
     timer = datetime.now()
-    
+
     mdt.fh.write_header(args.OUTFILE + ".txt")
     with open(args.OUTFILE + ".txt", 'a') as outfile:
         outfile.write("# Diffusion coefficient(s) D\n")
@@ -339,7 +339,7 @@ if __name__ == "__main__":
             outfile.write(" {:16.9e}".format(np.sqrt(pcov[i])))
             outfile.write(" {:>12.3f}".format(times[beginfit[i]]))
             outfile.write(" {:>12.3f}\n".format(times[endfit[i]-1]))
-    
+
     print("  Created {}".format(args.OUTFILE + ".txt"))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -347,19 +347,19 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plots", flush=True)
     timer = datetime.now()
-    
+
     outfile = args.OUTFILE + ".pdf"
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
-        
-        
+
+
         # Loglog plot without fit
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -387,8 +387,8 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         # Loglog plot with fit
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -430,8 +430,8 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         # Loglog plot with fit, zoomed in fitted region
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -472,10 +472,10 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
-        
-        
+
+
+
+
         # Fit residuals
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -496,16 +496,16 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
-        
-        
+
+
+
+
         # Semi log plot without fit
         for i in range(len(msds[0])):
-           msds[:,i][times!=0] /= (6 * times[times!=0])
+            msds[:,i][times!=0] /= (6 * times[times!=0])
         ymin_semilog = np.min(msds)
         ymax_semilog = np.max(msds)
-        
+
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
                                  clear=True,
@@ -535,8 +535,8 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         # Semi log plot with fit
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -584,12 +584,12 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         # Semi log plot with fit, zoomed in fitted region
         ymin_fit_semilog = np.min(msds[np.min(beginfit):np.max(endfit[i])])
         ymax_fit_semilog = np.max(msds[np.min(beginfit):np.max(endfit[i])])
-        
+
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
                                  clear=True,
@@ -635,7 +635,7 @@ if __name__ == "__main__":
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(outfile))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -643,10 +643,10 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"

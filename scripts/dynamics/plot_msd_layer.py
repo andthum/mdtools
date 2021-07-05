@@ -35,18 +35,18 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Plot selected columns from the output of"
-                     " msd_layer_serial.py (or msd_layer_parallel.py)."
-                     )
+        description=(
+            "Plot selected columns from the output of"
+            " msd_layer_serial.py (or msd_layer_parallel.py)."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         help="The spatial direction used to dicretize the MSD. Must be"
              " either x, y or z. Default: z"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -140,7 +140,7 @@ if __name__ == '__main__':
         default=None,
         help="Maximum y-range of the plot. Default: Maximum MSD"
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -175,32 +175,32 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.MSD_DIRECTION != 'r' and
         args.MSD_DIRECTION != 'x' and
         args.MSD_DIRECTION != 'y' and
-        args.MSD_DIRECTION != 'z'):
+            args.MSD_DIRECTION != 'z'):
         raise ValueError("--d1 must be either 'r, 'x', 'y' or 'z', but"
                          " you gave {}".format(args.MSD_DIRECTION))
     if (args.BIN_DIRECTION != 'x' and
         args.BIN_DIRECTION != 'y' and
-        args.BIN_DIRECTION != 'z'):
+            args.BIN_DIRECTION != 'z'):
         raise ValueError("--d2 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.BIN_DIRECTION))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     if args.LAYER is None:
         cols = None
     else:
@@ -212,7 +212,7 @@ if __name__ == '__main__':
         layer = np.arange(1, msd.shape[1]+1)
     else:
         layer = np.unique(args.LAYER)
-    
+
     if args.MDFILE is not None:
         if len(args.MDFILE) != 1 and len(args.MDFILE) != 3:
             raise ValueError("You must provide either one or three"
@@ -235,7 +235,7 @@ if __name__ == '__main__':
         md = np.asarray(md)
         msd -= np.sum(md**2, axis=0)
         md = np.sum(md, axis=0)
-    
+
     # Line with slope 1 in log-log plot indicating the diffusive regime
     if args.MSD_DIRECTION == 'r':
         ndim = 3
@@ -243,34 +243,34 @@ if __name__ == '__main__':
         ndim = 1
     try:
         popt, pcov = opt.curve_fit(
-                         f=lambda t, D: mdt.dyn.msd(t=t, D=D, d=ndim),
-                         xdata=times,
-                         ydata=msd[:,len(layer)//2])
+            f=lambda t, D: mdt.dyn.msd(t=t, D=D, d=ndim),
+            xdata=times,
+            ydata=msd[:,len(layer)//2])
         fit_successful = True
     except (ValueError, RuntimeError, opt.OptimizeWarning):
         fit_successful = False
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fontsize_legend = 24
-    
+
     if args.XMIN is None:
         args.XMIN = np.min(times[times>0])
     if args.XMAX is None:
         args.XMAX = np.max(times[times>0])
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         if args.MDFILE is not None:
@@ -313,8 +313,8 @@ if __name__ == '__main__':
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-        
-        
+
+
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
                                  clear=True,
@@ -335,7 +335,7 @@ if __name__ == '__main__':
                     r' / ' + args.LUNIT + r'$^2$')
         #cmap = plt.get_cmap('gist_rainbow')
         #axis.set_prop_cycle(color=[cmap(i/len(layer))
-                                   #for i in range(len(layer))])
+            #for i in range(len(layer))])
         #ls = ['-', '--', '-.', ':']
         #ls *= (1 + len(layer)//len(ls))
         for i, l in enumerate(layer):
@@ -379,7 +379,7 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -387,10 +387,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

@@ -289,7 +289,7 @@ if __name__ == "__main__":
         bins = None
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
-    
+
     print("\n")
     dtrj, bins, lbox_av, time_step = mdt.strc.discrete_pos_trj(
         sel=' '.join(args.SEL),
@@ -311,7 +311,7 @@ if __name__ == "__main__":
         verbose=True,
         debug=args.DEBUG
     )
-    
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
     print("Totally elapsed time: {}".format(datetime.now()-timer_tot))

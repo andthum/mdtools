@@ -33,11 +33,11 @@ from msd_layer_serial import parse_user_input, msd_layer
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     additional_description = (
         " This script is parallelized. The number of CPUs to use is"
         " specified (in decreasing precedence) by either one of the"
@@ -52,15 +52,15 @@ if __name__ == '__main__':
     num_CPUs = mdt.rti.get_num_CPUs()
     print("\n\n\n", flush=True)
     print("Available CPUs: {}".format(num_CPUs), flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
+
     print("\n\n\n", flush=True)
     sel = mdt.select.atoms(ag=u,
                            sel=' '.join(args.SEL),
@@ -70,35 +70,35 @@ if __name__ == '__main__':
     if args.COM is not None:
         print("\n\n\n", flush=True)
         mdt.check.masses(ag=sel, flash_test=False)
-    
-    
-    
-    
+
+
+
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
     NBLOCKS, blocksize = mdt.check.block_averaging(n_blocks=args.NBLOCKS,
                                                    n_frames=n_frames,
                                                    check_CPUs=True)
     RESTART, effective_restart = mdt.check.restarts(
-                                     restart_every_nth_frame=args.RESTART,
-                                     read_every_nth_frame=EVERY,
-                                     n_frames=blocksize)
+        restart_every_nth_frame=args.RESTART,
+        read_every_nth_frame=EVERY,
+        n_frames=blocksize)
     last_frame = u.trajectory[END-1].frame
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Checking bins", flush=True)
     timer = datetime.now()
-    
+
     lbox_max = [ts.dimensions[d] for ts in u.trajectory[BEGIN:END:EVERY]]
     lbox_max = np.max(lbox_max)
     if args.BINFILE is None:
@@ -123,17 +123,17 @@ if __name__ == '__main__':
         print("  Appending new last bin edge: {}"
               .format(bins[-1]),
               flush=True)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -143,19 +143,19 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-    
+
     nchunks = num_CPUs
     if nchunks > int(n_frames/10):
         nchunks = int(n_frames/10)
     pool = mdt.parallel.ProcessPool(nprocs=nchunks)
-    
+
     chunk_size = int((END-BEGIN) / nchunks)
     chunk_size -= chunk_size % EVERY
     if chunk_size: # !=0
         nchunks = int((END-BEGIN) / chunk_size)
     else:
         nchunks = 1
-    
+
     for chunk in range(nchunks):
         pool.submit_task(func=get_COMs,
                          args=(args.TOPFILE,
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     elif BEGIN+(chunk+1)*chunk_size > END:
         raise ValueError("I've read more frames than given with -e. This"
                          " should not have happened")
-    
+
     pos = []
     for result in pool.get_results():
         pos.append(result)
@@ -188,12 +188,12 @@ if __name__ == '__main__':
     pos = np.vstack(pos)
     pool.close()
     pool.join()
-    
+
     if len(pos) != n_frames:
         raise ValueError("The number of position arrays does not equal"
                          " the number of frames to read. This should not"
                          " have happened")
-    
+
     print(flush=True)
     print("Frames read: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -212,13 +212,13 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
+
+
+
     print("\n\n\n", flush=True)
     print("Calculating MSD", flush=True)
     timer = datetime.now()
-    
+
     pool = mdt.parallel.ProcessPool(nprocs=num_CPUs)
     for block in range(NBLOCKS):
         pool.submit_task(func=msd_layer,
@@ -228,7 +228,7 @@ if __name__ == '__main__':
                                effective_restart,
                                args.DEBUG))
     del pos
-    
+
     md = []
     msd = []
     for result in pool.get_results():
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     del result
     pool.close()
     pool.join()
-    
+
     if len(md) != NBLOCKS:
         raise ValueError("The number of MDs does not equal the number"
                          " of blocks for block averaging. This should"
@@ -248,7 +248,7 @@ if __name__ == '__main__':
                          " not have happened")
     md = np.asarray(md)
     msd = np.asarray(msd)
-    
+
     if NBLOCKS > 1:
         md, md_sd = mdt.stats.block_average(md)
         msd, msd_sd = mdt.stats.block_average(msd)
@@ -261,21 +261,21 @@ if __name__ == '__main__':
                           timestep*blocksize*EVERY,
                           timestep*EVERY,
                           dtype=np.float32)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     header = (
         "The brackets <...> denote averaging over all particles and\n"
         "over all possible restarting points t0. d[...] stands for the\n"
@@ -313,10 +313,10 @@ if __name__ == '__main__':
                 len(np.unique(sel.types)),
                 '\' \''.join(i for i in np.unique(sel.types)),
                 len(sel.fragments)
-        )
+                )
     )
-    
-    
+
+
     # MSDs
     prefix = (
         "Total mean square displacement (MSD) as function of the\n"
@@ -347,7 +347,7 @@ if __name__ == '__main__':
                               upper_left=bins[0],
                               header=prefix+header+suffix)
         print("  Created {}".format(args.OUTFILE+"_msd_layer_sd.txt"))
-    
+
     for i, x in enumerate(['x', 'y', 'z']):
         prefix = (
             "{}-component of the mean square displacement (MSD) as function\n"
@@ -379,8 +379,8 @@ if __name__ == '__main__':
                                   upper_left=bins[0],
                                   header=prefix+header+suffix)
             print("  Created {}".format(args.OUTFILE+"_msd"+x+"_layer_sd.txt"))
-    
-    
+
+
     # MDs
     for i, x in enumerate(['x', 'y', 'z']):
         prefix = (
@@ -413,17 +413,17 @@ if __name__ == '__main__':
                                   upper_left=bins[0],
                                   header=prefix+header+suffix)
             print("  Created {}".format(args.OUTFILE+"_md"+x+"_layer_sd.txt"))
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

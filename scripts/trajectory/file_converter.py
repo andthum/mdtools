@@ -33,7 +33,7 @@ def conv_strc_file(strcfile, outfile):
     """
     Convert structure files into each other. File conversion relies on
     the file extension.
-    
+
     Paramters
     ---------
     strcfile : str
@@ -41,7 +41,7 @@ def conv_strc_file(strcfile, outfile):
     outfile : str
         Name of the ouput file.
     """
-    
+
     u = mda.Universe(strcfile)
     mdt.fh.backup(outfile)
     with mda.Writer(outfile) as W:
@@ -56,12 +56,12 @@ def conv_strc_file(strcfile, outfile):
 
 
 if __name__ == '__main__':
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Convert structure files into each other. File"
-                     " conversion relies on the file extension."
-                 )
+        description=(
+            "Convert structure files into each other. File"
+            " conversion relies on the file extension."
+        )
     )
     parser.add_argument(
         '-f',
@@ -78,11 +78,11 @@ if __name__ == '__main__':
         required=True,
         help="Output filename."
     )
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
+
     conv_strc_file(args.STRCFILE, args.OUTFILE)
-    
+
     print()
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)

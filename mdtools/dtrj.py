@@ -33,7 +33,7 @@ import numpy as np
 def trans_per_state(dtrj, axis=-1):
     """
     Count the number of transitions leading into or out of a given state.
-    
+
     Parameters
     ----------
     dtrj : array_like
@@ -49,7 +49,7 @@ def trans_per_state(dtrj, axis=-1):
         where ``n`` is the number of compounds and ``f`` is the number
         of frames, set `axis` to ``-1``.  If you parse a transposed
         discrete trajectory to `dtrj`, set `axis` to ``0``.
-    
+
     Returns
     -------
     hist_start : numpy.ndarray
@@ -58,14 +58,14 @@ def trans_per_state(dtrj, axis=-1):
     hist_end : numpy.ndarray
         Histogram counting how many state transitions **ended** it a
         given state, i.e. how many transitions led into a given state.
-    
+
     Notes
     -----
     The histograms contain the counts for all states ranging from the
     minimum to the maximum state in `dtrj` in whole numbers.  This means,
     the states corresponding to the counts in `hist_start` and `hist_end`
     are given by ``numpy.arange(np.min(dtrj), np.max(dtrj)+1)``.
-    
+
     Examples
     --------
     >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
@@ -79,10 +79,10 @@ def trans_per_state(dtrj, axis=-1):
     >>> # Number of transitions ending in the 1st, 2nd or 3rd state
     >>> hist_end
     array([2, 3, 3])
-    
+
     Iterprete first dimension as frames and second dimension as
     compounds:
-    
+
     >>> hist_start, hist_end = mdt.dtrj.trans_per_state(dtrj, axis=0)
     >>> hist_start
     array([3, 3, 4])

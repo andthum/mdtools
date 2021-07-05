@@ -37,16 +37,16 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Plot the output of state_lifetime_autocorr.py.")
+        description=(
+            "Plot the output of state_lifetime_autocorr.py.")
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -62,8 +62,8 @@ if __name__ == '__main__':
         help="Output filename. Plots are optimized for PDF format with"
              " TeX support."
     )
-    
-    
+
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -96,7 +96,7 @@ if __name__ == '__main__':
         default=1,
         help="Maximum y-range of the plot. Default: 1"
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -114,38 +114,38 @@ if __name__ == '__main__':
         default="steps",
         help="Time unit. Default: 'steps'"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     times, autocorr, fit = np.loadtxt(fname=args.INFILE, unpack=True)
     times *= args.TCONV
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     if args.XMAX is None:
         args.XMAX = np.max(times)
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         # Autocorrelation function vs lag time
@@ -177,8 +177,8 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         # ln(Autocorrelation function) vs lag time
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -216,8 +216,8 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         # Autocorrelation function vs log(lag time)
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -252,7 +252,7 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -260,10 +260,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

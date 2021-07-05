@@ -34,24 +34,24 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal evenst as e.g."
-                     " generated with extract_renewal_events.py and plot"
-                     " the number of events versus the inital positions"
-                     " as a bin-wise average. For the error estimation"
-                     " it is assumed that the renewal events are"
-                     " distributed in time according to a Poisson"
-                     " distribution. In this case, the standard"
-                     " deviation is simply the square root of the mean."
-                     )
+        description=(
+            "Read a trajectory of renewal evenst as e.g."
+            " generated with extract_renewal_events.py and plot"
+            " the number of events versus the inital positions"
+            " as a bin-wise average. For the error estimation"
+            " it is assumed that the renewal events are"
+            " distributed in time according to a Poisson"
+            " distribution. In this case, the standard"
+            " deviation is simply the square root of the mean."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -86,7 +86,7 @@ if __name__ == '__main__':
         help="Use the selection compounds instead of the reference"
              " compounds."
     )
-    
+
     parser.add_argument(
         '--bin-start',
         dest='START',
@@ -123,7 +123,7 @@ if __name__ == '__main__':
              " edges are read from the first column, lines starting with"
              " '#' are ignored. Bins do not need to be equidistant."
     )
-    
+
     parser.add_argument(
         '--f2',
         dest='INFILE2',
@@ -173,7 +173,7 @@ if __name__ == '__main__':
              " second and third plot. These plots are only created if"
              " --f2 is provided. Default: 'Compound'"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -209,7 +209,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--length-conv',
         dest='LCONV',
@@ -227,33 +227,33 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.DIRECTION != 'x' and
         args.DIRECTION != 'y' and
-        args.DIRECTION != 'z'):
+            args.DIRECTION != 'z'):
         raise ValueError("-d must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     if args.SEL:
         cols = 7+dim[args.DIRECTION]
     else:
         cols = 4+dim[args.DIRECTION]
     pos_t0 = np.loadtxt(fname=args.INFILE, usecols=cols)
     pos_t0 *= args.LCONV
-    
+
     if args.BINFILE is None:
         if args.START is None or args.START > np.min(pos_t0):
             args.START = np.min(pos_t0)
@@ -269,7 +269,7 @@ if __name__ == '__main__':
             bins = np.insert(bins, 0, np.min(pos_t0))
         if bins[-1] <= np.max(pos_t0):
             bins = np.append(bins, np.max(pos_t0) + (np.max(pos_t0)-bins[0])/len(bins))
-    
+
     bin_ix = np.digitize(pos_t0, bins)
     nevents = np.zeros(len(bins), dtype=np.uint32)
     for i in np.unique(bin_ix):
@@ -277,7 +277,7 @@ if __name__ == '__main__':
     if nevents[0] != 0:
         raise ValueError("The first element of nevents is not zero. This"
                          " should not have happened")
-    
+
     if args.INFILE2 is not None:
         xdata, ydata = np.loadtxt(fname=args.INFILE2,
                                   comments=['#', '@'],
@@ -296,26 +296,26 @@ if __name__ == '__main__':
         print("  Total number of compounds: {}"
               .format(np.sum(n_compounds_per_bin)),
               flush=True)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     tick_length = 10
     label_pad = 16
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         logy = (False, True)
@@ -336,7 +336,7 @@ if __name__ == '__main__':
                                          constrained_layout=True,
                                          gridspec_kw={'height_ratios': [1/5, 1]})
                 axis = axes[1]
-            
+
             mdt.plot.errorbar(
                 ax=axis,
                 x=bins[1:]-np.diff(bins)/2,
@@ -351,7 +351,7 @@ if __name__ == '__main__':
                 ylabel=r'$N_{renew}$',
                 color='black',
                 marker='o')
-            
+
             mdt.plot.vlines(ax=axis,
                             x=bins,
                             start=axis.get_ylim()[0],
@@ -362,7 +362,7 @@ if __name__ == '__main__':
                             ymax=args.YMAX,
                             color='black',
                             linestyle='dotted')
-            
+
             if args.INFILE2 is not None:
                 mdt.plot.plot(ax=axes[0],
                               x=xdata,
@@ -378,13 +378,13 @@ if __name__ == '__main__':
                 axes[0].spines['top'].set_visible(False)
                 axes[0].spines['left'].set_visible(False)
                 axes[0].spines['right'].set_visible(False)
-            
+
             if args.INFILE2 is None:
                 plt.tight_layout()
             pdf.savefig()
             plt.close()
-            
-            
+
+
             if args.INFILE2 is not None:
                 # Number of compounds per bin
                 fig, axes = plt.subplots(nrows=2,
@@ -394,7 +394,7 @@ if __name__ == '__main__':
                                          clear=True,
                                          constrained_layout=True,
                                          gridspec_kw={'height_ratios': [1/5, 1]})
-                
+
                 mdt.plot.plot(
                     ax=axes[1],
                     x=bins[1:]-np.diff(bins)/2,
@@ -408,7 +408,7 @@ if __name__ == '__main__':
                     ylabel=r'$\langle N_{'+args.NAME+r'} \rangle$',
                     color='black',
                     marker='o')
-                
+
                 mdt.plot.vlines(ax=axes[1],
                                 x=bins,
                                 start=axes[1].get_ylim()[0],
@@ -419,7 +419,7 @@ if __name__ == '__main__':
                                 ymax=args.YMAX,
                                 color='black',
                                 linestyle='dotted')
-                
+
                 mdt.plot.plot(ax=axes[0],
                               x=xdata,
                               y=ydata,
@@ -434,11 +434,11 @@ if __name__ == '__main__':
                 axes[0].spines['top'].set_visible(False)
                 axes[0].spines['left'].set_visible(False)
                 axes[0].spines['right'].set_visible(False)
-                
+
                 pdf.savefig()
                 plt.close()
-                
-                
+
+
                 # Number of renewal events / Number of  compounds per bin
                 fig, axes = plt.subplots(nrows=2,
                                          sharex=True,
@@ -447,7 +447,7 @@ if __name__ == '__main__':
                                          clear=True,
                                          constrained_layout=True,
                                          gridspec_kw={'height_ratios': [1/5, 1]})
-                
+
                 mdt.plot.errorbar(
                     ax=axes[1],
                     x=bins[1:]-np.diff(bins)/2,
@@ -462,7 +462,7 @@ if __name__ == '__main__':
                     ylabel=r'$N_{renew}$ / $\langle N_{'+args.NAME+r'} \rangle$',
                     color='black',
                     marker='o')
-                
+
                 mdt.plot.vlines(ax=axes[1],
                                 x=bins,
                                 start=axes[1].get_ylim()[0],
@@ -473,7 +473,7 @@ if __name__ == '__main__':
                                 ymax=args.YMAX,
                                 color='black',
                                 linestyle='dotted')
-                
+
                 mdt.plot.plot(ax=axes[0],
                               x=xdata,
                               y=ydata,
@@ -488,10 +488,10 @@ if __name__ == '__main__':
                 axes[0].spines['top'].set_visible(False)
                 axes[0].spines['left'].set_visible(False)
                 axes[0].spines['right'].set_visible(False)
-                
+
                 pdf.savefig()
                 plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -499,10 +499,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

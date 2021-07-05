@@ -119,7 +119,7 @@ def cmp_contact_count_matrices(
     """
     Take a contact matrix and return all possible compound contact
     **count** matrices.
-    
+
     A compound is usually a chemically meaningfull subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
@@ -133,7 +133,7 @@ def cmp_contact_count_matrices(
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
     in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -159,7 +159,7 @@ def cmp_contact_count_matrices(
         against ``cm.shape[1]``).
     dtype : dtype, optional
         Data type of the output arrays.
-    
+
     Returns
     -------
     ccm_refatm_selcmp : numpy.ndarray
@@ -171,7 +171,7 @@ def cmp_contact_count_matrices(
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.
     ccm_refcmp_selcmp : numpy.ndarray
         Same for reference and selection compounds.
-    
+
     See Also
     --------
     :func:`mdtools.structure.cmp_contact_count_matrix` :
@@ -325,7 +325,7 @@ if __name__ == '__main__':
         mdabackend = 'OpenMP'
     else:
         mdabackend = 'serial'
-    
+
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
     print("\n")
@@ -351,7 +351,7 @@ if __name__ == '__main__':
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames
     )
-    
+
     if not args.UPDATING_REF:
         natms_per_refcmp = mdt.strc.natms_per_cmp(ag=ref,
                                                   compound=args.REFCMP,
@@ -366,7 +366,7 @@ if __name__ == '__main__':
                                  dtype=np.float64)
     else:
         dist_array_tmp = None
-    
+
     expected_max_contacts = 16  # Will be increased if necessary
     # Histogram for refatm_selatm:
     hist_refatm_selatm = np.zeros(expected_max_contacts, dtype=np.uint32)
@@ -376,7 +376,7 @@ if __name__ == '__main__':
     n_atms = np.zeros(2, dtype=int)  # refatms and selatms
     n_cmps = np.zeros_like(n_atms)   # refcmps and selcmps
     n_pairs = np.zeros(len(hists_cmp), dtype=np.uint32)
-    
+
     print("\n")
     print("Reading trajectory...")
     print("Total number of frames: {:>8d}".format(u.trajectory.n_frames))
@@ -459,7 +459,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     if np.any(n_atms == 0):
         warnings.warn("The total number of reference or selection atoms"
                       " is zero. The output will be meaningless",
@@ -468,7 +468,7 @@ if __name__ == '__main__':
         warnings.warn("At least one of the pair histograms is void."
                       " This histogram will be meaningless",
                       RuntimeWarning)
-    
+
     # Average contact numbers:
     n_refatms_bound = np.sum(hist_refatm_selatm[1:])
     n_refcmps_bound = np.sum(hists_cmp[1][0][1:])  # refcmp_diff_selatm
@@ -499,7 +499,7 @@ if __name__ == '__main__':
         tot_contacts = np.sum(hists_cmp[i][-1] *
                               np.arange(len(hists_cmp[i][-1])))
         avs_pair[i] = tot_contacts / n
-    
+
     # Normalization:
     hist_refatm_selatm = hist_refatm_selatm / n_atms[0]
     for i in range(len(hists_cmp)):
@@ -510,7 +510,7 @@ if __name__ == '__main__':
             hists_cmp[i][:-1] /= n_cmps[0]
     for i, n in enumerate(n_pairs):
         hists_cmp[i][-1] /= n
-    
+
     # Bring all histograms to the same length:
     max_length = len(hist_refatm_selatm)
     for hists in hists_cmp:
@@ -518,7 +518,7 @@ if __name__ == '__main__':
     hist_refatm_selatm = mdt.nph.extend(hist_refatm_selatm, max_length)
     for i, hists in enumerate(hists_cmp):
         hists_cmp[i] = mdt.nph.extend(hists, max_length, axis=-1)
-    
+
     # Find the last non-zero value up to which to write the histograms
     # to file:
     if np.any(hist_refatm_selatm != 0):
@@ -529,7 +529,7 @@ if __name__ == '__main__':
         if np.any(hists != 0):
             last_nonzero = max(last_nonzero,
                                np.max(np.nonzero(hists)[1]))
-    
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -658,7 +658,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Checking output for consistency...")
     timer = datetime.now()
@@ -768,7 +768,7 @@ if __name__ == '__main__':
                                      " but 'avs_cmp[{}][{}][0]' ({}) !="
                                      " 'avs_cmp[{}][{}][1]' ({})"
                                      .format(i, j, av[0], i, j, av[1]))
-    
+
     hist_refatm_same_selatm = np.array([hist_refatm_selatm[0],
                                         1-hist_refatm_selatm[0]])
     hist_refatm_same_selatm = mdt.nph.extend(hist_refatm_same_selatm,
@@ -829,7 +829,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
     print("Totally elapsed time: {}".format(datetime.now()-timer_tot))

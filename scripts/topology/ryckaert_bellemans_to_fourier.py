@@ -45,7 +45,7 @@ def calc_f_coeff(rb):
     tol = 1e-5
     if not np.isclose(rb[0], f[1]+0.5*(f[0]+f[2]), atol=tol):
         raise ValueError("rb[0] ({}) is not equal to f[1]+0.5*(f[0]+f[2])"
-                        " ({})".format(rb[0], f[1]+0.5*(f[0]+f[2])))
+                         " ({})".format(rb[0], f[1]+0.5*(f[0]+f[2])))
 
     return f
 

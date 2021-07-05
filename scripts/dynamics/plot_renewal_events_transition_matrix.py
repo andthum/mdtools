@@ -36,24 +36,24 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py,"
-                     " discretize a given spatial direction and create"
-                     " and plot a row-stochastic transition matrix"
-                     " similar to the transition matrix of a Markov"
-                     " model. The matrix element T_ij represents the"
-                     " probability that a renewal event which starts in"
-                     " bins i ends in bin j."
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py,"
+            " discretize a given spatial direction and create"
+            " and plot a row-stochastic transition matrix"
+            " similar to the transition matrix of a Markov"
+            " model. The matrix element T_ij represents the"
+            " probability that a renewal event which starts in"
+            " bins i ends in bin j."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -88,7 +88,7 @@ if __name__ == '__main__':
         help="Use the selection compounds instead of the reference"
              " compounds."
     )
-    
+
     parser.add_argument(
         '--bin-start',
         dest='START',
@@ -125,7 +125,7 @@ if __name__ == '__main__':
              " edges are read from the first column, lines starting with"
              " '#' are ignored. Bins do not need to be equidistant."
     )
-    
+
     parser.add_argument(
         '--f2',
         dest='INFILE2',
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         help="Name of the compound to use in the y-axis label. Is"
              " meaningless if --f2 is not given. Default: 'Compound'"
     )
-    
+
     parser.add_argument(
         '--min',
         dest='MIN',
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         help="Maximum x- and y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -228,26 +228,26 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.DIRECTION != 'x' and
         args.DIRECTION != 'y' and
-        args.DIRECTION != 'z'):
+            args.DIRECTION != 'z'):
         raise ValueError("-d must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     if args.SEL:
         cols = (3, 7+dim[args.DIRECTION], 13+dim[args.DIRECTION])
     else:
@@ -259,7 +259,7 @@ if __name__ == '__main__':
     pos_t0 *= args.LCONV
     pos_trenew *= args.LCONV
     pos_trenew += pos_t0
-    
+
     if args.BINFILE is None:
         if args.START is None or args.START > np.min(pos_t0):
             args.START = np.min(pos_t0)
@@ -275,7 +275,7 @@ if __name__ == '__main__':
             bins = np.insert(bins, 0, np.min(pos_t0))
         if bins[-1] <= np.max(pos_t0):
             bins = np.append(bins, np.max(pos_t0) + (np.max(pos_t0)-bins[0])/len(bins))
-    
+
     if args.INFILE2 is not None:
         xdata, ydata = np.loadtxt(fname=args.INFILE2,
                                   comments=['#', '@'],
@@ -294,21 +294,21 @@ if __name__ == '__main__':
         print("  Total number of compounds: {}"
               .format(np.sum(n_compounds_per_bin)),
               flush=True)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating transition matrix", flush=True)
     timer = datetime.now()
-    
+
     bin_ix_t0 = np.digitize(pos_t0, bins) - 1
     bin_ix_trenew = np.digitize(pos_trenew, bins) - 1
     if np.any(bin_ix_t0 < 0):
@@ -317,7 +317,7 @@ if __name__ == '__main__':
     if np.any(bin_ix_trenew < 0):
         raise ValueError("At least one element of bin_ix_trenew is less"
                          " than zero. This should not have happened")
-    
+
     count_matrix = np.zeros((len(bins)-1, len(bins)-1), dtype=np.uint32)
     trenew_matrix = np.full((len(bins)-1, len(bins)-1), np.nan)
     nevents = np.zeros(len(bins)-1, dtype=np.uint32)
@@ -331,28 +331,28 @@ if __name__ == '__main__':
             mask2 = mask & (bin_ix_trenew == j)
             if np.any(mask2):
                 trenew_matrix[i][j] = np.mean(trenew[mask2])
-    
+
     ####################################################################
     #print("count_matrix =")
     #print(count_matrix)
     #count_matrix[-1][-1] -= 4
     #count_matrix[-1][-2] += 2
     #count_matrix[-1][-3] += 2
-    
+
     #count_matrix[-2][-1] -= 1
     #count_matrix[-2][-3] += 1
-    
+
     #count_matrix[-4][-1] -= 1
     #count_matrix[-4][-4] -= 1
     #count_matrix[-4][-2] += 1
     #count_matrix[-4][-3] += 1
-    
+
     #count_matrix[-5][-1] -= 1
     #count_matrix[-5][-2] += 1
     #print("count_matrix =")
     #print(count_matrix)
     ####################################################################
-    
+
     active_set = np.arange(1, len(bins), dtype=np.uint32)
     inactive = np.flatnonzero(np.sum(count_matrix, axis=1) == 0)
     count_matrix = np.delete(count_matrix, inactive, axis=0)
@@ -363,7 +363,7 @@ if __name__ == '__main__':
     trenew_matrix = np.delete(trenew_matrix, inactive, axis=0)
     trenew_matrix = np.delete(trenew_matrix, inactive, axis=1)
     active_set = np.delete(active_set, inactive)
-    
+
     norm = np.sum(count_matrix, axis=1)
     transition_matrix = count_matrix / norm[:,None]
     if not np.allclose(np.sum(transition_matrix, axis=1), 1):
@@ -375,7 +375,7 @@ if __name__ == '__main__':
     if np.min(transition_matrix) < 0:
         raise ValueError("At least one element of the transition matrix"
                          " is less than zero")
-    
+
     eigvals, eigvecs = eig(transition_matrix, left=True, right=False)
     mask = np.isclose(eigvals, 1)
     if not np.any(mask):
@@ -393,21 +393,21 @@ if __name__ == '__main__':
     if np.min(eigvecs) < 0:
         raise ValueError("At least one element of the stationary"
                          " distribution is less than zero")
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         # Count/Transition/Renewal time matrix as function of bin number
@@ -423,7 +423,7 @@ if __name__ == '__main__':
                                      tight_layout=True)
             axis.xaxis.set_major_locator(MaxNLocator(integer=True))
             axis.yaxis.set_major_locator(MaxNLocator(integer=True))
-            
+
             xy = np.append(active_set, active_set[-1]+1) - 0.5
             mdt.plot.pcolormesh(
                 ax=axis,
@@ -438,18 +438,18 @@ if __name__ == '__main__':
                 ylabel=r'Bin $i$',
                 cbarlabel=cbarlabel[i],
                 cmap=cmap[i])
-            
+
             axis.invert_yaxis()
             axis.xaxis.set_label_position('top')
             axis.xaxis.labelpad = 22
             axis.xaxis.tick_top()
             axis.tick_params(axis='x', which='both', pad=6)
-            
+
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-        
-        
+
+
         # Stationary distribution as function of bin number
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -470,10 +470,10 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
-        
-        
+
+
+
+
         # Count/Transition/Renewal time matrix as function of spatial
         # direction
         for i in range(len(cbarlabel)):
@@ -481,7 +481,7 @@ if __name__ == '__main__':
                                      frameon=False,
                                      clear=True,
                                      tight_layout=True)
-            
+
             matrix[i] = np.insert(matrix[i].astype(np.float32),
                                   inactive,
                                   np.nan,
@@ -503,23 +503,23 @@ if __name__ == '__main__':
                 ylabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
                 cbarlabel=cbarlabel[i],
                 cmap=cmap[i])
-            
+
             yticks = np.array(axis.get_yticks())
             mask = ((yticks >= axis.get_xlim()[0]) &
                     (yticks <= axis.get_xlim()[1]))
             axis.set_xticks(yticks[mask])
-            
+
             axis.invert_yaxis()
             axis.xaxis.set_label_position('top')
             axis.xaxis.labelpad = 22
             axis.xaxis.tick_top()
             axis.tick_params(axis='x', which='both', pad=6)
-            
+
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-        
-        
+
+
         # Stationary distribution as function of spatial direction
         if args.INFILE2 is None:
             fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
@@ -528,15 +528,15 @@ if __name__ == '__main__':
                                      tight_layout=True)
         else:
             fig, axes = plt.subplots(
-                            nrows=2,
-                            sharex=True,
-                            figsize=(11.69, 8.27+8.27/5),
-                            frameon=False,
-                            clear=True,
-                            constrained_layout=True,
-                            gridspec_kw={'height_ratios': [1/5, 1]})
+                nrows=2,
+                sharex=True,
+                figsize=(11.69, 8.27+8.27/5),
+                frameon=False,
+                clear=True,
+                constrained_layout=True,
+                gridspec_kw={'height_ratios': [1/5, 1]})
             axis = axes[1]
-        
+
         eigvecs = np.insert(eigvecs, inactive, np.nan, axis=0)
         mdt.plot.plot(
             ax=axis,
@@ -558,7 +558,7 @@ if __name__ == '__main__':
                         ymin=0,
                         color='black',
                         linestyle='dotted')
-        
+
         if args.INFILE2 is not None:
             mdt.plot.plot(ax=axes[0],
                           x=xdata,
@@ -574,13 +574,13 @@ if __name__ == '__main__':
             axes[0].spines['top'].set_visible(False)
             axes[0].spines['left'].set_visible(False)
             axes[0].spines['right'].set_visible(False)
-        
+
         if args.INFILE2 is None:
             plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         logy = (False, True)
         ymin = (0, None)
         for i in range(len(logy)):
@@ -593,15 +593,15 @@ if __name__ == '__main__':
                                          tight_layout=True)
             else:
                 fig, axes = plt.subplots(
-                                nrows=2,
-                                sharex=True,
-                                figsize=(11.69, 8.27+8.27/5),
-                                frameon=False,
-                                clear=True,
-                                constrained_layout=True,
-                                gridspec_kw={'height_ratios': [1/5, 1]})
+                    nrows=2,
+                    sharex=True,
+                    figsize=(11.69, 8.27+8.27/5),
+                    frameon=False,
+                    clear=True,
+                    constrained_layout=True,
+                    gridspec_kw={'height_ratios': [1/5, 1]})
                 axis = axes[1]
-            
+
             mdt.plot.errorbar(
                 ax=axis,
                 x=bins[1:]-np.diff(bins)/2,
@@ -636,7 +636,7 @@ if __name__ == '__main__':
                 ylabel=r'$N_{renew}$',
                 label="Model",
                 marker='s')
-            
+
             if args.INFILE2 is not None:
                 mdt.plot.plot(ax=axes[0],
                               x=xdata,
@@ -652,24 +652,24 @@ if __name__ == '__main__':
                 axes[0].spines['top'].set_visible(False)
                 axes[0].spines['left'].set_visible(False)
                 axes[0].spines['right'].set_visible(False)
-            
+
             if args.INFILE2 is None:
                 plt.tight_layout()
             pdf.savefig()
             plt.close()
-            
-            
+
+
             # Stationary distribution as function of spatial direction
             # together with number of events per bin
             # divided by the number of compounds per bin
             fig, axes = plt.subplots(
-                                nrows=2,
-                                sharex=True,
-                                figsize=(11.69, 8.27+8.27/5),
-                                frameon=False,
-                                clear=True,
-                                constrained_layout=True,
-                                gridspec_kw={'height_ratios': [1/5, 1]})
+                nrows=2,
+                sharex=True,
+                figsize=(11.69, 8.27+8.27/5),
+                frameon=False,
+                clear=True,
+                constrained_layout=True,
+                gridspec_kw={'height_ratios': [1/5, 1]})
             mdt.plot.errorbar(
                 ax=axes[1],
                 x=bins[1:]-np.diff(bins)/2,
@@ -720,7 +720,7 @@ if __name__ == '__main__':
             axes[0].spines['right'].set_visible(False)
             pdf.savefig()
             plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -728,10 +728,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

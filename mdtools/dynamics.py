@@ -44,10 +44,10 @@ def msd(t, D, d=3):
     r"""
     Mean square displacement (MSD) as fuction of time according to the
     Einstein relation:
-    
+
     .. math::
         \langle \Delta\mathbf{r}^2(\tau) \rangle = 2d \cdot D \cdot \tau
-    
+
     with
     :math:`\Delta\mathbf{r}(\tau) = |\mathbf{r}(t_0+\tau) - \mathbf{r}(t_0)|`
     being the displacement vector after a diffusion time :math:`\tau`,
@@ -55,7 +55,7 @@ def msd(t, D, d=3):
     number of spatial dimensions of the diffusion process.  The brackets
     :math:`\langle ... \rangle` denote averaging over all particles of
     the same species and over all possible starting times :math:`t_0`.
-    
+
     Parameters
     ----------
     t : scalar or numpy.ndarray
@@ -65,22 +65,22 @@ def msd(t, D, d=3):
         Diffustion coefficient.
     d : scalar or numpy.ndarray, optional
         Number of spatial dimensions of the diffusion process.
-    
+
     Returns
     -------
     msd : scalar or numpy.ndarray
         Mean square displacement MSD(t) = 2d*D*t.
-    
+
     See Also
     --------
     :func:`mdtools.dynamics.msd_non_diffusive` :
         Calculate a non-diffusive MSD as function of time.
-    
+
     Notes
     -----
     If more than one input argument is a :class:`numpy.ndarray`, the
     arrays must be broadcastable to a common shape.
-    
+
     Examples
     --------
     >>> mdt.dyn.msd(t=np.arange(4), D=2, d=3)
@@ -92,10 +92,10 @@ def msd(t, D, d=3):
 def msd_non_diffusive(t, a, x):
     r"""
     Non-diffusive Mean Square Displacement (MSD) as fuction of time.
-    
+
     .. math::
         \langle \Delta\mathbf{r}^2(\tau) \rangle = a \tau^x
-    
+
     with
     :math:`\Delta\mathbf{r}(\tau) = |\mathbf{r}(t_0+\tau) - \mathbf{r}(t_0)|`
     being the displacement vector after a diffusion time :math:`\tau`.
@@ -106,7 +106,7 @@ def msd_non_diffusive(t, a, x):
     diffusion process.  The brackets :math:`\langle ... \rangle` denote
     averaging over all particles of the same species and over all
     possible starting times :math:`t_0`.
-    
+
     Parameters
     ----------
     t : scalar or numpy.ndarray
@@ -115,23 +115,23 @@ def msd_non_diffusive(t, a, x):
         Prefactor.
     x : scalar or numpy.ndarray
         Exponent.
-    
+
     Returns
     -------
     msd : scalar or numpy.ndarray
         (Non-diffusive) mean square displacement MSD(t) = a*t^x.
-    
+
     See Also
     --------
     :func:`mdtools.dynamics.msd` :
         Calculate the diffusive MSD according to the Einstin relation as
         function of time
-    
+
     Notes
     -----
     If more than one input argument is a :class:`numpy.ndarray`, the
     arrays must be broadcastable to a common shape.
-    
+
     Examples
     --------
     >>> mdt.dyn.msd_non_diffusive(t=np.arange(4), a=2, x=3)
@@ -143,12 +143,12 @@ def msd_non_diffusive(t, a, x):
 def n_restarts(n_frames, restart):
     """
     Get the number of restarting points for each lag time.
-    
+
     Useful to normalize quantities that depend on a lag time and should
     be averaged over all possible restarting times.  The most prominent
     example for such a quantity is the Mean Square Displacement (MSD),
     another example is autocorrelation functions.
-    
+
     Parameters
     ----------
     n_frames : int
@@ -156,13 +156,13 @@ def n_restarts(n_frames, restart):
     restart : int
         Number of frames between restarting points.  Must be greater
         than zero and should be less than `n_frames`.
-    
+
     Returns
     -------
     n_restarts : numpy.ndarray
         Array of shape ``(n_frames,)`` and dtype :attr:`numpy.uint32`
         containing the number of restarting points for each lag time.
-    
+
     Examples
     --------
     >>> n_frames = 5
@@ -174,10 +174,10 @@ def n_restarts(n_frames, restart):
     array([2, 1, 1, 1, 1], dtype=uint32)
     array([1, 1, 1, 1, 1], dtype=uint32)
     >>> #  0  1  2  3  4  Corresponding lag times [in trajectory frames]
-    
+
     :func:`mdtools.dynamics.n_restarts` is equivalent to but faster than
     the following nested loops
-    
+
     >>> n_frames, restart = 5, 2
     >>> n_restarts = np.zeros(n_frames, dtype=np.uint32)
     >>> for t0 in range(0, n_frames, restart):
@@ -187,10 +187,10 @@ def n_restarts(n_frames, restart):
     array([3, 2, 2, 1, 1], dtype=uint32)
     >>> np.array_equal(n_restarts, mdt.dyn.n_restarts(n_frames, restart))
     True
-    
+
     The nested loop from above can also be reduced to a single loop.
     But still, :func:`mdtools.dynamics.n_restarts` is faster.
-    
+
     >>> n_frames, restart = 5, 2
     >>> n_restarts = np.zeros(n_frames, dtype=np.uint32)
     >>> for t0 in range(0, n_frames, restart):
@@ -221,14 +221,14 @@ def correct_intermittency(
     r"""
     Correct for intermittent behavior of discrete variables stored in
     a sequence of arrays.
-    
+
     Analogue of :func:`MDAnalysis.lib.correlations.correct_intermittency`
     for sequences of arbitrarily shaped arrays (e.g. a list of contact
     matrices as generated by :func:`mdtools.structure.contact_matrices`).
-    
+
     Fill gaps between same values with a gap size smaller or equal to a
     given maximum gap size with the enclosing values.
-    
+
     Parameters
     ----------
     list_of_arrays : tuple or list or numpy.ndarray
@@ -265,18 +265,18 @@ def correct_intermittency(
         If ``True``, print progress information to standard output.
     debug : bool, optional
         If ``True``, run in :ref:`debug mode <debug-mode-label>`.
-        
+
         .. deprecated:: 0.0.0.dev0
             This argument is without use and will be removed in a future
             release.
-    
+
     Returns
     -------
     list_of_arrays : tuple or list or numpy.ndarray
         The input sequence of arrays with gaps of size
         ``<=intermittency`` between same values filled with the
         enclosing values.
-    
+
     See Also
     --------
     :func:`mdtools.dynamics.correct_intermittency_1d` :
@@ -286,7 +286,7 @@ def correct_intermittency(
         Replace consecutive occurrences of the same value that are
         shorter than a given minimum length by a given value
     :func:`mdtools.dynamics.replace_short_sequences_global` : TODO
-    
+
     Notes
     -----
     Possible use case of this function: Calculating lifetimes from the
@@ -301,7 +301,7 @@ def correct_intermittency(
     to leave the region of interest for up to a specified consecutive
     number of frames whilst still being considered present at
     :math:`t_0 + \tau`.
-    
+
     For example, if a ligand is absent for a number of frames equal to
     or smaller than the parameter `intermittency`, then this absence
     will be removed and thus the ligand is considered to have not left.
@@ -314,7 +314,7 @@ def correct_intermittency(
     is not enclosed by the same value.  If you want 0,1,1,0,1,1,2 to be
     replaced by 0,0,0,0,0,0,0, take a look at
     :func:`mdtools.dynamics.replace_short_sequences`.
-    
+
     If you want to apply this function on a 1-dimensional array, parse
     the array as ``numpy.expand_dims(array, axis=0).T`` and convert the
     output back to a 1-dimensional array via ``np.squeeze(result.T)``.
@@ -322,7 +322,7 @@ def correct_intermittency(
     :func:`mdtools.dynamics.correct_intermittency_1d` instead, which is
     a fast version of :func:`mdtools.dynamics.correct_intermittency` for
     1-dimensional arrays.
-    
+
     The `intermittency` value must not exceed 65534
     (``np.uint16(-1) - 1``).  If you really need a higher intermittency
     value, change the dtype of ``seen_nframes_ago`` in the source code
@@ -331,7 +331,7 @@ def correct_intermittency(
     read-in only every ``intermittency/2``-th frame and set
     `intermittency` to one or even read-in only every `intermittency`-th
     frame and set `intermittency` to zero.
-    
+
     Examples
     --------
     >>> a = np.array([[0, 0, 0],
@@ -371,12 +371,12 @@ def correct_intermittency(
      [1 1 1]]
     [[0 1 0]
      [1 0 1]]
-    
+
     An `intermittency` value larger than ``len(list_of_arrays)-2`` leads
     to the same result as an `intermittency` value of
     ``len(list_of_arrays)-2``.  The first and the last arrays are never
     changed:
-    
+
     >>> y = mdt.dyn.correct_intermittency(x,
     ...                                   intermittency=len(x)-1,
     ...                                   inplace=False,
@@ -395,19 +395,19 @@ def correct_intermittency(
     True
     >>> np.array_equal(y[3], d)
     True
-    
+
     If intermittency is less than one, the input `list_of_arrays` is
     returned without any changes:
-    
+
     >>> y = mdt.dyn.correct_intermittency(x,
     ...                                   intermittency=0,
     ...                                   inplace=False,
     ...                                   verbose=False)
     >>> all(np.array_equal(x[i], arr) for i, arr in enumerate(y))
     True
-    
+
     Using :mod:`SciPy sparse matrices <scipy.sparse>`:
-    
+
     >>> from scipy.sparse import csr_matrix
     >>> x_sparse = [csr_matrix(arr) for arr in x]
     >>> y = mdt.dyn.correct_intermittency(x_sparse,
@@ -440,9 +440,9 @@ def correct_intermittency(
      [1 1 1]]
     [[0 1 0]
      [1 0 1]]
-    
+
     Inplace modification:
-    
+
     >>> y = mdt.dyn.correct_intermittency(x,
     ...                                   intermittency=2,
     ...                                   inplace=True,
@@ -547,12 +547,12 @@ def correct_intermittency_1d(a, intermittency, inplace=True, debug=False):
     """
     Correct for intermittent behavior of discrete variables stored in a
     1-dimensional array.
-    
+
     Fill gaps between same values with a gap size smaller or equal to a
     given maximum gap size with the enclosing values.  For instance,
     0,1,1,0,1,1,2 is replaced by 0,0,0,0,1,1,2, when `intermittency` is
     set to ``2``.
-    
+
     Parameters
     ----------
     a : array_like
@@ -569,18 +569,18 @@ def correct_intermittency_1d(a, intermittency, inplace=True, debug=False):
         copy of `a`.  Works only, if `a` is a :class:`numpy.ndarray`.
     debug : bool, optional
         If ``True``, check the input arguments.
-        
+
         .. deprecated:: 0.0.0.dev0
             This argument is without use and will be removed in a future
             release.
-    
+
     Returns
     -------
     a : numpy.ndarray
         The input array as :class:`numpy.ndarray` with gaps of size
         ``<=intermittency`` between same values filled with the
         enclosing values.
-    
+
     See Also
     --------
     :func:`mdtools.dynamics.correct_intermittency` :
@@ -590,13 +590,13 @@ def correct_intermittency_1d(a, intermittency, inplace=True, debug=False):
         Replace consecutive occurrences of the same value that are
         shorter than a given minimum length by a given value
     :func:`mdtools.dynamics.replace_short_sequences_global` : TODO
-    
+
     Notes
     -----
     This is a faster version of
     :func:`mdtools.dynamics.correct_intermittency` for 1-dimensional
     arrays.  See there for more details.
-    
+
     Examples
     --------
     >>> a = np.array([1, 2, 2, 1, 3, 3, 3, 1, 3, 3, 3])
@@ -612,11 +612,11 @@ def correct_intermittency_1d(a, intermittency, inplace=True, debug=False):
     ...                                  intermittency=3,
     ...                                  inplace=False)
     array([1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3])
-    
+
     An `intermittency` value larger than ``len(a)-2`` leads to the same
     result as an `intermittency` value of ``len(a)-2``.  The first and
     the last elements are never changed:
-    
+
     >>> mdt.dyn.correct_intermittency_1d(a,
     ...                                  intermittency=len(a)-2,
     ...                                  inplace=False)
@@ -625,17 +625,17 @@ def correct_intermittency_1d(a, intermittency, inplace=True, debug=False):
     ...                                  intermittency=len(a)-1,
     ...                                  inplace=False)
     array([1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3])
-    
+
     If intermittency is less than one, the input array is returned as
     :class:`numpy.ndarray`:
-    
+
     >>> mdt.dyn.correct_intermittency_1d(a,
     ...                                  intermittency=0,
     ...                                  inplace=False)
     array([1, 2, 2, 1, 3, 3, 3, 1, 3, 3, 3])
-    
+
     Inplace modification:
-    
+
     >>> b = mdt.dyn.correct_intermittency_1d(a,
     ...                                      intermittency=3,
     ...                                      inplace=True)
@@ -662,11 +662,11 @@ def replace_short_sequences(
     """
     Replace consecutive occurrences of the same value that are shorter
     than a given minimum length by a given value.
-    
+
     For instance, the sequence 1,3,3,3,2,2,1 is replaced by
     0,3,3,3,0,0,0, when `min_len` is set to ``3`` and `val` is set to
     ``0``.
-    
+
     Parameters
     ----------
     list_of_arrays : tuple or list or numpy.ndarray
@@ -689,17 +689,17 @@ def replace_short_sequences(
         If ``True``, print progress information to standard output.
     debug : bool, optional
         If ``True``, check the input arguments.
-        
+
         .. deprecated:: 0.0.0.dev0
             This argument is without use and will be removed in a future
             release.
-    
+
     Returns
     -------
     list_of_arrays : tuple or list or numpy.ndarray
         List of arrays with consecutive occurrences shorter than
         `min_len` replaced by `val`.
-    
+
     See Also
     --------
     :func:`mdtools.dynamics.correct_intermittency` :
@@ -709,20 +709,20 @@ def replace_short_sequences(
         Correct for intermittent behavior of discrete variables stored
         in a 1-dimensional array
     :func:`mdtools.dynamics.replace_short_sequences_global` : TODO
-    
+
     Notes
     -----
     If you want to replace consecutive occurrences in a 1-dimensional
     array, parse the array as ``np.expand_dims(array, axis=0).T`` and
     convert the output back to a 1-dimensional array via
     ``np.squeeze(result.T)``.
-    
+
     `min_len` must not exceed 65535 (``np.uint16(-1)``). If you really
     need a higher value for `min_len`, change the dtype of
     ``seen_nframes_ago`` and ``seen_nframes_ahead`` in the source code
     of this function.  Be aware that high values of `min_len` increase
     the computational cost.
-    
+
     Examples
     --------
     >>> a = np.array([[3, 1, 2],
@@ -758,10 +758,10 @@ def replace_short_sequences(
      [0 0 3]]
     [[3 0 0]
      [0 0 3]]
-    
+
     If `min_len` is greater than ``len(list_of_arrays)``, all elements
     of all arrays are replaced by `val`:
-    
+
     >>> y = mdt.dyn.replace_short_sequences(x,
     ...                                     min_len=len(x)+1,
     ...                                     val=0,
@@ -775,10 +775,10 @@ def replace_short_sequences(
      [0 0 0]]
     [[0 0 0]
      [0 0 0]]
-    
+
     If `min_len` is less than two, the input `list_of_arrays` is
     returned without any changes:
-    
+
     >>> y = mdt.dyn.replace_short_sequences(x,
     ...                                     min_len=1,
     ...                                     val=0,
@@ -786,9 +786,9 @@ def replace_short_sequences(
     ...                                     verbose=False)
     >>> all(np.array_equal(x[i], arr) for i, arr in enumerate(y))
     True
-    
+
     Inplace modification:
-    
+
     >>> y = mdt.dyn.replace_short_sequences(x,
     ...                                     min_len=3,
     ...                                     val=0,
@@ -878,7 +878,7 @@ def replace_short_sequences_global(
     Replace consecutive occurrences of the same value that are shorter
     than a given minimum length by a given value at any location of the
     arrays.
-    
+
     Parameters
     ----------
     list_of_arrays : tuple or list or numpy.ndarray
@@ -901,11 +901,11 @@ def replace_short_sequences_global(
         If ``True``, print progress information to standard output.
     debug : bool, optional
         If ``True``, check the input arguments.
-        
+
         .. deprecated:: 0.0.0.dev0
             This argument is without use and will be removed in a future
             release.
-    
+
     See Also
     --------
     :func:`mdtools.dynamics.correct_intermittency` :
@@ -917,7 +917,7 @@ def replace_short_sequences_global(
     :func:`mdtools.dynamics.replace_short_sequences` :
         Replace consecutive occurrences of the same value that are
         shorter than a given minimum length by a given value
-    
+
     Notes
     -----
     This function is very similar to
@@ -926,13 +926,13 @@ def replace_short_sequences_global(
     elements at the same location of the arrays in `list_of_arrays` but
     all elements of the arrays in `list_of_arrays` are taken into
     account.
-    
+
     `min_len` must not exceed 65535 (``np.uint16(-1)``). If you really
     need a higher value for `min_len`, change the dtype of
     ``seen_nframes_ago`` and ``seen_nframes_ahead`` in the source code
     of this function.  Be aware that high values of `min_len` increase
     the computational cost.
-    
+
     Examples
     --------
     >>> a = np.array([[1, 2, 3],
@@ -968,10 +968,10 @@ def replace_short_sequences_global(
      [0 0 3]]
     [[3 3 3]
      [3 3 3]]
-    
+
     If `min_len` is greater than ``len(list_of_arrays)``, all elements
     of all arrays are replaced by `val`:
-    
+
     >>> y = mdt.dyn.replace_short_sequences_global(x,
     ...                                            min_len=len(x)+1,
     ...                                            val=0,
@@ -985,10 +985,10 @@ def replace_short_sequences_global(
      [0 0 0]]
     [[0 0 0]
      [0 0 0]]
-    
+
     If `min_len` is less than two, the input `list_of_arrays` is
     returned without any changes:
-    
+
     >>> y = mdt.dyn.replace_short_sequences_global(x,
     ...                                            min_len=1,
     ...                                            val=0,
@@ -996,9 +996,9 @@ def replace_short_sequences_global(
     ...                                            verbose=False)
     >>> all(np.array_equal(x[i], arr) for i, arr in enumerate(y))
     True
-    
+
     Inplace modification:
-    
+
     >>> y = mdt.dyn.replace_short_sequences_global(x,
     ...                                            min_len=3,
     ...                                            val=0,

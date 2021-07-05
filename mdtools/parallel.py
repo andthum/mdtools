@@ -35,7 +35,7 @@ class ProcessPool:
     """
     Create a pool of worker processes which will carry out tasks
     submitted to the pool.
-    
+
     This is a very basic custom version of Python's built-in
     :class:`multiprocessing.pool.Pool` class.  The problem with the
     built-in :class:`multiprocessing.pool.Pool` is that the message pipe
@@ -47,7 +47,7 @@ class ProcessPool:
     the data to a file and only sending the filename through the pipe.
     At the other end of the pipe, the data are unpickled from the file
     and can be processed.
-    
+
     The file names follow a specific pattern.  Files sheduling tasks to
     woker (i.e. child) processes follow the pattern
     :file:`.pid<ProcessID>_pool<PoolNumber>_task<TaskNumber>_args_uuid_<UUID>.pkl`
@@ -62,21 +62,21 @@ class ProcessPool:
     execution.  Note that the leading dot :file:`.` marks the files
     hidden on Unix systems.  To show them, you have to invoke
     :command:`ls -a`.
-    
+
     This process pool was only implemented to circumvent the above
     mentioned issue and has therefore only a very basic functionality,
     not comparable with the sophisticated functionality of the built-in
     :class:`multiprocessing.pool.Pool`.
     """
-    
+
     #: Counts how many instances of :class:`ProcessPool`` have been
     #: created.
     _counter = 0
-    
+
     def __init__(self, nprocs=None, parse_file=True):
         """
         Initialize a pool of worker processes.
-        
+
         Parameters
         ----------
         nprocs : int
@@ -127,15 +127,15 @@ class ProcessPool:
             proc.start()
             atexit.register(proc.terminate)
             self._procs.append(proc)
-    
+
     def __del__(self):
         """Terminate the process pool."""
         self.terminate()
-    
+
     def n_tasks_submitted(self):
         """
         Get the total number of tasks submitted to the pool.
-        
+
         Returns
         -------
         _tasknum : int
@@ -143,22 +143,22 @@ class ProcessPool:
             already finished tasks).
         """
         return self._tasknum
-    
+
     def n_tasks_done(self):
         """
         Get the total number of done tasks.
-        
+
         Returns
         -------
         _ntasks_done : int
             The total number of already finished tasks.
         """
         return self._ntasks_done
-    
+
     def _worker(self, inq, outq, sentinel):
         """
         A wrapper function executed by the worker processes.
-        
+
         Each spawned worker (child) process runs one :meth:`_worker`
         method.  The :meth:`_worker` method reads a task from `inq` (the
         task queue of the parent process), executes the task and send
@@ -166,7 +166,7 @@ class ProcessPool:
         queue of the parent process).  If a worker reads `sentinel` from
         `inq`, it stops and the process running the :meth:`_worker`
         method terminates.
-        
+
         Parameters
         ----------
         inq : multiprocessing.Queue
@@ -175,7 +175,7 @@ class ProcessPool:
             Output queue in which to put the results.
         sentinel : object
             The sentinel object indicating the end of the input queue.
-        
+
         Returns
         -------
         tasknums : list
@@ -219,12 +219,12 @@ class ProcessPool:
                           self._poolnum))
             traceback.print_exc()
             outq.put((tasknum, e))
-    
+
     def submit_task(self, func, args=(), kwargs={}, parse_file=None):
         """
         Submit a task to the process pool.  The task will start as soon
         as a free worker (child) process is available.
-        
+
         Parameters
         ----------
         func : function
@@ -238,7 +238,7 @@ class ProcessPool:
             described above.  The default (``None``) is to infer the
             behaviour from the `parse_file` argument that was used for
             the construction of this :class:`ProcessPool`.
-        
+
         Returns
         -------
         _tasknum : int
@@ -270,15 +270,15 @@ class ProcessPool:
         self._taskq.put((self._tasknum, parse_file, func, args, kwargs))
         self._tasknum += 1
         return self._tasknum - 1
-    
+
     def get_results(self):
         """
         Get the results of all tasks that have not been collected, yet.
-        
+
         This method blocks until all undone tasks are done and their
         results are fetched.  Results are returned in the order of task
         submission (FIFO: first in, first out).
-        
+
         Returns
         -------
         results : tuple
@@ -303,11 +303,11 @@ class ProcessPool:
                     results[i] = pickle.load(f)
                 os.remove(fresult)
         return tuple(results)
-    
+
     def close(self):
         """
         Close the process pool.
-        
+
         Prevents any more tasks from being submitted to the pool.  Once
         all the tasks have been completed, the worker processes will
         exit.  You should collect your result with :meth:`get_results`
@@ -319,22 +319,22 @@ class ProcessPool:
         self._taskq.close()
         self._resultq.close()
         self._pool_closed = True
-    
+
     def terminate(self):
         """
         Terminate the process pool.
-        
+
         Stops the worker processes immediately without completing
         outstanding work.  When the pool object is garbage collected
         :meth:`terminate` will be called.
         """
         for proc in self._procs:
             proc.terminate()
-    
+
     def join(self):
         """
         Wait for the worker processes to exit.
-        
+
         One should call :meth:`close` or :meth:`terminate` before using
         :meth:`join`.  If :meth:`join` is called without calling
         :meth:`close` or :meth:`terminate` before, :meth:`close` will be

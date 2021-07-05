@@ -35,21 +35,21 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py and"
-                     " correlate the mean square displacements (MSDs)"
-                     " along two different spatial directions in a"
-                     " scatter plot."
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py and"
+            " correlate the mean square displacements (MSDs)"
+            " along two different spatial directions in a"
+            " scatter plot."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         help="Use the selection compounds instead of the reference"
              " compounds."
     )
-    
+
     parser.add_argument(
         '--d3',
         dest='DIRECTION3',
@@ -122,7 +122,7 @@ if __name__ == '__main__':
              " meaningless if --d3 is not given. Default: Maximum"
              " position plus one"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -159,7 +159,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -194,50 +194,50 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.DIRECTION1 != 'x' and
         args.DIRECTION1 != 'y' and
-        args.DIRECTION1 != 'z'):
+            args.DIRECTION1 != 'z'):
         raise ValueError("--d1 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION))
     if (args.DIRECTION2 != 'x' and
         args.DIRECTION2 != 'y' and
-        args.DIRECTION2 != 'z'):
+            args.DIRECTION2 != 'z'):
         raise ValueError("--d2 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION))
     if (args.DIRECTION3 is not None and
         args.DIRECTION3 != 'x' and
         args.DIRECTION3 != 'y' and
-        args.DIRECTION3 != 'z'):
+            args.DIRECTION3 != 'z'):
         raise ValueError("--d3 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION3))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     if args.SEL:
         cols = (3, 13+dim[args.DIRECTION1], 13+dim[args.DIRECTION2])
     else:
         cols = (3, 10+dim[args.DIRECTION1], 10+dim[args.DIRECTION2])
     trenew, displ1, displ2 = np.loadtxt(fname=args.INFILE,
-                                usecols=cols,
-                                unpack=True)
+                                        usecols=cols,
+                                        unpack=True)
     trenew *= args.TCONV
     displ1 *= args.LCONV
     displ2 *= args.LCONV
     msd1 = displ1**2
     msd2 = displ2**2
-    
+
     if args.DIRECTION3 is not None:
         if args.SEL:
             cols = 7+dim[args.DIRECTION3]
@@ -263,52 +263,52 @@ if __name__ == '__main__':
             msd1 = msd1[valid]
             msd2 = msd2[valid]
             pos_t0 = pos_t0[valid]
-    
+
     r, p = pearsonr(x=msd1, y=msd2)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     label_pad = 16
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
-        
+
         mask = (msd1 > 0) & (msd2 > 0)
         img = mdt.plot.scatter(
-                  ax=axis,
-                  x=msd1[mask],
-                  y=msd2[mask],
-                  c=trenew[mask],
-                  xmin=args.XMIN,
-                  xmax=args.XMAX,
-                  ymin=args.YMIN,
-                  ymax=args.YMAX,
-                  logx=True,
-                  logy=True,
-                  xlabel=r'$\Delta '+args.DIRECTION1+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
-                  ylabel=r'$\Delta '+args.DIRECTION2+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
-                  marker='x',
-                  cmap='plasma')
+            ax=axis,
+            x=msd1[mask],
+            y=msd2[mask],
+            c=trenew[mask],
+            xmin=args.XMIN,
+            xmax=args.XMAX,
+            ymin=args.YMIN,
+            ymax=args.YMAX,
+            logx=True,
+            logy=True,
+            xlabel=r'$\Delta '+args.DIRECTION1+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+            ylabel=r'$\Delta '+args.DIRECTION2+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+            marker='x',
+            cmap='plasma')
         cbar = plt.colorbar(img, ax=axis)
         cbar.set_label(label=r'$\tau_{renew}$ / '+args.TUNIT,
                        fontsize=fontsize_labels)
@@ -322,7 +322,7 @@ if __name__ == '__main__':
                             direction='out',
                             length=0.5*tick_length,
                             labelsize=0.8*fontsize_ticks)
-        
+
         diagonal = np.linspace(*axis.get_xlim())
         mdt.plot.plot(
             ax=axis,
@@ -338,7 +338,7 @@ if __name__ == '__main__':
             ylabel=r'$\Delta '+args.DIRECTION2+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
             color='black',
             linestyle='--')
-        
+
         axis.axvline(x=np.mean(msd1),
                      color='blue',
                      linestyle='-.',
@@ -349,7 +349,7 @@ if __name__ == '__main__':
                      label=r'$\langle \Delta a^2 \rangle - \langle \Delta a \rangle ^2$')
         axis.axhline(y=np.mean(msd2), color='blue', linestyle='-.')
         axis.axhline(y=np.var(displ2), color='green', linestyle='dotted')
-        
+
         axis.legend(loc='upper center',
                     bbox_to_anchor=(0.5, 1.2),
                     ncol=2,
@@ -359,19 +359,19 @@ if __name__ == '__main__':
                     framealpha=1,
                     edgecolor='black',
                     fancybox=False)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         xpos = 0.05
         ypos = 0.95
         if args.SEL:
@@ -384,7 +384,7 @@ if __name__ == '__main__':
                      y=ypos,
                      s="Reference compound MSDs",
                      fontsize=fontsize)
-        
+
         # Input
         if args.DIRECTION3 is not None:
             ypos -= 0.10
@@ -415,7 +415,7 @@ if __name__ == '__main__':
                             r' < {:>16.9e}$'.format(args.POS_T0_MAX) +
                             r' '+args.LUNIT),
                          fontsize=fontsize)
-        
+
         # Statistics
         ypos -= 0.10
         plt.text(x=xpos, y=ypos, s="Statistics:", fontsize=fontsize)
@@ -450,7 +450,7 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'$N(\Delta a^2 = 0)$',
                  fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos,
@@ -472,7 +472,7 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16d}$'.format(np.count_nonzero(msd1==0)),
                  fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos,
@@ -494,11 +494,11 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16d}$'.format(np.count_nonzero(msd2==0)),
                  fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -506,10 +506,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

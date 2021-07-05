@@ -40,30 +40,30 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Calculate the 'coordination trajectory' of a"
-                     " reference group of atoms (usually a single atom,"
-                     " e.g. the first lithium ion) to a selection group"
-                     " of atoms (usually all atoms with the same"
-                     " atomtype and moleculetype, e.g. all ether oxygens"
-                     " of all PEO polymers). This is referred to as"
-                     " 'topological map', because it shows to which"
-                     " selection atoms the reference atom was coodinated"
-                     " at a given time. If the reference group consists"
-                     " of more than one atom, the center of mass of all"
-                     " reference atoms is taken as reference position."
-                     " A selection atom is considered to be coordinated"
-                     " to the reference position, if its distance to the"
-                     " reference position is within a given cutoff."
-                 )
+        description=(
+            "Calculate the 'coordination trajectory' of a"
+            " reference group of atoms (usually a single atom,"
+            " e.g. the first lithium ion) to a selection group"
+            " of atoms (usually all atoms with the same"
+            " atomtype and moleculetype, e.g. all ether oxygens"
+            " of all PEO polymers). This is referred to as"
+            " 'topological map', because it shows to which"
+            " selection atoms the reference atom was coodinated"
+            " at a given time. If the reference group consists"
+            " of more than one atom, the center of mass of all"
+            " reference atoms is taken as reference position."
+            " A selection atom is considered to be coordinated"
+            " to the reference position, if its distance to the"
+            " reference position is within a given cutoff."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -87,7 +87,7 @@ if __name__ == '__main__':
         required=True,
         help="Output filename."
     )
-    
+
     parser.add_argument(
         '--ref',
         dest='REF',
@@ -118,7 +118,7 @@ if __name__ == '__main__':
              " if its distance to the reference position is within this"
              " cutoff."
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -146,7 +146,7 @@ if __name__ == '__main__':
         default=1,
         help="Read every n-th frame. Default: 1"
     )
-    
+
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -155,24 +155,24 @@ if __name__ == '__main__':
         action='store_true',
         help="Run in debug mode."
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
-    
+
+
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
     timer = datetime.now()
-    
+
     ref = u.select_atoms(' '.join(args.REF))
     sel = u.select_atoms(' '.join(args.SEL))
     print("  Reference group: '{}'"
@@ -184,31 +184,31 @@ if __name__ == '__main__':
           .format(' '.join(args.SEL)),
           flush=True)
     print(mdt.rti.ag_info_str(ag=sel, indent=4))
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
+
+
     if ref.n_atoms > 1:
         print("\n\n\n", flush=True)
         print("The reference group contain more than one atom. Using\n"
               "its center of mass as reference position")
         print(flush=True)
         mdt.check.masses(ag=ref, flash_test=False)
-    
-    
+
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
     last_frame = u.trajectory[END-1].frame
-    
-    
+
+
     seg_types = np.unique(sel.segids)
     res_types = np.unique(sel.resnames)
     atm_types = np.unique(sel.types)
@@ -223,10 +223,10 @@ if __name__ == '__main__':
     res_ix = [[[] for j in range(n_seg_types)] for i in range(n_frames)]
     atm_ix = [[[] for j in range(n_seg_types)] for i in range(n_frames)]
     pos = np.full((n_frames, 3), np.nan, dtype=np.float32)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -237,13 +237,13 @@ if __name__ == '__main__':
           flush=True)
     timer = datetime.now()
     timer_frame = datetime.now()
-    
+
     times = np.array([ts.time for ts in u.trajectory[BEGIN:END:EVERY]],
                      dtype=np.float32)
-    
+
     for i, ts in enumerate(u.trajectory[BEGIN:END:EVERY]):
         if (ts.frame % 10**(len(str(ts.frame))-1) == 0 or
-            ts.frame == END-1):
+                ts.frame == END-1):
             print("  Frame   {:12d}".format(ts.frame), flush=True)
             print("    Step: {:>12}    Time: {:>12} (ps)"
                   .format(ts.data['step'], ts.data['time']),
@@ -255,7 +255,7 @@ if __name__ == '__main__':
                   .format(proc.memory_info().rss/2**20),
                   flush=True)
             timer_frame = datetime.now()
-        
+
         mdt.box.wrap(ag=ref, debug=args.DEBUG)
         mdt.box.wrap(ag=sel, debug=args.DEBUG)
         if ref.n_atoms > 1:
@@ -265,7 +265,7 @@ if __name__ == '__main__':
                                   debug=args.DEBUG)
         else:
             pos[i] = ref[0].position
-        
+
         if args.DEBUG:
             mdt.check.box(box=ts.dimensions, with_angles=True, dim=1)
             if np.all(ts.dimensions[3:] == 90):
@@ -277,10 +277,10 @@ if __name__ == '__main__':
                 print("The box is not orthorhombic, minimum and maximum"
                       " coordinates will not be checked.")
             mdt.check.pos_array(pos_array=pos[i],
-                                  shape=(3,),
-                                  amin=amin,
-                                  amax=amax)
-        
+                                shape=(3,),
+                                amin=amin,
+                                amax=amax)
+
         sel_near_ref = mdt.select.atoms_around_point(ag=sel,
                                                      point=pos[i],
                                                      cutoff=args.CUTOFF)
@@ -318,7 +318,7 @@ if __name__ == '__main__':
                             atm_ix[i][j][s_ix][k][r_ix][l] = atms.indices + 1
                             if max_atms[j][k][l] < atms.n_atoms:
                                 max_atms[j][k][l] = atms.n_atoms
-    
+
     print(flush=True)
     print("Frames read: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -337,14 +337,14 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     mdt.fh.write_header(args.OUTFILE)
     with open(args.OUTFILE, 'a') as outfile:
         outfile.write("# Topological map\n")
@@ -391,7 +391,7 @@ if __name__ == '__main__':
         outfile.write("# Segment indices are numbered alphabetically to distinguish them from atom and residue indices\n")
         outfile.write("#\n")
         outfile.write('# Column number:\n')
-        
+
         # Column numbers
         outfile.write("# {:>12d}   ".format(1))
         counter = 2
@@ -411,7 +411,7 @@ if __name__ == '__main__':
                                 outfile.write(" {:>6d}".format(counter))
                                 counter += 1
         outfile.write("\n")
-        
+
         # Column headers
         outfile.write("# {:>12s}   ".format("Time"))
         for j in ["x", "y", "z"]:
@@ -426,7 +426,7 @@ if __name__ == '__main__':
                             for atm in range(max_atms[j][k][l]):
                                 outfile.write(" {:>6s}".format(atm_types[l]))
         outfile.write("\n")
-        
+
         # Data
         for i in range(n_frames):
             outfile.write("  {:>12.3f}   ".format(times[i]))
@@ -463,9 +463,9 @@ if __name__ == '__main__':
                                 for atm in range(max_atms[j][k][l]):
                                     outfile.write(" {:>6d}".format(atm_ix[i][j][s_ix][k][r_ix][l][atm]))
             outfile.write("\n")
-        
+
         outfile.flush()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -473,10 +473,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"

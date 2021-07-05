@@ -39,13 +39,13 @@ def hex_verts2faces(verts, r0=None, flatside='x', box=None):
     """
     Generate the positions of the faces (hexagon centers) of a hexagonal
     lattice from the positions of the vertices of this lattice.
-    
+
     WARNING:
     The lattice must lie flat within the xy-plane. The z coordinate is
     only used for a potential wrapping into the primary unit cell. In
     fact, if `box` is ``None``, `verts` can also have shape ``(n, 2)``
     instead of ``(n, 3)``.
-    
+
     Parameters
     ----------
     verts : numpy.ndarray
@@ -69,7 +69,7 @@ def hex_verts2faces(verts, r0=None, flatside='x', box=None):
         vertices will be shifted into the primary unit cell before
         calculating the lattice faces. It is ensured that all lattice
         faces will lie within the primary unit cell as well.
-    
+
     Returns
     -------
     faces : numpy.ndarray
@@ -130,23 +130,23 @@ def hex_verts2faces(verts, r0=None, flatside='x', box=None):
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Assign the atoms of a selection group to the"
-                     " hexagons of a hexagonal surface. The surface must"
-                     " lie in xy-plane. For some basic considerations on"
-                     " hexagonal grids see"
-                     " http://www-cs-students.stanford.edu/~amitp/game-programming/grids/#parts"
-                     " and"
-                     " https://www.redblobgames.com/grids/hexagons/"
-                     )
+        description=(
+            "Assign the atoms of a selection group to the"
+            " hexagons of a hexagonal surface. The surface must"
+            " lie in xy-plane. For some basic considerations on"
+            " hexagonal grids see"
+            " http://www-cs-students.stanford.edu/~amitp/game-programming/grids/#parts"
+            " and"
+            " https://www.redblobgames.com/grids/hexagons/"
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -188,7 +188,7 @@ if __name__ == '__main__':
              " time not within the [ZMIN; ZMAX) interval, the index will"
              " be set to -1."
     )
-    
+
     parser.add_argument(
         '--sel',
         dest='SEL',
@@ -263,7 +263,7 @@ if __name__ == '__main__':
              " x- or y-axis of the simulation box. Default: x."
              " WARNING: ONLY TESTED FOR x"
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -291,7 +291,7 @@ if __name__ == '__main__':
         default=1,
         help="Read every n-th frame. Default: 1"
     )
-    
+
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -300,17 +300,17 @@ if __name__ == '__main__':
         action='store_true',
         help="Run in debug mode."
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.COM is not None and
         args.COM != 'group' and
         args.COM != 'segments' and
         args.COM != 'residues' and
-        args.COM != 'fragments'):
+            args.COM != 'fragments'):
         raise ValueError("--com must be either 'group', 'segments',"
                          " 'residues' or 'fragments', but you gave {}"
                          .format(args.COM))
@@ -321,25 +321,25 @@ if __name__ == '__main__':
     if args.FLATSIDE != 'x' and args.FLATSIDE != 'y':
         raise ValueError("--flat-side must be either 'x', or 'y', but"
                          " you gave {}".format(args.FLATSIDE))
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
     timer = datetime.now()
-    
+
     sel = u.select_atoms(' '.join(args.SEL))
     surf = u.select_atoms(' '.join(args.SURF))
-    
+
     print("  Selection group: '{}'"
           .format(' '.join(args.SEL)),
           flush=True)
@@ -349,7 +349,7 @@ if __name__ == '__main__':
           .format(' '.join(args.SURF)),
           flush=True)
     print(mdt.rti.ag_info_str(ag=surf, indent=4))
-    
+
     if sel.n_atoms <= 0:
         raise ValueError("The selection group contains no atoms")
     if surf.n_atoms <= 0:
@@ -357,27 +357,27 @@ if __name__ == '__main__':
     if args.COM is not None:
         print("\n\n\n", flush=True)
         mdt.check.masses(ag=sel, flash_test=False)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
     last_frame = u.trajectory[END-1].frame
-    
-    
-    
-    
+
+
+
+
     # xy-positions of hexagon centers
     u.trajectory[BEGIN]
     lattice = hex_verts2faces(verts=surf.positions,
@@ -385,10 +385,10 @@ if __name__ == '__main__':
                               flatside=args.FLATSIDE,
                               box=surf.dimensions)
     lattice = lattice[:,:2]
-    
-    
-    
-    
+
+
+
+
     # Discretized single-particle trajectories compatible with PyEMMA's
     # MSM model
     if args.COM is None:
@@ -406,10 +406,10 @@ if __name__ == '__main__':
     elif args.COM == 'fragments':
         dtrajs = -np.ones((n_frames, sel.n_fragments), dtype=np.int32)
         n_particles = sel.n_fragments
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -420,13 +420,13 @@ if __name__ == '__main__':
           flush=True)
     timer = datetime.now()
     timer_frame = datetime.now()
-    
+
     surf_pos = surf.positions
     n_surf_moves = 0
     n_surf_moves_dangerous = 0
     for i, ts in enumerate(u.trajectory[BEGIN:END:EVERY]):
         if (ts.frame % 10**(len(str(ts.frame))-1) == 0 or
-            ts.frame == END-1):
+                ts.frame == END-1):
             print("  Frame   {:12d}".format(ts.frame), flush=True)
             print("    Step: {:>12}    Time: {:>12} (ps)"
                   .format(ts.data['step'], ts.data['time']),
@@ -438,7 +438,7 @@ if __name__ == '__main__':
                   .format(proc.memory_info().rss/2**20),
                   flush=True)
             timer_frame = datetime.now()
-        
+
         if not np.allclose(surf.positions, surf_pos):
             print(flush=True)
             print("  Note: The surface has moved in", flush=True)
@@ -460,7 +460,7 @@ if __name__ == '__main__':
                                       box=surf.dimensions)
             lattice = lattice[:,:2]
         surf_pos = surf.positions
-        
+
         if args.COM is None:
             pos = mdt.box.wrap(ag=sel, debug=args.DEBUG)
         else:
@@ -471,28 +471,28 @@ if __name__ == '__main__':
                                pbc=True,
                                compound=args.COM,
                                debug=args.DEBUG)
-        
+
         if args.DEBUG:
             mdt.check.box(box=ts.dimensions,
                           with_angles=True,
                           orthorhombic=True,
                           dim=1)
             mdt.check.pos_array(pos_array=pos,
-                                  shape=(n_particles, 3),
-                                  amin=0,
-                                  amax=ts.dimensions[:3])
-        
+                                shape=(n_particles, 3),
+                                amin=0,
+                                amax=ts.dimensions[:3])
+
         sel_pos_z = pos[:,2]
         valid = (sel_pos_z >= args.ZMIN) & (sel_pos_z < args.ZMAX)
         sel_pos_xy = pos[:,:2][valid]
         dists = distance_matrix(sel_pos_xy, lattice)
         lattice_faces = np.argmin(dists, axis=1)
         dtrajs[i][valid] = lattice_faces
-    
+
     # Trajectories must be C contiguous for PyEMMA's timescales_msm and
     # each individual atom/COM needs its individual trajectory.
     dtrajs = np.ascontiguousarray(dtrajs.T)
-    
+
     surf_pos = surf_pos[:,:2]
     if n_surf_moves > 0:
         print(flush=True)
@@ -501,7 +501,7 @@ if __name__ == '__main__':
               "  to wrapping around periodic boundaries)"
               .format(n_surf_moves, n_surf_moves_dangerous),
               flush=True)
-    
+
     print(flush=True)
     print("Frames read: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -520,43 +520,43 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     # Hexagonal lattice faces
     mdt.fh.backup(args.OUTFILE+"_lattice_faces.npy")
     np.save(args.OUTFILE+"_lattice_faces.npy",
             lattice,
             allow_pickle=False)
     print("  Created " + args.OUTFILE+"_lattice_faces.npy", flush=True)
-    
+
     # Hexagonal lattice vertices
     mdt.fh.backup(args.OUTFILE+"_lattice_vertices.npy")
     np.save(args.OUTFILE+"_lattice_vertices.npy",
             surf_pos,
             allow_pickle=False)
     print("  Created " + args.OUTFILE+"_lattice_vertices.npy", flush=True)
-    
+
     # Discrete trajectories
     mdt.fh.backup(args.OUTFILE+"_traj.npy")
     np.save(args.OUTFILE+"_traj.npy", dtrajs, allow_pickle=False)
     print("  Created " + args.OUTFILE+"_traj.npy", flush=True)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

@@ -122,7 +122,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
+
     print("\n")
     print("Loading trajectory...")
     timer = datetime.now()
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Reading trajectory...")
     print("Number of compounds:    {:>8d}".format(N_CMPS))
@@ -158,11 +158,11 @@ if __name__ == '__main__':
     bins = np.arange(np.min(dtrj), np.max(dtrj)+2)
     hist_start = np.histogram(dtrj[trans_start], bins)
     hist_end = np.histogram(dtrj[trans_end], bins)
-    
+
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
     print("Totally elapsed time: {}".format(datetime.now()-timer_tot))

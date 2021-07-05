@@ -34,21 +34,21 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py and plot"
-                     " the displacement versus the inital position as"
-                     " scatter plot. Additionally, a bin-wise average"
-                     " and variance are computed and plotted."
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py and plot"
+            " the displacement versus the inital position as"
+            " scatter plot. Additionally, a bin-wise average"
+            " and variance are computed and plotted."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -83,7 +83,7 @@ if __name__ == '__main__':
         help="Use the selection compounds instead of the reference"
              " compounds."
     )
-    
+
     parser.add_argument(
         '--bin-start',
         dest='START',
@@ -120,7 +120,7 @@ if __name__ == '__main__':
              " edges are read from the first column, lines starting with"
              " '#' are ignored. Bins do not need to be equidistant."
     )
-    
+
     parser.add_argument(
         '--f2',
         dest='INFILE2',
@@ -144,7 +144,7 @@ if __name__ == '__main__':
              " determines the column containing the x values, the second"
              " is for the y values. Default: '0 1'"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -181,7 +181,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -216,26 +216,26 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.DIRECTION != 'x' and
         args.DIRECTION != 'y' and
-        args.DIRECTION != 'z'):
+            args.DIRECTION != 'z'):
         raise ValueError("-d must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     if args.SEL:
         cols = (3, 7+dim[args.DIRECTION])
     else:
@@ -251,7 +251,7 @@ if __name__ == '__main__':
         cols = (10, 11, 12)
     displ = np.loadtxt(fname=args.INFILE, usecols=cols)
     displ *= args.LCONV
-    
+
     if args.BINFILE is None:
         if args.START is None or args.START > np.min(pos_t0):
             args.START = np.min(pos_t0)
@@ -267,7 +267,7 @@ if __name__ == '__main__':
             bins = np.insert(bins, 0, np.min(pos_t0))
         if bins[-1] <= np.max(pos_t0):
             bins = np.append(bins, np.max(pos_t0) + (np.max(pos_t0)-bins[0])/len(bins))
-    
+
     bin_ix = np.digitize(pos_t0, bins)
     displ_means = np.full((len(bins), displ.shape[1]), np.nan)
     displ_vars = np.full((len(bins), displ.shape[1]), np.nan)
@@ -286,32 +286,32 @@ if __name__ == '__main__':
     if not np.all(np.isnan(msd_means[0])):
         raise ValueError("Not all first elements of msd_means are NaN."
                          " This should not have happened")
-    
+
     if args.INFILE2 is not None:
         data = np.loadtxt(fname=args.INFILE2,
                           comments=['#', '@'],
                           usecols=args.COLS)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     label_pad = 16
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         ylabel = ('x', 'y', 'z')
@@ -330,21 +330,21 @@ if __name__ == '__main__':
                                          constrained_layout=True,
                                          gridspec_kw={'height_ratios': [1/5, 1]})
                 axis = axes[1]
-            
+
             axis.axhline(y=0, color='black')
             img = mdt.plot.scatter(
-                      ax=axis,
-                      x=pos_t0,
-                      y=displ.T[i],
-                      c=trenew,
-                      xmin=args.XMIN,
-                      xmax=args.XMAX,
-                      ymin=args.YMIN,
-                      ymax=args.YMAX,
-                      xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
-                      ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
-                      marker='x',
-                      cmap='plasma')
+                ax=axis,
+                x=pos_t0,
+                y=displ.T[i],
+                c=trenew,
+                xmin=args.XMIN,
+                xmax=args.XMAX,
+                ymin=args.YMIN,
+                ymax=args.YMAX,
+                xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
+                ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                marker='x',
+                cmap='plasma')
             cbar = plt.colorbar(img, ax=axis)
             cbar.set_label(label=r'$\tau_{renew}$ / '+args.TUNIT,
                            fontsize=fontsize_labels)
@@ -358,7 +358,7 @@ if __name__ == '__main__':
                                 direction='out',
                                 length=0.5*tick_length,
                                 labelsize=0.8*fontsize_ticks)
-            
+
             mdt.plot.vlines(ax=axis,
                             x=bins,
                             start=axis.get_ylim()[0],
@@ -369,7 +369,7 @@ if __name__ == '__main__':
                             ymax=args.YMAX,
                             color='black',
                             linestyle='dotted')
-            
+
             mdt.plot.plot(
                 ax=axis,
                 x=bins[1:]-np.diff(bins)/2,
@@ -383,7 +383,7 @@ if __name__ == '__main__':
                 label=r'$\langle \Delta '+ylabel[i]+r' \rangle$',
                 color='red',
                 marker='o')
-            
+
             mdt.plot.plot(
                 ax=axis,
                 x=bins[1:]-np.diff(bins)/2,
@@ -397,7 +397,7 @@ if __name__ == '__main__':
                 label=r'$\langle \Delta '+ylabel[i]+r'^2 \rangle$',
                 color='blue',
                 marker='^')
-            
+
             mdt.plot.plot(
                 ax=axis,
                 x=bins[1:]-np.diff(bins)/2,
@@ -411,12 +411,12 @@ if __name__ == '__main__':
                 label=r'$\langle \Delta '+ylabel[i]+r'^2 \rangle - \langle \Delta '+ylabel[i]+r' \rangle ^2$',
                 color='green',
                 marker='s')
-            
+
             axis.legend(loc='lower left',
                         numpoints=1,
                         frameon=True,
                         fontsize=fontsize_legend)
-            
+
             if args.INFILE2 is not None:
                 mdt.plot.plot(ax=axes[0],
                               x=data[:,0],
@@ -432,12 +432,12 @@ if __name__ == '__main__':
                 axes[0].spines['top'].set_visible(False)
                 axes[0].spines['left'].set_visible(False)
                 axes[0].spines['right'].set_visible(False)
-            
+
             if args.INFILE2 is None:
                 plt.tight_layout()
             pdf.savefig()
             plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -445,10 +445,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

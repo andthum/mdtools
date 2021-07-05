@@ -423,7 +423,7 @@ if __name__ == '__main__':
         raise ValueError("--lag ({}) must not be negative"
                          .format(args.LAG))
     if (args.MIN_BLOCK_SIZE is not None and
-        args.MIN_BLOCK_SIZE <= args.LAG):
+            args.MIN_BLOCK_SIZE <= args.LAG):
         raise ValueError("--min-block-size ({}) must be greater than"
                          " --lag ({})"
                          .format(args.MIN_BLOCK_SIZE, args.LAG))
@@ -436,7 +436,7 @@ if __name__ == '__main__':
         mdabackend = 'OpenMP'
     else:
         mdabackend = 'serial'
-    
+
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
     print("\n")
@@ -511,7 +511,7 @@ if __name__ == '__main__':
                       " 'MIN_BLOCK_SIZE' ({})"
                       .format(MAX_GAP_SIZE, MIN_BLOCK_SIZE),
                       RuntimeWarning)
-    
+
     # Reference group containing *all* atoms of the given compound (for
     # creating the discrete center of mass trajectory)
     if args.REFCMP == 'group':
@@ -553,7 +553,7 @@ if __name__ == '__main__':
         N_SELCMPS = sel.n_atoms // natms_per_selcmp
     else:
         N_SELCMPS = len(natms_per_selcmp)
-    
+
     print("\n")
     print("Step 1/2:")
     # Creating discrete position trajectory...
@@ -577,7 +577,7 @@ if __name__ == '__main__':
         debug=args.DEBUG
     )
     bin_num = len(bins) - 1
-    
+
     if args.OUTFILE_BINS is not None or args.OUTFILE_DTRJ is not None:
         print("\n")
         print("Creating output...")
@@ -604,7 +604,7 @@ if __name__ == '__main__':
         print("Elapsed time:         {}".format(datetime.now()-timer))
         print("Current memory usage: {:.2f} MiB"
               .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Step 2/2:")
     print("Comparing coordination environments...")
@@ -821,7 +821,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     if n_state_trans == 0:
         warnings.warn("The reference compounds did not change their"
                       " position bins. The output will be meaningless."
@@ -849,14 +849,14 @@ if __name__ == '__main__':
                       " counted valid block transitions is zero. The"
                       " corresponding output will be meaningless. Try to"
                       " increase the maximum gap size", RuntimeWarning)
-    
+
     # Effective frame numbers -> real frame numbers
     av_block_size *= EVERY
     av_block_size_valid *= EVERY
     av_gap_size *= EVERY
     av_gap_size_valid *= EVERY
     av_gap_size_counted *= EVERY
-    
+
     # Compute averages:
     av_block_size /= n_blocks
     av_block_size_valid /= n_blocks_valid
@@ -867,14 +867,14 @@ if __name__ == '__main__':
     selix_stats_b /= n_refcmps_bound_b[:,:,None]
     selix_stats_a /= n_refcmps_bound_a[:,:,None]
     selix_stats_diff /= n_refcmps_bound_ba[:,:,None]
-    
+
     # n_detached = n_contacts_before - n_remain
     # n_attached = n_contacts_after - n_remain
     for sc in range(2):
         for tt in range(len(trans_types)):
             for bn in range(bin_num):
                 n_contacts[sc][tt][bn][:-1] -= n_contacts[sc][tt][bn][-1]
-    
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -1132,7 +1132,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("Checking output for consistency...")
     timer = datetime.now()
@@ -1245,7 +1245,7 @@ if __name__ == '__main__':
         for tt in range(len(trans_types)):
             for bn in range(bin_num):
                 if (selix_stats_b[sc][tt][bn][2] >
-                    selix_stats_b[sc][tt][bn][3]):
+                        selix_stats_b[sc][tt][bn][3]):
                     raise ValueError(
                         "Minimum index ({}) is greater than maximum"
                         " index ({})"
@@ -1256,7 +1256,7 @@ if __name__ == '__main__':
         for tt in range(len(trans_types)):
             for bn in range(bin_num):
                 if (selix_stats_a[sc][tt][bn][2] >
-                    selix_stats_a[sc][tt][bn][3]):
+                        selix_stats_a[sc][tt][bn][3]):
                     raise ValueError(
                         "Minimum index ({}) is greater than maximum"
                         " index ({})"
@@ -1266,7 +1266,7 @@ if __name__ == '__main__':
     print("Elapsed time:         {}".format(datetime.now()-timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20))
-    
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
     print("Totally elapsed time: {}".format(datetime.now()-timer_tot))

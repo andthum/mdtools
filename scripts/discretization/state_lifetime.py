@@ -46,7 +46,7 @@ def dtraj_transition_info(dtraj):
     """
     Get basic information about the transitions between different states
     in a discretized trajectory.
-    
+
     Parameters
     ----------
     dtraj : array_like
@@ -55,7 +55,7 @@ def dtraj_transition_info(dtraj):
         compounds.  The elements of `dtraj` are interpreted as the
         indices of the states in which a given compound is at a given
         frame.
-    
+
     Returns
     -------
     n_stay : int
@@ -82,7 +82,7 @@ def dtraj_transition_info(dtraj):
         Number of Negative -> Positive transitions.
     neg2neg : int
         Number of Negative -> Negative transitions.
-    
+
     Note
     ----
     Positive states are states with a state index equal(!) to or greater
@@ -95,12 +95,12 @@ def dtraj_transition_info(dtraj):
     if np.any(np.modf(dtraj)[0] != 0):
         warnings.warn("At least one element of the discrete trajectory"
                       " is not an integer", RuntimeWarning)
-    
+
     n_stay = np.count_nonzero(np.all(dtraj==dtraj[0], axis=0))
     always_neg = np.count_nonzero(np.all(dtraj<0, axis=0))
     never_neg = np.count_nonzero(np.all(dtraj>=0, axis=0))
     n_frames_neg = np.count_nonzero(dtraj<0)
-    
+
     n_compounds = dtraj.shape[1]
     transitions = (np.diff(dtraj, axis=0) != 0)
     trans_init = np.vstack([transitions, np.zeros(n_compounds, dtype=bool)])
@@ -129,7 +129,7 @@ def dtraj_transition_info(dtraj):
                          " happened"
                          .format(pos2pos+pos2neg+neg2pos+neg2neg,
                                  n_trans))
-    
+
     return (n_stay, always_neg, never_neg, n_frames_neg,
             n_trans, pos2pos, pos2neg, neg2pos, neg2neg)
 
@@ -137,11 +137,11 @@ def dtraj_transition_info(dtraj):
 
 
 def remain_prob(dtraj, restart=1, continuous=False,
-        discard_neg_start=False, discard_all_neg=False):
+                discard_neg_start=False, discard_all_neg=False):
     """
     .. todo::
        Write docstring
-    
+
     Parameters
     ----------
     dtraj : array_like
@@ -164,13 +164,13 @@ def remain_prob(dtraj, restart=1, continuous=False,
         Discard all transitions starting from or ending in a state with
         a negative index.  `discard_neg_start` and `discard_all_neg` are
         mutually exclusive.
-    
+
     Returns
     -------
     p : numpy.ndarray
         Array of shape ``f`` containing the remain probability at each
         lag time.
-    
+
     Notes
     -----
     """
@@ -183,7 +183,7 @@ def remain_prob(dtraj, restart=1, continuous=False,
     if discard_neg_start and discard_all_neg:
         raise ValueError("discard_neg_start and discard_all_neg are"
                          " mutually exclusive")
-    
+
     n_frames = dtraj.shape[0]
     n_compounds = dtraj.shape[1]
     p = np.zeros(n_frames, dtype=np.uint32)
@@ -195,7 +195,7 @@ def remain_prob(dtraj, restart=1, continuous=False,
         norm = np.zeros(n_frames, dtype=np.uint32)
     else:
         remain = np.zeros(n_compounds, dtype=bool)
-    
+
     proc = psutil.Process(os.getpid())
     timer = datetime.now()
     for t0 in range(0, n_frames-1, restart):
@@ -210,7 +210,7 @@ def remain_prob(dtraj, restart=1, continuous=False,
                   .format(proc.memory_info().rss/2**20),
                   flush=True)
             timer = datetime.now()
-        
+
         # When trying to read and under stand this code, always read the
         # "else" parts fist.  Those are the simpler cases upon which the
         # other cases are built.
@@ -278,7 +278,7 @@ def remain_prob(dtraj, restart=1, continuous=False,
                 for lag in range(1, n_frames-t0):
                     np.equal(dtraj[t0], dtraj[t0+lag], out=remain)
                     p[lag] += np.count_nonzero(remain)
-    
+
     if discard_neg_start or discard_all_neg:
         if norm[0] != 0:
             raise ValueError("The first element of norm is not zero but"
@@ -299,7 +299,7 @@ def remain_prob(dtraj, restart=1, continuous=False,
     if np.any(p < 0):
         raise ValueError("At least one element of p is less than zero."
                          " This should not have happened")
-    
+
     return p
 
 
@@ -310,28 +310,28 @@ def remain_prob(dtraj, restart=1, continuous=False,
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Calculate the average lifetime of the discrete"
-                     " states in a discretized trajectory. I.e."
-                     " calculate the average residence time for how long"
-                     " a compound resides in a specific state before it"
-                     " changes states. This is done by computing the"
-                     " probability to be in the same state as at time t0"
-                     " after a lag time tau. This 'remain probability'"
-                     " is then fitted by a stretched exponential"
-                     " function, whose integral from zero to infinity is"
-                     " the averave lifetime of all states in the"
-                     " discretized trajectory."
-                     )
+        description=(
+            "Calculate the average lifetime of the discrete"
+            " states in a discretized trajectory. I.e."
+            " calculate the average residence time for how long"
+            " a compound resides in a specific state before it"
+            " changes states. This is done by computing the"
+            " probability to be in the same state as at time t0"
+            " after a lag time tau. This 'remain probability'"
+            " is then fitted by a stretched exponential"
+            " function, whose integral from zero to infinity is"
+            " the averave lifetime of all states in the"
+            " discretized trajectory."
+        )
     )
     group = parser.add_mutually_exclusive_group()
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -351,7 +351,7 @@ if __name__ == '__main__':
         required=True,
         help="Output filename."
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -400,7 +400,7 @@ if __name__ == '__main__':
              " the remain probability. This must be an integer multiple"
              " of --every. Default: 100"
     )
-    
+
     parser.add_argument(
         '--continuous',
         dest='CONTINUOUS',
@@ -432,7 +432,7 @@ if __name__ == '__main__':
         help="Discard all transitions starting from or ending in a state"
              " with a negative index. Warning: Experimental feature!"
     )
-    
+
     parser.add_argument(
         '--end-fit',
         dest='ENDFIT',
@@ -454,18 +454,18 @@ if __name__ == '__main__':
              " below this value. The fitting is stopped by whatever"
              " happens earlier: --end-fit or --stop-fit. Default: 0.01"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     dtrajs = np.load(args.TRJFILE)
     if dtrajs.ndim == 1:
         dtrajs = np.expand_dims(dtrajs, axis=0)
@@ -482,37 +482,37 @@ if __name__ == '__main__':
     if np.any(np.modf(dtrajs)[0] != 0):
         warnings.warn("At least one element of the discrete trajectory"
                       " is not an integer", RuntimeWarning)
-    
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=n_frames)
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=n_frames)
     NBLOCKS, blocksize = mdt.check.block_averaging(n_blocks=args.NBLOCKS,
                                                    n_frames=n_frames)
     RESTART, effective_restart = mdt.check.restarts(
-                                     restart_every_nth_frame=args.RESTART,
-                                     read_every_nth_frame=EVERY,
-                                     n_frames=blocksize)
+        restart_every_nth_frame=args.RESTART,
+        read_every_nth_frame=EVERY,
+        n_frames=blocksize)
     dtrajs = dtrajs[BEGIN:END:EVERY]
-    
+
     trans_info = dtraj_transition_info(dtraj=dtrajs[:NBLOCKS*blocksize])
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Calculating remain probability", flush=True)
     timer = datetime.now()
     timer_block = datetime.now()
-    
+
     p = [None,] * NBLOCKS
     for block in range(NBLOCKS):
         if block % 10**(len(str(block))-1) == 0 or block == NBLOCKS-1:
@@ -528,36 +528,36 @@ if __name__ == '__main__':
                   flush=True)
             timer_block = datetime.now()
         p[block] = remain_prob(
-                       dtraj=dtrajs[block*blocksize:(block+1)*blocksize],
-                       restart=effective_restart,
-                       continuous=args.CONTINUOUS,
-                       discard_neg_start=args.DISCARD_NEG_START,
-                       discard_all_neg=args.DISCARD_ALL_NEG)
+            dtraj=dtrajs[block*blocksize:(block+1)*blocksize],
+            restart=effective_restart,
+            continuous=args.CONTINUOUS,
+            discard_neg_start=args.DISCARD_NEG_START,
+            discard_all_neg=args.DISCARD_ALL_NEG)
     del dtrajs
-    
+
     p = np.asarray(p)
     if NBLOCKS > 1:
         p, p_sd = mdt.stats.block_average(p)
     else:
         p = np.squeeze(p)
         p_sd = None
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Fitting remain probability", flush=True)
     timer = datetime.now()
-    
+
     lag_times = np.arange(blocksize, dtype=np.uint32)
-    
+
     if args.ENDFIT is None:
         endfit = int(0.9 * len(lag_times))
     else:
@@ -565,13 +565,13 @@ if __name__ == '__main__':
                                          args.ENDFIT,
                                          return_index=True)
     endfit += 1  # To make args.ENDFIT inclusive
-    
+
     stopfit = np.argmax(p < args.STOPFIT)
     if stopfit == 0 and p[stopfit] >= args.STOPFIT:
         stopfit = len(p)
     elif stopfit < 2:
         stopfit = 2
-    
+
     fit_start = 0                    # inclusive
     fit_stop = min(endfit, stopfit)  # exclusive
     if p_sd is None:
@@ -585,21 +585,21 @@ if __name__ == '__main__':
     fit = mdt.func.kww(t=lag_times, tau=popt[0], beta=popt[1])
     fit[:fit_start] = np.nan
     fit[fit_stop:] = np.nan
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     header = (
         "Average lifetime of all discrete states in the discretized\n"
         "trajectory\n"
@@ -637,7 +637,7 @@ if __name__ == '__main__':
                 trans_info[6], 100*trans_info[6]/trans_info[4],
                 trans_info[7], 100*trans_info[7]/trans_info[4],
                 trans_info[8], 100*trans_info[8]/trans_info[4]
-        )
+                )
     )
     if NBLOCKS == 1:
         header += (
@@ -686,9 +686,9 @@ if __name__ == '__main__':
                     tau_mean, popt[0], perr[0], popt[1], perr[1])
         )
         data = np.column_stack([lag_times, p, p_sd, fit])
-    
+
     mdt.fh.savetxt(fname=args.OUTFILE, data=data, header=header)
-    
+
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -696,10 +696,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

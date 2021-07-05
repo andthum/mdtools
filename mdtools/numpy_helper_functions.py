@@ -48,7 +48,7 @@ import mdtools as mdt
 def excel_colname(n, upper=True):
     """
     Convert an integer to its corresponding Excel-style column name.
-    
+
     Parameters
     ----------
     n : int
@@ -57,33 +57,33 @@ def excel_colname(n, upper=True):
         value will be ``'0'``.
     upper : bool, optional
         If ``True`` (default), return upper case column name.
-    
+
     Returns
     -------
     col_name : str
         Excel-style column name.
-    
+
     See Also
     --------
     :func:`excel_colnum` : Inverse function
-    
+
     Examples
     --------
     >>> mdt.nph.excel_colname(0)
     '0'
-    
+
     >>> mdt.nph.excel_colname(1)
     'A'
-    
+
     >>> mdt.nph.excel_colname(1, upper=False)
     'a'
-    
+
     >>> mdt.nph.excel_colname(26)
     'Z'
-    
+
     >>> mdt.nph.excel_colname(27)
     'AA'
-    
+
     >>> mdt.nph.excel_colname(27, upper=False)
     'aa'
     """
@@ -106,46 +106,46 @@ def excel_colnum(name):
     """
     Convert an Excel-style column name to its corresponding integer
     number.
-    
+
     Parameters
     ----------
     name : str
         Excel-style column name to convert to column number.  Also
         ``name = '0'`` is accepted, in wich case the return value will
         be ``0``.
-    
+
     Returns
     -------
     col_num : int
         Column number.
-    
+
     See Also
     --------
     :func:`excel_colname` : Inverse function
-    
+
     Examples
     --------
     >>> mdt.nph.excel_colnum('0')
     0
-    
+
     >>> mdt.nph.excel_colnum('A')
     1
-    
+
     >>> mdt.nph.excel_colnum('a')
     1
-    
+
     >>> mdt.nph.excel_colnum('Z')
     26
-    
+
     >>> mdt.nph.excel_colnum('AA')
     27
-    
+
     >>> mdt.nph.excel_colnum('aa')
     27
-    
+
     >>> mdt.nph.excel_colnum('Aa')
     27
-    
+
     >>> mdt.nph.excel_colnum('aA')
     27
     """
@@ -163,39 +163,39 @@ def excel_colnum(name):
 def trailing_digits(n, digit=0):
     """
     Get the number of trailing digits in an integer.
-    
+
     Parameters
     ----------
     n : int
         The integer for which to count the trailing digits.
     digit : int, optional
         The trailing digit to count.  Must be positive.
-    
+
     Returns
     -------
     n_trailing : int
         The number of trailing digits.
-    
+
     Examples
     --------
     >>> mdt.nph.trailing_digits(1, digit=0)
     0
-    
+
     >>> mdt.nph.trailing_digits(1, digit=1)
     1
-    
+
     >>> mdt.nph.trailing_digits(10, digit=0)
     1
-    
+
     >>> mdt.nph.trailing_digits(10, digit=1)
     0
-    
+
     >>> mdt.nph.trailing_digits(100, digit=0)
     2
-    
+
     >>> mdt.nph.trailing_digits(100, digit=1)
     0
-    
+
     >>> mdt.nph.trailing_digits(-100, digit=0)
     2
     """
@@ -212,7 +212,7 @@ def ix_along_axis_to_global_ix(ix, axis):
     """
     Construnct a tuple of index arrays suitable to directly index an
     array `a` from an array of indices along an axis of `a`.
-    
+
     Parameters
     ----------
     ix : array_like
@@ -222,12 +222,12 @@ def ix_along_axis_to_global_ix(ix, axis):
         cannot be used to index `a`.
     axis : int
         The axis of `a` along which the indices `ix` were taken.
-    
+
     Returns
     -------
     ix_global : tuple of numpy.ndarrays
         A tuple of index arrays that can be used to directly index `a`.
-    
+
     See Also
     --------
     :func:`numpy.unravel_index` :
@@ -235,7 +235,7 @@ def ix_along_axis_to_global_ix(ix, axis):
     :func:`numpy.take` : Take elements from an array along an axis
     :func:`numpy.take_along_axis` :
         Take values from an array by matching 1d index and data slices
-    
+
     Notes
     -----
     Functions like :func:`numpy.argmin` or :func:`numpy.argmax` return
@@ -249,54 +249,54 @@ def ix_along_axis_to_global_ix(ix, axis):
     would make ``a[ix]`` possible, are required.
     :func:`numpy.take_along_axis` and :func:`numpy.expand_dims` do not
     help in this case.
-    
+
     This is where :func:`ix_along_axis_to_global_ix` is useful.  It
     constructs a tuple of index arrays, `ix_global`, from `ix` such that
     ``a[ix_global]`` and
     ``np.squeeze(numpy.take_along_axis(a, numpy.expand_dims(ix, axis=axis), axis=axis))``
     give the same result.
-    
+
     Examples
     --------
     If `a` is an 1-dimensional array, it can be directly indexed with
     `ix`.  In this case, :func:`ix_along_axis_to_global_ix` is overkill.
-    
+
     1-dimensional example:
-    
+
     >>> a = np.array([1, 0, 2])
     >>> ax = 0
-    
+
     >>> ix = np.argmin(a, axis=ax)
     >>> ix
     1
     >>> a[ix]
     0
-    
+
     >>> ix_global = mdt.nph.ix_along_axis_to_global_ix(ix, ax)
     >>> ix_global
     array(1)
     >>> a[ix_global]
     0
-    
+
     >>> np.squeeze(np.take_along_axis(a,
     ...                               np.expand_dims(ix, axis=ax),
     ...                               axis=ax))
     array(0)
-    
+
     >>> np.min(a, axis=ax)
     0
-    
+
     Only for for multidimensional arrays,
     :func:`ix_along_axis_to_global_ix` is really useful, since in this
     case ``a[ix]`` yields a wrong result or an error.
-    
+
     2-dimensional example:
     First axis:
-    
+
     >>> b = np.array([[0, 1, 2],
     ...               [1, 2, 0]])
     >>> ax = 0
-    
+
     >>> ix = np.argmin(b, axis=ax)
     >>> ix
     array([0, 0, 1])
@@ -304,28 +304,28 @@ def ix_along_axis_to_global_ix(ix, axis):
     array([[0, 1, 2],
            [0, 1, 2],
            [1, 2, 0]])
-    
+
     >>> ix_global = mdt.nph.ix_along_axis_to_global_ix(ix, ax)
     >>> ix_global
     (array([0, 0, 1]), array([0, 1, 2]))
     >>> b[ix_global]
     array([0, 1, 0])
-    
+
     >>> np.squeeze(np.take_along_axis(b,
     ...                               np.expand_dims(ix, axis=ax),
     ...                               axis=ax))
     array([0, 1, 0])
-    
+
     >>> np.min(b, axis=0)
     array([0, 1, 0])
-    
+
     Second axis:
-    
+
     >>> b
     array([[0, 1, 2],
            [1, 2, 0]])
     >>> ax = 1
-    
+
     >>> ix = np.argmin(b, axis=ax)
     >>> ix
     array([0, 2])
@@ -333,31 +333,31 @@ def ix_along_axis_to_global_ix(ix, axis):
     Traceback (most recent call last):
     ...
     IndexError: index 2 is out of bounds for axis 0 with size 2
-    
+
     >>> ix_global = mdt.nph.ix_along_axis_to_global_ix(ix, ax)
     >>> ix_global
     (array([0, 1]), array([0, 2]))
     >>> b[ix_global]
     array([0, 0])
-    
+
     >>> np.squeeze(np.take_along_axis(b,
     ...                               np.expand_dims(ix, axis=ax),
     ...                               axis=ax))
     array([0, 0])
-    
+
     >>> np.min(b, axis=ax)
     array([0, 0])
-    
+
     3-dimensional example:
     First axis:
-    
+
     >>> c = np.array([[[0, 1, 2],
     ...                [1, 2, 0]],
     ...
     ...               [[2, 0, 1],
     ...                [0, 2, 1]]])
     >>> ax = 0
-    
+
     >>> ix = np.argmin(c, axis=ax)
     >>> ix
     array([[0, 1, 1],
@@ -381,7 +381,7 @@ def ix_along_axis_to_global_ix(ix, axis):
     <BLANKLINE>
             [[0, 1, 2],
              [1, 2, 0]]]])
-    
+
     >>> ix_global = mdt.nph.ix_along_axis_to_global_ix(ix, ax)
     >>> ix_global
     (array([[0, 1, 1],
@@ -391,19 +391,19 @@ def ix_along_axis_to_global_ix(ix, axis):
     >>> c[ix_global]
     array([[0, 0, 1],
            [0, 2, 0]])
-    
+
     >>> np.squeeze(np.take_along_axis(c,
     ...                               np.expand_dims(ix, axis=ax),
     ...                               axis=ax))
     array([[0, 0, 1],
            [0, 2, 0]])
-    
+
     >>> np.min(c, axis=ax)
     array([[0, 0, 1],
            [0, 2, 0]])
-    
+
     Second axis:
-    
+
     >>> c
     array([[[0, 1, 2],
             [1, 2, 0]],
@@ -411,7 +411,7 @@ def ix_along_axis_to_global_ix(ix, axis):
            [[2, 0, 1],
             [0, 2, 1]]])
     >>> ax = 1
-    
+
     >>> ix = np.argmin(c, axis=ax)
     >>> ix
     array([[0, 0, 1],
@@ -435,7 +435,7 @@ def ix_along_axis_to_global_ix(ix, axis):
     <BLANKLINE>
             [[0, 1, 2],
              [1, 2, 0]]]])
-    
+
     >>> ix_global = mdt.nph.ix_along_axis_to_global_ix(ix, ax)
     >>> ix_global
     (array([[0, 0, 0],
@@ -445,7 +445,7 @@ def ix_along_axis_to_global_ix(ix, axis):
     >>> c[ix_global]
     array([[0, 1, 0],
            [0, 0, 1]])
-    
+
     >>> np.squeeze(np.take_along_axis(c,
     ...                               np.expand_dims(ix, axis=ax),
     ...                               axis=ax))
@@ -455,9 +455,9 @@ def ix_along_axis_to_global_ix(ix, axis):
     >>> np.min(c, axis=ax)
     array([[0, 1, 0],
            [0, 0, 1]])
-    
+
     Third axis:
-    
+
     >>> c
     array([[[0, 1, 2],
             [1, 2, 0]],
@@ -465,7 +465,7 @@ def ix_along_axis_to_global_ix(ix, axis):
            [[2, 0, 1],
             [0, 2, 1]]])
     >>> ax = 2
-    
+
     >>> ix = np.argmin(c, axis=ax)
     >>> ix
     array([[0, 2],
@@ -474,7 +474,7 @@ def ix_along_axis_to_global_ix(ix, axis):
     Traceback (most recent call last):
     ...
     IndexError: index 2 is out of bounds for axis 0 with size 2
-    
+
     >>> ix_global = mdt.nph.ix_along_axis_to_global_ix(ix, ax)
     >>> ix_global
     (array([[0, 0],
@@ -484,26 +484,26 @@ def ix_along_axis_to_global_ix(ix, axis):
     >>> c[ix_global]
     array([[0, 0],
            [0, 0]])
-    
+
     >>> np.squeeze(np.take_along_axis(c,
     ...                               np.expand_dims(ix, axis=ax),
     ...                               axis=ax))
     array([[0, 0],
            [0, 0]])
-    
+
     >>> np.min(c, axis=ax)
     array([[0, 0],
            [0, 0]])
-    
+
     Edge cases:
-    
+
     >>> ix = np.array([], dtype=int)
     >>> for ax in range(3):
     ...     mdt.nph.ix_along_axis_to_global_ix(ix, ax)
     (array([], dtype=int64), array([], dtype=int64))
     (array([], dtype=int64), array([], dtype=int64))
     (array([], dtype=int64), array([], dtype=int64))
-    
+
     >>> ix = np.array(0)
     >>> for ax in range(3):
     ...     mdt.nph.ix_along_axis_to_global_ix(ix, ax)
@@ -523,7 +523,7 @@ def find_nearest(a, val, axis=None, return_index=False):
     """
     Find the values in an array which are closest to a given value along
     an axis.
-    
+
     Parameters
     ----------
     a : array_like
@@ -539,7 +539,7 @@ def find_nearest(a, val, axis=None, return_index=False):
     return_index : bool, optional
         If ``True``, also return the indices of the first values in `a`
         that are closest to `val` along the search axis.
-    
+
     Returns
     -------
     nearest : scalar or numpy.ndarray
@@ -547,7 +547,7 @@ def find_nearest(a, val, axis=None, return_index=False):
     ix : int or numpy.ndarray of ints
         The indices of the first values in `a` nearest to `val` along
         the given axis.  Only returned if `return_index` is ``True``.
-    
+
     See Also
     --------
     :func:`numpy.searchsorted` :
@@ -559,12 +559,12 @@ def find_nearest(a, val, axis=None, return_index=False):
     :func:`ix_along_axis_to_global_ix` :
         Same as :func:`numpy.unravel_index`, but to be used when `axis`
         was not ``None``
-    
+
     Notes
     -----
     In case of multiple occurrences of the closest values, only the
     *first* occurrence (and its index) is returned.
-    
+
     Examples
     --------
     >>> a = np.arange(-1, 1.5, 0.5)
@@ -574,24 +574,24 @@ def find_nearest(a, val, axis=None, return_index=False):
     0.0
     >>> mdt.nph.find_nearest(a, 0, return_index=True)
     (0.0, 2)
-    
+
     :func:`find_nearest` returns the *first* value that is closest to
     the given value.
-    
+
     >>> mdt.nph.find_nearest(a, -0.75, return_index=True)
     (-1.0, 0)
     >>> mdt.nph.find_nearest(a, 0.75, return_index=True)
     (0.5, 3)
-    
+
     >>> b = np.array([0, 2, 4, 2])
     >>> mdt.nph.find_nearest(b, 2, return_index=True)
     (2, 1)
-    
+
     If `axis` is ``None``, :func:`find_nearest` searches globally in the
     flattened array for the value closest to the given value and returns
     its first occurrence.  To get an object suitable to index the input
     array, use :func:`numpy.unravel_index`.
-    
+
     >>> c = np.array([[0, 1, 2],
     ...               [1, 2, 0]])
     >>> n, ix = mdt.nph.find_nearest(c, 1.8, return_index=True)
@@ -604,11 +604,11 @@ def find_nearest(a, val, axis=None, return_index=False):
     (0, 2)
     >>> c[ix_global]
     2
-    
+
     If `axis` is not ``None``, :func:`find_nearest` returns the first
     occurrences along the given axis.  To get an object suitable to
     index the input array, use :func:`ix_along_axis_to_global_ix`.
-    
+
     >>> mdt.nph.find_nearest(c, 1.8, axis=0, return_index=True)
     (array([1, 2, 2]), array([1, 1, 0]))
     >>> n, ix = mdt.nph.find_nearest(c, 1.8, axis=1, return_index=True)
@@ -621,9 +621,9 @@ def find_nearest(a, val, axis=None, return_index=False):
     (array([0, 1]), array([2, 1]))
     >>> c[ix_global]
     array([2, 2])
-    
+
     3-dimensional example:
-    
+
     >>> d = np.array([[[0, 1, 2],
     ...                [1, 2, 0]],
     ...
@@ -650,24 +650,24 @@ def find_nearest(a, val, axis=None, return_index=False):
     >>> ix
     array([[2, 1],
            [0, 1]])
-    
+
     You can also specify an array of values to search for.
-    
+
     >>> c
     array([[0, 1, 2],
            [1, 2, 0]])
     >>> x = np.array([1, 1, 0])
     >>> mdt.nph.find_nearest(c, x, axis=0, return_index=True)
     (array([1, 1, 0]), array([1, 0, 1]))
-    
+
     Edge cases:
-    
+
     >>> x = np.array([])
     >>> mdt.nph.find_nearest(x, 0, return_index=True)
     (array([], dtype=float64), array([], dtype=int64))
     >>> mdt.nph.find_nearest(x, 0, axis=0, return_index=True)
     (array([], dtype=float64), array([], dtype=int64))
-    
+
     >>> x = np.array(0)
     >>> mdt.nph.find_nearest(x, 0, return_index=True)
     Traceback (most recent call last):
@@ -698,33 +698,33 @@ def find_nearest(a, val, axis=None, return_index=False):
 def ix_of_item_change_1d(a):
     """
     Get the indices of a 1-dimensional array where its elements change.
-    
+
     .. deprecated:: 0.0.0.dev0
        :func:`ix_of_item_change_1d` might be removed in future versions.
        It is replaced by :func:`ix_of_item_change`, since this function
        works for arrays with arbitrary dimensions and provides
        additional functionality.
-    
+
     .. todo::
        Check for scripts using this function before removing it.
-    
+
     Parameters
     ----------
     a : array_like
         1-dimensional array for which to get each index where its
         elements change.
-    
+
     Returns
     -------
     ix : numpy.ndarray
         The indices where the elements of `a` change.  The first element
         of `ix` is always zero.
-    
+
     See Also
     --------
     :func:`ix_of_item_change` :
         Same function for arrays of arbitrary dimension
-    
+
     Examples
     --------
     >>> a = np.arange(3)
@@ -732,21 +732,21 @@ def ix_of_item_change_1d(a):
     array([0, 1, 2])
     >>> mdt.nph.ix_of_item_change_1d(a)
     array([0, 1, 2])
-    
+
     >>> b = np.array([1, 2, 2, 3, 3, 3, 1])
     >>> mdt.nph.ix_of_item_change_1d(b)
     array([0, 1, 3, 6])
-    
+
     >>> c = np.ones(3)
     >>> mdt.nph.ix_of_item_change_1d(c)
     array([0])
-    
+
     Edge cases:
-    
+
     >>> x = np.array([1])
     >>> mdt.nph.ix_of_item_change_1d(x)
     array([0])
-    
+
     >>> x = np.array([])
     >>> ix = mdt.nph.ix_of_item_change_1d(x)
     >>> ix
@@ -770,7 +770,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     """
     Get the indices of an array where its elements change along a given
     axis.
-    
+
     Parameters
     ----------
     a : array_like
@@ -788,14 +788,14 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
         If ``True``, regard the first element of `a` along the given
         axis as item change and prepend a ``0`` to the returned array of
         indices.  Must not be used together with `wrap`.
-    
+
     Returns
     -------
     ix : tuple
         Tuple of arrays, one for each dimension of `a`, containing the
         indices where the elements of `a` change.  `ix` can be used to
         index `a` and get the values of the changed elements.
-    
+
     Examples
     --------
     >>> a = np.arange(3)
@@ -810,7 +810,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([0, 1, 2]),)
     >>> a[ix]
     array([0, 1, 2])
-    
+
     >>> b = np.array([1, 2, 2, 3, 3, 3, 1])
     >>> mdt.nph.ix_of_item_change(b)
     (array([1, 3, 6]),)
@@ -821,7 +821,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([0, 1, 3, 6]),)
     >>> b[ix]
     array([1, 2, 3, 1])
-    
+
     >>> c = np.ones(3)
     >>> ix = mdt.nph.ix_of_item_change(c)
     >>> ix
@@ -832,9 +832,9 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([], dtype=int64),)
     >>> mdt.nph.ix_of_item_change(c, prepend_zero=True)
     (array([0]),)
-    
+
     2-dimensional example:
-    
+
     >>> d = np.array([[1, 3, 3, 3],
     ...               [3, 1, 3, 3],
     ...               [3, 3, 1, 3]])
@@ -848,7 +848,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([0, 0, 0, 0, 1, 1, 2, 2]), array([0, 1, 2, 3, 0, 1, 1, 2]))
     >>> d[ix]
     array([1, 3, 3, 3, 3, 1, 3, 1])
-    
+
     >>> ax = 1
     >>> mdt.nph.ix_of_item_change(d, axis=ax)
     (array([0, 1, 1, 2, 2]), array([1, 1, 2, 2, 3]))
@@ -856,9 +856,9 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([0, 0, 1, 1, 2, 2]), array([0, 1, 1, 2, 2, 3]))
     >>> mdt.nph.ix_of_item_change(d, axis=ax, prepend_zero=True)
     (array([0, 0, 1, 1, 1, 2, 2, 2]), array([0, 1, 0, 1, 2, 0, 2, 3]))
-    
+
     3-dimensional expample:
-    
+
     >>> e = np.array([[[1, 2, 2],
     ...                [2, 2, 1]],
     ...
@@ -874,7 +874,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 0, 1, 1, 1, 0, 0, 1, 1]), array([0, 1, 2, 0, 1, 2, 0, 2, 0, 2]))
     >>> e[ix]
     array([1, 2, 2, 2, 2, 1, 2, 1, 1, 2])
-    
+
     >>> ax = 1
     >>> mdt.nph.ix_of_item_change(e, axis=ax)
     (array([0, 0, 1, 1]), array([1, 1, 1, 1]), array([0, 2, 0, 2]))
@@ -882,7 +882,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 2, 0, 2, 0, 2, 0, 2]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, prepend_zero=True)
     (array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]), array([0, 0, 0, 1, 1, 0, 0, 0, 1, 1]), array([0, 1, 2, 0, 2, 0, 1, 2, 0, 2]))
-    
+
     >>> ax = 2
     >>> mdt.nph.ix_of_item_change(e, axis=ax)
     (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([1, 2, 2, 1]))
@@ -890,9 +890,9 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 1, 0, 2, 0, 2, 0, 1]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, prepend_zero=True)
     (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 1, 0, 2, 0, 2, 0, 1]))
-    
+
     Edge cases:
-    
+
     >>> x = np.array([1])
     >>> mdt.nph.ix_of_item_change(x)
     (array([], dtype=int64),)
@@ -900,7 +900,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([], dtype=int64),)
     >>> mdt.nph.ix_of_item_change(x, prepend_zero=True)
     (array([0]),)
-    
+
     >>> x = np.array([])
     >>> mdt.nph.ix_of_item_change(x)
     (array([], dtype=int64),)
@@ -911,7 +911,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     (array([], dtype=int64),)
     >>> x[ix]
     array([], dtype=float64)
-    
+
     >>> x = np.array(0)
     >>> mdt.nph.ix_of_item_change(x)
     Traceback (most recent call last):
@@ -942,10 +942,10 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
 def argmin_last(a, axis=None, out=None):
     """
     Get the indices of the minimum values along an axis.
-    
+
     Contrarily to :func:`numpy.argmin`, this function returns the
     indices of the last occurrence of the minimum value.
-    
+
     Parameters
     ----------
     a : array_like
@@ -956,13 +956,13 @@ def argmin_last(a, axis=None, out=None):
     out : numpy.ndarray, optional
         If provided, the result will be inserted into this array.  It
         should be of the appropriate shape and dtype.
-    
+
     Returns
     -------
     index_array : numpy.ndarray of ints
         Array of indices into the array.  It has the same shape as
         ``a.shape`` with the dimension along `axis` removed.
-    
+
     See Also
     --------
     :func:`numpy.argmin` :
@@ -976,13 +976,13 @@ def argmin_last(a, axis=None, out=None):
     :func:`ix_along_axis_to_global_ix` :
         Same as :func:`numpy.unravel_index`, but to be used when `axis`
         was not ``None``.
-    
+
     Notes
     -----
     In case of multiple occurrences of the minimum values, the indices
     corresponding to the last occurrence are returned.  This is the
     opposite of what :func:`numpy.argmin` does.
-    
+
     Examples
     --------
     >>> a = -np.arange(4)
@@ -993,9 +993,9 @@ def argmin_last(a, axis=None, out=None):
     3
     >>> np.argmin(a)
     1
-    
+
     2-dimensional case:
-    
+
     >>> a = -np.eye(3, 4, 0, dtype=int) - np.eye(3, 4, 2, dtype=int)
     >>> a
     array([[-1,  0, -1,  0],
@@ -1007,9 +1007,9 @@ def argmin_last(a, axis=None, out=None):
     array([0, 1, 2, 1])
     >>> mdt.nph.argmin_last(a, axis=1)
     array([2, 3, 2])
-    
+
     3-dimensional case:
-    
+
     >>> a = -np.array([[[1, 1, 0],
     ...                 [0, 1, 1]],
     ...
@@ -1040,10 +1040,10 @@ def argmin_last(a, axis=None, out=None):
 def argmax_last(a, axis=None, out=None):
     """
     Get the indices of the maximum values along an axis.
-    
+
     Contrarily to :func:`numpy.argmax`, this function returns the
     indices of the last occurrence of the maximum value.
-    
+
     Parameters
     ----------
     a : array_like
@@ -1054,13 +1054,13 @@ def argmax_last(a, axis=None, out=None):
     out : numpy.ndarray, optional
         If provided, the result will be inserted into this array.  It
         should be of the appropriate shape and dtype.
-    
+
     Returns
     -------
     index_array : numpy.ndarray of ints
         Array of indices into the array.  It has the same shape as
         ``a.shape`` with the dimension along `axis` removed.
-    
+
     See Also
     --------
     :func:`numpy.argmax` :
@@ -1074,13 +1074,13 @@ def argmax_last(a, axis=None, out=None):
     :func:`ix_along_axis_to_global_ix` :
         Same as :func:`numpy.unravel_index`, but to be used when `axis`
         was not ``None``.
-    
+
     Notes
     -----
     In case of multiple occurrences of the maximum values, the indices
     corresponding to the last occurrence are returned.  This is the
     opposite of what :func:`numpy.argmax` does.
-    
+
     Examples
     --------
     >>> a = np.arange(4)
@@ -1091,9 +1091,9 @@ def argmax_last(a, axis=None, out=None):
     3
     >>> np.argmax(a)
     1
-    
+
     2-dimensional case:
-    
+
     >>> a = np.eye(3, 4, 0, dtype=int) + np.eye(3, 4, 2, dtype=int)
     >>> a
     array([[1, 0, 1, 0],
@@ -1105,9 +1105,9 @@ def argmax_last(a, axis=None, out=None):
     array([0, 1, 2, 1])
     >>> mdt.nph.argmax_last(a, axis=1)
     array([2, 3, 2])
-    
+
     3-dimensional case:
-    
+
     >>> a = np.array([[[1, 1, 0],
     ...                [0, 1, 1]],
     ...
@@ -1138,11 +1138,11 @@ def argmax_last(a, axis=None, out=None):
 def ceil_divide(x1, x2, **kwargs):
     """
     Calculate element-wise ceil division.
-    
+
     Return the smallest integer greater or equal to the division of the
     inputs.  It is equivalent to ``-(-x1 // x2)`` and can bee regarded
     as the oppoiste of :func:`numpy.floor_divide`.
-    
+
     Parameters
     ----------
     x1 : array_like
@@ -1154,19 +1154,19 @@ def ceil_divide(x1, x2, **kwargs):
     **kwargs : dict, optional
         Additional keyword arguments to parse to :func:`numpy.multiply`
         and :func:`numpy.floor_divide`.  See there for possible choices.
-    
+
     Returns
     -------
     y : numpy.ndarray
         The element-wise ceil division of `x1` and `x2`, formally
         ``y = -(-x1 // x2)``.  This is a scalar if both `x1` and `x2`
         are scalars.
-    
+
     See Also
     --------
     :func:`numpy.floor_divide` : Element-wise floor division
     :func:`numpy.ceil` : Element-wise ceiling.
-    
+
     Examples
     --------
     >>> mdt.nph.ceil_divide(3, 2)
@@ -1177,12 +1177,12 @@ def ceil_divide(x1, x2, **kwargs):
     2.0
     >>> np.floor_divide(3.5, 2)
     1.0
-    
+
     >>> mdt.nph.ceil_divide(np.arange(3, 6), np.arange(1, 4))
     array([3, 2, 2])
     >>> np.floor_divide(np.arange(3, 6), np.arange(1, 4))
     array([3, 2, 1])
-    
+
     >>> result = np.zeros(3, dtype=int)
     >>> mask = np.array([True, True, False])
     >>> mdt.nph.ceil_divide([5, 5, 5], [2, 3, 3], out=result, where=mask)
@@ -1204,7 +1204,7 @@ def ceil_divide(x1, x2, **kwargs):
 def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
     """
     Split an array into its subarrays of consecutive numbers.
-    
+
     Parameters
     ----------
     a : array_like
@@ -1216,21 +1216,21 @@ def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
         Sort `a` before searching for contiguous sequences.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     consecutive_subarrays : list
         List of subarrays, one for each contiguous sequence of numbers
         with stepsize `step` in `a`.
     """
-    
+
     a = np.asarray(a)
     if debug:
         mdt.check.array(a, dim=1)
-    
+
     if sort:
         a = np.sort(a)
-    
+
     return np.split(a, np.flatnonzero((np.diff(a)!=step))+1)
 
 
@@ -1239,16 +1239,16 @@ def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
 def sequenize(a, step=1, start=0):
     """
     'Sequenize' the values of an array.
-    
+
     Assign to each different value in an array `a` a constant offset in
     such a way that subtracting the resulting offset array from `a`
     yields a new array whose unique sorted values yield a contiguous
     sequence with a given step width.
-    
+
     This might for example be useful if you have an array containing
     some indices and one or more intermediate indices are missing but
     you want the indices to form a contiguous sequence.
-    
+
     Parameters
     ----------
     a : array_like
@@ -1261,7 +1261,7 @@ def sequenize(a, step=1, start=0):
     start : scalar, optional
         The value at which this sequence should start. The data type of
         `a` and `start` must be castable.
-    
+
     Returns
     -------
     b : numpy.ndarray
@@ -1281,10 +1281,10 @@ def sequenize(a, step=1, start=0):
 
 
 def group_by(keys, values, assume_sorted=False, return_keys=False,
-        debug=False):
+             debug=False):
     """
     Group the elements of `values` by their `keys`.
-    
+
     Parameters
     ----------
     keys : array_like
@@ -1298,7 +1298,7 @@ def group_by(keys, values, assume_sorted=False, return_keys=False,
         If ``True``, return the unique, sorted keys.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     unique_keys : numpy.ndarray
@@ -1309,22 +1309,22 @@ def group_by(keys, values, assume_sorted=False, return_keys=False,
         belonging to the same key. The arrays in the list are sorted
         according to the unique, sorted keys.
     """
-    
+
     keys = np.asarray(keys)
     values = np.asarray(values)
     if debug:
         mdt.check.array(keys, dim=1)
         if len(keys) != len(values):
             raise ValueError("keys and values must have the same length")
-    
+
     if not assume_sorted:
         ix_sort = np.argsort(keys)
         keys = keys[ix_sort]
         values = values[ix_sort]
-    
+
     unique_keys, counts = np.unique(keys, return_counts=True)
     sections = np.cumsum(counts[:-1])
-    
+
     if return_keys:
         return unique_keys, np.split(values, sections)
     else:
@@ -1336,7 +1336,7 @@ def group_by(keys, values, assume_sorted=False, return_keys=False,
 def get_middle(a, n=1, debug=False):
     """
     Get the `n` innermost elements of a 1-dimensional array.
-    
+
     Parameters
     ----------
     a : array_like
@@ -1345,26 +1345,26 @@ def get_middle(a, n=1, debug=False):
         Number of elements to write out.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     b : array_like
         Array of the `n` innermost elements of `a`.
     """
-    
+
     if debug:
         mdt.check.array(a, dim=1)
-    
+
     if n > len(a):
         raise ValueError("n exceeds the length of a")
-    
+
     b = a[(len(a)-n)//2 : len(a)-(len(a)-n)//2]
     if len(b) > n:
         b = b[:n]
     else:
         raise ValueError("The length of b ({}) is less than n ({}). This"
                          " should not have happened".format(len(b), n))
-    
+
     return b
 
 
@@ -1373,7 +1373,7 @@ def get_middle(a, n=1, debug=False):
 def symmetrize(a, lower=True, debug=False):
     """
     Create a symmetrized copy of a 2-dimensional array.
-    
+
     Parameters
     ----------
     a : array_like
@@ -1384,16 +1384,16 @@ def symmetrize(a, lower=True, debug=False):
         diagonal of `a` is unchanged.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     a_sym : numpy.ndarray
         A symmetrized copy of `a`.
     """
-    
+
     if debug:
         mdt.check.array(a, dim=2)
-    
+
     if lower:
         a_sym = np.tril(a)
     else:
@@ -1409,7 +1409,7 @@ def tilt_diagonals(a, clockwise=True, diagpos=None, debug=False):
     Tilt a 2-dimensional array by 45 degrees so that the diagonals will
     either be converted to columns (if tilted clockwise) or to rows (if
     tilted counterclockwise).
-    
+
     Parameters
     ----------
     a : array_like
@@ -1424,18 +1424,18 @@ def tilt_diagonals(a, clockwise=True, diagpos=None, debug=False):
         column/row of the tilted array.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     a_tilted : numpy.ndarray
         2-dimensional array of shape ``(m, n)`` (if tilted clockwise) or
         ``(n, m)`` (if tilted counterclockwise).
     """
-    
+
     a = np.asarray(a)
     if debug:
         mdt.check.array(a, dim=2)
-    
+
     if a.shape[0] > a.shape[1]:
         reps = int(np.ceil((a.shape[1] + a.shape[0])/a.shape[1]))
         diags = np.tile(a, reps)
@@ -1443,13 +1443,13 @@ def tilt_diagonals(a, clockwise=True, diagpos=None, debug=False):
                           for i in range(a.shape[1])])
     else:
         diags = np.array([np.concatenate((
-                              np.diagonal(a, offset=i),
-                              np.diagonal(a, offset=-a.shape[1]+i)))
-                          for i in range(a.shape[1])])
-    
+            np.diagonal(a, offset=i),
+            np.diagonal(a, offset=-a.shape[1]+i)))
+            for i in range(a.shape[1])])
+
     if diagpos is None:
         diagpos = int(a.shape[1]/2)
-    
+
     if clockwise:
         return np.roll(diags, shift=diagpos, axis=0).T
     else:
@@ -1463,7 +1463,7 @@ def extend(a, length, axis=-1, fill_value=0):
     """
     Extend an axis of an array to a given length by padding a given
     value at the end of the axis.
-    
+
     Parameters
     ----------
     a : array_like
@@ -1477,7 +1477,7 @@ def extend(a, length, axis=-1, fill_value=0):
         desired length. Note that you might have to change the data type
         of the input array to fit the type of `fill_value` before
         parsing the array to this function.
-    
+
     Returns
     -------
     a_new : numpy.ndarray
@@ -1486,14 +1486,14 @@ def extend(a, length, axis=-1, fill_value=0):
         the given axis already had the desired length or is even longer,
         just the input array is returned.
     """
-    
+
     a = np.asarray(a)
     if a.shape[axis] >= length:
         return a
-    
+
     pad_width = [[0, 0] for i in range(a.ndim)]
     pad_width[axis][1] = length - a.shape[axis]
-    
+
     return np.pad(a,
                   pad_width,
                   mode='constant',
@@ -1506,7 +1506,7 @@ def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
     """
     Bring two arrays to the same shape by padding a given value at the
     end of of the axes of the shorter array.
-    
+
     Parameters
     ----------
     a, b : array_like
@@ -1520,7 +1520,7 @@ def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
         If a new dimension needs to be added to one of the arrays,
         transfer the values of the original array also to this new
         dimension. Default: ``True``
-    
+
     Returns
     -------
     a_new, b_new : numpy.ndarray
@@ -1528,12 +1528,12 @@ def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
         way that they have the same shape. If `a` and `b` already had
         the same shape, just the input arrays are returned.
     """
-    
+
     a = np.asarray(a)
     b = np.asarray(b)
     if a.shape == b.shape:
         return a, b
-    
+
     if a.ndim == b.ndim:
         shape = np.maximum(a.shape, b.shape)
     elif a.ndim < b.ndim:
@@ -1542,25 +1542,25 @@ def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
     else:
         shape = np.maximum(a.shape[-b.ndim:], b.shape)
         shape = np.insert(shape, 0, a.shape[:b.ndim])
-    
+
     if transfer_to_new_dim:
         slice_a = [slice(0, None, None)] * len(shape)
     else:
         slice_a = [0] * len(shape)
     slice_b = slice_a.copy()
-    
+
     slice_a[len(slice_a)-a.ndim:] = [slice(None, a.shape[i], None)
                                      for i in range(a.ndim)]
     slice_a = tuple(slice_a)
     a_new = np.full(shape, fill_value, dtype=a.dtype)
     a_new[slice_a] = a
-    
+
     slice_b[len(slice_b)-b.ndim:] = [slice(None, b.shape[i], None)
                                      for i in range(b.ndim)]
     slice_b = tuple(slice_b)
     b_new = np.full(shape, fill_value, dtype=b.dtype)
     b_new[slice_b] = b
-    
+
     return a_new, b_new
 
 
@@ -1571,7 +1571,7 @@ def cross_section(z, x, y, line, num=None, order=1):
     Extract a cross section from a 2-dimensional array along a given
     line using :func:`scipy.ndimage.map_coordinates`. See also
     https://stackoverflow.com/questions/18920614/plot-cross-section-through-heat-map
-    
+
     Parameters
     ----------
     z : array_like
@@ -1594,7 +1594,7 @@ def cross_section(z, x, y, line, num=None, order=1):
         points are used as real data points are on the line.
     order : int, optional
         Interpolation order.
-    
+
     Returns
     -------
     cs : numpy.ndarray
@@ -1602,12 +1602,12 @@ def cross_section(z, x, y, line, num=None, order=1):
     r : numpy.ndarray
         The sample points along the given line.
     """
-    
+
     z = np.asarray(z)
     x = np.asarray(x)
     y = np.asarray(y)
     line = np.asarray(line)
-    
+
     if z.ndim != 2:
         raise ValueError("z must be a 2d array")
     if len(x) != z.shape[1]:
@@ -1618,7 +1618,7 @@ def cross_section(z, x, y, line, num=None, order=1):
                          " rows of z")
     if line.shape != (2, 2):
         raise ValueError("line must be given as [(x0, y0), (x1, y1)]")
-    
+
     # Convert line from world coordinates to pixel coordinates
     x_world, y_world = np.asarray(list(zip(*line)))
     l_world = np.hypot(x_world[1]-x_world[0], y_world[1]-y_world[0])
@@ -1630,7 +1630,7 @@ def cross_section(z, x, y, line, num=None, order=1):
         raise ValueError("The line is outside the y-data range")
     x_pix = z.shape[1] * (x_world - x_world_min) / x.ptp()  # ptp = max-min
     y_pix = z.shape[0] * (y_world - y_world_min) / y.ptp()
-    
+
     # Interpolate the line at "num" points
     if num is None:
         _, x0_ix = find_nearest(x, x_world[0], return_index=True)
@@ -1644,7 +1644,7 @@ def cross_section(z, x, y, line, num=None, order=1):
     rows = np.linspace(y_pix[0], y_pix[1], num)
     r = np.linspace(0, l_world, num)
     cs = map_coordinates(z, np.vstack((rows, cols)), order=order)
-    
+
     return cs, r
 
 
@@ -1654,7 +1654,7 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
     """
     Extract a cross section from a 2-dimensional array along a given
     axis.
-    
+
     Note
     ----
     This function is probably not what you want, since the cross section
@@ -1664,7 +1664,7 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
     the ``print(mask)`` statement in the ``for`` loop of this function.
     For extracting proper cross sections from 2-dimensional arrays use
     :func:`cross_section`.
-    
+
     Parameters
     ----------
     z : array_like
@@ -1696,18 +1696,18 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
         actual value of the cross section at the current `x` (if `y` is
         given) or `y` (if `x` is given) position. Must be one of the
         following choices:
-        
+
         * ``'arithmetic'``: Use arithmetic mean
         * ``'integral'``: Integrate over the current width slice and
           divide by the width
-    
+
     Returns
     -------
     cross_sec : numpy.ndarray
         Cross section as function of `x` and shape ``(n,)`` if `y` is
         given or as function of `y` and shape ``(m,)`` if `y` is given.
     """
-    
+
     z = np.asarray(z)
     if z.ndim != 2:
         raise ValueError("z must be a 2d array")
@@ -1732,7 +1732,7 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
               flush=True)
     if mean != 'arithmetic' and mean != 'integral':
         raise ValueError("mean must be eithe 'arithmetic' or 'integral'")
-    
+
     width2 = width / 2
     cross_sec = np.full(z.shape[zax], np.nan, dtype=np.float64)
     for i, zz in enumerate(z if zax==0 else z.T):
@@ -1745,7 +1745,7 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
             cross_sec[i] = np.mean(zz[mask])
         elif mean == 'integral':
             cross_sec[i] = np.trapz(zz[mask], var[mask]) / (width)
-    
+
     return cross_sec
 
 
@@ -1755,7 +1755,7 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
     """
     Integrate `z(x,y)` within the given limits using ``numpy.trapz``
     twice, first in `y` and then in `x` direction.
-    
+
     Parameters
     ----------
     z : array_like
@@ -1780,13 +1780,13 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
         limits that depend on `x`. If ``None`` (default), no limits are
         applied. If you only want to apply an upper (lower) limit, set
         the lower (upper) limit to ``-np.inf`` (``np.inf``).
-    
+
     Returns
     -------
     trapz : float
         Definite integral as approximated by trapezoidal rule.
     """
-    
+
     z = np.asarray(z)
     if x is None:
         x = np.arange(0, z.shape[0]*dx, dx)
@@ -1796,7 +1796,7 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
         y = np.arange(0, z.shape[1]*dy, dy)
     else:
         y = np.asarray(y)
-    
+
     if z.ndim != 2:
         raise ValueError("z must be a 2d array")
     if len(x) != z.shape[0]:
@@ -1833,7 +1833,7 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
                              " array of the same shape as x")
         if np.any(ylim[1] <= ylim[0]):
             raise ValueError("ylim[1] must be greater than ylim[0]")
-    
+
     yint = np.zeros(z.shape[0])
     if ylim is None:
         for i, zy in enumerate(z):
@@ -1851,20 +1851,20 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
         for i, zy in enumerate(z):
             mask = (y >= ylim[0][i]) & (y <= ylim[1][i])
             yint[i] = np.trapz(y=zy[mask], x=y[mask])
-    
+
     if xlim is None:
         trapz = np.trapz(y=yint, x=x)
     else:
         mask = (x >= xlim[0]) & (x <= xlim[1])
         trapz = np.trapz(y=yint[mask], x=x[mask])
-    
+
     return trapz
 
 
 
 
 def find_linear_region(data, window_length, polyorder=2, delta=1,
-        tol=0.1, axis=-1, correct_intermittency=None, visualize=False):
+                       tol=0.1, axis=-1, correct_intermittency=None, visualize=False):
     """
     Find linear regions in a data array. This is done by applying a
     Savitzky-Golay differentiation filter to the array using
@@ -1873,7 +1873,7 @@ def find_linear_region(data, window_length, polyorder=2, delta=1,
     given tolerance. The sample points of the data must be equidistant.
     For a brief introduction to Savitzky-Golay filters see for instance
     https://eigenvector.com/wp-content/uploads/2020/01/SavitzkyGolay.pdf
-    
+
     Parameters
     ----------
     data : array_like
@@ -1918,7 +1918,7 @@ def find_linear_region(data, window_length, polyorder=2, delta=1,
         Visualize the result of applying the Savitzky-Golay filter to
         the data. This should only be used in interactive algorithms,
         since the plot window must be manually closed by the user.
-    
+
     Returns
     -------
     linear : numpy.ndarray
@@ -1927,10 +1927,10 @@ def find_linear_region(data, window_length, polyorder=2, delta=1,
         respective position. Therefore, the data can be considered
         linear at this position.
     """
-    
+
     if polyorder < 2:
         raise ValueError("polyorder must be at least 2")
-    
+
     grad2 = savgol_filter(x=data,
                           window_length=window_length,
                           polyorder=polyorder,
@@ -1943,7 +1943,7 @@ def find_linear_region(data, window_length, polyorder=2, delta=1,
     mdt.dynamics.correct_intermittency_1d(
         a=linear,
         intermittency=correct_intermittency)
-    
+
     if visualize:
         grad0 = savgol_filter(x=data,
                               window_length=window_length,
@@ -1967,5 +1967,5 @@ def find_linear_region(data, window_length, polyorder=2, delta=1,
         plt.legend(loc='best')
         plt.tight_layout()
         plt.show()
-    
+
     return linear

@@ -35,21 +35,21 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py and plot"
-                     " the mean square displacement (MSD) versus the"
-                     " renewal time as scatter plot. Additionaly, a"
-                     " running-average is computed and plotted."
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py and plot"
+            " the mean square displacement (MSD) versus the"
+            " renewal time as scatter plot. Additionaly, a"
+            " running-average is computed and plotted."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -85,7 +85,7 @@ if __name__ == '__main__':
              " position of the compounds. Must be either x, y or z."
              " Default: No coloring"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -111,7 +111,7 @@ if __name__ == '__main__':
         required=False,
         default=None,
         help="Minimum y-range of the plot. By default detected"
-            " automatically."
+        " automatically."
     )
     parser.add_argument(
         '--ymax',
@@ -122,7 +122,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -157,27 +157,27 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.DCOLOR is not None and
         args.DCOLOR != 'x' and
         args.DCOLOR != 'y' and
-        args.DCOLOR != 'z'):
+            args.DCOLOR != 'z'):
         raise ValueError("--dcolor must be either 'x', 'y' or 'z', but"
                          " you gave {}".format(args.DCOLOR))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     trenew = np.loadtxt(fname=args.INFILE, usecols=3)
     trenew *= args.TCONV
     if args.SEL:
@@ -195,57 +195,57 @@ if __name__ == '__main__':
             cols = 4+dim[args.DCOLOR]
         pos_t0 = np.loadtxt(fname=args.INFILE, usecols=cols)
         pos_t0 *= args.LCONV
-    
+
     sort_ix = np.argsort(trenew)
     running_average = mdt.stats.running_average(msd[sort_ix], axis=0)
     running_average_tot = mdt.stats.running_average(msd_tot[sort_ix])
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Fitting MSDs", flush=True)
     timer = datetime.now()
-    
+
     displ0 = np.zeros(4, dtype=np.uint32)
     popt = np.zeros(4)
     pcov = np.zeros(4)
     for i, data in enumerate(msd.T):
         popt[i], pcov[i] = curve_fit(
-                               f=lambda t, D: mdt.dyn.msd(t=t, D=D, d=1),
-                               xdata=trenew,
-                               ydata=data)
+            f=lambda t, D: mdt.dyn.msd(t=t, D=D, d=1),
+            xdata=trenew,
+            ydata=data)
     popt[-1], pcov[-1] = curve_fit(
-                             f=lambda t, D: mdt.dyn.msd(t=t, D=D, d=3),
-                             xdata=trenew,
-                             ydata=msd_tot)
-    
+        f=lambda t, D: mdt.dyn.msd(t=t, D=D, d=3),
+        xdata=trenew,
+        ydata=msd_tot)
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     tick_length = 10
     label_pad = 16
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
@@ -270,20 +270,20 @@ if __name__ == '__main__':
                 marker='x')
         else:
             img = mdt.plot.scatter(
-                      ax=axis,
-                      x=trenew[mask],
-                      y=msd_tot[mask],
-                      c=pos_t0[mask],
-                      xmin=args.XMIN,
-                      xmax=args.XMAX,
-                      ymin=args.YMIN,
-                      ymax=args.YMAX,
-                      logx=True,
-                      logy=True,
-                      xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                      ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
-                      marker='x',
-                      cmap='plasma')
+                ax=axis,
+                x=trenew[mask],
+                y=msd_tot[mask],
+                c=pos_t0[mask],
+                xmin=args.XMIN,
+                xmax=args.XMAX,
+                ymin=args.YMIN,
+                ymax=args.YMAX,
+                logx=True,
+                logy=True,
+                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                marker='x',
+                cmap='plasma')
             cbar = plt.colorbar(img, ax=axis)
             cbar.set_label(label=r'${}(t_0)$ / {}'.format(args.DCOLOR, args.LUNIT),
                            fontsize=fontsize_labels)
@@ -331,8 +331,8 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         ylabel = ('x', 'y', 'z')
         for i, data in enumerate(msd.T):
             fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
@@ -357,20 +357,20 @@ if __name__ == '__main__':
                     marker='x')
             else:
                 img = mdt.plot.scatter(
-                          ax=axis,
-                          x=trenew[mask],
-                          y=data[mask],
-                          c=pos_t0[mask],
-                          xmin=args.XMIN,
-                          xmax=args.XMAX,
-                          ymin=args.YMIN,
-                          ymax=args.YMAX,
-                          logx=True,
-                          logy=True,
-                          xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                          ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
-                          marker='x',
-                          cmap='plasma')
+                    ax=axis,
+                    x=trenew[mask],
+                    y=data[mask],
+                    c=pos_t0[mask],
+                    xmin=args.XMIN,
+                    xmax=args.XMAX,
+                    ymin=args.YMIN,
+                    ymax=args.YMAX,
+                    logx=True,
+                    logy=True,
+                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                    ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                    marker='x',
+                    cmap='plasma')
                 cbar = plt.colorbar(img, ax=axis)
                 cbar.set_label(label=r'${}(t_0)$ / {}'.format(args.DCOLOR, args.LUNIT),
                                fontsize=fontsize_labels)
@@ -418,8 +418,8 @@ if __name__ == '__main__':
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-        
-        
+
+
         # Statistics
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -427,7 +427,7 @@ if __name__ == '__main__':
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         xpos = 0.05
         ypos = 0.95
         if args.SEL:
@@ -463,7 +463,7 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'$N(\Delta a^2 = 0)$',
                  fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos, y=ypos, s=r'$\Delta r^2$', fontsize=fontsize)
@@ -504,7 +504,7 @@ if __name__ == '__main__':
                      y=ypos,
                      s=r'${:>16d}$'.format(displ0[i]),
                      fontsize=fontsize)
-        
+
         # Fit parameters
         xpos = 0.05
         ypos -= 0.10
@@ -527,7 +527,7 @@ if __name__ == '__main__':
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos, y=ypos, s=r'$d$', fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos, y=ypos, s=r'$\Delta r^2$', fontsize=fontsize)
@@ -568,11 +568,11 @@ if __name__ == '__main__':
                      y=ypos,
                      s=r'${:>16d}$'.format(1),
                      fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -580,10 +580,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

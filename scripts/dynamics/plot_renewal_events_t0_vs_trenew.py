@@ -33,21 +33,21 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py and plot"
-                     " the new starting time after a renewal event"
-                     " versus the end time of the preceding renewal"
-                     " event as scatter plot."
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py and plot"
+            " the new starting time after a renewal event"
+            " versus the end time of the preceding renewal"
+            " event as scatter plot."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -73,7 +73,7 @@ if __name__ == '__main__':
         help="Use the selection compounds instead of the reference"
              " compounds."
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -108,7 +108,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -126,18 +126,18 @@ if __name__ == '__main__':
         default="ps",
         help="Time unit. Default: ps"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     if args.SEL:
         cols = (1, 2, 3)
     else:
@@ -147,12 +147,12 @@ if __name__ == '__main__':
                                          unpack=True)
     t0 *= args.TCONV
     trenew *= args.TCONV
-    
+
     sort_ix = np.lexsort((t0, compound_ix))
     compound_ix = compound_ix[sort_ix]
     t0 = t0[sort_ix]
     trenew = trenew[sort_ix]
-    
+
     t0_new_event = []
     tend_preceding_event = []
     for i, cix in enumerate(compound_ix[1:], 1):
@@ -162,38 +162,38 @@ if __name__ == '__main__':
         tend_preceding_event.append(t0[i-1] + trenew[i-1])
     t0_new_event = np.asarray(t0_new_event)
     tend_preceding_event = np.asarray(tend_preceding_event)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                              frameon=False,
                              clear=True,
                              tight_layout=True)
-    
+
     img = mdt.plot.scatter(
-              ax=axis,
-              x=t0_new_event,
-              y=tend_preceding_event,
-              xmin=args.XMIN,
-              xmax=args.XMAX,
-              ymin=args.YMIN,
-              ymax=args.YMAX,
-              xlabel=r'$t_0 + \tau_{renew}$ / '+args.TUNIT,
-              ylabel=r'$t_0^\prime$ / '+args.TUNIT,
-              marker='x')
-    
+        ax=axis,
+        x=t0_new_event,
+        y=tend_preceding_event,
+        xmin=args.XMIN,
+        xmax=args.XMAX,
+        ymin=args.YMIN,
+        ymax=args.YMAX,
+        xlabel=r'$t_0 + \tau_{renew}$ / '+args.TUNIT,
+        ylabel=r'$t_0^\prime$ / '+args.TUNIT,
+        marker='x')
+
     diagonal = np.linspace(*axis.get_xlim())
     mdt.plot.plot(
         ax=axis,
@@ -206,12 +206,12 @@ if __name__ == '__main__':
         xlabel=r'$t_0 + \tau_{renew}$ / '+args.TUNIT,
         ylabel=r'$t_0^\prime$ / '+args.TUNIT,
         color='black')
-    
+
     mdt.fh.backup(args.OUTFILE)
     plt.tight_layout()
     plt.savefig(args.OUTFILE)
     plt.close(fig)
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -219,10 +219,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),

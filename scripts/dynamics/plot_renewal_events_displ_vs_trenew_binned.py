@@ -35,24 +35,24 @@ import mdtools as mdt
 
 
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py and plot"
-                     " the displacement versus the renewal time as"
-                     " scatter plot. Additionally, a bin-wise average"
-                     " and variance are computed and plotted."
-                     " Furthermore, the displacement distribution in"
-                     " each time bin is fitted by a Gaussian function"
-                     " and the non-Gaussian parameter is calculated."
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py and plot"
+            " the displacement versus the renewal time as"
+            " scatter plot. Additionally, a bin-wise average"
+            " and variance are computed and plotted."
+            " Furthermore, the displacement distribution in"
+            " each time bin is fitted by a Gaussian function"
+            " and the non-Gaussian parameter is calculated."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -88,7 +88,7 @@ if __name__ == '__main__':
              " position of the compounds. Must be either x, y or z."
              " Default: No coloring"
     )
-    
+
     parser.add_argument(
         '--tbin-start',
         dest='TBIN_START',
@@ -153,7 +153,7 @@ if __name__ == '__main__':
         help="Number of bins to use for binning the displacements."
              " Default: 50"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -189,7 +189,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -224,27 +224,27 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
+
     if (args.DCOLOR is not None and
         args.DCOLOR != 'x' and
         args.DCOLOR != 'y' and
-        args.DCOLOR != 'z'):
+            args.DCOLOR != 'z'):
         raise ValueError("--dcolor must be either 'x', 'y' or 'z', but"
                          " you gave {}".format(args.DCOLOR))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     trenew = np.loadtxt(fname=args.INFILE, usecols=3)
     trenew *= args.TCONV
     if args.SEL:
@@ -260,7 +260,7 @@ if __name__ == '__main__':
             cols = 4+dim[args.DCOLOR]
         pos_t0 = np.loadtxt(fname=args.INFILE, usecols=cols)
         pos_t0 *= args.LCONV
-    
+
     if args.TBINFILE is None:
         if args.TBIN_START is None or args.TBIN_START > np.min(trenew):
             args.TBIN_START = np.min(trenew)
@@ -279,7 +279,7 @@ if __name__ == '__main__':
         if tbins[-1] < np.max(trenew):
             tbins = np.append(tbins, np.max(trenew))
     t = tbins[1:] - np.diff(tbins)/2
-    
+
     tbin_ix = np.digitize(trenew, tbins)
     # In np.histogram the last bin is closed, but in np.digitize all
     # bins are half-open. Make the last bin closed:
@@ -300,10 +300,10 @@ if __name__ == '__main__':
             displ_std[i] = np.std(displ[mask], axis=0)
             msd_mean[i] = np.mean(displ[mask]**2, axis=0)
             non_gaus[i] = mdt.stats.non_gaussian_parameter(
-                              displ[mask],
-                              d=1,
-                              is_squared=False,
-                              axis=0)
+                displ[mask],
+                d=1,
+                is_squared=False,
+                axis=0)
     if not np.isnan(nevents[0]):
         raise ValueError("The first element of nevents is not NaN. This"
                          " should not have happened")
@@ -320,37 +320,37 @@ if __name__ == '__main__':
         raise ValueError("Not all first elements of non_gaus are NaN."
                          " This should not have happened")
     valid = (nevents > 0)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Fitting histograms", flush=True)
     timer = datetime.now()
-    
+
     if args.DISPLBIN_START is None or args.DISPLBIN_START > np.min(displ):
         args.DISPLBIN_START = np.min(displ)
     if args.DISPLBIN_STOP is None or args.DISPLBIN_STOP < np.max(displ):
         args.DISPLBIN_STOP = np.max(displ)
-    
+
     popt_displ = np.full((len(tbins), displ.shape[1], 2), np.nan)
     perr_displ = np.full((len(tbins), displ.shape[1], 2), np.nan)
     for i in np.unique(tbin_ix):
         for j, data in enumerate(displ[tbin_ix==i].T):
             try:
                 displhist, displbins = np.histogram(
-                                           data,
-                                           bins=args.DISPLBIN_NUM,
-                                           range=(args.DISPLBIN_START,
-                                                  args.DISPLBIN_STOP),
-                                           density=True)
+                    data,
+                    bins=args.DISPLBIN_NUM,
+                    range=(args.DISPLBIN_START,
+                           args.DISPLBIN_STOP),
+                    density=True)
                 x = displbins[1:] - np.diff(displbins) / 2
                 popt, pcov = opt.curve_fit(f=mdt.stats.gaussian,
                                            xdata=x,
@@ -368,27 +368,27 @@ if __name__ == '__main__':
                 print("  Setting fit parameters to numpy.nan",
                       flush=True)
                 print(flush=True)
-    
+
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     label_pad = 16
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         # Number of renewal events per time bins
@@ -416,10 +416,10 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
-        
-        
+
+
+
+
         # Displacements vs renewal time
         ylabel = ('x', 'y', 'z')
         for i in range(displ.shape[1]):
@@ -442,18 +442,18 @@ if __name__ == '__main__':
                     marker='x')
             else:
                 img = mdt.plot.scatter(
-                          ax=axis,
-                          x=trenew,
-                          y=displ.T[i],
-                          c=pos_t0,
-                          xmin=args.XMIN,
-                          xmax=args.XMAX,
-                          ymin=args.YMIN,
-                          ymax=args.YMAX,
-                          xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                          ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
-                          marker='x',
-                          cmap='plasma')
+                    ax=axis,
+                    x=trenew,
+                    y=displ.T[i],
+                    c=pos_t0,
+                    xmin=args.XMIN,
+                    xmax=args.XMAX,
+                    ymin=args.YMIN,
+                    ymax=args.YMAX,
+                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                    ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                    marker='x',
+                    cmap='plasma')
                 cbar = plt.colorbar(img, ax=axis)
                 cbar.set_label(label=r'${}(t_0)$ / {}'.format(args.DCOLOR, args.LUNIT),
                                fontsize=fontsize_labels)
@@ -528,8 +528,8 @@ if __name__ == '__main__':
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-        
-        
+
+
         # Statistics
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
@@ -537,7 +537,7 @@ if __name__ == '__main__':
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         xpos = 0.05
         ypos = 0.95
         if args.SEL:
@@ -595,8 +595,8 @@ if __name__ == '__main__':
                      y=ypos,
                      s=r'${:>16d}$'.format(np.count_nonzero(data==0)),
                      fontsize=fontsize)
-        
-        
+
+
         # Histogram parameters
         xpos = 0.05
         ypos -= 0.10
@@ -633,14 +633,14 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16d}$'.format(args.DISPLBIN_NUM),
                  fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
-        
-        
+
+
+
+
         # Displacements vs renewal time, Gaussian fit parameters
         ylabel = ('x', 'y', 'z')
         for i in range(displ.shape[1]):
@@ -651,30 +651,30 @@ if __name__ == '__main__':
             axis.axhline(y=0, color='black')
             if args.DCOLOR is None:
                 img = mdt.plot.scatter(
-                          ax=axis,
-                          x=trenew,
-                          y=displ.T[i],
-                          xmin=args.XMIN,
-                          xmax=args.XMAX,
-                          ymin=args.YMIN,
-                          ymax=args.YMAX,
-                          xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                          ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
-                          marker='x')
+                    ax=axis,
+                    x=trenew,
+                    y=displ.T[i],
+                    xmin=args.XMIN,
+                    xmax=args.XMAX,
+                    ymin=args.YMIN,
+                    ymax=args.YMAX,
+                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                    ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                    marker='x')
             else:
                 img = mdt.plot.scatter(
-                          ax=axis,
-                          x=trenew,
-                          y=displ.T[i],
-                          c=pos_t0,
-                          xmin=args.XMIN,
-                          xmax=args.XMAX,
-                          ymin=args.YMIN,
-                          ymax=args.YMAX,
-                          xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                          ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
-                          marker='x',
-                          cmap='plasma')
+                    ax=axis,
+                    x=trenew,
+                    y=displ.T[i],
+                    c=pos_t0,
+                    xmin=args.XMIN,
+                    xmax=args.XMAX,
+                    ymin=args.YMIN,
+                    ymax=args.YMAX,
+                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                    ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                    marker='x',
+                    cmap='plasma')
                 cbar = plt.colorbar(img, ax=axis)
                 cbar.set_label(label=r'${}(t_0)$ / {}'.format(args.DCOLOR, args.LUNIT),
                                fontsize=fontsize_labels)
@@ -740,8 +740,8 @@ if __name__ == '__main__':
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-        
-        
+
+
         # Fit parameters
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
@@ -749,7 +749,7 @@ if __name__ == '__main__':
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         xpos = 0.05
         ypos = 0.95
         plt.text(x=xpos, y=ypos, s="Fit parameters:", fontsize=fontsize)
@@ -796,7 +796,7 @@ if __name__ == '__main__':
                      y=ypos,
                      s=r'${:>16.9e}$'.format(np.nanstd(popt_displ.T[0][i][1:])),
                      fontsize=fontsize)
-        
+
         xpos = 0.15
         ypos -= 0.08
         plt.text(x=xpos,
@@ -825,7 +825,7 @@ if __name__ == '__main__':
                      y=ypos,
                      s=r'${:>16.9e}$'.format(np.nanstd(popt_displ.T[1][i][1:])),
                      fontsize=fontsize)
-        
+
         xpos = 0.15
         ypos -= 0.08
         plt.text(x=xpos,
@@ -855,24 +855,24 @@ if __name__ == '__main__':
                      fontsize=fontsize)
             xpos += 0.30
             plt.text(x=xpos, y=ypos, s=r'$1$', fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
+
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         _, counts = np.unique(tbin_ix, return_counts=True)
         mean, std = mdt.stats.std_weighted(popt_displ[valid],
                                            weights=counts,
                                            axis=0)
-        
+
         xpos = 0.05
         ypos = 0.95
         plt.text(x=xpos,
@@ -912,7 +912,7 @@ if __name__ == '__main__':
                      y=ypos,
                      s=r'${:>16.9e}$'.format(std.T[0][i]),
                      fontsize=fontsize)
-        
+
         xpos = 0.15
         ypos -= 0.08
         plt.text(x=xpos,
@@ -941,7 +941,7 @@ if __name__ == '__main__':
                      y=ypos,
                      s=r'${:>16.9e}$'.format(std.T[1][i]),
                      fontsize=fontsize)
-        
+
         mean, std = mdt.stats.std_weighted(non_gaus[valid],
                                            weights=counts,
                                            axis=0)
@@ -974,12 +974,12 @@ if __name__ == '__main__':
                      fontsize=fontsize)
             xpos += 0.30
             plt.text(x=xpos, y=ypos, s=r'$1$', fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
-    
+
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer),
@@ -987,10 +987,10 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss/2**20),
           flush=True)
-    
-    
-    
-    
+
+
+
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
           .format(datetime.now()-timer_tot),
