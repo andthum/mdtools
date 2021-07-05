@@ -93,9 +93,9 @@ def universe(top, trj, verbose=True, **kwargs):
         print("Total number of frames: {}"
               .format(universe.trajectory.n_frames))
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer))
+              .format(datetime.now() - timer))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
     return universe
 
 
@@ -170,9 +170,9 @@ def atoms(ag, sel, warn_empty=True, verbose=True, **kwargs):
     if verbose:
         print(mdt.rti.ag_info_str(ag=selection))
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer))
+              .format(datetime.now() - timer))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
     return selection
 
 

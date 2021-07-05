@@ -78,22 +78,22 @@ def hex_verts2faces(verts, r0=None, flatside='x', box=None):
         their position, whereas the primary sort order is the x position
         and the secondary sort order the y position.
     """
-    if verts.shape[1] == 3 and np.any(verts[:,2] != verts[0,2]):
+    if verts.shape[1] == 3 and np.any(verts[:, 2] != verts[0, 2]):
         raise ValueError("The lattice must lie flat in xy-plane, but the"
                          " z positions of the lattice vertices are not"
                          " all the same")
     if box is not None:
         verts = mdadist.apply_PBC(verts, box=box)
     if r0 is None:
-        d = distance_matrix(verts[:,:2], verts[:,:2])
-        r0 = np.min(d[d>0])
+        d = distance_matrix(verts[:, :2], verts[:, :2])
+        r0 = np.min(d[d > 0])
     faces = np.copy(verts)
     if flatside == 'x':
-        faces[:,0] += r0 / 2
-        faces[:,1] += r0 * np.sqrt(3)/2  # sin(60°) = sqrt(3)/2
+        faces[:, 0] += r0 / 2
+        faces[:, 1] += r0 * np.sqrt(3) / 2  # sin(60°) = sqrt(3)/2
     elif flatside == 'y':
-        faces[:,0] += r0 * np.sqrt(3)/2
-        faces[:,1] += r0 / 2
+        faces[:, 0] += r0 * np.sqrt(3) / 2
+        faces[:, 1] += r0 / 2
     else:
         raise ValueError("flatside must be either x or y, but you gave"
                          " {}".format(flatside))
@@ -106,19 +106,19 @@ def hex_verts2faces(verts, r0=None, flatside='x', box=None):
     precision = max(len(p) for p in precision)
     np.round(faces, precision, out=faces)
     if flatside == 'x':
-        valid = np.isin(faces[:,0],
-                        np.round(verts[:,0], precision),
+        valid = np.isin(faces[:, 0],
+                        np.round(verts[:, 0], precision),
                         invert=True)
     elif flatside == 'y':
-        valid = np.isin(faces[:,1],
-                        np.round(verts[:,1], precision),
+        valid = np.isin(faces[:, 1],
+                        np.round(verts[:, 1], precision),
                         invert=True)
     faces = faces[valid]
-    if 2*len(faces) != len(verts):
+    if 2 * len(faces) != len(verts):
         raise ValueError("The number of hexagon faces is not half the"
                          " number of vertices. This should not have"
                          " happened")
-    ix_sort = np.lexsort(faces[:,::-1].T)
+    ix_sort = np.lexsort(faces[:, ::-1].T)
     faces = faces[ix_sort]
     return faces
 
@@ -359,10 +359,10 @@ if __name__ == '__main__':
         mdt.check.masses(ag=sel, flash_test=False)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -373,7 +373,7 @@ if __name__ == '__main__':
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
 
 
 
@@ -384,7 +384,7 @@ if __name__ == '__main__':
                               r0=args.R0,
                               flatside=args.FLATSIDE,
                               box=surf.dimensions)
-    lattice = lattice[:,:2]
+    lattice = lattice[:, :2]
 
 
 
@@ -425,17 +425,17 @@ if __name__ == '__main__':
     n_surf_moves = 0
     n_surf_moves_dangerous = 0
     for i, ts in enumerate(u.trajectory[BEGIN:END:EVERY]):
-        if (ts.frame % 10**(len(str(ts.frame))-1) == 0 or
-                ts.frame == END-1):
+        if (ts.frame % 10**(len(str(ts.frame)) - 1) == 0 or
+                ts.frame == END - 1):
             print("  Frame   {:12d}".format(ts.frame), flush=True)
             print("    Step: {:>12}    Time: {:>12} (ps)"
                   .format(ts.data['step'], ts.data['time']),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_frame),
+                  .format(datetime.now() - timer_frame),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_frame = datetime.now()
 
@@ -447,8 +447,8 @@ if __name__ == '__main__':
                   .format(ts.data['step'], ts.data['time']),
                   flush=True)
             n_surf_moves += 1
-            ix_sort1 = np.lexsort(surf.positions[:,::-1].T)
-            ix_sort2 = np.lexsort(surf_pos[:,::-1].T)
+            ix_sort1 = np.lexsort(surf.positions[:, ::-1].T)
+            ix_sort2 = np.lexsort(surf_pos[:, ::-1].T)
             if not np.allclose(surf.positions[ix_sort1],
                                surf_pos[ix_sort2]):
                 print("  This was a dangerous move!", flush=True)
@@ -458,7 +458,7 @@ if __name__ == '__main__':
                                       r0=args.R0,
                                       flatside=args.FLATSIDE,
                                       box=surf.dimensions)
-            lattice = lattice[:,:2]
+            lattice = lattice[:, :2]
         surf_pos = surf.positions
 
         if args.COM is None:
@@ -482,9 +482,9 @@ if __name__ == '__main__':
                                 amin=0,
                                 amax=ts.dimensions[:3])
 
-        sel_pos_z = pos[:,2]
+        sel_pos_z = pos[:, 2]
         valid = (sel_pos_z >= args.ZMIN) & (sel_pos_z < args.ZMAX)
-        sel_pos_xy = pos[:,:2][valid]
+        sel_pos_xy = pos[:, :2][valid]
         dists = distance_matrix(sel_pos_xy, lattice)
         lattice_faces = np.argmin(dists, axis=1)
         dtrajs[i][valid] = lattice_faces
@@ -493,7 +493,7 @@ if __name__ == '__main__':
     # each individual atom/COM needs its individual trajectory.
     dtrajs = np.ascontiguousarray(dtrajs.T)
 
-    surf_pos = surf_pos[:,:2]
+    surf_pos = surf_pos[:, :2]
     if n_surf_moves > 0:
         print(flush=True)
         print("  Note: The surface has moved {} times. {} of these\n"
@@ -511,14 +511,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -529,29 +529,29 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     # Hexagonal lattice faces
-    mdt.fh.backup(args.OUTFILE+"_lattice_faces.npy")
-    np.save(args.OUTFILE+"_lattice_faces.npy",
+    mdt.fh.backup(args.OUTFILE + "_lattice_faces.npy")
+    np.save(args.OUTFILE + "_lattice_faces.npy",
             lattice,
             allow_pickle=False)
-    print("  Created " + args.OUTFILE+"_lattice_faces.npy", flush=True)
+    print("  Created " + args.OUTFILE + "_lattice_faces.npy", flush=True)
 
     # Hexagonal lattice vertices
-    mdt.fh.backup(args.OUTFILE+"_lattice_vertices.npy")
-    np.save(args.OUTFILE+"_lattice_vertices.npy",
+    mdt.fh.backup(args.OUTFILE + "_lattice_vertices.npy")
+    np.save(args.OUTFILE + "_lattice_vertices.npy",
             surf_pos,
             allow_pickle=False)
-    print("  Created " + args.OUTFILE+"_lattice_vertices.npy", flush=True)
+    print("  Created " + args.OUTFILE + "_lattice_vertices.npy", flush=True)
 
     # Discrete trajectories
-    mdt.fh.backup(args.OUTFILE+"_traj.npy")
-    np.save(args.OUTFILE+"_traj.npy", dtrajs, allow_pickle=False)
-    print("  Created " + args.OUTFILE+"_traj.npy", flush=True)
+    mdt.fh.backup(args.OUTFILE + "_traj.npy")
+    np.save(args.OUTFILE + "_traj.npy", dtrajs, allow_pickle=False)
+    print("  Created " + args.OUTFILE + "_traj.npy", flush=True)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -559,8 +559,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

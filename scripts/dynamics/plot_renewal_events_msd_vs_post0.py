@@ -239,9 +239,9 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     if args.SEL:
-        cols = (3, 7+dim[args.DIRECTION])
+        cols = (3, 7 + dim[args.DIRECTION])
     else:
-        cols = (3, 4+dim[args.DIRECTION])
+        cols = (3, 4 + dim[args.DIRECTION])
     trenew, pos_t0 = np.loadtxt(fname=args.INFILE,
                                 usecols=cols,
                                 unpack=True)
@@ -260,7 +260,7 @@ if __name__ == '__main__':
         if args.START is None or args.START > np.min(pos_t0):
             args.START = np.min(pos_t0)
         if args.STOP is None or args.STOP <= np.max(pos_t0):
-            args.STOP = np.max(pos_t0) + (np.max(pos_t0)-args.START)/args.NUM
+            args.STOP = np.max(pos_t0) + (np.max(pos_t0) - args.START) / args.NUM
         bins = np.linspace(args.START, args.STOP, args.NUM)
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
@@ -270,7 +270,7 @@ if __name__ == '__main__':
         if bins[0] > np.min(pos_t0):
             bins = np.insert(bins, 0, np.min(pos_t0))
         if bins[-1] <= np.max(pos_t0):
-            bins = np.append(bins, np.max(pos_t0) + (np.max(pos_t0)-bins[0])/len(bins))
+            bins = np.append(bins, np.max(pos_t0) + (np.max(pos_t0) - bins[0]) / len(bins))
 
     bin_ix = np.digitize(pos_t0, bins)
     msd_mean = np.full((len(bins), msd.shape[1]), np.nan)
@@ -303,10 +303,10 @@ if __name__ == '__main__':
                           usecols=args.COLS)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -335,11 +335,11 @@ if __name__ == '__main__':
                 fig, axes = plt.subplots(
                     nrows=2,
                     sharex=True,
-                    figsize=(11.69, 8.27+8.27/5),
+                    figsize=(11.69, 8.27 + 8.27 / 5),
                     frameon=False,
                     clear=True,
                     constrained_layout=True,
-                    gridspec_kw={'height_ratios': [1/5, 1]})
+                    gridspec_kw={'height_ratios': [1 / 5, 1]})
                 axis = axes[1]
 
             if logy[l]:
@@ -357,11 +357,11 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logy=logy[l],
                 xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
-                ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 marker='x',
                 cmap='plasma')
             cbar = plt.colorbar(img, ax=axis)
-            cbar.set_label(label=r'$\tau_{renew}$ / '+args.TUNIT,
+            cbar.set_label(label=r'$\tau_{renew}$ / ' + args.TUNIT,
                            fontsize=fontsize_labels)
             cbar.ax.yaxis.labelpad = label_pad
             cbar.ax.yaxis.offsetText.set(size=fontsize_ticks)
@@ -371,8 +371,8 @@ if __name__ == '__main__':
                                 labelsize=fontsize_ticks)
             cbar.ax.tick_params(which='minor',
                                 direction='out',
-                                length=0.5*tick_length,
-                                labelsize=0.8*fontsize_ticks)
+                                length=0.5 * tick_length,
+                                labelsize=0.8 * fontsize_ticks)
 
             mdt.plot.vlines(ax=axis,
                             x=bins,
@@ -391,7 +391,7 @@ if __name__ == '__main__':
                 mask = slice(0, len(msd_tot_mean))
             mdt.plot.errorbar(
                 ax=axis,
-                x=(bins[1:]-np.diff(bins)/2)[mask],
+                x=(bins[1:] - np.diff(bins) / 2)[mask],
                 y=msd_tot_mean[1:][mask],
                 yerr=msd_tot_std[1:][mask],
                 xmin=args.XMIN,
@@ -400,18 +400,18 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logy=logy[l],
                 xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
-                ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 color='red',
                 marker='o')
 
             if args.INFILE2 is not None:
                 mdt.plot.plot(ax=axes[0],
-                              x=data[:,0],
-                              y=data[:,1],
+                              x=data[:, 0],
+                              y=data[:, 1],
                               xmin=args.XMIN,
                               xmax=args.XMAX,
-                              ymin=np.min(data[:,1]),
-                              ymax=np.max(data[:,1]),
+                              ymin=np.min(data[:, 1]),
+                              ymax=np.max(data[:, 1]),
                               color='black')
                 axes[0].xaxis.set_visible(False)
                 axes[0].yaxis.set_visible(False)
@@ -438,11 +438,11 @@ if __name__ == '__main__':
                 else:
                     fig, axes = plt.subplots(nrows=2,
                                              sharex=True,
-                                             figsize=(11.69, 8.27+8.27/5),
+                                             figsize=(11.69, 8.27 + 8.27 / 5),
                                              frameon=False,
                                              clear=True,
                                              constrained_layout=True,
-                                             gridspec_kw={'height_ratios': [1/5, 1]})
+                                             gridspec_kw={'height_ratios': [1 / 5, 1]})
                     axis = axes[1]
 
                 if logy[l]:
@@ -460,11 +460,11 @@ if __name__ == '__main__':
                     ymax=args.YMAX,
                     logy=logy[l],
                     xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
-                    ylabel=ylabel[i]+args.LUNIT+r'$^2$',
+                    ylabel=ylabel[i] + args.LUNIT + r'$^2$',
                     marker='x',
                     cmap='plasma')
                 cbar = plt.colorbar(img, ax=axis)
-                cbar.set_label(label=r'$\tau_{renew}$ / '+args.TUNIT,
+                cbar.set_label(label=r'$\tau_{renew}$ / ' + args.TUNIT,
                                fontsize=fontsize_labels)
                 cbar.ax.yaxis.labelpad = label_pad
                 cbar.ax.yaxis.offsetText.set(size=fontsize_ticks)
@@ -474,8 +474,8 @@ if __name__ == '__main__':
                                     labelsize=fontsize_ticks)
                 cbar.ax.tick_params(which='minor',
                                     direction='out',
-                                    length=0.5*tick_length,
-                                    labelsize=0.8*fontsize_ticks)
+                                    length=0.5 * tick_length,
+                                    labelsize=0.8 * fontsize_ticks)
 
                 mdt.plot.vlines(ax=axis,
                                 x=bins,
@@ -494,7 +494,7 @@ if __name__ == '__main__':
                     mask = slice(0, len(msd_mean.T[i]))
                 mdt.plot.errorbar(
                     ax=axis,
-                    x=(bins[1:]-np.diff(bins)/2)[mask],
+                    x=(bins[1:] - np.diff(bins) / 2)[mask],
                     y=msd_mean.T[i][1:][mask],
                     yerr=msd_std.T[i][1:][mask],
                     xmin=args.XMIN,
@@ -503,18 +503,18 @@ if __name__ == '__main__':
                     ymax=args.YMAX,
                     logy=logy[l],
                     xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
-                    ylabel=ylabel[i]+args.LUNIT+r'$^2$',
+                    ylabel=ylabel[i] + args.LUNIT + r'$^2$',
                     color='red',
                     marker='o')
 
                 if args.INFILE2 is not None:
                     mdt.plot.plot(ax=axes[0],
-                                  x=data[:,0],
-                                  y=data[:,1],
+                                  x=data[:, 0],
+                                  y=data[:, 1],
                                   xmin=args.XMIN,
                                   xmax=args.XMAX,
-                                  ymin=np.min(data[:,1]),
-                                  ymax=np.max(data[:,1]),
+                                  ymin=np.min(data[:, 1]),
+                                  ymax=np.max(data[:, 1]),
                                   color='black')
                     axes[0].xaxis.set_visible(False)
                     axes[0].yaxis.set_visible(False)
@@ -530,10 +530,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -541,8 +541,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

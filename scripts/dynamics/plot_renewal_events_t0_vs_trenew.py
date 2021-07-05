@@ -156,18 +156,18 @@ if __name__ == '__main__':
     t0_new_event = []
     tend_preceding_event = []
     for i, cix in enumerate(compound_ix[1:], 1):
-        if cix != compound_ix[i-1]:
+        if cix != compound_ix[i - 1]:
             continue
         t0_new_event.append(t0[i])
-        tend_preceding_event.append(t0[i-1] + trenew[i-1])
+        tend_preceding_event.append(t0[i - 1] + trenew[i - 1])
     t0_new_event = np.asarray(t0_new_event)
     tend_preceding_event = np.asarray(tend_preceding_event)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -190,8 +190,8 @@ if __name__ == '__main__':
         xmax=args.XMAX,
         ymin=args.YMIN,
         ymax=args.YMAX,
-        xlabel=r'$t_0 + \tau_{renew}$ / '+args.TUNIT,
-        ylabel=r'$t_0^\prime$ / '+args.TUNIT,
+        xlabel=r'$t_0 + \tau_{renew}$ / ' + args.TUNIT,
+        ylabel=r'$t_0^\prime$ / ' + args.TUNIT,
         marker='x')
 
     diagonal = np.linspace(*axis.get_xlim())
@@ -203,8 +203,8 @@ if __name__ == '__main__':
         xmax=args.XMAX,
         ymin=args.YMIN,
         ymax=args.YMAX,
-        xlabel=r'$t_0 + \tau_{renew}$ / '+args.TUNIT,
-        ylabel=r'$t_0^\prime$ / '+args.TUNIT,
+        xlabel=r'$t_0 + \tau_{renew}$ / ' + args.TUNIT,
+        ylabel=r'$t_0^\prime$ / ' + args.TUNIT,
         color='black')
 
     mdt.fh.backup(args.OUTFILE)
@@ -214,10 +214,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -225,8 +225,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

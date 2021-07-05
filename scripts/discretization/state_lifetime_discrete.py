@@ -122,16 +122,16 @@ def remain_prob_discrete(dtraj1, dtraj2, restart=1, continuous=False,
 
     proc = psutil.Process(os.getpid())
     timer = datetime.now()
-    for t0 in range(0, n_frames-1, restart):
-        if t0 % 10**(len(str(t0))-1) == 0 or t0 == n_frames-2:
+    for t0 in range(0, n_frames - 1, restart):
+        if t0 % 10**(len(str(t0)) - 1) == 0 or t0 == n_frames - 2:
             print("  Restart {:12d} of {:12d}"
-                  .format(t0, n_frames-2),
+                  .format(t0, n_frames - 2),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer),
+                  .format(datetime.now() - timer),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer = datetime.now()
 
@@ -146,13 +146,13 @@ def remain_prob_discrete(dtraj1, dtraj2, restart=1, continuous=False,
             dtraj1_t0 = dtraj1[t0][valid]
             dtraj2_t0 = dtraj2[t0][valid]
             bin_ix_u, counts = np.unique(dtraj2_t0, return_counts=True)
-            masks = (dtraj2_t0 == bin_ix_u[:,None])
-            norm[1:n_frames-t0][:,bin_ix_u] += counts.astype(np.uint32)
+            masks = (dtraj2_t0 == bin_ix_u[:, None])
+            norm[1:n_frames - t0][:, bin_ix_u] += counts.astype(np.uint32)
             if continuous:
                 stay = np.ones(n_valid, dtype=bool)
                 remain = np.zeros(n_valid, dtype=bool)
-                for lag in range(1, n_frames-t0):
-                    np.equal(dtraj1_t0, dtraj1[t0+lag][valid], out=remain)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtraj1_t0, dtraj1[t0 + lag][valid], out=remain)
                     stay &= remain
                     if not np.any(stay):
                         break
@@ -160,8 +160,8 @@ def remain_prob_discrete(dtraj1, dtraj2, restart=1, continuous=False,
                         p[lag][b] += np.count_nonzero(stay[masks[i]])
             else:
                 remain = np.zeros(n_valid, dtype=bool)
-                for lag in range(1, n_frames-t0):
-                    np.equal(dtraj1_t0, dtraj1[t0+lag][valid], out=remain)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtraj1_t0, dtraj1[t0 + lag][valid], out=remain)
                     for i, b in enumerate(bin_ix_u):
                         p[lag][b] += np.count_nonzero(remain[masks[i]])
         elif discard_all_neg:
@@ -172,13 +172,13 @@ def remain_prob_discrete(dtraj1, dtraj2, restart=1, continuous=False,
                 stay = np.ones(n_compounds, dtype=bool)
                 remain = np.zeros(n_compounds, dtype=bool)
                 mask = np.zeros(n_compounds, dtype=bool)
-                for lag in range(1, n_frames-t0):
-                    valid &= dtraj1_valid[t0+lag]
+                for lag in range(1, n_frames - t0):
+                    valid &= dtraj1_valid[t0 + lag]
                     if not np.any(valid):
                         continue
                     bin_ix_u, counts = np.unique(dtraj2[t0][valid],
                                                  return_counts=True)
-                    np.equal(dtraj1[t0], dtraj1[t0+lag], out=remain)
+                    np.equal(dtraj1[t0], dtraj1[t0 + lag], out=remain)
                     stay &= remain
                     stay &= valid
                     # This loop must not be broken upon n_stay == 0,
@@ -188,35 +188,35 @@ def remain_prob_discrete(dtraj1, dtraj2, restart=1, continuous=False,
                         p[lag][b] += np.count_nonzero(stay[mask])
                         norm[lag][b] += counts[i]
             else:
-                for lag in range(1, n_frames-t0):
-                    valid &= dtraj1_valid[t0+lag]
+                for lag in range(1, n_frames - t0):
+                    valid &= dtraj1_valid[t0 + lag]
                     n_valid = np.count_nonzero(valid)
                     if n_valid == 0:
                         continue
                     bin_ix_u, counts = np.unique(dtraj2[t0][valid],
                                                  return_counts=True)
                     mask = np.zeros(n_valid, dtype=bool)
-                    remain = (dtraj1[t0][valid] == dtraj1[t0+lag][valid])
+                    remain = (dtraj1[t0][valid] == dtraj1[t0 + lag][valid])
                     for i, b in enumerate(bin_ix_u):
                         np.equal(dtraj2[t0][valid], b, out=mask)
                         p[lag][b] += np.count_nonzero(remain[mask])
                         norm[lag][b] += counts[i]
         else:
             bin_ix_u, counts = np.unique(dtraj2[t0], return_counts=True)
-            masks = (dtraj2[t0] == bin_ix_u[:,None])
-            norm[1:n_frames-t0][:,bin_ix_u] += counts.astype(np.uint32)
+            masks = (dtraj2[t0] == bin_ix_u[:, None])
+            norm[1:n_frames - t0][:, bin_ix_u] += counts.astype(np.uint32)
             if continuous:
                 stay = np.ones(n_compounds, dtype=bool)
-                for lag in range(1, n_frames-t0):
-                    np.equal(dtraj1[t0], dtraj1[t0+lag], out=remain)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtraj1[t0], dtraj1[t0 + lag], out=remain)
                     stay &= remain
                     if not np.any(stay):
                         break
                     for i, b in enumerate(bin_ix_u):
                         p[lag][b] += np.count_nonzero(stay[masks[i]])
             else:
-                for lag in range(1, n_frames-t0):
-                    np.equal(dtraj1[t0], dtraj1[t0+lag], out=remain)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtraj1[t0], dtraj1[t0 + lag], out=remain)
                     for i, b in enumerate(bin_ix_u):
                         p[lag][b] += np.count_nonzero(remain[masks[i]])
 
@@ -445,10 +445,10 @@ if __name__ == '__main__':
     trans_info = dtraj_transition_info(dtraj=dtrajs1)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -468,10 +468,10 @@ if __name__ == '__main__':
     del dtrajs1, dtrajs2
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -496,22 +496,22 @@ if __name__ == '__main__':
     popt = np.full((n_states, 2), np.nan, dtype=np.float32)
     perr = np.full((n_states, 2), np.nan, dtype=np.float32)
     for i in range(n_states):
-        stopfit = np.argmax(p[:,i] < args.STOPFIT)
-        if stopfit == 0 and p[:,i][stopfit] >= args.STOPFIT:
-            stopfit = len(p[:,i])
+        stopfit = np.argmax(p[:, i] < args.STOPFIT)
+        if stopfit == 0 and p[:, i][stopfit] >= args.STOPFIT:
+            stopfit = len(p[:, i])
         elif stopfit < 2:
             stopfit = 2
         fit_stop[i] = min(endfit, stopfit)
         popt[i], perr[i] = mdt.func.fit_kww(
             xdata=lag_times[fit_start[i]:fit_stop[i]],
-            ydata=p[:,i][fit_start[i]:fit_stop[i]])
-    tau_mean = popt[:,0]/popt[:,1] * gamma(1/popt[:,1])
+            ydata=p[:, i][fit_start[i]:fit_stop[i]])
+    tau_mean = popt[:, 0] / popt[:, 1] * gamma(1 / popt[:, 1])
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -560,10 +560,10 @@ if __name__ == '__main__':
                 trans_info[0], trans_info[1],
                 trans_info[2], trans_info[3],
                 trans_info[4],
-                trans_info[5], 100*trans_info[5]/trans_info[4],
-                trans_info[6], 100*trans_info[6]/trans_info[4],
-                trans_info[7], 100*trans_info[7]/trans_info[4],
-                trans_info[8], 100*trans_info[8]/trans_info[4]
+                trans_info[5], 100 * trans_info[5] / trans_info[4],
+                trans_info[6], 100 * trans_info[6] / trans_info[4],
+                trans_info[7], 100 * trans_info[7] / trans_info[4],
+                trans_info[8], 100 * trans_info[8] / trans_info[4]
                 )
     )
     for i in range(n_states):
@@ -605,10 +605,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -616,8 +616,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

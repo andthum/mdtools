@@ -186,10 +186,10 @@ if __name__ == '__main__':
     print(mdt.rti.ag_info_str(ag=sel, indent=4))
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
 
 
     seg_types = np.unique(sel.segids)
@@ -242,17 +242,17 @@ if __name__ == '__main__':
                      dtype=np.float32)
 
     for i, ts in enumerate(u.trajectory[BEGIN:END:EVERY]):
-        if (ts.frame % 10**(len(str(ts.frame))-1) == 0 or
-                ts.frame == END-1):
+        if (ts.frame % 10**(len(str(ts.frame)) - 1) == 0 or
+                ts.frame == END - 1):
             print("  Frame   {:12d}".format(ts.frame), flush=True)
             print("    Step: {:>12}    Time: {:>12} (ps)"
                   .format(ts.data['step'], ts.data['time']),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_frame),
+                  .format(datetime.now() - timer_frame),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_frame = datetime.now()
 
@@ -328,14 +328,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -435,31 +435,31 @@ if __name__ == '__main__':
             for j in range(n_seg_types):
                 if len(seg_ix[i][j]) < max_segs[j]:
                     seg_ix[i][j] = np.append(seg_ix[i][j],
-                                             [0 for i in range(max_segs[j]-len(seg_ix[i][j]))]).astype(np.uint16)
+                                             [0 for i in range(max_segs[j] - len(seg_ix[i][j]))]).astype(np.uint16)
                 if len(res_ix[i][j]) < max_segs[j]:
-                    res_ix[i][j] += [[] for i in range(max_segs[j]-len(res_ix[i][j]))]
+                    res_ix[i][j] += [[] for i in range(max_segs[j] - len(res_ix[i][j]))]
                 if len(atm_ix[i][j]) < max_segs[j]:
-                    atm_ix[i][j] += [[] for i in range(max_segs[j]-len(atm_ix[i][j]))]
+                    atm_ix[i][j] += [[] for i in range(max_segs[j] - len(atm_ix[i][j]))]
                 for s_ix in range(max_segs[j]):
                     outfile.write("      {:>12s}".format(mdt.nph.excel_colname(seg_ix[i][j][s_ix])))
                     if len(res_ix[i][j][s_ix]) < n_res_types:
-                        res_ix[i][j][s_ix] += [[] for i in range(n_res_types-len(res_ix[i][j][s_ix]))]
+                        res_ix[i][j][s_ix] += [[] for i in range(n_res_types - len(res_ix[i][j][s_ix]))]
                     if len(atm_ix[i][j][s_ix]) < n_res_types:
-                        atm_ix[i][j][s_ix] += [[] for i in range(n_res_types-len(atm_ix[i][j][s_ix]))]
+                        atm_ix[i][j][s_ix] += [[] for i in range(n_res_types - len(atm_ix[i][j][s_ix]))]
                     for k in range(n_res_types):
                         if len(res_ix[i][j][s_ix][k]) < max_ress[j][k]:
                             res_ix[i][j][s_ix][k] = np.append(res_ix[i][j][s_ix][k],
-                                                              [0 for i in range(max_ress[j][k]-len(res_ix[i][j][s_ix][k]))]).astype(np.int32)
+                                                              [0 for i in range(max_ress[j][k] - len(res_ix[i][j][s_ix][k]))]).astype(np.int32)
                         if len(atm_ix[i][j][s_ix][k]) < max_ress[j][k]:
-                            atm_ix[i][j][s_ix][k] += [[] for i in range(max_ress[j][k]-len(atm_ix[i][j][s_ix][k]))]
+                            atm_ix[i][j][s_ix][k] += [[] for i in range(max_ress[j][k] - len(atm_ix[i][j][s_ix][k]))]
                         for r_ix in range(max_ress[j][k]):
                             outfile.write("    {:>6d} ".format(-res_ix[i][j][s_ix][k][r_ix]))
                             if len(atm_ix[i][j][s_ix][k][r_ix]) < n_atm_types:
-                                atm_ix[i][j][s_ix][k][r_ix] += [[] for i in range(n_atm_types-len(atm_ix[i][j][s_ix][k][r_ix]))]
+                                atm_ix[i][j][s_ix][k][r_ix] += [[] for i in range(n_atm_types - len(atm_ix[i][j][s_ix][k][r_ix]))]
                             for l in range(n_atm_types):
                                 if len(atm_ix[i][j][s_ix][k][r_ix][l]) < max_atms[j][k][l]:
                                     atm_ix[i][j][s_ix][k][r_ix][l] = np.append(atm_ix[i][j][s_ix][k][r_ix][l],
-                                                                               [0 for i in range(max_atms[j][k][l]-len(atm_ix[i][j][s_ix][k][r_ix][l]))]).astype(np.uint32)
+                                                                               [0 for i in range(max_atms[j][k][l] - len(atm_ix[i][j][s_ix][k][r_ix][l]))]).astype(np.uint32)
                                 for atm in range(max_atms[j][k][l]):
                                     outfile.write(" {:>6d}".format(atm_ix[i][j][s_ix][k][r_ix][l][atm]))
             outfile.write("\n")
@@ -468,10 +468,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -480,8 +480,8 @@ if __name__ == '__main__':
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

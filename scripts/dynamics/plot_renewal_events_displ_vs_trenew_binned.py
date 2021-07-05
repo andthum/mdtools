@@ -255,9 +255,9 @@ if __name__ == '__main__':
     displ *= args.LCONV
     if args.DCOLOR is not None:
         if args.SEL:
-            cols = 7+dim[args.DCOLOR]
+            cols = 7 + dim[args.DCOLOR]
         else:
-            cols = 4+dim[args.DCOLOR]
+            cols = 4 + dim[args.DCOLOR]
         pos_t0 = np.loadtxt(fname=args.INFILE, usecols=cols)
         pos_t0 *= args.LCONV
 
@@ -278,12 +278,12 @@ if __name__ == '__main__':
             tbins = np.insert(tbins, 0, np.min(trenew))
         if tbins[-1] < np.max(trenew):
             tbins = np.append(tbins, np.max(trenew))
-    t = tbins[1:] - np.diff(tbins)/2
+    t = tbins[1:] - np.diff(tbins) / 2
 
     tbin_ix = np.digitize(trenew, tbins)
     # In np.histogram the last bin is closed, but in np.digitize all
     # bins are half-open. Make the last bin closed:
-    tbin_ix[tbin_ix==len(tbins)] = len(tbins) - 1
+    tbin_ix[tbin_ix == len(tbins)] = len(tbins) - 1
     if np.any(tbin_ix == 0):
         raise ValueError("At least one element of tbin_ix is zero. This"
                          " should not have happened.")
@@ -322,10 +322,10 @@ if __name__ == '__main__':
     valid = (nevents > 0)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -343,7 +343,7 @@ if __name__ == '__main__':
     popt_displ = np.full((len(tbins), displ.shape[1], 2), np.nan)
     perr_displ = np.full((len(tbins), displ.shape[1], 2), np.nan)
     for i in np.unique(tbin_ix):
-        for j, data in enumerate(displ[tbin_ix==i].T):
+        for j, data in enumerate(displ[tbin_ix == i].T):
             try:
                 displhist, displbins = np.histogram(
                     data,
@@ -370,10 +370,10 @@ if __name__ == '__main__':
                 print(flush=True)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -401,7 +401,7 @@ if __name__ == '__main__':
                       y=nevents[1:],
                       xmin=args.XMIN,
                       xmax=args.XMAX,
-                      xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                       ylabel=r'$N_{renew}$',
                       color='black',
                       marker='o')
@@ -437,8 +437,8 @@ if __name__ == '__main__':
                     xmax=args.XMAX,
                     ymin=args.YMIN,
                     ymax=args.YMAX,
-                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                    ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                    xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                    ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                     marker='x')
             else:
                 img = mdt.plot.scatter(
@@ -450,8 +450,8 @@ if __name__ == '__main__':
                     xmax=args.XMAX,
                     ymin=args.YMIN,
                     ymax=args.YMAX,
-                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                    ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                    xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                    ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                     marker='x',
                     cmap='plasma')
                 cbar = plt.colorbar(img, ax=axis)
@@ -465,8 +465,8 @@ if __name__ == '__main__':
                                     labelsize=fontsize_ticks)
                 cbar.ax.tick_params(which='minor',
                                     direction='out',
-                                    length=0.5*tick_length,
-                                    labelsize=0.8*fontsize_ticks)
+                                    length=0.5 * tick_length,
+                                    labelsize=0.8 * fontsize_ticks)
             mdt.plot.vlines(ax=axis,
                             x=tbins,
                             start=axis.get_ylim()[0],
@@ -485,9 +485,9 @@ if __name__ == '__main__':
                 xmax=args.XMAX,
                 ymin=args.YMIN,
                 ymax=args.YMAX,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
-                label=r'$\langle \Delta '+ylabel[i]+r' \rangle$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
+                label=r'$\langle \Delta ' + ylabel[i] + r' \rangle$',
                 color='red',
                 marker='o')
             mdt.plot.plot(
@@ -498,9 +498,9 @@ if __name__ == '__main__':
                 xmax=args.XMAX,
                 ymin=args.YMIN,
                 ymax=args.YMAX,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
-                label=r'$\sqrt{\langle \Delta '+ylabel[i]+r'^2 \rangle}$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
+                label=r'$\sqrt{\langle \Delta ' + ylabel[i] + r'^2 \rangle}$',
                 color='blue',
                 marker='^')
             mdt.plot.plot(
@@ -511,9 +511,9 @@ if __name__ == '__main__':
                 xmax=args.XMAX,
                 ymin=args.YMIN,
                 ymax=args.YMAX,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
-                label=r'$\sqrt{\langle \Delta '+ylabel[i]+r'^2 \rangle - \langle \Delta '+ylabel[i]+r' \rangle ^2}$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
+                label=r'$\sqrt{\langle \Delta ' + ylabel[i] + r'^2 \rangle - \langle \Delta ' + ylabel[i] + r' \rangle ^2}$',
                 color='green',
                 marker='s')
             axis.legend(loc='upper center',
@@ -561,12 +561,12 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Mean / '+args.LUNIT,
+                 s=r'Mean / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
@@ -578,7 +578,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'$',
+                     s=r'$\Delta ' + ylabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -593,7 +593,7 @@ if __name__ == '__main__':
             xpos += 0.30
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'${:>16d}$'.format(np.count_nonzero(data==0)),
+                     s=r'${:>16d}$'.format(np.count_nonzero(data == 0)),
                      fontsize=fontsize)
 
 
@@ -607,7 +607,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="First bin edge / "+args.LUNIT,
+                 s="First bin edge / " + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -618,7 +618,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="Last bin edge / "+args.LUNIT,
+                 s="Last bin edge / " + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -658,8 +658,8 @@ if __name__ == '__main__':
                     xmax=args.XMAX,
                     ymin=args.YMIN,
                     ymax=args.YMAX,
-                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                    ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                    xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                    ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                     marker='x')
             else:
                 img = mdt.plot.scatter(
@@ -671,8 +671,8 @@ if __name__ == '__main__':
                     xmax=args.XMAX,
                     ymin=args.YMIN,
                     ymax=args.YMAX,
-                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                    ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                    xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                    ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                     marker='x',
                     cmap='plasma')
                 cbar = plt.colorbar(img, ax=axis)
@@ -686,8 +686,8 @@ if __name__ == '__main__':
                                     labelsize=fontsize_ticks)
                 cbar.ax.tick_params(which='minor',
                                     direction='out',
-                                    length=0.5*tick_length,
-                                    labelsize=0.8*fontsize_ticks)
+                                    length=0.5 * tick_length,
+                                    labelsize=0.8 * fontsize_ticks)
             mdt.plot.vlines(ax=axis,
                             x=tbins,
                             start=axis.get_ylim()[0],
@@ -706,8 +706,8 @@ if __name__ == '__main__':
                 xmax=args.XMAX,
                 ymin=args.YMIN,
                 ymax=args.YMAX,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                 label=r'$\mu$',
                 color='red',
                 marker='o')
@@ -719,8 +719,8 @@ if __name__ == '__main__':
                 xmax=args.XMAX,
                 ymin=args.YMIN,
                 ymax=args.YMAX,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                 label=r'$\sigma$',
                 color='blue',
                 marker='^')
@@ -732,8 +732,8 @@ if __name__ == '__main__':
                 xmax=args.XMAX,
                 ymin=args.YMIN,
                 ymax=args.YMAX,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'(\tau_{renew})$ / '+args.LUNIT,
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                 label=r'$A$',
                 color='green',
                 marker='s')
@@ -772,19 +772,19 @@ if __name__ == '__main__':
         ypos -= 0.08
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\langle \mu \rangle$ / '+args.LUNIT,
+                 s=r'$\langle \mu \rangle$ / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         for i in range(displ.shape[1]):
             xpos = 0.05
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'$',
+                     s=r'$\Delta ' + ylabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -801,19 +801,19 @@ if __name__ == '__main__':
         ypos -= 0.08
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\langle \sigma \rangle$ / '+args.LUNIT,
+                 s=r'$\langle \sigma \rangle$ / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         for i in range(displ.shape[1]):
             xpos = 0.05
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'$',
+                     s=r'$\Delta ' + ylabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -841,7 +841,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'$',
+                     s=r'$\Delta ' + ylabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -888,19 +888,19 @@ if __name__ == '__main__':
         ypos -= 0.08
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\langle \mu \rangle$ / '+args.LUNIT,
+                 s=r'$\langle \mu \rangle$ / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         for i in range(displ.shape[1]):
             xpos = 0.05
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'$',
+                     s=r'$\Delta ' + ylabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -917,19 +917,19 @@ if __name__ == '__main__':
         ypos -= 0.08
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\langle \sigma \rangle$ / '+args.LUNIT,
+                 s=r'$\langle \sigma \rangle$ / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         for i in range(displ.shape[1]):
             xpos = 0.05
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'$',
+                     s=r'$\Delta ' + ylabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -960,7 +960,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'$',
+                     s=r'$\Delta ' + ylabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -982,10 +982,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -993,8 +993,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

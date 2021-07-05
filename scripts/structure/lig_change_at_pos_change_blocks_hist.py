@@ -452,9 +452,9 @@ if __name__ == '__main__':
     print(mdt.rti.ag_info_str(ag=ref, indent=2))
     print("Selection group: '{}'".format(' '.join(args.SEL)))
     print(mdt.rti.ag_info_str(ag=sel, indent=2))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
     print("\n")
     print("Checking frame slice...")
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
@@ -595,15 +595,15 @@ if __name__ == '__main__':
                   "Discretized spatial dimension:        {:<s}\n"
                   "Average box length in this direction: {:<.9e} A\n"
                   .format(len(bins),
-                          len(bins)-1,
+                          len(bins) - 1,
                           args.DIRECTION,
                           lbox_av))
         mdt.fh.savetxt(fname=args.OUTFILE_BINS, data=bins, header=header)
         print("Created {}".format(args.OUTFILE_BINS))
     if args.OUTFILE_BINS is not None or args.OUTFILE_DTRJ is not None:
-        print("Elapsed time:         {}".format(datetime.now()-timer))
+        print("Elapsed time:         {}".format(datetime.now() - timer))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("Step 2/2:")
@@ -612,16 +612,16 @@ if __name__ == '__main__':
     print("Total number of frames: {:>8d}".format(u.trajectory.n_frames))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
     print("First frame to read:    {:>8d}".format(BEGIN))
-    print("Last frame to read:     {:>8d}".format(END-1))
+    print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     print("Time first frame:       {:>12.3f} (ps)"
           .format(u.trajectory[BEGIN].time))
     print("Time last frame:        {:>12.3f} (ps)"
-          .format(u.trajectory[END-1].time))
+          .format(u.trajectory[END - 1].time))
     print("Time step first frame:  {:>12.3f} (ps)"
           .format(u.trajectory[BEGIN].dt))
     print("Time step last frame:   {:>12.3f} (ps)"
-          .format(u.trajectory[END-1].dt))
+          .format(u.trajectory[END - 1].dt))
     timer = datetime.now()
     # Total number of state transitions
     n_state_trans = 0
@@ -719,22 +719,22 @@ if __name__ == '__main__':
         if len(valid_blocks) < 2:
             continue
         # MDAnalysis AtomGroup containing a single reference compound:
-        refcmp = ref[refcmp_slices[rc]:refcmp_slices[rc+1]]
+        refcmp = ref[refcmp_slices[rc]:refcmp_slices[rc + 1]]
         # Frame index where the current valid block ends:
-        frame = np.sum(block_sizes[:valid_blocks[0]+1]) - 1
+        frame = np.sum(block_sizes[:valid_blocks[0] + 1]) - 1
         # Number of frames between the current and next valid block
-        gap_size = np.sum(block_sizes[valid_blocks[0]+1:valid_blocks[1]])
+        gap_size = np.sum(block_sizes[valid_blocks[0] + 1:valid_blocks[1]])
         gap_size_pre = gap_size
         # Loop over valid blocks:
         for i, vb in enumerate(valid_blocks[1:-1], start=1):
             # Bin number of the preceding valid block
             bn = cmp_trj[frame]
             frame += gap_size_pre + block_sizes[vb]
-            gap_size = np.sum(block_sizes[vb+1:valid_blocks[i+1]])
-            if cmp_trj[frame] == cmp_trj[frame+gap_size+1]:
+            gap_size = np.sum(block_sizes[vb + 1:valid_blocks[i + 1]])
+            if cmp_trj[frame] == cmp_trj[frame + gap_size + 1]:
                 # "unsuccessful" transition type
                 tt = 0
-            elif cmp_trj[frame] < cmp_trj[frame+gap_size+1]:
+            elif cmp_trj[frame] < cmp_trj[frame + gap_size + 1]:
                 # "left to right" transition type
                 tt = 1
             else:
@@ -758,7 +758,7 @@ if __name__ == '__main__':
             av_gap_size_counted[tt][bn] += gap_size
             n_block_trans_counted[tt][bn] += 1
             # refcmp-selatm contact matrix at t0_b-dt (b = "before"):
-            ts = md_trj[frame-LAG_EFF]
+            ts = md_trj[frame - LAG_EFF]
             cm_b = mdt.strc.contact_matrix(
                 ref=refcmp,
                 sel=sel,
@@ -768,7 +768,7 @@ if __name__ == '__main__':
                 mdabackend=mdabackend
             )
             # refcmp-selatm contact matrix at t0_a+dt (a = "after"):
-            ts = md_trj[frame+gap_size+1+LAG_EFF]
+            ts = md_trj[frame + gap_size + 1 + LAG_EFF]
             cm_a = mdt.strc.contact_matrix(
                 ref=refcmp,
                 sel=sel,
@@ -818,9 +818,9 @@ if __name__ == '__main__':
                              refresh=False)
     dtrj.close()
     del dtrj, cmp_trj, block_sizes, valid_blocks, natms_per_selcmp
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     if n_state_trans == 0:
         warnings.warn("The reference compounds did not change their"
@@ -863,10 +863,10 @@ if __name__ == '__main__':
     av_gap_size = av_gap_size / n_block_trans
     av_gap_size_valid = av_gap_size_valid / n_block_trans_valid
     av_gap_size_counted = av_gap_size_counted / n_block_trans_counted
-    n_contacts = n_contacts / n_block_trans_counted[:,:,None]
-    selix_stats_b /= n_refcmps_bound_b[:,:,None]
-    selix_stats_a /= n_refcmps_bound_a[:,:,None]
-    selix_stats_diff /= n_refcmps_bound_ba[:,:,None]
+    n_contacts = n_contacts / n_block_trans_counted[:, :, None]
+    selix_stats_b /= n_refcmps_bound_b[:, :, None]
+    selix_stats_a /= n_refcmps_bound_a[:, :, None]
+    selix_stats_diff /= n_refcmps_bound_ba[:, :, None]
 
     # n_detached = n_contacts_before - n_remain
     # n_attached = n_contacts_after - n_remain
@@ -900,9 +900,9 @@ if __name__ == '__main__':
         outfile.write("# Cutoff (Angstrom):     {}\n".format(args.CUTOFF))
         outfile.write("# Reference compound:   '{}'\n".format(args.REFCMP))
         outfile.write("# Selection compound:   '{}'\n".format(args.SELCMP))
-        outfile.write("# Lag time:              {:.3f} ps\n".format(LAG*time_step))
-        outfile.write("# Minimum block size     {:.3f} ps\n".format(MIN_BLOCK_SIZE*time_step))
-        outfile.write("# Maximum gap size       {:.3f} ps\n".format(MAX_GAP_SIZE*time_step))
+        outfile.write("# Lag time:              {:.3f} ps\n".format(LAG * time_step))
+        outfile.write("# Minimum block size     {:.3f} ps\n".format(MIN_BLOCK_SIZE * time_step))
+        outfile.write("# Maximum gap size       {:.3f} ps\n".format(MAX_GAP_SIZE * time_step))
         outfile.write("# Discretized dimension: {}\n".format(args.DIRECTION))
         outfile.write("# \n")
         outfile.write("# \n")
@@ -913,8 +913,8 @@ if __name__ == '__main__':
         outfile.write("# Tot. No. of transitions between position bins: {:>12d}\n".format(n_state_trans))
         outfile.write("# Tot. No. of       blocks (   any block size):  {:>12d}\n".format(n_blocks))
         outfile.write("# Tot. No. of valid blocks (>= min block size):  {:>12d}\n".format(n_blocks_valid))
-        outfile.write("# Av. size of all   blocks (   any block size):  {:>16.3f} ps\n".format(av_block_size*time_step))
-        outfile.write("# Av. size of valid blocks (>= min block size):  {:>16.3f} ps\n".format(av_block_size_valid*time_step))
+        outfile.write("# Av. size of all   blocks (   any block size):  {:>16.3f} ps\n".format(av_block_size * time_step))
+        outfile.write("# Av. size of valid blocks (>= min block size):  {:>16.3f} ps\n".format(av_block_size_valid * time_step))
         outfile.write("# \n")
         outfile.write("# \n")
         outfile.write("# The COLUMNS contain:\n")
@@ -1013,7 +1013,7 @@ if __name__ == '__main__':
         # Data:
         # n_block_trans
         row = 0
-        outfile.write("{:>9d}".format(row+1))
+        outfile.write("{:>9d}".format(row + 1))
         outfile.write(" {:<19s}".format(row_names[row]))
         for sc in range(2):
             outfile.write("  ")
@@ -1024,7 +1024,7 @@ if __name__ == '__main__':
         outfile.write("\n")
         # n_block_trans_valid
         row += 1
-        outfile.write("{:>9d}".format(row+1))
+        outfile.write("{:>9d}".format(row + 1))
         outfile.write(" {:<19s}".format(row_names[row]))
         for sc in range(2):
             outfile.write("  ")
@@ -1035,7 +1035,7 @@ if __name__ == '__main__':
         outfile.write("\n")
         # n_block_trans_counted
         row += 1
-        outfile.write("{:>9d}".format(row+1))
+        outfile.write("{:>9d}".format(row + 1))
         outfile.write(" {:<19s}".format(row_names[row]))
         for sc in range(2):
             outfile.write("  ")
@@ -1046,7 +1046,7 @@ if __name__ == '__main__':
         outfile.write("\n")
         # av_gap_size
         row += 1
-        outfile.write("{:>9d}".format(row+1))
+        outfile.write("{:>9d}".format(row + 1))
         outfile.write(" {:<19s}".format(row_names[row]))
         for sc in range(2):
             outfile.write("  ")
@@ -1058,7 +1058,7 @@ if __name__ == '__main__':
         outfile.write("\n")
         # av_gap_size_valid
         row += 1
-        outfile.write("{:>9d}".format(row+1))
+        outfile.write("{:>9d}".format(row + 1))
         outfile.write(" {:<19s}".format(row_names[row]))
         for sc in range(2):
             outfile.write("  ")
@@ -1070,7 +1070,7 @@ if __name__ == '__main__':
         outfile.write("\n")
         # av_gap_size_counted
         row += 1
-        outfile.write("{:>9d}".format(row+1))
+        outfile.write("{:>9d}".format(row + 1))
         outfile.write(" {:<19s}".format(row_names[row]))
         for sc in range(2):
             outfile.write("  ")
@@ -1083,7 +1083,7 @@ if __name__ == '__main__':
         # n_contacts (detached, attached, remain)
         for i in range(n_contacts.shape[-1]):
             row += 1
-            outfile.write("{:>9d}".format(row+1))
+            outfile.write("{:>9d}".format(row + 1))
             outfile.write(" {:<19s}".format(row_names[row]))
             for sc in range(2):
                 outfile.write("  ")
@@ -1096,7 +1096,7 @@ if __name__ == '__main__':
         for i in range(selix_stats_b.shape[-1]):
             # selix_stats_b
             row += 1
-            outfile.write("{:>9d}".format(row+1))
+            outfile.write("{:>9d}".format(row + 1))
             outfile.write(" {:<19s}".format(row_names[row]))
             for sc in range(2):
                 outfile.write("  ")
@@ -1107,7 +1107,7 @@ if __name__ == '__main__':
             outfile.write("\n")
             # selix_stats_a
             row += 1
-            outfile.write("{:>9d}".format(row+1))
+            outfile.write("{:>9d}".format(row + 1))
             outfile.write(" {:<19s}".format(row_names[row]))
             for sc in range(2):
                 outfile.write("  ")
@@ -1119,7 +1119,7 @@ if __name__ == '__main__':
         # selix_stats_diff
         for i in range(selix_stats_diff.shape[-1]):
             row += 1
-            outfile.write("{:>9d}".format(row+1))
+            outfile.write("{:>9d}".format(row + 1))
             outfile.write(" {:<19s}".format(row_names[row]))
             for sc in range(2):
                 outfile.write("  ")
@@ -1129,9 +1129,9 @@ if __name__ == '__main__':
                         outfile.write(" {:>16.9e}".format(selix_stats_diff[sc][tt][bn][i]))
             outfile.write("\n")
     print("Created {}".format(args.OUTFILE))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("Checking output for consistency...")
@@ -1150,7 +1150,7 @@ if __name__ == '__main__':
         raise ValueError("'n_blocks_valid' ({}) > {} ('N_REFCMPS' {} *"
                          " 'N_FRAMES' {} // 'MIN_BLOCK_SIZE_EFF' {})"
                          .format(n_blocks_valid,
-                                 N_REFCMPS*N_FRAMES//MIN_BLOCK_SIZE_EFF,
+                                 N_REFCMPS * N_FRAMES // MIN_BLOCK_SIZE_EFF,
                                  N_REFCMPS,
                                  N_FRAMES,
                                  MIN_BLOCK_SIZE_EFF))
@@ -1263,15 +1263,15 @@ if __name__ == '__main__':
                         .format(selix_stats_a[sc][tt][bn][2],
                                 selix_stats_a[sc][tt][bn][3])
                     )
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

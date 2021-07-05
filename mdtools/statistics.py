@@ -46,7 +46,7 @@ def gaussian(x, mu=0, sigma=1):
     """
 
     s2 = 2 * sigma**2
-    return np.exp(-(x-mu)**2 / s2) / np.sqrt(np.pi*s2)
+    return np.exp(-(x - mu)**2 / s2) / np.sqrt(np.pi * s2)
 
 
 
@@ -94,7 +94,7 @@ def non_gaussian_parameter(x, d=1, is_squared=False, axis=None):
         x2 = x**2
     x4 = np.mean(x2**2, axis=axis)
     x2 = np.mean(x2, axis=axis)
-    return x4 / ((1+2/d) * x2**2) - 1
+    return x4 / ((1 + 2 / d) * x2**2) - 1
 
 
 
@@ -121,7 +121,7 @@ def exp_dist(x, rate=1):
         :math:`f(x)`.
     """
 
-    return rate * np.exp(-rate*x)
+    return rate * np.exp(-rate * x)
 
 
 
@@ -146,7 +146,7 @@ def exp_dist_log(x, rate):
         :math:`f(x)`.
     """
 
-    return np.log(rate) - rate*x
+    return np.log(rate) - rate * x
 
 
 
@@ -289,11 +289,11 @@ def running_average(a, axis=None, out=None):
     a = np.asarray(a)
     rav = np.cumsum(a, axis=axis, out=out)
     if axis is None:
-        norm = np.arange(1, a.size+1)
+        norm = np.arange(1, a.size + 1)
     else:
         s = [1 for i in range(a.ndim)]
         s[axis] = a.shape[axis]
-        norm = np.arange(1, a.shape[axis]+1, dtype=np.uint32).reshape(s)
+        norm = np.arange(1, a.shape[axis] + 1, dtype=np.uint32).reshape(s)
     rav /= norm
     return rav
 

@@ -191,7 +191,7 @@ if __name__ == '__main__':
         stop=args.END,
         step=1,
         n_frames_tot=u.trajectory.n_frames)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
 
 
     print("\n\n\n", flush=True)
@@ -225,14 +225,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[0].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -240,8 +240,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

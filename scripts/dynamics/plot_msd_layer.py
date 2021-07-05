@@ -206,10 +206,10 @@ if __name__ == '__main__':
     else:
         cols = [0] + np.unique(args.LAYER).tolist()
     msd = np.loadtxt(fname=args.INFILE, usecols=cols)
-    times = msd[1:,0] * args.TCONV
-    msd = msd[1:,1:] * args.LCONV**2
+    times = msd[1:, 0] * args.TCONV
+    msd = msd[1:, 1:] * args.LCONV**2
     if args.LAYER is None:
-        layer = np.arange(1, msd.shape[1]+1)
+        layer = np.arange(1, msd.shape[1] + 1)
     else:
         layer = np.unique(args.LAYER)
 
@@ -217,17 +217,17 @@ if __name__ == '__main__':
         if len(args.MDFILE) != 1 and len(args.MDFILE) != 3:
             raise ValueError("You must provide either one or three"
                              " additional input files with --fmd")
-        md = [None,] * len(args.MDFILE)
+        md = [None, ] * len(args.MDFILE)
         for i, mdfile in enumerate(args.MDFILE):
             md[i] = np.loadtxt(fname=mdfile, usecols=cols)
-            times_md = md[i][1:,0] * args.TCONV
+            times_md = md[i][1:, 0] * args.TCONV
             if times_md.shape != times.shape:
                 raise ValueError("The number of lag times in the"
                                  " different input files does not match")
             if not np.allclose(times_md, times):
                 raise ValueError("The lag times of the different input"
                                  " files do not match")
-            md[i] = md[i][1:,1:] * args.LCONV
+            md[i] = md[i][1:, 1:] * args.LCONV
             if md[i].shape != msd.shape:
                 raise ValueError("The number of displacements in the"
                                  " different input files does not match")
@@ -245,16 +245,16 @@ if __name__ == '__main__':
         popt, pcov = opt.curve_fit(
             f=lambda t, D: mdt.dyn.msd(t=t, D=D, d=ndim),
             xdata=times,
-            ydata=msd[:,len(layer)//2])
+            ydata=msd[:, len(layer) // 2])
         fit_successful = True
     except (ValueError, RuntimeError, opt.OptimizeWarning):
         fit_successful = False
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -267,9 +267,9 @@ if __name__ == '__main__':
     fontsize_legend = 24
 
     if args.XMIN is None:
-        args.XMIN = np.min(times[times>0])
+        args.XMIN = np.min(times[times > 0])
     if args.XMAX is None:
-        args.XMAX = np.max(times[times>0])
+        args.XMAX = np.max(times[times > 0])
 
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
@@ -280,23 +280,23 @@ if __name__ == '__main__':
                                      tight_layout=True)
             axis.axhline(y=0, color='black')
             if args.MSD_DIRECTION != 'r':
-                ylabel=(r'$\langle \Delta ' + args.MSD_DIRECTION +
-                        r'(\Delta t) \rangle$ / ' + args.LUNIT)
+                ylabel = (r'$\langle \Delta ' + args.MSD_DIRECTION +
+                          r'(\Delta t) \rangle$ / ' + args.LUNIT)
             else:
-                ylabel=(r'$\langle \Delta x(\Delta t) \rangle' +
-                        r'+ \langle \Delta y(\Delta t) \rangle' +
-                        r'+ \langle \Delta z(\Delta t) \rangle$ / ' +
-                        args.LUNIT)
+                ylabel = (r'$\langle \Delta x(\Delta t) \rangle' +
+                          r'+ \langle \Delta y(\Delta t) \rangle' +
+                          r'+ \langle \Delta z(\Delta t) \rangle$ / ' +
+                          args.LUNIT)
             for i, l in enumerate(layer):
                 mdt.plot.plot(ax=axis,
                               x=times,
-                              y=md[:,i],
+                              y=md[:, i],
                               xmin=args.XMIN,
                               xmax=args.XMAX,
                               ymin=np.min(md[np.isfinite(md)]),
                               ymax=np.max(md[np.isfinite(md)]),
                               logx=True,
-                              xlabel=r'$\Delta t$ / '+args.TUNIT,
+                              xlabel=r'$\Delta t$ / ' + args.TUNIT,
                               ylabel=ylabel,
                               label=str(l))
             axis.legend(loc='best',
@@ -305,10 +305,10 @@ if __name__ == '__main__':
                         title_fontsize=fontsize_legend,
                         fontsize=fontsize_legend,
                         numpoints=1,
-                        ncol=1 + len(layer)//6,
-                        labelspacing = 0.2,
-                        columnspacing = 1.4,
-                        handletextpad = 0.5,
+                        ncol=1 + len(layer) // 6,
+                        labelspacing=0.2,
+                        columnspacing=1.4,
+                        handletextpad=0.5,
                         frameon=False)
             plt.tight_layout()
             pdf.savefig()
@@ -324,31 +324,31 @@ if __name__ == '__main__':
         if args.YMAX is None:
             args.YMAX = np.max(msd[1:][np.isfinite(msd[1:])])
         if args.MDFILE is not None:
-            ylabel=(r'$[\langle \Delta ' + args.MSD_DIRECTION +
-                    r'^2(\Delta t) \rangle - ' +
-                    r'\langle \Delta ' + args.MSD_DIRECTION +
-                    r'(\Delta t) \rangle^2]$' +
-                    r' / ' + args.LUNIT + r'$^2$')
+            ylabel = (r'$[\langle \Delta ' + args.MSD_DIRECTION +
+                      r'^2(\Delta t) \rangle - ' +
+                      r'\langle \Delta ' + args.MSD_DIRECTION +
+                      r'(\Delta t) \rangle^2]$' +
+                      r' / ' + args.LUNIT + r'$^2$')
         else:
-            ylabel=(r'$\langle \Delta ' + args.MSD_DIRECTION +
-                    r'^2(\Delta t) \rangle$' +
-                    r' / ' + args.LUNIT + r'$^2$')
+            ylabel = (r'$\langle \Delta ' + args.MSD_DIRECTION +
+                      r'^2(\Delta t) \rangle$' +
+                      r' / ' + args.LUNIT + r'$^2$')
         #cmap = plt.get_cmap('gist_rainbow')
-        #axis.set_prop_cycle(color=[cmap(i/len(layer))
-            #for i in range(len(layer))])
+        # axis.set_prop_cycle(color=[cmap(i/len(layer))
+            # for i in range(len(layer))])
         #ls = ['-', '--', '-.', ':']
         #ls *= (1 + len(layer)//len(ls))
         for i, l in enumerate(layer):
             mdt.plot.plot(ax=axis,
                           x=times,
-                          y=msd[:,i],
+                          y=msd[:, i],
                           xmin=args.XMIN,
                           xmax=args.XMAX,
                           ymin=args.YMIN,
                           ymax=args.YMAX,
                           logx=True,
                           logy=True,
-                          xlabel=r'$\Delta t$ / '+args.TUNIT,
+                          xlabel=r'$\Delta t$ / ' + args.TUNIT,
                           ylabel=ylabel,
                           label=str(l))
         if fit_successful:
@@ -361,7 +361,7 @@ if __name__ == '__main__':
                           ymax=args.YMAX,
                           logx=True,
                           logy=True,
-                          xlabel=r'$\Delta t$ / '+args.TUNIT,
+                          xlabel=r'$\Delta t$ / ' + args.TUNIT,
                           ylabel=ylabel,
                           label=r'$\propto \Delta t$',
                           color='black',
@@ -371,10 +371,10 @@ if __name__ == '__main__':
                     title_fontsize=fontsize_legend,
                     fontsize=fontsize_legend,
                     numpoints=1,
-                    ncol=1 + len(layer)//10,
-                    labelspacing = 0.2,
-                    columnspacing = 1.4,
-                    handletextpad = 0.5,
+                    ncol=1 + len(layer) // 10,
+                    labelspacing=0.2,
+                    columnspacing=1.4,
+                    handletextpad=0.5,
                     frameon=False)
         plt.tight_layout()
         pdf.savefig()
@@ -382,10 +382,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -393,8 +393,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

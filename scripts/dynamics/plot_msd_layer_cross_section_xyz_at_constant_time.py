@@ -222,14 +222,14 @@ if __name__ == '__main__':
     print("Reading input", flush=True)
     timer = datetime.now()
 
-    msd = [None,] * len(args.INFILES)
-    times = [None,] * len(args.INFILES)
-    bins = [None,] * len(args.INFILES)
+    msd = [None, ] * len(args.INFILES)
+    times = [None, ] * len(args.INFILES)
+    bins = [None, ] * len(args.INFILES)
     for i, infile in enumerate(args.INFILES):
         msd[i] = np.loadtxt(fname=infile)
-        times[i]= msd[i][1:,0] * args.TCONV
+        times[i] = msd[i][1:, 0] * args.TCONV
         bins[i] = msd[i][0] * args.LCONV
-        msd[i] = msd[i][1:,1:] * args.LCONV**2
+        msd[i] = msd[i][1:, 1:] * args.LCONV**2
     for i in range(len(args.INFILES)):
         if times[i].shape != times[0].shape:
             raise ValueError("The number of lag times in the"
@@ -248,15 +248,15 @@ if __name__ == '__main__':
     msd = np.asarray(msd)
 
     _, tix = mdt.nph.find_nearest(times, args.TIME, return_index=True)
-    msd = msd[:,tix]
+    msd = msd[:, tix]
 
     if args.MDFILES is not None:
-        md = [None,] * len(args.MDFILES)
+        md = [None, ] * len(args.MDFILES)
         for i, mdfile in enumerate(args.MDFILES):
             md[i] = np.loadtxt(fname=mdfile)
-            times_md = md[i][1:,0] * args.TCONV
+            times_md = md[i][1:, 0] * args.TCONV
             bins_md = md[i][0] * args.LCONV
-            md[i] = md[i][1:,1:] * args.LCONV
+            md[i] = md[i][1:, 1:] * args.LCONV
             if times_md.shape != times.shape:
                 raise ValueError("The number of lag times in the"
                                  " different input files does not match")
@@ -271,7 +271,7 @@ if __name__ == '__main__':
                                  " files do not match")
         del times_md, bins_md
         md = np.asarray(md)
-        md = md[:,tix]
+        md = md[:, tix]
         msd -= md**2
     times = times[tix]
 
@@ -281,10 +281,10 @@ if __name__ == '__main__':
                           usecols=args.COLS)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -314,21 +314,21 @@ if __name__ == '__main__':
             else:
                 fig, axes = plt.subplots(nrows=2,
                                          sharex=True,
-                                         figsize=(11.69, 8.27+8.27/5),
+                                         figsize=(11.69, 8.27 + 8.27 / 5),
                                          frameon=False,
                                          clear=True,
                                          constrained_layout=True,
-                                         gridspec_kw={'height_ratios': [1/5, 1]})
+                                         gridspec_kw={'height_ratios': [1 / 5, 1]})
                 axis = axes[1]
 
-            ylabel=(r'$\langle \Delta a(' + str(args.TIME) +
-                    r'$ ' + args.TUNIT +
-                    r'$) \rangle$ / ' + args.LUNIT)
+            ylabel = (r'$\langle \Delta a(' + str(args.TIME) +
+                      r'$ ' + args.TUNIT +
+                      r'$) \rangle$ / ' + args.LUNIT)
             axis.axhline(y=0, color='black')
             for i in range(len(args.MDFILES)):
                 mdt.plot.plot(
                     ax=axis,
-                    x=bins[1:]-np.diff(bins)/2,
+                    x=bins[1:] - np.diff(bins) / 2,
                     y=md[i],
                     xmin=args.XMIN,
                     xmax=args.XMAX,
@@ -353,20 +353,20 @@ if __name__ == '__main__':
                         fontsize=fontsize_legend,
                         numpoints=1,
                         ncol=3,
-                        labelspacing = 0.2,
-                        columnspacing = 1.4,
-                        handletextpad = 0.5,
+                        labelspacing=0.2,
+                        columnspacing=1.4,
+                        handletextpad=0.5,
                         frameon=True,
                         fancybox=False)
 
             if args.INFILE2 is not None:
                 mdt.plot.plot(ax=axes[0],
-                              x=data[:,0],
-                              y=data[:,1],
+                              x=data[:, 0],
+                              y=data[:, 1],
                               xmin=args.XMIN,
                               xmax=args.XMAX,
-                              ymin=np.nanmin(data[:,1]),
-                              ymax=np.nanmax(data[:,1]),
+                              ymin=np.nanmin(data[:, 1]),
+                              ymax=np.nanmax(data[:, 1]),
                               color='black')
                 axes[0].xaxis.set_visible(False)
                 axes[0].yaxis.set_visible(False)
@@ -389,11 +389,11 @@ if __name__ == '__main__':
         else:
             fig, axes = plt.subplots(nrows=2,
                                      sharex=True,
-                                     figsize=(11.69, 8.27+8.27/5),
+                                     figsize=(11.69, 8.27 + 8.27 / 5),
                                      frameon=False,
                                      clear=True,
                                      constrained_layout=True,
-                                     gridspec_kw={'height_ratios': [1/5, 1]})
+                                     gridspec_kw={'height_ratios': [1 / 5, 1]})
             axis = axes[1]
 
         if args.YMIN is None:
@@ -401,17 +401,17 @@ if __name__ == '__main__':
         if args.YMAX is None:
             args.YMAX = np.nanmax(msd)
         if args.MDFILES is not None:
-            ylabel=(r'Var$[\Delta a(' + str(args.TIME) +
-                    r'$ ' + args.TUNIT +
-                    r'$)]$ / ' + args.LUNIT + r'$^2$')
+            ylabel = (r'Var$[\Delta a(' + str(args.TIME) +
+                      r'$ ' + args.TUNIT +
+                      r'$)]$ / ' + args.LUNIT + r'$^2$')
         else:
-            ylabel=(r'$\langle \Delta a^2(' + str(args.TIME) +
-                    r'$ ' + args.TUNIT +
-                    r'$) \rangle$ / ' + args.LUNIT + r'$^2$')
+            ylabel = (r'$\langle \Delta a^2(' + str(args.TIME) +
+                      r'$ ' + args.TUNIT +
+                      r'$) \rangle$ / ' + args.LUNIT + r'$^2$')
         for i in range(len(args.MDFILES)):
             mdt.plot.plot(
                 ax=axis,
-                x=bins[1:]-np.diff(bins)/2,
+                x=bins[1:] - np.diff(bins) / 2,
                 y=msd[i],
                 xmin=args.XMIN,
                 xmax=args.XMAX,
@@ -437,20 +437,20 @@ if __name__ == '__main__':
                     fontsize=fontsize_legend,
                     numpoints=1,
                     ncol=3,
-                    labelspacing = 0.2,
-                    columnspacing = 1.4,
-                    handletextpad = 0.5,
+                    labelspacing=0.2,
+                    columnspacing=1.4,
+                    handletextpad=0.5,
                     frameon=True,
                     fancybox=False)
 
         if args.INFILE2 is not None:
             mdt.plot.plot(ax=axes[0],
-                          x=data[:,0],
-                          y=data[:,1],
+                          x=data[:, 0],
+                          y=data[:, 1],
                           xmin=args.XMIN,
                           xmax=args.XMAX,
-                          ymin=np.nanmin(data[:,1]),
-                          ymax=np.nanmax(data[:,1]),
+                          ymin=np.nanmin(data[:, 1]),
+                          ymax=np.nanmax(data[:, 1]),
                           color='black')
             axes[0].xaxis.set_visible(False)
             axes[0].yaxis.set_visible(False)
@@ -466,10 +466,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -477,8 +477,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

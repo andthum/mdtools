@@ -186,9 +186,9 @@ if __name__ == '__main__':
             raise ValueError("You must give at least one column"
                              " different from zero with -c")
     p = np.loadtxt(fname=args.INFILE, usecols=args.COLS)
-    times = p[1:,0] * args.TCONV
-    states = p[0,1:]
-    p = p[1:,1:]
+    times = p[1:, 0] * args.TCONV
+    states = p[0, 1:]
+    p = p[1:, 1:]
 
     if np.any(p > 1):
         raise ValueError("At least one element of the remain probability"
@@ -206,7 +206,7 @@ if __name__ == '__main__':
 
     if not args.REFIT:
         if args.COLS is None:
-            args.COLS = np.arange(len(states)+1)
+            args.COLS = np.arange(len(states) + 1)
         with open(args.INFILE, 'r') as f:
             header = []
             for line in f:
@@ -216,13 +216,13 @@ if __name__ == '__main__':
                     break
         header = header[-8:]
         fit_data = []
-        for i in range(8-1):
+        for i in range(8 - 1):
             fd = header[i].split()
             if i == 5:  # beta
                 fd = np.array(fd[1:], dtype=np.float32)
             else:
                 fd = np.array(fd[2:], dtype=np.float32)
-            fd = fd[args.COLS[1:]-1]
+            fd = fd[args.COLS[1:] - 1]
             if i < 2:  # fit_start and fit_stop
                 if np.any(np.modf(fd)[0] != 0):
                     raise ValueError("The input file contains"
@@ -246,10 +246,10 @@ if __name__ == '__main__':
         #   beta_sd
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -273,28 +273,28 @@ if __name__ == '__main__':
         popt = np.full((len(states), 2), np.nan, dtype=np.float32)
         perr = np.full((len(states), 2), np.nan, dtype=np.float32)
         for i in range(len(states)):
-            stopfit = np.argmax(p[:,i] < args.STOPFIT)
-            if stopfit == 0 and p[:,i][stopfit] >= args.STOPFIT:
-                stopfit = len(p[:,i])
+            stopfit = np.argmax(p[:, i] < args.STOPFIT)
+            if stopfit == 0 and p[:, i][stopfit] >= args.STOPFIT:
+                stopfit = len(p[:, i])
             elif stopfit < 2:
                 stopfit = 2
             fit_stop[i] = min(endfit, stopfit)
             popt[i], perr[i] = mdt.func.fit_kww(
                 xdata=times[fit_start[i]:fit_stop[i]],
-                ydata=p[:,i][fit_start[i]:fit_stop[i]])
-        tau = popt[:,0]
-        beta = popt[:,1]
-        tau_mean = tau/beta * gamma(1/beta)
+                ydata=p[:, i][fit_start[i]:fit_stop[i]])
+        tau = popt[:, 0]
+        beta = popt[:, 1]
+        tau_mean = tau / beta * gamma(1 / beta)
         fit_data = [fit_start, fit_stop,
                     tau_mean,
-                    tau, perr[:,0],
-                    beta, perr[:,1]]
+                    tau, perr[:, 0],
+                    beta, perr[:, 1]]
 
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -326,10 +326,10 @@ if __name__ == '__main__':
         )
         data = np.column_stack([states,
                                 tau_mean,
-                                fit_start*args.TCONV,
-                                fit_stop*args.TCONV,
-                                tau, perr[:,0],
-                                beta, perr[:,1]])
+                                fit_start * args.TCONV,
+                                fit_stop * args.TCONV,
+                                tau, perr[:, 0],
+                                beta, perr[:, 1]])
         outfile = args.OUTFILE + "_fit.txt"
         mdt.fh.savetxt(fname=outfile, data=data, header=header)
         print("  Created {}".format(outfile))
@@ -345,7 +345,7 @@ if __name__ == '__main__':
         args.XMAX = np.nanmax(times)
     # Line style "cycler"
     ls = ['-', '--', '-.', ':']
-    ls *= (1 + len(states)//len(ls))
+    ls *= (1 + len(states) // len(ls))
 
 
     outfile = args.OUTFILE + ".pdf"
@@ -359,12 +359,12 @@ if __name__ == '__main__':
         for i, s in enumerate(states):
             mdt.plot.plot(ax=axis,
                           x=times,
-                          y=p[:,i],
+                          y=p[:, i],
                           xmin=args.XMIN,
                           xmax=args.XMAX,
                           ymin=args.YMIN,
                           ymax=args.YMAX,
-                          xlabel=r'$\Delta t$ / '+args.TUNIT,
+                          xlabel=r'$\Delta t$ / ' + args.TUNIT,
                           ylabel=r'$p(\Delta t, S^\prime)$',
                           label=str(s),
                           linestyle=ls[i])
@@ -373,10 +373,10 @@ if __name__ == '__main__':
                     title_fontsize=fontsize_legend,
                     fontsize=fontsize_legend,
                     numpoints=1,
-                    ncol=1 + len(states)//9,
-                    labelspacing = 0.2,
-                    columnspacing = 1.4,
-                    handletextpad = 0.5,
+                    ncol=1 + len(states) // 9,
+                    labelspacing=0.2,
+                    columnspacing=1.4,
+                    handletextpad=0.5,
                     frameon=False)
         plt.tight_layout()
         pdf.savefig()
@@ -387,18 +387,18 @@ if __name__ == '__main__':
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
-        ymin = args.YMIN if args.YMIN < 0 else np.nanmin(np.log(p[p>0]))
+        ymin = args.YMIN if args.YMIN < 0 else np.nanmin(np.log(p[p > 0]))
         ymax = args.YMAX if args.YMAX <= 0 else 0
         for i, s in enumerate(states):
-            mask = (p[:,i] > 0)
+            mask = (p[:, i] > 0)
             mdt.plot.plot(ax=axis,
                           x=times[mask],
-                          y=np.log(p[:,i][mask]),
+                          y=np.log(p[:, i][mask]),
                           xmin=args.XMIN,
                           xmax=args.XMAX,
                           ymin=ymin,
                           ymax=ymax,
-                          xlabel=r'$\Delta t$ / '+args.TUNIT,
+                          xlabel=r'$\Delta t$ / ' + args.TUNIT,
                           ylabel=r'$\ln{p(\Delta t, S^\prime)}$',
                           label=str(s),
                           linestyle=ls[i])
@@ -407,10 +407,10 @@ if __name__ == '__main__':
                     title_fontsize=fontsize_legend,
                     fontsize=fontsize_legend,
                     numpoints=1,
-                    ncol=1 + len(states)//9,
-                    labelspacing = 0.2,
-                    columnspacing = 1.4,
-                    handletextpad = 0.5,
+                    ncol=1 + len(states) // 9,
+                    labelspacing=0.2,
+                    columnspacing=1.4,
+                    handletextpad=0.5,
                     frameon=False)
         plt.tight_layout()
         pdf.savefig()
@@ -421,18 +421,18 @@ if __name__ == '__main__':
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
-        xmin = args.XMIN if args.XMIN > 0 else np.nanmin(times[times>0])
-        xmax = args.XMAX if args.XMAX > 0 else np.nanmax(times[times>0])
+        xmin = args.XMIN if args.XMIN > 0 else np.nanmin(times[times > 0])
+        xmax = args.XMAX if args.XMAX > 0 else np.nanmax(times[times > 0])
         for i, s in enumerate(states):
             mdt.plot.plot(ax=axis,
                           x=times,
-                          y=p[:,i],
+                          y=p[:, i],
                           xmin=xmin,
                           xmax=xmax,
                           ymin=args.YMIN,
                           ymax=args.YMAX,
                           logx=True,
-                          xlabel=r'$\Delta t$ / '+args.TUNIT,
+                          xlabel=r'$\Delta t$ / ' + args.TUNIT,
                           ylabel=r'$p(\Delta t, S^\prime)$',
                           label=str(s),
                           linestyle=ls[i])
@@ -441,10 +441,10 @@ if __name__ == '__main__':
                     title_fontsize=fontsize_legend,
                     fontsize=fontsize_legend,
                     numpoints=1,
-                    ncol=1 + len(states)//9,
-                    labelspacing = 0.2,
-                    columnspacing = 1.4,
-                    handletextpad = 0.5,
+                    ncol=1 + len(states) // 9,
+                    labelspacing=0.2,
+                    columnspacing=1.4,
+                    handletextpad=0.5,
                     frameon=False)
         plt.tight_layout()
         pdf.savefig()
@@ -461,14 +461,14 @@ if __name__ == '__main__':
             y=fit_data[2],
             ymin=0,
             xlabel=r'$S^\prime$',
-            ylabel=r'Mean relaxation time $\langle \tau \rangle$ / '+args.TUNIT,
+            ylabel=r'Mean relaxation time $\langle \tau \rangle$ / ' + args.TUNIT,
             marker='o')
         plt.tight_layout()
         pdf.savefig()
         plt.close()
 
         # Fit parameter tau and bete vs secondary state
-        ylabels = (r'$\tau$ / '+args.TUNIT, r'$\beta$')
+        ylabels = (r'$\tau$ / ' + args.TUNIT, r'$\beta$')
         for i, j in enumerate([3, 5]):
             fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                      frameon=False,
@@ -477,11 +477,11 @@ if __name__ == '__main__':
             mdt.plot.errorbar(ax=axis,
                               x=states,
                               y=fit_data[j],
-                              yerr=fit_data[j+1],
+                              yerr=fit_data[j + 1],
                               ymin=0,
-                              ymax=1 if j==5 else None,
+                              ymax=1 if j == 5 else None,
                               xlabel=r'$S^\prime$',
-                              ylabel=r'Fit parameter '+ylabels[i],
+                              ylabel=r'Fit parameter ' + ylabels[i],
                               marker='o')
             plt.tight_layout()
             pdf.savefig()
@@ -497,11 +497,11 @@ if __name__ == '__main__':
         for i, j in enumerate([0, 1]):
             mdt.plot.plot(ax=axis,
                           x=states,
-                          y=fit_data[j]*args.TCONV,
+                          y=fit_data[j] * args.TCONV,
                           ymin=0,
-                          ymax=1.05*np.nanmax(fit_data[1])*args.TCONV,
+                          ymax=1.05 * np.nanmax(fit_data[1]) * args.TCONV,
                           xlabel=r'$S^\prime$',
-                          ylabel=r'Fit range / '+args.TUNIT,
+                          ylabel=r'Fit range / ' + args.TUNIT,
                           label=labels[i],
                           marker=markers[i])
         plt.tight_layout()
@@ -527,14 +527,14 @@ if __name__ == '__main__':
                                      frameon=False,
                                      clear=True,
                                      tight_layout=True)
-            mask = (p[:,i] > 0)
+            mask = (p[:, i] > 0)
             mdt.plot.plot(ax=axis,
                           x=times[mask],
-                          y=np.log(p[:,i][mask]),
+                          y=np.log(p[:, i][mask]),
                           xmin=args.XMIN,
                           xmax=args.XMAX,
                           ymax=0,
-                          xlabel=r'$\Delta t$ / '+args.TUNIT,
+                          xlabel=r'$\Delta t$ / ' + args.TUNIT,
                           ylabel=r'$\ln{p(\Delta t, S^\prime)}$',
                           label=r'$S^\prime =' + str(s) + r'$')
             mask = fit_region & (fit > 0)
@@ -544,7 +544,7 @@ if __name__ == '__main__':
                           xmin=args.XMIN,
                           xmax=args.XMAX,
                           ymax=0,
-                          xlabel=r'$\Delta t$ / '+args.TUNIT,
+                          xlabel=r'$\Delta t$ / ' + args.TUNIT,
                           ylabel=r'$\ln{p(\Delta t, S^\prime)}$',
                           linestyle='--',
                           label="Fit")
@@ -557,17 +557,17 @@ if __name__ == '__main__':
                                      frameon=False,
                                      clear=True,
                                      tight_layout=True)
-            xmin = args.XMIN if args.XMIN > 0 else np.nanmin(times[times>0])
-            xmax = args.XMAX if args.XMAX > 0 else np.nanmax(times[times>0])
+            xmin = args.XMIN if args.XMIN > 0 else np.nanmin(times[times > 0])
+            xmax = args.XMAX if args.XMAX > 0 else np.nanmax(times[times > 0])
             mdt.plot.plot(ax=axis,
                           x=times,
-                          y=p[:,i],
+                          y=p[:, i],
                           xmin=xmin,
                           xmax=xmax,
                           ymin=args.YMIN,
                           ymax=args.YMAX,
                           logx=True,
-                          xlabel=r'$\Delta t$ / '+args.TUNIT,
+                          xlabel=r'$\Delta t$ / ' + args.TUNIT,
                           ylabel=r'$p(\Delta t, S^\prime)$',
                           label=r'$S^\prime =' + str(s) + r'$')
             mdt.plot.plot(ax=axis,
@@ -578,7 +578,7 @@ if __name__ == '__main__':
                           ymin=args.YMIN,
                           ymax=args.YMAX,
                           logx=True,
-                          xlabel=r'$\Delta t$ / '+args.TUNIT,
+                          xlabel=r'$\Delta t$ / ' + args.TUNIT,
                           ylabel=r'$p(\Delta t, S^\prime)$',
                           linestyle='--',
                           label="Fit")
@@ -589,10 +589,10 @@ if __name__ == '__main__':
 
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -600,8 +600,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

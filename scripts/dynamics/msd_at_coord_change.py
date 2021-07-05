@@ -218,19 +218,19 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
             raise ValueError("begin must not be negative")
         if every <= 0:
             raise ValueError("every must be positive")
-        mdt.check.time_step(trj=universe.trajectory[begin:len(cms)*every])
+        mdt.check.time_step(trj=universe.trajectory[begin:len(cms) * every])
 
     if verbose:
         timer = datetime.now()
         proc = psutil.Process(os.getpid())
         print("  Frame   {:12d} of {:12d}"
-              .format(0, len(cms)-1),
+              .format(0, len(cms) - 1),
               flush=True)
         print("    Elapsed time:             {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("    Current memory usage: {:18.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
         timer = datetime.now()
 
@@ -245,21 +245,21 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
 
     for i, cm in enumerate(cms[1:], 1):
         if (verbose and
-                (i % 10**(len(str(i))-1) == 0 or i == len(cms)-1)):
+                (i % 10**(len(str(i)) - 1) == 0 or i == len(cms) - 1)):
             print("  Frame   {:12d} of {:12d}"
-                  .format(i, len(cms)-1),
+                  .format(i, len(cms) - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer),
+                  .format(datetime.now() - timer),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer = datetime.now()
 
         if coord_change == 'any':
             # Consider any change in the reference-selection coordination
-            changes = (cm != cms[i-1])
+            changes = (cm != cms[i - 1])
             if changes.count_nonzero() == 0:
                 dt += 1
                 continue
@@ -267,15 +267,15 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
                 affected_ref = np.flatnonzero(changes.sum(axis=1))
         elif coord_change == 'detachment':
             # Consider only detachments of at least n_det selection compounds at once
-            bound_in_both = cm.multiply(cms[i-1])
-            detached = cms[i-1] - bound_in_both
+            bound_in_both = cm.multiply(cms[i - 1])
+            detached = cms[i - 1] - bound_in_both
             affected_ref = np.flatnonzero(detached.sum(axis=1) >= n_det)
             if affected_ref.size == 0:
                 dt += 1
                 continue
         elif coord_change == 'attachment':
             # Consider only attachments of at least n_att selection compounds at once
-            bound_in_both = cm.multiply(cms[i-1])
+            bound_in_both = cm.multiply(cms[i - 1])
             attached = cm - bound_in_both
             affected_ref = np.flatnonzero(attached.sum(axis=1) >= n_att)
             if affected_ref.size == 0:
@@ -284,8 +284,8 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
         elif coord_change == 'exchange':
             # Consider only detachments of at least n_det selection compounds
             # and attachments of at least n_att selection compounds at once
-            bound_in_both = cm.multiply(cms[i-1])
-            detached = cms[i-1] - bound_in_both
+            bound_in_both = cm.multiply(cms[i - 1])
+            detached = cms[i - 1] - bound_in_both
             attached = cm - bound_in_both
             affected_ref = np.intersect1d(
                 np.flatnonzero(detached.sum(axis=1) >= n_det),
@@ -296,11 +296,11 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
 
         newpos = get_pos(universe=universe,
                          atm_grp=ref,
-                         frame=begin+i*every,
+                         frame=begin + i * every,
                          compound=compound,
                          debug=debug)
         newpos = newpos[affected_ref]
-        msd_affected_ref = np.sum((newpos-refpos[affected_ref])**2,
+        msd_affected_ref = np.sum((newpos - refpos[affected_ref])**2,
                                   axis=1)
         refpos[affected_ref] = newpos
         dt_unique, dt_unique_counts = np.unique(dt[affected_ref],
@@ -308,7 +308,7 @@ def msd_at_coordination_change(universe, ref, cms, compound='atoms',
         dt_counts[dt_unique] += dt_unique_counts.astype(np.uint32)
         if not np.all(dt_unique_counts == 1):
             msd_affected_ref = [np.sum(msd_affected_ref,
-                                       where=(dt[affected_ref]==t))
+                                       where=(dt[affected_ref] == t))
                                 for t in dt_unique]
             msd_affected_ref = np.asarray(msd_affected_ref)
         msd[dt_unique] += msd_affected_ref
@@ -575,10 +575,10 @@ if __name__ == '__main__':
         raise ValueError("The selection atom group contains no atoms")
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -589,7 +589,7 @@ if __name__ == '__main__':
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
@@ -634,14 +634,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -659,10 +659,10 @@ if __name__ == '__main__':
             debug=args.DEBUG)
 
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -687,10 +687,10 @@ if __name__ == '__main__':
         verbose=True,
         debug=args.DEBUG)
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_msd),
+          .format(datetime.now() - timer_msd),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
     print(flush=True)
@@ -711,10 +711,10 @@ if __name__ == '__main__':
         verbose=True,
         debug=args.DEBUG)
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_msd),
+          .format(datetime.now() - timer_msd),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
     print(flush=True)
@@ -735,10 +735,10 @@ if __name__ == '__main__':
         verbose=True,
         debug=args.DEBUG)
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_msd),
+          .format(datetime.now() - timer_msd),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
     print(flush=True)
@@ -761,17 +761,17 @@ if __name__ == '__main__':
         verbose=True,
         debug=args.DEBUG)
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_msd),
+          .format(datetime.now() - timer_msd),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
     del cms
 
     lag_times = np.arange(0,
-                          timestep*n_frames*EVERY,
-                          timestep*EVERY,
+                          timestep * n_frames * EVERY,
+                          timestep * EVERY,
                           dtype=np.float32)
 
     tot_counts_any = np.sum(hist_any)
@@ -817,27 +817,27 @@ if __name__ == '__main__':
     mean_att = np.sum(lag_times * hist_att)
     mean_exc = np.sum(lag_times * hist_exc)
 
-    sd_any = np.sum((lag_times-mean_any)**2 * hist_any)
-    sd_det = np.sum((lag_times-mean_det)**2 * hist_det)
-    sd_att = np.sum((lag_times-mean_att)**2 * hist_att)
-    sd_exc = np.sum((lag_times-mean_exc)**2 * hist_exc)
+    sd_any = np.sum((lag_times - mean_any)**2 * hist_any)
+    sd_det = np.sum((lag_times - mean_det)**2 * hist_det)
+    sd_att = np.sum((lag_times - mean_att)**2 * hist_att)
+    sd_exc = np.sum((lag_times - mean_exc)**2 * hist_exc)
 
     mean_msd_any = np.nansum(msd_any * hist_any)
     mean_msd_det = np.nansum(msd_det * hist_det)
     mean_msd_att = np.nansum(msd_att * hist_att)
     mean_msd_exc = np.nansum(msd_exc * hist_exc)
 
-    sd_msd_any = np.nansum((msd_any-mean_msd_any)**2 * hist_any)
-    sd_msd_det = np.nansum((msd_det-mean_msd_det)**2 * hist_det)
-    sd_msd_att = np.nansum((msd_att-mean_msd_att)**2 * hist_att)
-    sd_msd_exc = np.nansum((msd_exc-mean_msd_exc)**2 * hist_exc)
+    sd_msd_any = np.nansum((msd_any - mean_msd_any)**2 * hist_any)
+    sd_msd_det = np.nansum((msd_det - mean_msd_det)**2 * hist_det)
+    sd_msd_att = np.nansum((msd_att - mean_msd_att)**2 * hist_att)
+    sd_msd_exc = np.nansum((msd_exc - mean_msd_exc)**2 * hist_exc)
 
     print(flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -984,10 +984,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -995,8 +995,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

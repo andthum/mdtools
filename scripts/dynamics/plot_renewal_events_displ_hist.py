@@ -197,10 +197,10 @@ if __name__ == '__main__':
                                         density=True)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -214,17 +214,17 @@ if __name__ == '__main__':
     popt = np.zeros((displ.shape[1], 2))
     pcov = np.zeros((displ.shape[1], 2, 2))
     for i in range(displ.shape[1]):
-        x[i] = bins[i][1:] - np.diff(bins[i])/2
+        x[i] = bins[i][1:] - np.diff(bins[i]) / 2
         popt[i], pcov[i] = curve_fit(f=mdt.stats.gaussian,
                                      xdata=x[i],
                                      ydata=hist[i],
                                      p0=(mean[i], std[i]))
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -248,8 +248,8 @@ if __name__ == '__main__':
                           xmax=args.XMAX,
                           ymin=args.YMIN,
                           ymax=args.YMAX,
-                          xlabel=r'$'+xlabel[i]+r'$ / '+args.LUNIT,
-                          ylabel=r'$p('+xlabel[i]+r')$',
+                          xlabel=r'$' + xlabel[i] + r'$ / ' + args.LUNIT,
+                          ylabel=r'$p(' + xlabel[i] + r')$',
                           bins=bins[i],
                           range=(args.START, args.STOP),
                           density=True)
@@ -263,8 +263,8 @@ if __name__ == '__main__':
                 xmax=args.XMAX,
                 ymin=args.YMIN,
                 ymax=args.YMAX,
-                xlabel=r'$'+xlabel[i]+r'$ / '+args.LUNIT,
-                ylabel=r'$p('+xlabel[i]+r')$',
+                xlabel=r'$' + xlabel[i] + r'$ / ' + args.LUNIT,
+                ylabel=r'$p(' + xlabel[i] + r')$',
                 label="Fit",
                 color='black')
             plt.tight_layout()
@@ -303,12 +303,12 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Mean / '+args.LUNIT,
+                 s=r'Mean / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
@@ -320,7 +320,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$'+xlabel[i]+r'$',
+                     s=r'$' + xlabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -335,7 +335,7 @@ if __name__ == '__main__':
             xpos += 0.30
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'${:>16d}$'.format(np.count_nonzero(data==0)),
+                     s=r'${:>16d}$'.format(np.count_nonzero(data == 0)),
                      fontsize=fontsize)
 
 
@@ -349,7 +349,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="First bin edge / "+args.LUNIT,
+                 s="First bin edge / " + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -360,7 +360,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="Last bin edge / "+args.LUNIT,
+                 s="Last bin edge / " + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -406,19 +406,19 @@ if __name__ == '__main__':
         ypos -= 0.08
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\mu$ / '+args.LUNIT,
+                 s=r'$\mu$ / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         for i in range(displ.shape[1]):
             xpos = 0.05
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$'+xlabel[i]+r'$',
+                     s=r'$' + xlabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -435,19 +435,19 @@ if __name__ == '__main__':
         ypos -= 0.08
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\sigma$ / '+args.LUNIT,
+                 s=r'$\sigma$ / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         for i in range(displ.shape[1]):
             xpos = 0.05
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$'+xlabel[i]+r'$',
+                     s=r'$' + xlabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -473,7 +473,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$'+xlabel[i]+r'$',
+                     s=r'$' + xlabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -502,10 +502,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -513,8 +513,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

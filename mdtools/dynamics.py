@@ -86,7 +86,7 @@ def msd(t, D, d=3):
     >>> mdt.dyn.msd(t=np.arange(4), D=2, d=3)
     array([ 0, 12, 24, 36])
     """
-    return 2*d * D * t
+    return 2 * d * D * t
 
 
 def msd_non_diffusive(t, a, x):
@@ -460,20 +460,20 @@ def correct_intermittency(
                          " np.uint16(-1)-1. If you really need a higher"
                          " intermittency value, change the dtype of"
                          " 'seen_nframes_ago' in the source code of this"
-                         " function".format(np.uint16(-1)-1))
+                         " function".format(np.uint16(-1) - 1))
     mdt.check.list_of_cms(list_of_arrays)
     if not inplace:
         list_of_arrays = deepcopy(list_of_arrays)
     if intermittency <= 0:
         if verbose:
             print("mdtools.dynamics.correct_intermittency() done")
-            print("Elapsed time: {}".format(datetime.now()-timer))
+            print("Elapsed time: {}".format(datetime.now() - timer))
             print("CPU time:             {}"
                   .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
             print("CPU usage:            {:.2f} %"
                   .format(proc.cpu_percent()))
             print("Current memory usage: {:.2f} MiB"
-                  .format(proc.memory_info().rss/2**20))
+                  .format(proc.memory_info().rss / 2**20))
         return list_of_arrays
     if sparse.issparse(list_of_arrays[0]):
         issparse = True
@@ -482,8 +482,8 @@ def correct_intermittency(
         sparse2array = False
     if issparse and sparse2array:
         sparse_format = list_of_arrays[0].format
-        stop = min(intermittency+2, len(list_of_arrays))
-        for i in range(0, stop-1):
+        stop = min(intermittency + 2, len(list_of_arrays))
+        for i in range(0, stop - 1):
             list_of_arrays[i] = list_of_arrays[i].toarray()
     if verbose:
         print("Arrays to process:   {}".format(len(list_of_arrays)))
@@ -496,16 +496,16 @@ def correct_intermittency(
         if sparse2array and ix_max < len(list_of_arrays):
             list_of_arrays[ix_max] = list_of_arrays[ix_max].toarray()
         seen_nframes_ago = np.zeros(a.shape, dtype=np.uint16)
-        stop = min(intermittency+2, len(list_of_arrays)-i)
+        stop = min(intermittency + 2, len(list_of_arrays) - i)
         for j in range(1, stop):
-            mask = (list_of_arrays[i+j] != a)
+            mask = (list_of_arrays[i + j] != a)
             if issparse and not sparse2array:
                 mask = mask.toarray()
             seen_nframes_ago += mask
             seen_nframes_ago[~mask] = 0
-        for j in range(1, stop-1):
-            mask = (seen_nframes_ago <= stop-2-j)
-            list_of_arrays[i+j][mask] = a[mask]
+        for j in range(1, stop - 1):
+            mask = (seen_nframes_ago <= stop - 2 - j)
+            list_of_arrays[i + j][mask] = a[mask]
         if sparse2array:
             if sparse_format == 'bsr':
                 list_of_arrays[i] = sparse.bsr_matrix(list_of_arrays[i])
@@ -533,13 +533,13 @@ def correct_intermittency(
     if verbose:
         loa.close()
         print("mdtools.dynamics.correct_intermittency() done")
-        print("Elapsed time: {}".format(datetime.now()-timer))
+        print("Elapsed time: {}".format(datetime.now() - timer))
         print("CPU time:             {}"
               .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
         print("CPU usage:            {:.2f} %"
               .format(proc.cpu_percent()))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
     return list_of_arrays
 
 
@@ -648,10 +648,10 @@ def correct_intermittency_1d(a, intermittency, inplace=True, debug=False):
     if intermittency <= 0:
         return a
     for i, init_val in enumerate(a):
-        stop = min(intermittency+2, len(a)-i)
-        for j, final_val in enumerate(a[i+2:i+stop][::-1]):
+        stop = min(intermittency + 2, len(a) - i)
+        for j, final_val in enumerate(a[i + 2:i + stop][::-1]):
             if final_val == init_val:
-                a[i+1:i+stop-1-j] = init_val
+                a[i + 1:i + stop - 1 - j] = init_val
                 break
     return a
 
@@ -814,13 +814,13 @@ def replace_short_sequences(
     if min_len < 2:
         if verbose:
             print("mdtools.dynamics.replace_short_sequences() done")
-            print("Elapsed time: {}".format(datetime.now()-timer))
+            print("Elapsed time: {}".format(datetime.now() - timer))
             print("CPU time:             {}"
                   .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
             print("CPU usage:            {:.2f} %"
                   .format(proc.cpu_percent()))
             print("Current memory usage: {:.2f} MiB"
-                  .format(proc.memory_info().rss/2**20))
+                  .format(proc.memory_info().rss / 2**20))
         return list_of_arrays
     if verbose:
         print("Arrays to process:   {}".format(len(list_of_arrays)))
@@ -830,8 +830,8 @@ def replace_short_sequences(
     seen_nframes_ago = np.ones(a.shape, dtype=np.uint16)
     seen_nframes_ahead = np.zeros(a.shape, dtype=np.uint16)
     seen_before = np.ones(a.shape, dtype=bool)
-    for j in range(1, min(min_len, len(list_of_arrays)-i)):
-        seen = (list_of_arrays[i+j] == a)
+    for j in range(1, min(min_len, len(list_of_arrays) - i)):
+        seen = (list_of_arrays[i + j] == a)
         seen_nframes_ahead += (seen & seen_before)
         seen_before = seen
     mask = ((seen_nframes_ago + seen_nframes_ahead) < min_len)
@@ -844,11 +844,11 @@ def replace_short_sequences(
     else:
         loa = list_of_arrays[1:]
     for i, a in enumerate(loa, start=1):
-        seen_nframes_ago[a != list_of_arrays[i-1]] = 1
+        seen_nframes_ago[a != list_of_arrays[i - 1]] = 1
         seen_nframes_ahead = np.zeros(a.shape, dtype=np.uint16)
         seen_before = np.ones(a.shape, dtype=bool)
-        for j in range(1, min(min_len, len(list_of_arrays)-i)):
-            seen = (list_of_arrays[i+j] == a)
+        for j in range(1, min(min_len, len(list_of_arrays) - i)):
+            seen = (list_of_arrays[i + j] == a)
             seen_nframes_ahead += (seen & seen_before)
             seen_before = seen
         mask = ((seen_nframes_ago + seen_nframes_ahead) < min_len)
@@ -861,13 +861,13 @@ def replace_short_sequences(
     if verbose:
         loa.close()
         print("mdtools.dynamics.replace_short_sequences() done")
-        print("Elapsed time: {}".format(datetime.now()-timer))
+        print("Elapsed time: {}".format(datetime.now() - timer))
         print("CPU time:             {}"
               .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
         print("CPU usage:            {:.2f} %"
               .format(proc.cpu_percent()))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
     return list_of_arrays
 
 
@@ -1025,13 +1025,13 @@ def replace_short_sequences_global(
         if verbose:
             print("mdtools.dynamics.replace_short_sequences_global()"
                   " done")
-            print("Elapsed time: {}".format(datetime.now()-timer))
+            print("Elapsed time: {}".format(datetime.now() - timer))
             print("CPU time:             {}"
                   .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
             print("CPU usage:            {:.2f} %"
                   .format(proc.cpu_percent()))
             print("Current memory usage: {:.2f} MiB"
-                  .format(proc.memory_info().rss/2**20))
+                  .format(proc.memory_info().rss / 2**20))
         return list_of_arrays
     if verbose:
         print("Arrays to process:   {}".format(len(list_of_arrays)))
@@ -1042,8 +1042,8 @@ def replace_short_sequences_global(
     seen_continuously = init_values
     seen_nframes_ago = np.ones(init_values.shape, dtype=np.uint16)
     seen_nframes_ahead = np.zeros(init_values.shape, dtype=np.uint16)
-    for j in range(1, min(min_len, len(list_of_arrays)-i)):
-        seen_values = np.unique(list_of_arrays[i+j])
+    for j in range(1, min(min_len, len(list_of_arrays) - i)):
+        seen_values = np.unique(list_of_arrays[i + j])
         seen_continuously = np.intersect1d(seen_continuously,
                                            seen_values)
         mask = np.isin(init_values,
@@ -1073,8 +1073,8 @@ def replace_short_sequences_global(
                        test_elements=init_values_prev,
                        assume_unique=True)
         seen_nframes_ago[mask] = seen_nframes_ago_prev[mask_prev]
-        for j in range(1, min(min_len, len(list_of_arrays)-i)):
-            seen_values = np.unique(list_of_arrays[i+j])
+        for j in range(1, min(min_len, len(list_of_arrays) - i)):
+            seen_values = np.unique(list_of_arrays[i + j])
             seen_continuously = np.intersect1d(seen_continuously,
                                                seen_values)
             mask = np.isin(init_values,
@@ -1091,11 +1091,11 @@ def replace_short_sequences_global(
     if verbose:
         print("mdtools.dynamics.replace_short_sequences_global()"
               " done")
-        print("Elapsed time: {}".format(datetime.now()-timer))
+        print("Elapsed time: {}".format(datetime.now() - timer))
         print("CPU time:             {}"
               .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
         print("CPU usage:            {:.2f} %"
               .format(proc.cpu_percent()))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
     return list_of_arrays

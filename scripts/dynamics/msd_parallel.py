@@ -83,7 +83,7 @@ if __name__ == '__main__':
         restart_every_nth_frame=args.RESTART,
         read_every_nth_frame=EVERY,
         n_frames=blocksize)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
@@ -103,14 +103,14 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     nchunks = num_CPUs
-    if nchunks > int(n_frames/10):
-        nchunks = int(n_frames/10)
+    if nchunks > int(n_frames / 10):
+        nchunks = int(n_frames / 10)
     pool = mdt.parallel.ProcessPool(nprocs=nchunks)
 
-    chunk_size = int((END-BEGIN) / nchunks)
+    chunk_size = int((END - BEGIN) / nchunks)
     chunk_size -= chunk_size % EVERY
-    if chunk_size: # !=0
-        nchunks = int((END-BEGIN) / chunk_size)
+    if chunk_size:  # !=0
+        nchunks = int((END - BEGIN) / chunk_size)
     else:
         nchunks = 1
 
@@ -120,22 +120,22 @@ if __name__ == '__main__':
                                args.TRJFILE,
                                args.SEL,
                                args.COM,
-                               BEGIN+chunk*chunk_size,
-                               BEGIN+(chunk+1)*chunk_size,
+                               BEGIN + chunk * chunk_size,
+                               BEGIN + (chunk + 1) * chunk_size,
                                EVERY,
                                args.DEBUG))
-    if BEGIN+(chunk+1)*chunk_size < END:
+    if BEGIN + (chunk + 1) * chunk_size < END:
         chunk += 1
         pool.submit_task(func=get_COMs,
                          args=(args.TOPFILE,
                                args.TRJFILE,
                                args.SEL,
                                args.COM,
-                               BEGIN+chunk*chunk_size,
+                               BEGIN + chunk * chunk_size,
                                END,
                                EVERY,
                                args.DEBUG))
-    elif BEGIN+(chunk+1)*chunk_size > END:
+    elif BEGIN + (chunk + 1) * chunk_size > END:
         raise ValueError("I've read more frames than given with -e. This"
                          " should not have happened")
 
@@ -161,14 +161,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     pool = mdt.parallel.ProcessPool(nprocs=num_CPUs)
     for block in range(NBLOCKS):
         pool.submit_task(func=calc_msd,
-                         args=(pos[block*blocksize:(block+1)*blocksize],
+                         args=(pos[block * blocksize:(block + 1) * blocksize],
                                effective_restart,
                                args.DEBUG))
     del pos
@@ -205,15 +205,15 @@ if __name__ == '__main__':
         msd = np.squeeze(msd)
     msd_tot = np.sum(msd, axis=1)
     lag_times = np.arange(0,
-                          timestep*blocksize*EVERY,
-                          timestep*EVERY,
+                          timestep * blocksize * EVERY,
+                          timestep * EVERY,
                           dtype=np.float32)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -295,23 +295,23 @@ if __name__ == '__main__':
         data = np.column_stack([lag_times,
                                 msd_tot,
                                 msd_tot_sd,
-                                msd[:,0],
-                                msd_sd[:,0],
-                                msd[:,1],
-                                msd_sd[:,1],
-                                msd[:,2],
-                                msd_sd[:,2]])
+                                msd[:, 0],
+                                msd_sd[:, 0],
+                                msd[:, 1],
+                                msd_sd[:, 1],
+                                msd[:, 2],
+                                msd_sd[:, 2]])
 
     mdt.fh.savetxt(fname=args.OUTFILE,
                    data=data,
-                   header=header+columns)
+                   header=header + columns)
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -319,8 +319,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

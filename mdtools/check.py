@@ -375,7 +375,7 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
 
     if with_angles:
         slc_angle = [slice(None)] * box.ndim
-        slc_angle[box.ndim-1] = slice(3, 6)
+        slc_angle[box.ndim - 1] = slice(3, 6)
         slc_angle = tuple(slc_angle)
         if np.any(box[slc_angle] <= 0):
             raise ValueError("At least one angle is less than or equal"
@@ -388,7 +388,7 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
             raise ValueError("At least one angle is not 90 degrees")
 
     slc_length = [slice(None)] * box.ndim
-    slc_length[box.ndim-1] = slice(0, 3)
+    slc_length[box.ndim - 1] = slice(0, 3)
     slc_length = tuple(slc_length)
     if not allow_negative and np.any(box[slc_length] < 0):
         raise ValueError("At least box length is negative")
@@ -770,7 +770,7 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
         if verbose:
             print("'mdtools.check.bins()' set 'step' to {}".format(step))
     if num is None or num != (stop - start) / step:
-        num = int(np.around((stop-start)/step))
+        num = int(np.around((stop - start) / step))
         if verbose:
             print("'mdtools.check.bins()' set 'num' to {}".format(num))
     return float(start), float(stop), float(step), int(num)
@@ -959,7 +959,7 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
                   .format(bins[0]))
     elif bins[0] < amin:
         raise ValueError("The first bin edge ({}) must not be less than"
-                         " 'amin-tol' ({})".format(bins[0], amin-tol))
+                         " 'amin-tol' ({})".format(bins[0], amin - tol))
     if np.isclose(bins[-1], amax, rtol=0, atol=tol):
         bins[-1] = last_bin_edge
         if verbose:
@@ -973,7 +973,7 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     elif bins[-1] > amax:
         raise ValueError("The last bin edge ({}) must not be greater"
                          " than 'amax+tol' ({})"
-                         .format(bins[-1], amax+tol))
+                         .format(bins[-1], amax + tol))
     return bins
 
 
@@ -1064,12 +1064,12 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
         if verbose:
             print("'mdtools.check.frame_slicing()' set 'stop' to {}"
                   .format(stop))
-    elif start >= stop and stop-step >= 0:
+    elif start >= stop and stop - step >= 0:
         start = stop - step
         if verbose:
             print("'mdtools.check.frame_slicing()' set 'start' to {}"
                   .format(start))
-    elif start >= stop and stop-step < 0:
+    elif start >= stop and stop - step < 0:
         start = 0
         step = stop - start
         if verbose:
@@ -1077,7 +1077,7 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
                   .format(start))
             print("'mdtools.check.frame_slicing()' set 'step' to {}"
                   .format(step))
-    elif step > stop-start:
+    elif step > stop - start:
         step = stop - start
         if verbose:
             print("'mdtools.check.frame_slicing()' set 'step' to {}"
@@ -1254,7 +1254,7 @@ def restarts(
             print("'mdtools.check.restarts()' set"
                   " 'restart_every_nth_frame' to {}"
                   .format(restart_every_nth_frame))
-    effective_restart = int(restart_every_nth_frame/read_every_nth_frame)
+    effective_restart = int(restart_every_nth_frame / read_every_nth_frame)
     return restart_every_nth_frame, effective_restart
 
 
@@ -1378,7 +1378,7 @@ def time_step(trj, verbose=True):
     if verbose:
         trj.close()
         print("All frames in 'trj' have the same time step")
-        print("Elapsed time:         {}".format(datetime.now()-timer))
+        print("Elapsed time:         {}".format(datetime.now() - timer))
         print("Current memory usage: {:.2f} MiB"
               .format(mdt.rti.mem_usage(unit='MiB')))
 

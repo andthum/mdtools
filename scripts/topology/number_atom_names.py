@@ -44,7 +44,7 @@ def number_atom_names_ignore_residues_and_atom_types(atoms):
     """
 
     atoms.names = np.char.add(atoms.names.astype(str),
-                              np.arange(1, atoms.n_atoms+1).astype(str))
+                              np.arange(1, atoms.n_atoms + 1).astype(str))
 
 
 
@@ -85,9 +85,9 @@ def number_atom_names_ignore_residues(atoms):
     atom_names, atom_counts = np.unique(atoms.names, return_counts=True)
 
     for i, atom_name in enumerate(atom_names):
-        atom_numbers[atoms.names==atom_name] = np.arange(
+        atom_numbers[atoms.names == atom_name] = np.arange(
             1,
-            atom_counts[i]+1)
+            atom_counts[i] + 1)
 
     atoms.names = np.char.add(atoms.names.astype(str),
                               atom_numbers.astype(str))

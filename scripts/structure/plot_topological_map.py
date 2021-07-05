@@ -55,7 +55,7 @@ plt.rc('ytick.major', width=2)
 plt.rc('ytick.minor', width=2)
 plt.rc('text', usetex=True)
 plt.rcParams['text.latex.preview'] = True
-plt.rc('font',**{'family' : 'serif', 'serif' : 'Times'})
+plt.rc('font', **{'family': 'serif', 'serif': 'Times'})
 
 fontsize_labels = 36
 fontsize_ticks = 32
@@ -340,7 +340,7 @@ if __name__ == "__main__":
 
     headers = headers.split()
     headers = np.array(headers[4:], dtype=str)
-    ix_cols = np.arange(4, len(headers)+4)
+    ix_cols = np.arange(4, len(headers) + 4)
 
 
     times = np.genfromtxt(fname=args.INFILE, usecols=0, dtype=np.float32)
@@ -396,10 +396,10 @@ if __name__ == "__main__":
                               usecols=args.COLS,
                               ndmin=2,
                               dtype=np.float32)
-            if np.min(data[:,0]) < vmin:
-                vmin = np.min(data[:,0])
-            if np.max(data[:,0]) > vmax:
-                vmax = np.max(data[:,0])
+            if np.min(data[:, 0]) < vmin:
+                vmin = np.min(data[:, 0])
+            if np.max(data[:, 0]) > vmax:
+                vmax = np.max(data[:, 0])
             label_pad = 8
         if args.VMIN is not None:
             vmin = args.VMIN
@@ -422,17 +422,17 @@ if __name__ == "__main__":
                 bounds = [vmin, np.mean((vmin, vmax)), vmax]
             norm = colors.BoundaryNorm(boundaries=bounds,
                                        ncolors=cmap.N)
-            spacing='proportional'
+            spacing = 'proportional'
         else:
             cmap = args.CMAP
-            spacing='uniform'
+            spacing = 'uniform'
 
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -445,21 +445,21 @@ if __name__ == "__main__":
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         seg_blocks = np.append(np.nonzero(seg_cols)[0], len(seg_cols))
-        for sb in range(len(seg_blocks)-1):
-            sb_headers = headers[seg_blocks[sb]:seg_blocks[sb+1]]
+        for sb in range(len(seg_blocks) - 1):
+            sb_headers = headers[seg_blocks[sb]:seg_blocks[sb + 1]]
             print(flush=True)
             print("  Segment: {:>12s}"
                   .format(sb_headers[0]),
                   flush=True)
-            sb_ix = ix[:,seg_blocks[sb]:seg_blocks[sb+1]]
-            #sb_seg_ix = np.array([mdt.nph.excel_colnum(i)  # not needed
-            #for i in sb_ix[:,0]],
-            #dtype=np.float16)
-            sb_seg_cols = seg_cols[seg_blocks[sb]:seg_blocks[sb+1]]
+            sb_ix = ix[:, seg_blocks[sb]:seg_blocks[sb + 1]]
+            # sb_seg_ix = np.array([mdt.nph.excel_colnum(i)  # not needed
+            # for i in sb_ix[:,0]],
+            # dtype=np.float16)
+            sb_seg_cols = seg_cols[seg_blocks[sb]:seg_blocks[sb + 1]]
             sb_atm_cols = np.all(np.char.isnumeric(sb_ix), axis=0)
-            sb_atm_cols &= atm_cols[seg_blocks[sb]:seg_blocks[sb+1]]
+            sb_atm_cols &= atm_cols[seg_blocks[sb]:seg_blocks[sb + 1]]
             sb_res_cols = np.equal(sb_seg_cols, sb_atm_cols)
-            sb_res_cols &= res_cols[seg_blocks[sb]:seg_blocks[sb+1]]
+            sb_res_cols &= res_cols[seg_blocks[sb]:seg_blocks[sb + 1]]
             res_blocks = np.append(np.nonzero(sb_res_cols)[0],
                                    len(sb_res_cols))
             res_blocks_same = mdt.nph.ix_of_item_change_1d(sb_headers[sb_res_cols])
@@ -483,7 +483,7 @@ if __name__ == "__main__":
                     grid_heights[0] = 0.3
                     fig_size = 8.27 * (grid_heights[0] + 0.05)
             fig = plt.figure(figsize=(11.69,
-                                      8.27*(len(res_blocks)-1)+fig_size),
+                                      8.27 * (len(res_blocks) - 1) + fig_size),
                              frameon=False,
                              clear=True)
             grid_outer = gridspec.GridSpec(nrows=nrows,
@@ -491,27 +491,27 @@ if __name__ == "__main__":
                                            figure=fig,
                                            height_ratios=grid_heights)
 
-            for rb in range(len(res_blocks)-1):
-                rb_headers = sb_headers[res_blocks[rb]:res_blocks[rb+1]]
+            for rb in range(len(res_blocks) - 1):
+                rb_headers = sb_headers[res_blocks[rb]:res_blocks[rb + 1]]
                 print("    Residue: {:>10s}"
                       .format(rb_headers[0]),
                       flush=True)
-                rb_ix = sb_ix[:,res_blocks[rb]:res_blocks[rb+1]].astype(np.float32)
-                rb_res_ix = -rb_ix[:,sb_res_cols[res_blocks[rb]:res_blocks[rb+1]]]
+                rb_ix = sb_ix[:, res_blocks[rb]:res_blocks[rb + 1]].astype(np.float32)
+                rb_res_ix = -rb_ix[:, sb_res_cols[res_blocks[rb]:res_blocks[rb + 1]]]
                 rb_res_ix = mdt.dyn.replace_short_sequences_global(
                     list_of_arrays=rb_res_ix,
                     min_len=effective_minbound,
                     val=0,
                     verbose=args.VERBOSE,
                     debug=args.DEBUG)
-                rb_res_ix_sorted = np.unique(rb_res_ix[rb_res_ix>0])
+                rb_res_ix_sorted = np.unique(rb_res_ix[rb_res_ix > 0])
                 rb_atm_cols = np.all(rb_ix >= 0, axis=0)
-                rb_atm_cols &= atm_cols[res_blocks[rb]:res_blocks[rb+1]]
+                rb_atm_cols &= atm_cols[res_blocks[rb]:res_blocks[rb + 1]]
                 atm_types = np.unique(rb_headers[rb_atm_cols])
                 atm_blocks = np.zeros((len(atm_types), len(rb_headers)),
                                       dtype=bool)
                 for i, at in enumerate(atm_types):
-                    atm_blocks[i][rb_headers==at] = True
+                    atm_blocks[i][rb_headers == at] = True
 
                 if pos is None:
                     grid_cell = rb
@@ -529,11 +529,11 @@ if __name__ == "__main__":
                     print("      Atom type: {:>6s}"
                           .format(ab_headers[0]),
                           flush=True)
-                    ab_ix = rb_ix[:,ab]
+                    ab_ix = rb_ix[:, ab]
                     rb_res_ix_invalid = np.equal(rb_res_ix, 0)
                     rb_res_ix_invalid = np.repeat(
                         rb_res_ix_invalid,
-                        len(ab_ix[0])//len(rb_res_ix[0]),
+                        len(ab_ix[0]) // len(rb_res_ix[0]),
                         axis=1)
                     ab_ix[rb_res_ix_invalid] = 0
                     ab_ix_valid = ab_ix > 0
@@ -544,22 +544,22 @@ if __name__ == "__main__":
                         ab_ix_min = 0
                     ab_ix_sorted = np.unique(ab_ix[ab_ix_valid])
                     ab_ix_sorted_diff = np.diff(ab_ix_sorted)
-                    ab_ix_sorted_diff_big = np.nonzero(ab_ix_sorted_diff>1)[0]
+                    ab_ix_sorted_diff_big = np.nonzero(ab_ix_sorted_diff > 1)[0]
                     for d in ab_ix_sorted_diff_big:
-                        ab_ix[ab_ix>=ab_ix_sorted[d+1]] -= ab_ix_sorted_diff[d]-1
-                        ab_ix_sorted[d+1:] -= ab_ix_sorted_diff[d] - 1
+                        ab_ix[ab_ix >= ab_ix_sorted[d + 1]] -= ab_ix_sorted_diff[d] - 1
+                        ab_ix_sorted[d + 1:] -= ab_ix_sorted_diff[d] - 1
                     ab_ix_in_r_min = np.zeros(len(rb_res_ix_sorted),
                                               dtype=np.uint32)
                     for j, r in enumerate(rb_res_ix_sorted):
                         r_mask = np.equal(rb_res_ix, r)
                         r_mask = np.repeat(
                             r_mask,
-                            len(ab_ix[0])//len(rb_res_ix[0]),
+                            len(ab_ix[0]) // len(rb_res_ix[0]),
                             axis=1)
                         ab_ix_in_r = np.unique(ab_ix[r_mask])
                         if not np.all(ab_ix_in_r == 0):
-                            ab_ix_in_r_min[j] = ab_ix_in_r[ab_ix_in_r>0][0]
-                    ab_ix_in_r_min = np.unique(ab_ix_in_r_min[ab_ix_in_r_min>0])
+                            ab_ix_in_r_min[j] = ab_ix_in_r[ab_ix_in_r > 0][0]
+                    ab_ix_in_r_min = np.unique(ab_ix_in_r_min[ab_ix_in_r_min > 0])
                     ab_ix_max = np.max(ab_ix)
                     ab_ix[np.logical_not(ab_ix_valid)] = np.nan
 
@@ -568,7 +568,7 @@ if __name__ == "__main__":
                     axis.yaxis.set_major_locator(MaxNLocator(integer=True))
                     if args.NXBINS is not None:
                         axis.locator_params(nbins=args.NXBINS, axis='x')
-                    axis.hlines(y=ab_ix_in_r_min-0.5,
+                    axis.hlines(y=ab_ix_in_r_min - 0.5,
                                 xmin=times[0],
                                 xmax=times[-1],
                                 linestyles='--')
@@ -582,7 +582,7 @@ if __name__ == "__main__":
                             xmin=times[0],
                             xmax=times[-1],
                             ymin=0.5,
-                            ymax=ab_ix_max+0.5 if ab_ix_max>1 else ab_ix_max+1.5,
+                            ymax=ab_ix_max + 0.5 if ab_ix_max > 1 else ab_ix_max + 1.5,
                             xlabel=r'Time / {}'.format(args.TIME_UNIT),
                             ylabel=r'{} {}'.format(args.YLABEL,
                                                    ab_headers[0]),
@@ -592,16 +592,16 @@ if __name__ == "__main__":
                             vmin=vmin,
                             vmax=vmax,
                             norm=norm)
-                    if rb < len(res_blocks)-2:
+                    if rb < len(res_blocks) - 2:
                         axis.tick_params(labelbottom=False)
                         axis.set_xlabel('')
-                    elif i < len(atm_types)-1:
+                    elif i < len(atm_types) - 1:
                         axis.tick_params(labelbottom=False)
                         axis.set_xlabel('')
                     else:
                         axis.ticklabel_format(axis='x',
                                               style='scientific',
-                                              scilimits=(0,0),
+                                              scilimits=(0, 0),
                                               useOffset=False)
                     axis_prev = axis
 
@@ -614,20 +614,20 @@ if __name__ == "__main__":
                         hspace=0.1,
                         height_ratios=[0.7, 0.3])
                     axis = fig.add_subplot(grid_inner[0])
-                    _, vmin_ix = mdt.nph.find_nearest(data[:,0],
+                    _, vmin_ix = mdt.nph.find_nearest(data[:, 0],
                                                       val=vmin,
                                                       return_index=True,
                                                       debug=args.DEBUG)
-                    _, vmax_ix = mdt.nph.find_nearest(data[:,0],
+                    _, vmax_ix = mdt.nph.find_nearest(data[:, 0],
                                                       val=vmax,
                                                       return_index=True,
                                                       debug=args.DEBUG)
                     if vmin_ix == vmax_ix:
                         vmin_ix = 0
-                        vmax_ix = len(data[:,1])
+                        vmax_ix = len(data[:, 1])
                     mdt.plot.plot(ax=axis,
-                                  x=data[:,0],
-                                  y=data[:,1],
+                                  x=data[:, 0],
+                                  y=data[:, 1],
                                   xmin=vmin,
                                   xmax=vmax,
                                   ymin=np.min(data[vmin_ix:vmax_ix, 1]),
@@ -660,8 +660,8 @@ if __name__ == "__main__":
                                     labelsize=fontsize_ticks)
                 cbar.ax.tick_params(which='minor',
                                     direction='out',
-                                    length=0.5*tick_length,
-                                    labelsize=0.8*fontsize_ticks)
+                                    length=0.5 * tick_length,
+                                    labelsize=0.8 * fontsize_ticks)
                 if data is None:
                     cbar.ax.xaxis.set_ticks_position('top')
                     cbar.ax.xaxis.set_label_position('top')
@@ -744,10 +744,10 @@ if __name__ == "__main__":
     print("  Created {}".format(args.OUTFILE))
     print(flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -756,8 +756,8 @@ if __name__ == "__main__":
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

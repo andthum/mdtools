@@ -35,10 +35,10 @@ import mdtools as mdt
 
 # This function is also used by: msd_parallel.py
 def parse_user_input(add_description=""):
-    description=("Calculate the mean square displacement (MSD) for"
-                 " compounds of a selection group.")
+    description = ("Calculate the mean square displacement (MSD) for"
+                   " compounds of a selection group.")
     parser = argparse.ArgumentParser(
-        description=description+add_description
+        description=description + add_description
     )
 
     parser.add_argument(
@@ -230,18 +230,18 @@ def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
 
     timer_frame = datetime.now()
     for i, ts in enumerate(u.trajectory[begin:end:every]):
-        if (ts.frame % 10**(len(str(ts.frame))-1) == 0 or
+        if (ts.frame % 10**(len(str(ts.frame)) - 1) == 0 or
             ts.frame == begin or
-                ts.frame == end-1):
+                ts.frame == end - 1):
             print("  Frame   {:12d}".format(ts.frame), flush=True)
             print("    Step: {:>12}    Time: {:>12} (ps)"
                   .format(ts.data['step'], ts.data['time']),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_frame),
+                  .format(datetime.now() - timer_frame),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_frame = datetime.now()
 
@@ -301,20 +301,20 @@ def calc_msd(pos, restart=1, debug=False):
 
     timer_lag = datetime.now()
     for lag in range(1, n_frames):
-        if lag % 10**(len(str(lag))-1) == 0 or lag == n_frames-1:
+        if lag % 10**(len(str(lag)) - 1) == 0 or lag == n_frames - 1:
             print("  Lag     {:12d} of {:12d}"
-                  .format(lag, n_frames-1),
+                  .format(lag, n_frames - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_lag),
+                  .format(datetime.now() - timer_lag),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_lag = datetime.now()
 
-        for t0 in range(0, n_frames-lag, restart):
-            np.subtract(pos[t0+lag], pos[t0], out=msd_tmp)
+        for t0 in range(0, n_frames - lag, restart):
+            np.subtract(pos[t0 + lag], pos[t0], out=msd_tmp)
             np.square(msd_tmp, out=msd_tmp)
             np.sum(msd_tmp, axis=0, out=msd_tmp[0])
             msd[lag] += msd_tmp[0]
@@ -323,7 +323,7 @@ def calc_msd(pos, restart=1, debug=False):
     n_restarts = n_frames - np.arange(n_frames, dtype=np.float32)
     n_restarts /= restart
     np.ceil(n_restarts, out=n_restarts)
-    msd /= n_restarts[:,None]
+    msd /= n_restarts[:, None]
     msd /= n_particles
 
     return msd
@@ -375,7 +375,7 @@ if __name__ == '__main__':
         restart_every_nth_frame=args.RESTART,
         read_every_nth_frame=EVERY,
         n_frames=blocksize)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
@@ -417,14 +417,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -434,22 +434,22 @@ if __name__ == '__main__':
     timer = datetime.now()
     timer_block = datetime.now()
 
-    msd = [None,] * NBLOCKS
+    msd = [None, ] * NBLOCKS
     for block in range(NBLOCKS):
-        if block % 10**(len(str(block))-1) == 0 or block == NBLOCKS-1:
+        if block % 10**(len(str(block)) - 1) == 0 or block == NBLOCKS - 1:
             print(flush=True)
             print("  Block   {:12d} of {:12d}"
-                  .format(block, NBLOCKS-1),
+                  .format(block, NBLOCKS - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_block),
+                  .format(datetime.now() - timer_block),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_block = datetime.now()
         msd[block] = calc_msd(
-            pos=pos[block*blocksize:(block+1)*blocksize],
+            pos=pos[block * blocksize:(block + 1) * blocksize],
             restart=effective_restart,
             debug=args.DEBUG)
 
@@ -463,15 +463,15 @@ if __name__ == '__main__':
         msd = np.squeeze(msd)
     msd_tot = np.sum(msd, axis=1)
     lag_times = np.arange(0,
-                          timestep*blocksize*EVERY,
-                          timestep*EVERY,
+                          timestep * blocksize * EVERY,
+                          timestep * EVERY,
                           dtype=np.float32)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -553,23 +553,23 @@ if __name__ == '__main__':
         data = np.column_stack([lag_times,
                                 msd_tot,
                                 msd_tot_sd,
-                                msd[:,0],
-                                msd_sd[:,0],
-                                msd[:,1],
-                                msd_sd[:,1],
-                                msd[:,2],
-                                msd_sd[:,2]])
+                                msd[:, 0],
+                                msd_sd[:, 0],
+                                msd[:, 1],
+                                msd_sd[:, 1],
+                                msd[:, 2],
+                                msd_sd[:, 2]])
 
     mdt.fh.savetxt(fname=args.OUTFILE,
                    data=data,
-                   header=header+columns)
+                   header=header + columns)
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -577,8 +577,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

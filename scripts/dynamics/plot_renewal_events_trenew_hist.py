@@ -167,10 +167,10 @@ if __name__ == '__main__':
                               density=True)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -180,23 +180,23 @@ if __name__ == '__main__':
     print("Fitting histogram", flush=True)
     timer = datetime.now()
 
-    x = bins[1:] - np.diff(bins)/2
+    x = bins[1:] - np.diff(bins) / 2
     valid = (hist > 0)
     if not np.any(valid):
         raise ValueError("All histogram elements are zero")
     popt, pcov = curve_fit(f=mdt.stats.exp_dist_log,
                            xdata=x[valid],
                            ydata=np.log(hist[valid]),
-                           p0=1/np.mean(hist),
+                           p0=1 / np.mean(hist),
                            bounds=(0, np.inf))
     popt = popt[0]
     pcov = np.diag(pcov)[0]
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -219,7 +219,7 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=args.YMIN,
                       ymax=args.YMAX,
-                      xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                       ylabel="Counts",
                       bins=bins,
                       range=(args.START, args.STOP),
@@ -240,7 +240,7 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=args.YMIN,
                       ymax=args.YMAX,
-                      xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                       ylabel=r'$p(\tau_{renew})$',
                       bins=bins,
                       range=(args.START, args.STOP),
@@ -252,7 +252,7 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=args.YMIN,
                       ymax=args.YMAX,
-                      xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                       ylabel=r'$p(\tau_{renew})$',
                       label="Fit",
                       color='black')
@@ -276,12 +276,12 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="Mean / "+args.TUNIT,
+                 s="Mean / " + args.TUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s="Std. dev. / "+args.TUNIT,
+                 s="Std. dev. / " + args.TUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos, y=ypos, s="Tot. counts", fontsize=fontsize)
@@ -291,7 +291,7 @@ if __name__ == '__main__':
         plt.text(x=xpos, y=ypos, s=r'$\tau_{renew}$', fontsize=fontsize)
         xpos += 0.10
         plt.text(x=xpos,
-                 y=ypos, 
+                 y=ypos,
                  s=r'${:>16.9e}$'.format(np.mean(trenew)),
                  fontsize=fontsize)
         xpos += 0.30
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="First bin edge / "+args.TUNIT,
+                 s="First bin edge / " + args.TUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -327,7 +327,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="Last bin edge / "+args.TUNIT,
+                 s="Last bin edge / " + args.TUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -357,12 +357,12 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Opt. param. / '+args.TUNIT+r'$^{-1}$',
+                 s=r'Opt. param. / ' + args.TUNIT + r'$^{-1}$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.TUNIT+r'$^{-1}$',
+                 s=r'Std. dev. / ' + args.TUNIT + r'$^{-1}$',
                  fontsize=fontsize)
 
         xpos = 0.05
@@ -385,10 +385,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -396,8 +396,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

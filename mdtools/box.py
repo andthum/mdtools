@@ -501,7 +501,7 @@ def dist_vecs(coords1, coords2, box=None, result=None, debug=False):
     if box is not None:
         mdt.check.box(box, with_angles=True, orthorhombic=True, dim=1)
         box = np.asarray(box[:3])
-        dist_vecs -= np.floor(dist_vecs/box + 0.5) * box
+        dist_vecs -= np.floor(dist_vecs / box + 0.5) * box
 
     return dist_vecs
 
@@ -724,17 +724,17 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
     if verbose:
         timer = datetime.now()
         proc = psutil.Process(os.getpid())
-        last_frame = universe.trajectory[end-1].frame
+        last_frame = universe.trajectory[end - 1].frame
         ts = universe.trajectory[0]
         print("  Frame   {:12d}".format(ts.frame), flush=True)
         print("    Step: {:>12}    Time: {:>12} (ps)"
               .format(ts.data['step'], ts.data['time']),
               flush=True)
         print("    Elapsed time:             {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("    Current memory usage: {:18.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
         timer = datetime.now()
     if debug:
@@ -757,17 +757,17 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
         w.write(atm_grp)
         for ts in universe.trajectory[1:end]:
             if (verbose and
-                (ts.frame % 10**(len(str(ts.frame))-1) == 0 or
+                (ts.frame % 10**(len(str(ts.frame)) - 1) == 0 or
                  ts.frame == last_frame)):
                 print("  Frame   {:12d}".format(ts.frame), flush=True)
                 print("    Step: {:>12}    Time: {:>12} (ps)"
                       .format(ts.data['step'], ts.data['time']),
                       flush=True)
                 print("    Elapsed time:             {}"
-                      .format(datetime.now()-timer),
+                      .format(datetime.now() - timer),
                       flush=True)
                 print("    Current memory usage: {:18.2f} MiB"
-                      .format(proc.memory_info().rss/2**20),
+                      .format(proc.memory_info().rss / 2**20),
                       flush=True)
                 timer = datetime.now()
             if debug:

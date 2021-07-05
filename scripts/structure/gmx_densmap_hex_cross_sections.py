@@ -62,9 +62,9 @@ def read_matrix(infile, dtype=np.float32):
     """
 
     data = np.loadtxt(infile, dtype=dtype)
-    x = data[1:,0]
-    y = data[0,1:]
-    z = data[1:,1:]
+    x = data[1:, 0]
+    y = data[0, 1:]
+    z = data[1:, 1:]
 
     # Make the columns corresponding to the x values and the rows to the
     # y values
@@ -190,7 +190,7 @@ def is_hex_center(test_pos, hex_pos, a):
 
 def g(x, m=1, c=0):
     """Straight line with slope `m` and intercept `c`."""
-    return m*x + c
+    return m * x + c
 
 
 
@@ -383,7 +383,7 @@ if __name__ == "__main__":
     ncols = int((col1 - col0) / xdist)
     nrows = int((row1 - row0) / ydist)
     # Total number of hexagons
-    nhex = ncols * nrows//2 + (ncols//2 + ncols%2) * nrows%2
+    nhex = ncols * nrows // 2 + (ncols // 2 + ncols % 2) * nrows % 2
 
 
     if args.SHOW_PLOTS:
@@ -394,31 +394,31 @@ if __name__ == "__main__":
                                  clear=True,
                                  tight_layout=True)
         mdt.plot.pcolormesh(ax=axis,
-                            x=np.append(x, x[-1]+(x[-1]-x[-2])),
-                            y=np.append(y, y[-1]+(y[-1]-y[-2])),
+                            x=np.append(x, x[-1] + (x[-1] - x[-2])),
+                            y=np.append(y, y[-1] + (y[-1] - y[-2])),
                             z=z,
-                            xmin=xmin-0.05*(xmax-xmin),
-                            xmax=xmax+0.05*(xmax-xmin),
-                            ymin=ymin-0.05*(ymax-ymin),
-                            ymax=ymax+0.05*(ymax-ymin))
+                            xmin=xmin - 0.05 * (xmax - xmin),
+                            xmax=xmax + 0.05 * (xmax - xmin),
+                            ymin=ymin - 0.05 * (ymax - ymin),
+                            ymax=ymax + 0.05 * (ymax - ymin))
         axis.axvline(x=col0, color='red', linestyle='--')
         axis.axvline(x=col1, color='red', linestyle='--')
         axis.axhline(y=row0, color='red', linestyle='--')
         axis.axhline(y=row1, color='red', linestyle='--')
         finish_heatmap_plot(axis=axis)
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -436,10 +436,10 @@ if __name__ == "__main__":
     # Assume perdiodic boundary conditions.
     # Extend z (and y) in y direction, to simplify the extraction of
     # cross sections that cross the boundary
-    unit_cell_slice = slice(z_shape[0], 2*z_shape[0])
-    z = np.row_stack([z]*3)
-    y_tmp = np.hstack([y, y[-1] + y[-1]-y[-2] + y])
-    y = np.hstack([y - y[1]-y[0] - ymax, y_tmp])
+    unit_cell_slice = slice(z_shape[0], 2 * z_shape[0])
+    z = np.row_stack([z] * 3)
+    y_tmp = np.hstack([y, y[-1] + y[-1] - y[-2] + y])
+    y = np.hstack([y - y[1] - y[0] - ymax, y_tmp])
     del y_tmp
 
 
@@ -460,7 +460,7 @@ if __name__ == "__main__":
                      a=args.LATCONST):
         intercept_min = row0 - slope * col0  # c = y - mx
     else:
-        intercept_min = (row0+ydist) - slope * col0
+        intercept_min = (row0 + ydist) - slope * col0
 
 
     if args.SHOW_PLOTS:
@@ -469,15 +469,15 @@ if __name__ == "__main__":
                                  clear=True,
                                  tight_layout=True)
         mdt.plot.pcolormesh(ax=axis,
-                            x=np.append(x, x[-1]+(x[-1]-x[-2])),
+                            x=np.append(x, x[-1] + (x[-1] - x[-2])),
                             y=np.append(y[unit_cell_slice],
-                                        (2*y[unit_cell_slice][-1] -
+                                        (2 * y[unit_cell_slice][-1] -
                                          y[unit_cell_slice][-2])),
                             z=z[unit_cell_slice],
-                            xmin=xmin-0.05*(xmax-xmin),
-                            xmax=xmax+0.05*(xmax-xmin),
-                            ymin=ymin-0.05*(ymax-ymin),
-                            ymax=ymax+0.05*(ymax-ymin))
+                            xmin=xmin - 0.05 * (xmax - xmin),
+                            xmax=xmax + 0.05 * (xmax - xmin),
+                            ymin=ymin - 0.05 * (ymax - ymin),
+                            ymax=ymax + 0.05 * (ymax - ymin))
         axis.axvline(x=col0, color='red', linestyle='--')
         axis.axvline(x=col1, color='red', linestyle='--')
         axis.axhline(y=row0, color='red', linestyle='--')
@@ -486,11 +486,11 @@ if __name__ == "__main__":
 
     # Cross section along axis 1/3
     cs1 = np.zeros(z_shape[1], dtype=np.float32)
-    n_hex_axes = nrows//2 + nrows%2
+    n_hex_axes = nrows // 2 + nrows % 2
     for i in range(n_hex_axes):
-        intercept = intercept_min + 2*i*ydist
-        intercept_samples = np.linspace(intercept-args.WIDTH/2,
-                                        intercept+args.WIDTH/2,
+        intercept = intercept_min + 2 * i * ydist
+        intercept_samples = np.linspace(intercept - args.WIDTH / 2,
+                                        intercept + args.WIDTH / 2,
                                         args.NSAMPLES,
                                         dtype=np.float32)
 
@@ -518,7 +518,7 @@ if __name__ == "__main__":
                 alpha=0.5)
 
 
-        r_prev = None # Avoid flake8: F821 undefined name 'r_prev'
+        r_prev = None  # Avoid flake8: F821 undefined name 'r_prev'
         for j, sample in enumerate(intercept_samples):
             hex_ax = [(xmin, g(x=xmin, m=slope, c=sample)),
                       (xmax, g(x=xmax, m=slope, c=sample))]
@@ -541,10 +541,10 @@ if __name__ == "__main__":
     if r1[0] != 0:
         raise ValueError("The first sampling point is not zero")
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_axis),
+          .format(datetime.now() - timer_axis),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -554,10 +554,10 @@ if __name__ == "__main__":
         timer_plot = datetime.now()
         finish_heatmap_plot(axis=axis)
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -577,10 +577,10 @@ if __name__ == "__main__":
         plt.show()
         plt.close()
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -601,7 +601,7 @@ if __name__ == "__main__":
                      a=args.LATCONST):
         intercept_min = row0 - slope * col0  # c = y - mx
     else:
-        intercept_min = (row0+ydist) - slope * col0
+        intercept_min = (row0 + ydist) - slope * col0
 
 
     if args.SHOW_PLOTS:
@@ -610,15 +610,15 @@ if __name__ == "__main__":
                                  clear=True,
                                  tight_layout=True)
         mdt.plot.pcolormesh(ax=axis,
-                            x=np.append(x, x[-1]+(x[-1]-x[-2])),
+                            x=np.append(x, x[-1] + (x[-1] - x[-2])),
                             y=np.append(y[unit_cell_slice],
-                                        (2*y[unit_cell_slice][-1] -
+                                        (2 * y[unit_cell_slice][-1] -
                                          y[unit_cell_slice][-2])),
                             z=z[unit_cell_slice],
-                            xmin=xmin-0.05*(xmax-xmin),
-                            xmax=xmax+0.05*(xmax-xmin),
-                            ymin=ymin-0.05*(ymax-ymin),
-                            ymax=ymax+0.05*(ymax-ymin))
+                            xmin=xmin - 0.05 * (xmax - xmin),
+                            xmax=xmax + 0.05 * (xmax - xmin),
+                            ymin=ymin - 0.05 * (ymax - ymin),
+                            ymax=ymax + 0.05 * (ymax - ymin))
         axis.axvline(x=col0, color='red', linestyle='--')
         axis.axvline(x=col1, color='red', linestyle='--')
         axis.axhline(y=row0, color='red', linestyle='--')
@@ -627,11 +627,11 @@ if __name__ == "__main__":
 
     # Cross section along axis 2/3
     cs2 = np.zeros(z_shape[1], dtype=np.float32)
-    n_hex_axes = nrows//2 + nrows%2
+    n_hex_axes = nrows // 2 + nrows % 2
     for i in range(n_hex_axes):
-        intercept = intercept_min + 2*i*ydist
-        intercept_samples = np.linspace(intercept-args.WIDTH/2,
-                                        intercept+args.WIDTH/2,
+        intercept = intercept_min + 2 * i * ydist
+        intercept_samples = np.linspace(intercept - args.WIDTH / 2,
+                                        intercept + args.WIDTH / 2,
                                         args.NSAMPLES,
                                         dtype=np.float32)
 
@@ -681,10 +681,10 @@ if __name__ == "__main__":
     if r2[0] != 0:
         raise ValueError("The first sampling point is not zero")
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_axis),
+          .format(datetime.now() - timer_axis),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -694,10 +694,10 @@ if __name__ == "__main__":
         timer_plot = datetime.now()
         finish_heatmap_plot(axis=axis)
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -717,10 +717,10 @@ if __name__ == "__main__":
         plt.show()
         plt.close()
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -740,15 +740,15 @@ if __name__ == "__main__":
                                  clear=True,
                                  tight_layout=True)
         mdt.plot.pcolormesh(ax=axis,
-                            x=np.append(x, x[-1]+(x[-1]-x[-2])),
+                            x=np.append(x, x[-1] + (x[-1] - x[-2])),
                             y=np.append(y[unit_cell_slice],
-                                        (2*y[unit_cell_slice][-1] -
+                                        (2 * y[unit_cell_slice][-1] -
                                          y[unit_cell_slice][-2])),
                             z=z[unit_cell_slice],
-                            xmin=xmin-0.05*(xmax-xmin),
-                            xmax=xmax+0.05*(xmax-xmin),
-                            ymin=ymin-0.05*(ymax-ymin),
-                            ymax=ymax+0.05*(ymax-ymin))
+                            xmin=xmin - 0.05 * (xmax - xmin),
+                            xmax=xmax + 0.05 * (xmax - xmin),
+                            ymin=ymin - 0.05 * (ymax - ymin),
+                            ymax=ymax + 0.05 * (ymax - ymin))
         axis.axvline(x=col0, color='red', linestyle='--')
         axis.axvline(x=col1, color='red', linestyle='--')
         axis.axhline(y=row0, color='red', linestyle='--')
@@ -758,11 +758,11 @@ if __name__ == "__main__":
     # Cross section along axis 3/3
     cs3_1 = np.zeros(z_shape[0], dtype=np.float32)
     cs3_2 = np.zeros(z_shape[0], dtype=np.float32)
-    n_hex_axes = ncols + ncols%2
+    n_hex_axes = ncols + ncols % 2
     for i in range(n_hex_axes):
-        intercept = col0 + i*xdist  # x-axis (!) intercept
-        intercept_samples = np.linspace(intercept-args.WIDTH/2,
-                                        intercept+args.WIDTH/2,
+        intercept = col0 + i * xdist  # x-axis (!) intercept
+        intercept_samples = np.linspace(intercept - args.WIDTH / 2,
+                                        intercept + args.WIDTH / 2,
                                         args.NSAMPLES,
                                         dtype=np.float32)
 
@@ -795,7 +795,7 @@ if __name__ == "__main__":
             cs_tmp, r3 = mdt.nph.cross_section(z=z, x=x, y=y,
                                                line=hex_ax,
                                                num=z_shape[0])
-            if i%2 == 0:
+            if i % 2 == 0:
                 cs3_1 += cs_tmp
             else:
                 cs3_2 += cs_tmp
@@ -820,18 +820,18 @@ if __name__ == "__main__":
                      a=args.LATCONST):
         _, shift1 = mdt.nph.find_nearest(r3, row0, return_index=True)
         _, shift2 = mdt.nph.find_nearest(r3,
-                                         row0+ydist,
+                                         row0 + ydist,
                                          return_index=True)
     else:
         _, shift1 = mdt.nph.find_nearest(r3,
-                                         row0+ydist,
+                                         row0 + ydist,
                                          return_index=True)
         _, shift2 = mdt.nph.find_nearest(r3, row0, return_index=True)
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_axis),
+          .format(datetime.now() - timer_axis),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -841,10 +841,10 @@ if __name__ == "__main__":
         timer_plot = datetime.now()
         finish_heatmap_plot(axis=axis)
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -871,10 +871,10 @@ if __name__ == "__main__":
         plt.show()
         plt.close()
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -905,7 +905,7 @@ if __name__ == "__main__":
     cs2 = np.roll(cs2, shift=-shift)
 
     rmax = min(np.max(r1), np.max(r3))
-    rmax_ix = min(np.argmax(r1>=rmax), np.argmax(r3>=rmax)) - 1
+    rmax_ix = min(np.argmax(r1 >= rmax), np.argmax(r3 >= rmax)) - 1
     r_1nn = r1[:rmax_ix]
     cs3_interp = np.interp(x=r_1nn, xp=r3, fp=cs3)
 
@@ -913,10 +913,10 @@ if __name__ == "__main__":
     cs_1nn = (cs1[:rmax_ix] + cs2[:rmax_ix] + cs3_interp[:rmax_ix]) / 3
 
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_average),
+          .format(datetime.now() - timer_average),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -956,19 +956,19 @@ if __name__ == "__main__":
         plt.show()
         plt.close()
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
     print(flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -988,10 +988,10 @@ if __name__ == "__main__":
     # Assume perdiodic boundary conditions.
     # Extend z (and x) in x direction, to simplify the extraction of
     # cross sections that cross the boundary
-    unit_cell_slice = slice(z_shape[1], 2*z_shape[1])
+    unit_cell_slice = slice(z_shape[1], 2 * z_shape[1])
     z = np.tile(z, 3)
-    x_tmp = np.hstack([x, x[-1] + x[-1]-x[-2] + x])
-    x = np.hstack([x - x[1]-x[0] - xmax, x_tmp])
+    x_tmp = np.hstack([x, x[-1] + x[-1] - x[-2] + x])
+    x = np.hstack([x - x[1] - x[0] - xmax, x_tmp])
     del x_tmp
 
 
@@ -1012,7 +1012,7 @@ if __name__ == "__main__":
                      a=args.LATCONST):
         intercept_min = row0 - slope * col1  # c = y - mx
     else:
-        intercept_min = row0 - slope * (col1-xdist)
+        intercept_min = row0 - slope * (col1 - xdist)
 
 
     if args.SHOW_PLOTS:
@@ -1022,14 +1022,14 @@ if __name__ == "__main__":
                                  tight_layout=True)
         mdt.plot.pcolormesh(ax=axis,
                             x=np.append(x[unit_cell_slice],
-                                        (2*x[unit_cell_slice][-1] -
+                                        (2 * x[unit_cell_slice][-1] -
                                          x[unit_cell_slice][-2])),
-                            y=np.append(y, y[-1]+(y[-1]-y[-2])),
-                            z=z[:,unit_cell_slice],
-                            xmin=xmin-0.05*(xmax-xmin),
-                            xmax=xmax+0.05*(xmax-xmin),
-                            ymin=ymin-0.05*(ymax-ymin),
-                            ymax=ymax+0.05*(ymax-ymin))
+                            y=np.append(y, y[-1] + (y[-1] - y[-2])),
+                            z=z[:, unit_cell_slice],
+                            xmin=xmin - 0.05 * (xmax - xmin),
+                            xmax=xmax + 0.05 * (xmax - xmin),
+                            ymin=ymin - 0.05 * (ymax - ymin),
+                            ymax=ymax + 0.05 * (ymax - ymin))
         axis.axvline(x=col0, color='red', linestyle='--')
         axis.axvline(x=col1, color='red', linestyle='--')
         axis.axhline(y=row0, color='red', linestyle='--')
@@ -1040,11 +1040,11 @@ if __name__ == "__main__":
     cs1_1 = np.zeros(z_shape[0], dtype=np.float32)
     cs1_2 = np.zeros(z_shape[0], dtype=np.float32)
     cs1_3 = np.zeros(z_shape[0], dtype=np.float32)
-    n_hex_axes = ncols + ncols//2 + ncols%2
+    n_hex_axes = ncols + ncols // 2 + ncols % 2
     for i in range(n_hex_axes):
-        intercept = intercept_min + 2*i*ydist
-        intercept_samples = np.linspace(intercept-args.WIDTH/2,
-                                        intercept+args.WIDTH/2,
+        intercept = intercept_min + 2 * i * ydist
+        intercept_samples = np.linspace(intercept - args.WIDTH / 2,
+                                        intercept + args.WIDTH / 2,
                                         args.NSAMPLES,
                                         dtype=np.float32)
 
@@ -1082,11 +1082,11 @@ if __name__ == "__main__":
             cs_tmp, r1 = mdt.nph.cross_section(z=z, x=x, y=y,
                                                line=hex_ax,
                                                num=z_shape[0])
-            if i%3 == 0:
+            if i % 3 == 0:
                 cs1_1 += cs_tmp
-            elif i%3 == 1:
+            elif i % 3 == 1:
                 cs1_2 += cs_tmp
-            elif i%3 == 2:
+            elif i % 3 == 2:
                 cs1_3 += cs_tmp
             if (i > 0 or j > 0) and not np.allclose(r1, r_prev):
                 raise ValueError("The sampling points along the"
@@ -1107,15 +1107,15 @@ if __name__ == "__main__":
     # center resides at r=0
     shift = row0 / np.sin(np.deg2rad(60))
     _, shift1 = mdt.nph.find_nearest(r1, shift, return_index=True)
-    shift = (row0 + 2*ydist) / np.sin(np.deg2rad(60))
+    shift = (row0 + 2 * ydist) / np.sin(np.deg2rad(60))
     _, shift2 = mdt.nph.find_nearest(r1, shift, return_index=True)
     shift = (row0 + ydist) / np.sin(np.deg2rad(60))
     _, shift3 = mdt.nph.find_nearest(r1, shift, return_index=True)
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_axis),
+          .format(datetime.now() - timer_axis),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -1125,10 +1125,10 @@ if __name__ == "__main__":
         timer_plot = datetime.now()
         finish_heatmap_plot(axis=axis)
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -1161,10 +1161,10 @@ if __name__ == "__main__":
         plt.show()
         plt.close()
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -1193,7 +1193,7 @@ if __name__ == "__main__":
                      a=args.LATCONST):
         intercept_min = row0 - slope * col0  # c = y - mx
     else:
-        intercept_min = row0 - slope * (col0+xdist)
+        intercept_min = row0 - slope * (col0 + xdist)
 
 
     if args.SHOW_PLOTS:
@@ -1203,14 +1203,14 @@ if __name__ == "__main__":
                                  tight_layout=True)
         mdt.plot.pcolormesh(ax=axis,
                             x=np.append(x[unit_cell_slice],
-                                        (2*x[unit_cell_slice][-1] -
+                                        (2 * x[unit_cell_slice][-1] -
                                          x[unit_cell_slice][-2])),
-                            y=np.append(y, y[-1]+(y[-1]-y[-2])),
-                            z=z[:,unit_cell_slice],
-                            xmin=xmin-0.05*(xmax-xmin),
-                            xmax=xmax+0.05*(xmax-xmin),
-                            ymin=ymin-0.05*(ymax-ymin),
-                            ymax=ymax+0.05*(ymax-ymin))
+                            y=np.append(y, y[-1] + (y[-1] - y[-2])),
+                            z=z[:, unit_cell_slice],
+                            xmin=xmin - 0.05 * (xmax - xmin),
+                            xmax=xmax + 0.05 * (xmax - xmin),
+                            ymin=ymin - 0.05 * (ymax - ymin),
+                            ymax=ymax + 0.05 * (ymax - ymin))
         axis.axvline(x=col0, color='red', linestyle='--')
         axis.axvline(x=col1, color='red', linestyle='--')
         axis.axhline(y=row0, color='red', linestyle='--')
@@ -1221,11 +1221,11 @@ if __name__ == "__main__":
     cs2_1 = np.zeros(z_shape[0], dtype=np.float32)
     cs2_2 = np.zeros(z_shape[0], dtype=np.float32)
     cs2_3 = np.zeros(z_shape[0], dtype=np.float32)
-    n_hex_axes = ncols + ncols//2 + ncols%2
+    n_hex_axes = ncols + ncols // 2 + ncols % 2
     for i in range(n_hex_axes):
-        intercept = intercept_min + 2*i*ydist
-        intercept_samples = np.linspace(intercept-args.WIDTH/2,
-                                        intercept+args.WIDTH/2,
+        intercept = intercept_min + 2 * i * ydist
+        intercept_samples = np.linspace(intercept - args.WIDTH / 2,
+                                        intercept + args.WIDTH / 2,
                                         args.NSAMPLES,
                                         dtype=np.float32)
 
@@ -1263,11 +1263,11 @@ if __name__ == "__main__":
             cs_tmp, r2 = mdt.nph.cross_section(z=z, x=x, y=y,
                                                line=hex_ax,
                                                num=z_shape[0])
-            if i%3 == 0:
+            if i % 3 == 0:
                 cs2_1 += cs_tmp
-            elif i%3 == 1:
+            elif i % 3 == 1:
                 cs2_2 += cs_tmp
-            elif i%3 == 2:
+            elif i % 3 == 2:
                 cs2_3 += cs_tmp
             if (i > 0 or j > 0) and not np.allclose(r2, r_prev):
                 raise ValueError("The sampling points along the"
@@ -1288,15 +1288,15 @@ if __name__ == "__main__":
     # center resides at r=0
     shift = row0 / np.sin(np.deg2rad(60))
     _, shift1 = mdt.nph.find_nearest(r2, shift, return_index=True)
-    shift = (row0 + 2*ydist) / np.sin(np.deg2rad(60))
+    shift = (row0 + 2 * ydist) / np.sin(np.deg2rad(60))
     _, shift2 = mdt.nph.find_nearest(r2, shift, return_index=True)
     shift = (row0 + ydist) / np.sin(np.deg2rad(60))
     _, shift3 = mdt.nph.find_nearest(r2, shift, return_index=True)
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_axis),
+          .format(datetime.now() - timer_axis),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -1306,10 +1306,10 @@ if __name__ == "__main__":
         timer_plot = datetime.now()
         finish_heatmap_plot(axis=axis)
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -1342,10 +1342,10 @@ if __name__ == "__main__":
         plt.show()
         plt.close()
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -1374,14 +1374,14 @@ if __name__ == "__main__":
                                  tight_layout=True)
         mdt.plot.pcolormesh(ax=axis,
                             x=np.append(x[unit_cell_slice],
-                                        (2*x[unit_cell_slice][-1] -
+                                        (2 * x[unit_cell_slice][-1] -
                                          x[unit_cell_slice][-2])),
-                            y=np.append(y, y[-1]+(y[-1]-y[-2])),
-                            z=z[:,unit_cell_slice],
-                            xmin=xmin-0.05*(xmax-xmin),
-                            xmax=xmax+0.05*(xmax-xmin),
-                            ymin=ymin-0.05*(ymax-ymin),
-                            ymax=ymax+0.05*(ymax-ymin))
+                            y=np.append(y, y[-1] + (y[-1] - y[-2])),
+                            z=z[:, unit_cell_slice],
+                            xmin=xmin - 0.05 * (xmax - xmin),
+                            xmax=xmax + 0.05 * (xmax - xmin),
+                            ymin=ymin - 0.05 * (ymax - ymin),
+                            ymax=ymax + 0.05 * (ymax - ymin))
         axis.axvline(x=col0, color='red', linestyle='--')
         axis.axvline(x=col1, color='red', linestyle='--')
         axis.axhline(y=row0, color='red', linestyle='--')
@@ -1393,9 +1393,9 @@ if __name__ == "__main__":
     cs3_2 = np.zeros(z_shape[1], dtype=np.float32)
     n_hex_axes = nrows
     for i in range(n_hex_axes):
-        intercept = row0 + i*ydist
-        intercept_samples = np.linspace(intercept-args.WIDTH/2,
-                                        intercept+args.WIDTH/2,
+        intercept = row0 + i * ydist
+        intercept_samples = np.linspace(intercept - args.WIDTH / 2,
+                                        intercept + args.WIDTH / 2,
                                         args.NSAMPLES,
                                         dtype=np.float32)
 
@@ -1428,7 +1428,7 @@ if __name__ == "__main__":
             cs_tmp, r3 = mdt.nph.cross_section(z=z, x=x, y=y,
                                                line=hex_ax,
                                                num=z_shape[1])
-            if i%2 == 0:
+            if i % 2 == 0:
                 cs3_1 += cs_tmp
             else:
                 cs3_2 += cs_tmp
@@ -1453,18 +1453,18 @@ if __name__ == "__main__":
                      a=args.LATCONST):
         _, shift1 = mdt.nph.find_nearest(r3, col0, return_index=True)
         _, shift2 = mdt.nph.find_nearest(r3,
-                                         col0+xdist,
+                                         col0 + xdist,
                                          return_index=True)
     else:
         _, shift1 = mdt.nph.find_nearest(r3,
-                                         col0+xdist,
+                                         col0 + xdist,
                                          return_index=True)
         _, shift2 = mdt.nph.find_nearest(r3, col0, return_index=True)
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_axis),
+          .format(datetime.now() - timer_axis),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -1474,10 +1474,10 @@ if __name__ == "__main__":
         timer_plot = datetime.now()
         finish_heatmap_plot(axis=axis)
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -1504,10 +1504,10 @@ if __name__ == "__main__":
         plt.show()
         plt.close()
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -1531,7 +1531,7 @@ if __name__ == "__main__":
         raise ValueError("The cross sections of axis 1 and 2 are not"
                          " sampled at equivalent points ")
     rmax = min(np.max(r1), np.max(r3))
-    rmax_ix = min(np.argmax(r1>=rmax), np.argmax(r3>=rmax)) - 1
+    rmax_ix = min(np.argmax(r1 >= rmax), np.argmax(r3 >= rmax)) - 1
     r_2nn = r1[:rmax_ix]
     cs3_interp = np.interp(x=r_2nn, xp=r3, fp=cs3)
 
@@ -1539,10 +1539,10 @@ if __name__ == "__main__":
     cs_2nn = (cs1[:rmax_ix] + cs2[:rmax_ix] + cs3_interp[:rmax_ix]) / 3
 
     print("  Elapsed time:         {}"
-          .format(datetime.now()-timer_average),
+          .format(datetime.now() - timer_average),
           flush=True)
     print("  Current memory usage: {:14.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -1582,19 +1582,19 @@ if __name__ == "__main__":
         plt.show()
         plt.close()
         print("  Elapsed time:         {}"
-              .format(datetime.now()-timer_plot),
+              .format(datetime.now() - timer_plot),
               flush=True)
         print("  Current memory usage: {:14.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
     print(flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -1640,28 +1640,28 @@ if __name__ == "__main__":
     )
 
     rmax = min(np.max(r_1nn), np.max(r_2nn))
-    rmax_ix = min(np.argmax(r_1nn>=rmax), np.argmax(r_2nn>=rmax)) - 1
+    rmax_ix = min(np.argmax(r_1nn >= rmax), np.argmax(r_2nn >= rmax)) - 1
     data = np.column_stack([r_1nn[:rmax_ix], cs_1nn[:rmax_ix],
                             r_2nn[:rmax_ix], cs_2nn[:rmax_ix]])
-    mdt.fh.savetxt(fname=args.OUTFILE+".txt",
+    mdt.fh.savetxt(fname=args.OUTFILE + ".txt",
                    data=data,
                    header=header)
-    print("  Created {}".format(args.OUTFILE+".txt"), flush=True)
+    print("  Created {}".format(args.OUTFILE + ".txt"), flush=True)
 
 
 
 
-    z = z[:,unit_cell_slice]
+    z = z[:, unit_cell_slice]
     x = x[unit_cell_slice]
-    mdt.fh.backup(args.OUTFILE+".pdf")
-    with PdfPages(args.OUTFILE+".pdf") as pdf:
+    mdt.fh.backup(args.OUTFILE + ".pdf")
+    with PdfPages(args.OUTFILE + ".pdf") as pdf:
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
         mdt.plot.pcolormesh(ax=axis,
-                            x=np.append(x, x[-1]+(x[-1]-x[-2])),
-                            y=np.append(y, y[-1]+(y[-1]-y[-2])),
+                            x=np.append(x, x[-1] + (x[-1] - x[-2])),
+                            y=np.append(y, y[-1] + (y[-1] - y[-2])),
                             z=z,
                             xmin=xmin,
                             xmax=xmax,
@@ -1711,10 +1711,10 @@ if __name__ == "__main__":
 
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -1722,8 +1722,8 @@ if __name__ == "__main__":
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

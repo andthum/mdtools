@@ -92,13 +92,13 @@ def discrete_coord(cms, verbose=False, debug=False):
         timer = datetime.now()
         proc = psutil.Process(os.getpid())
         print("  Frame   {:12d} of {:12d}"
-              .format(0, len(cms)-1),
+              .format(0, len(cms) - 1),
               flush=True)
         print("    Elapsed time:             {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("    Current memory usage: {:18.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
         timer = datetime.now()
 
@@ -117,19 +117,19 @@ def discrete_coord(cms, verbose=False, debug=False):
 
     for i, cm in enumerate(cms[1:], 1):
         if (verbose and
-                (i % 10**(len(str(i))-1) == 0 or i == len(cms)-1)):
+                (i % 10**(len(str(i)) - 1) == 0 or i == len(cms) - 1)):
             print("  Frame   {:12d} of {:12d}"
-                  .format(i, len(cms)-1),
+                  .format(i, len(cms) - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer),
+                  .format(datetime.now() - timer),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer = datetime.now()
 
-        bound_now_and_before = cm.multiply(cms[i-1])
+        bound_now_and_before = cm.multiply(cms[i - 1])
         attached = cm - bound_now_and_before
         refix, selix = attached.nonzero()
         if len(refix) > 0 and np.any(refix2refix_t0[refix] < 0):
@@ -149,7 +149,7 @@ def discrete_coord(cms, verbose=False, debug=False):
                 t0.append(np.uint32(i))
                 trenew.append(np.int32(-1))
 
-        detached = cms[i-1] - bound_now_and_before
+        detached = cms[i - 1] - bound_now_and_before
         refix, selix = detached.nonzero()
         if len(refix) > 0:
             refix_unique, selix = mdt.nph.group_by(
@@ -450,10 +450,10 @@ if __name__ == '__main__':
         raise ValueError("The selection atom group contains no atoms")
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -464,7 +464,7 @@ if __name__ == '__main__':
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
 
 
 
@@ -505,14 +505,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -530,10 +530,10 @@ if __name__ == '__main__':
             debug=args.DEBUG)
 
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -548,10 +548,10 @@ if __name__ == '__main__':
 
     print(flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -566,10 +566,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -577,8 +577,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

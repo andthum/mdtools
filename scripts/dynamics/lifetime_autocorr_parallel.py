@@ -86,10 +86,10 @@ if __name__ == '__main__':
         raise ValueError("The selection group contains no atoms")
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
     NBLOCKS, blocksize = mdt.check.block_averaging(n_blocks=args.NBLOCKS,
                                                    n_frames=n_frames,
                                                    check_CPUs=True)
@@ -127,14 +127,14 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     nchunks = num_CPUs
-    if nchunks > int(n_frames/10):
-        nchunks = int(n_frames/10)
+    if nchunks > int(n_frames / 10):
+        nchunks = int(n_frames / 10)
     pool = mdt.parallel.ProcessPool(nprocs=nchunks)
 
-    chunk_size = int((END-BEGIN) / nchunks)
+    chunk_size = int((END - BEGIN) / nchunks)
     chunk_size -= chunk_size % EVERY
-    if chunk_size: # !=0
-        nchunks = int((END-BEGIN) / chunk_size)
+    if chunk_size:  # !=0
+        nchunks = int((END - BEGIN) / chunk_size)
     else:
         nchunks = 1
 
@@ -147,12 +147,12 @@ if __name__ == '__main__':
                                args.CUTOFF,
                                args.COMPOUND,
                                args.MINCONTACTS,
-                               BEGIN+chunk*chunk_size,
-                               BEGIN+(chunk+1)*chunk_size,
+                               BEGIN + chunk * chunk_size,
+                               BEGIN + (chunk + 1) * chunk_size,
                                EVERY,
                                True,
                                args.DEBUG))
-    if BEGIN+(chunk+1)*chunk_size < END:
+    if BEGIN + (chunk + 1) * chunk_size < END:
         chunk += 1
         pool.submit_task(func=mdt.strc.contact_matrices,
                          args=(args.TOPFILE,
@@ -162,12 +162,12 @@ if __name__ == '__main__':
                                args.CUTOFF,
                                args.COMPOUND,
                                args.MINCONTACTS,
-                               BEGIN+chunk*chunk_size,
+                               BEGIN + chunk * chunk_size,
                                END,
                                EVERY,
                                True,
                                args.DEBUG))
-    elif BEGIN+(chunk+1)*chunk_size > END:
+    elif BEGIN + (chunk + 1) * chunk_size > END:
         raise ValueError("I've read more frames than given with -e. This"
                          " should not have happened")
 
@@ -192,14 +192,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -217,10 +217,10 @@ if __name__ == '__main__':
             debug=args.DEBUG)
 
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -233,16 +233,16 @@ if __name__ == '__main__':
     pool = mdt.parallel.ProcessPool(nprocs=num_CPUs)
     for block in range(NBLOCKS):
         pool.submit_task(func=autocorr_bound,
-                         args=(cms[block*blocksize:(block+1)*blocksize],
+                         args=(cms[block * blocksize:(block + 1) * blocksize],
                                effective_restart,
                                args.DEBUG))
         pool.submit_task(func=autocorr_unbound,
-                         args=(cms[block*blocksize:(block+1)*blocksize],
+                         args=(cms[block * blocksize:(block + 1) * blocksize],
                                1,
                                effective_restart,
                                args.DEBUG))
         pool.submit_task(func=autocorr_unbound,
-                         args=(cms[block*blocksize:(block+1)*blocksize],
+                         args=(cms[block * blocksize:(block + 1) * blocksize],
                                0,
                                effective_restart,
                                args.DEBUG))
@@ -285,13 +285,13 @@ if __name__ == '__main__':
     if NBLOCKS > 1:
         acorr_bound, acorr_bound_sd = mdt.stats.block_average(acorr_bound)
         acorr_bound_sd_fit = np.copy(acorr_bound_sd)
-        acorr_bound_sd_fit[acorr_bound_sd_fit==0] = 1e-20
+        acorr_bound_sd_fit[acorr_bound_sd_fit == 0] = 1e-20
         acorr_unbound_ref, acorr_unbound_ref_sd = mdt.stats.block_average(acorr_unbound_ref)
         acorr_unbound_ref_sd_fit = np.copy(acorr_unbound_ref_sd)
-        acorr_unbound_ref_sd_fit[acorr_unbound_ref_sd_fit==0] = 1e-20
+        acorr_unbound_ref_sd_fit[acorr_unbound_ref_sd_fit == 0] = 1e-20
         acorr_unbound_sel, acorr_unbound_sel_sd = mdt.stats.block_average(acorr_unbound_sel)
         acorr_unbound_sel_sd_fit = np.copy(acorr_unbound_sel_sd)
-        acorr_unbound_sel_sd_fit[acorr_unbound_sel_sd_fit==0] = 1e-20
+        acorr_unbound_sel_sd_fit[acorr_unbound_sel_sd_fit == 0] = 1e-20
     else:
         acorr_bound = np.squeeze(acorr_bound)
         acorr_bound_sd_fit = None
@@ -301,10 +301,10 @@ if __name__ == '__main__':
         acorr_unbound_sel_sd_fit = None
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -315,8 +315,8 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     lag_times = np.arange(0,
-                          timestep*blocksize*EVERY,
-                          timestep*EVERY,
+                          timestep * blocksize * EVERY,
+                          timestep * EVERY,
                           dtype=np.float32)
     if args.ENDFIT is None:
         endfit = int(0.9 * len(lag_times))
@@ -345,8 +345,8 @@ if __name__ == '__main__':
                             ysd=ysd)
     else:
         fit_bound = np.full(4, np.nan)
-    lifetime_bound = (fit_bound[0]/fit_bound[2] *
-                      special.gamma(1/fit_bound[2]))
+    lifetime_bound = (fit_bound[0] / fit_bound[2] *
+                      special.gamma(1 / fit_bound[2]))
     kww_bound = kww(t=lag_times, tau=fit_bound[0], beta=fit_bound[2])
     kww_bound[~valid] = np.nan
 
@@ -368,8 +368,8 @@ if __name__ == '__main__':
                                   ysd=ysd)
     else:
         fit_unbound_ref = np.full(4, np.nan)
-    lifetime_unbound_ref = (fit_unbound_ref[0]/fit_unbound_ref[2] *
-                            special.gamma(1/fit_unbound_ref[2]))
+    lifetime_unbound_ref = (fit_unbound_ref[0] / fit_unbound_ref[2] *
+                            special.gamma(1 / fit_unbound_ref[2]))
     kww_unbound_ref = kww(t=lag_times,
                           tau=fit_unbound_ref[0],
                           beta=fit_unbound_ref[2])
@@ -393,8 +393,8 @@ if __name__ == '__main__':
                                   ysd=ysd)
     else:
         fit_unbound_sel = np.full(4, np.nan)
-    lifetime_unbound_sel = (fit_unbound_sel[0]/fit_unbound_sel[2] *
-                            special.gamma(1/fit_unbound_sel[2]))
+    lifetime_unbound_sel = (fit_unbound_sel[0] / fit_unbound_sel[2] *
+                            special.gamma(1 / fit_unbound_sel[2]))
     kww_unbound_sel = kww(t=lag_times,
                           tau=fit_unbound_sel[0],
                           beta=fit_unbound_sel[2])
@@ -408,10 +408,10 @@ if __name__ == '__main__':
     del ysd
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -631,14 +631,14 @@ if __name__ == '__main__':
 
     mdt.fh.savetxt(fname=args.OUTFILE,
                    data=data,
-                   header=header+columns)
+                   header=header + columns)
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -647,8 +647,8 @@ if __name__ == '__main__':
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

@@ -229,9 +229,9 @@ if __name__ == '__main__':
     msd_tot = np.sum(msd, axis=1)
     if args.DCOLOR is not None:
         if args.SEL:
-            cols = 7+dim[args.DCOLOR]
+            cols = 7 + dim[args.DCOLOR]
         else:
-            cols = 4+dim[args.DCOLOR]
+            cols = 4 + dim[args.DCOLOR]
         pos_t0 = np.loadtxt(fname=args.INFILE, usecols=cols)
         pos_t0 *= args.LCONV
 
@@ -250,12 +250,12 @@ if __name__ == '__main__':
             tbins = np.insert(tbins, 0, np.min(trenew))
         if tbins[-1] < np.max(trenew):
             tbins = np.append(tbins, np.max(trenew))
-    t = tbins[1:] - np.diff(tbins)/2
+    t = tbins[1:] - np.diff(tbins) / 2
 
     tbin_ix = np.digitize(trenew, tbins)
     # In np.histogram the last bin is closed, but in np.digitize all
     # bins are half-open. Make the last bin closed:
-    tbin_ix[tbin_ix==len(tbins)] = len(tbins) - 1
+    tbin_ix[tbin_ix == len(tbins)] = len(tbins) - 1
     if np.any(tbin_ix == 0):
         raise ValueError("At least one element of tbin_ix is zero. This"
                          " should not have happened.")
@@ -301,10 +301,10 @@ if __name__ == '__main__':
                          " NaN. This should not have happened")
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -328,10 +328,10 @@ if __name__ == '__main__':
         ydata=msd_tot)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -355,11 +355,11 @@ if __name__ == '__main__':
                                  clear=True,
                                  tight_layout=True)
         mdt.plot.plot(ax=axis,
-                      x=tbins[1:]-np.diff(tbins)/2,
+                      x=tbins[1:] - np.diff(tbins) / 2,
                       y=nevents[1:],
                       xmin=0,
                       xmax=args.XMAX,
-                      xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                       ylabel=r'$N_{renew}$',
                       color='black',
                       marker='o')
@@ -396,8 +396,8 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logx=True,
                 logy=True,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 marker='x')
         else:
             img = mdt.plot.scatter(
@@ -411,8 +411,8 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logx=True,
                 logy=True,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 marker='x',
                 cmap='plasma')
             cbar = plt.colorbar(img, ax=axis)
@@ -426,8 +426,8 @@ if __name__ == '__main__':
                                 labelsize=fontsize_ticks)
             cbar.ax.tick_params(which='minor',
                                 direction='out',
-                                length=0.5*tick_length,
-                                labelsize=0.8*fontsize_ticks)
+                                length=0.5 * tick_length,
+                                labelsize=0.8 * fontsize_ticks)
         mdt.plot.vlines(ax=axis,
                         x=tbins,
                         start=axis.get_ylim()[0],
@@ -450,8 +450,8 @@ if __name__ == '__main__':
             ymax=args.YMAX,
             logx=True,
             logy=True,
-            xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-            ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+            xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+            ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             label=r'$\langle \Delta r^2 \rangle$',
             color='red',
             marker='o')
@@ -467,8 +467,8 @@ if __name__ == '__main__':
             ymax=args.YMAX,
             logx=True,
             logy=True,
-            xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-            ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+            xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+            ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             label="Fit",
             color='black')
         plt.tight_layout()
@@ -495,8 +495,8 @@ if __name__ == '__main__':
                     ymax=args.YMAX,
                     logx=True,
                     logy=True,
-                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                    ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                    xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                    ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                     marker='x')
             else:
                 img = mdt.plot.scatter(
@@ -510,8 +510,8 @@ if __name__ == '__main__':
                     ymax=args.YMAX,
                     logx=True,
                     logy=True,
-                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                    ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                    xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                    ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                     marker='x',
                     cmap='plasma')
                 cbar = plt.colorbar(img, ax=axis)
@@ -525,8 +525,8 @@ if __name__ == '__main__':
                                     labelsize=fontsize_ticks)
                 cbar.ax.tick_params(which='minor',
                                     direction='out',
-                                    length=0.5*tick_length,
-                                    labelsize=0.8*fontsize_ticks)
+                                    length=0.5 * tick_length,
+                                    labelsize=0.8 * fontsize_ticks)
             mdt.plot.vlines(ax=axis,
                             x=tbins,
                             start=axis.get_ylim()[0],
@@ -549,9 +549,9 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logx=True,
                 logy=True,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
-                label=r'$\langle \Delta '+ylabel[i]+r'^2 \rangle$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
+                label=r'$\langle \Delta ' + ylabel[i] + r'^2 \rangle$',
                 color='red',
                 marker='o')
             fit = mdt.dyn.msd(t=trenew, D=popt_msd[i], d=1)
@@ -566,8 +566,8 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logx=True,
                 logy=True,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 label="Fit",
                 color='black')
             plt.tight_layout()
@@ -606,12 +606,12 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Mean / '+args.LUNIT+r'$^2$',
+                 s=r'Mean / ' + args.LUNIT + r'$^2$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT+r'$^2$',
+                 s=r'Std. dev. / ' + args.LUNIT + r'$^2$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
@@ -624,7 +624,7 @@ if __name__ == '__main__':
         plt.text(x=xpos, y=ypos, s=r'$\Delta r^2$', fontsize=fontsize)
         xpos += 0.10
         plt.text(x=xpos,
-                 y=ypos, 
+                 y=ypos,
                  s=r'${:>16.9e}$'.format(np.mean(msd_tot)),
                  fontsize=fontsize)
         xpos += 0.30
@@ -642,7 +642,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'$',
+                     s=r'$\Delta ' + ylabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -657,7 +657,7 @@ if __name__ == '__main__':
             xpos += 0.30
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'${:>16d}$'.format(np.count_nonzero(data==0)),
+                     s=r'${:>16d}$'.format(np.count_nonzero(data == 0)),
                      fontsize=fontsize)
 
         # Fit parameters
@@ -673,12 +673,12 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$D$ / '+args.LUNIT+r'$^2$ '+args.TUNIT+r'$^{-1}$',
+                 s=r'$D$ / ' + args.LUNIT + r'$^2$ ' + args.TUNIT + r'$^{-1}$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT+r'$^2$ '+args.TUNIT+r'$^{-1}$',
+                 s=r'Std. dev. / ' + args.LUNIT + r'$^2$ ' + args.TUNIT + r'$^{-1}$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos, y=ypos, s=r'$d$', fontsize=fontsize)
@@ -709,7 +709,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'^2$',
+                     s=r'$\Delta ' + ylabel[i] + r'^2$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -756,7 +756,7 @@ if __name__ == '__main__':
             xmax=args.XMAX,
             ymin=min(np.nanmin(msd_tot_non_gaus), np.nanmin(msd_non_gaus)),
             ymax=max(np.nanmax(msd_tot_non_gaus), np.nanmax(msd_non_gaus)),
-            xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+            xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
             ylabel=r'$A(\tau_{renew})$',
             label=r'$\Delta r^2$',
             marker='o')
@@ -783,7 +783,7 @@ if __name__ == '__main__':
                 xmax=args.XMAX,
                 ymin=min(np.nanmin(msd_tot_non_gaus), np.nanmin(msd_non_gaus)),
                 ymax=max(np.nanmax(msd_tot_non_gaus), np.nanmax(msd_non_gaus)),
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                 ylabel=r'$A(\tau_{renew})$',
                 label=label[i],
                 marker=marker[i])
@@ -795,10 +795,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -806,8 +806,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

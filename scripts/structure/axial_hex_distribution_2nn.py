@@ -90,16 +90,16 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
                                 box=box,
                                 flatside='x',
                                 tol=tol)
-    xmin = np.min(hex_faces[:,0])
-    ix = np.isclose(hex_faces[:,0], xmin, rtol=0, atol=args.TOL)
+    xmin = np.min(hex_faces[:, 0])
+    ix = np.isclose(hex_faces[:, 0], xmin, rtol=0, atol=args.TOL)
     hex_face_col1 = hex_faces[ix]
-    ix = np.isclose(hex_faces[:,0], xmin+r0*3/2, rtol=0, atol=tol)
+    ix = np.isclose(hex_faces[:, 0], xmin + r0 * 3 / 2, rtol=0, atol=tol)
     hex_face_col2 = hex_faces[ix]
     a0 = r0 * np.sqrt(3)  # Lattice constant
-    if not np.isclose(len(hex_face_col1), box[1]/a0, rtol=0, atol=tol):
+    if not np.isclose(len(hex_face_col1), box[1] / a0, rtol=0, atol=tol):
         raise ValueError("The number of hexagons per column is {} but"
                          " should be {}"
-                         .format(len(hex_face_col1), box[1]/a0))
+                         .format(len(hex_face_col1), box[1] / a0))
     if len(hex_face_col2) != len(hex_face_col1):
         raise ValueError("The number of hexagons in column 2 ({}) is not"
                          " the same as in column 1 ({})"
@@ -307,17 +307,17 @@ if __name__ == '__main__':
                          .format(args.R0))
     A0 = args.R0 * np.sqrt(3)
     if args.AX_WIDTH is None:
-        args.AX_WIDTH = args.R0/2
+        args.AX_WIDTH = args.R0 / 2
     if args.AX_WIDTH <= 0:
         raise ValueError("--ax-width ({}) must be greater than zero"
                          .format(args.AX_WIDTH))
-    elif args.AX_WIDTH > A0/2:
+    elif args.AX_WIDTH > A0 / 2:
         warnings.warn("--ax-width ({}) should not exceed {}"
                       " (=R0*sqrt(3)/2)"
-                      .format(args.AX_WIDTH, A0/2),
+                      .format(args.AX_WIDTH, A0 / 2),
                       RuntimeWarning)
     if args.BIN_WIDTH is None:
-        args.BIN_WIDTH = (A0/2) / 25
+        args.BIN_WIDTH = (A0 / 2) / 25
     if args.BIN_WIDTH <= 0:
         raise ValueError("--bin-width ({}) must be greater than zero"
                          .format(args.BIN_WIDTH))
@@ -379,10 +379,10 @@ if __name__ == '__main__':
                          .format(args.ZMIN, args.ZMAX))
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -393,7 +393,7 @@ if __name__ == '__main__':
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
-    LAST_FRAME = u.trajectory[END-1].frame
+    LAST_FRAME = u.trajectory[END - 1].frame
 
 
 
@@ -429,8 +429,8 @@ if __name__ == '__main__':
     hex_ax_radians = np.deg2rad(hex_ax_angles)
     hex_ax_slopes = np.tan(hex_ax_radians)
     # y = mx + c  =>  c = y0 - m*x0
-    hex_ax_intercepts = (hex_face_cols[0][:,1][:,None] -
-                         hex_ax_slopes * hex_face_cols[0][:,0][:,None])
+    hex_ax_intercepts = (hex_face_cols[0][:, 1][:, None] -
+                         hex_ax_slopes * hex_face_cols[0][:, 0][:, None])
 
     # Number of sampling axes
     n_axes_tilted = hex_face_cols.shape[1]
@@ -446,21 +446,21 @@ if __name__ == '__main__':
     # Maximal axis length when the hexagonal axis is allowed to leave
     # the box in y direction but not in x direction -> x-limited
     ax_lx = abs(surf.dimensions[0] / hex_ax_cos[0])
-    if not np.isclose(ax_lx%(args.R0*3), 0, rtol=0, atol=args.TOL):
+    if not np.isclose(ax_lx % (args.R0 * 3), 0, rtol=0, atol=args.TOL):
         raise ValueError("ax_lx ({}) is not a multiple of r0*3 ({})."
                          " This means the hexagonal lattice does not"
                          " continue properly across periodic boundaries"
-                         .format(ax_lx, args.R0*3))
-    if args.BIN_WIDTH > ax_lx/2:
+                         .format(ax_lx, args.R0 * 3))
+    if args.BIN_WIDTH > ax_lx / 2:
         raise ValueError("The bin width ({}) must be less than half of"
                          " the maximal axis length ({})"
-                         .format(args.BIN_WIDTH, ax_lx/2))
+                         .format(args.BIN_WIDTH, ax_lx / 2))
     bins = np.arange(0,
-                     ax_lx/2 + args.BIN_WIDTH/2,
+                     ax_lx / 2 + args.BIN_WIDTH / 2,
                      args.BIN_WIDTH,
                      dtype=np.float32)
     # Histograms for axes with 60°, 120° and 0° to x axis
-    hists = np.zeros((len(hex_ax_slopes)+1, len(bins)-1),
+    hists = np.zeros((len(hex_ax_slopes) + 1, len(bins) - 1),
                      dtype=np.uint32)
 
 
@@ -499,17 +499,17 @@ if __name__ == '__main__':
     n_surf_moves_dangerous = 0
 
     for ts in u.trajectory[BEGIN:END:EVERY]:
-        if (ts.frame % 10**(len(str(ts.frame))-1) == 0 or
-                ts.frame == END-1):
+        if (ts.frame % 10**(len(str(ts.frame)) - 1) == 0 or
+                ts.frame == END - 1):
             print("  Frame   {:12d}".format(ts.frame), flush=True)
             print("    Step: {:>12}    Time: {:>12} (ps)"
                   .format(ts.data['step'], ts.data['time']),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_frame),
+                  .format(datetime.now() - timer_frame),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_frame = datetime.now()
 
@@ -567,8 +567,8 @@ if __name__ == '__main__':
                                 amin=0,
                                 amax=ts.dimensions[:3])
 
-        np.greater_equal(pos[:,2], args.ZMIN, out=valid_z)
-        np.less(pos[:,2], args.ZMAX, out=valid_z_tmp)
+        np.greater_equal(pos[:, 2], args.ZMIN, out=valid_z)
+        np.less(pos[:, 2], args.ZMAX, out=valid_z_tmp)
         valid_z &= valid_z_tmp
         if not np.any(valid_z):
             continue
@@ -580,16 +580,16 @@ if __name__ == '__main__':
         # Axes with 60° and 120° to x axis
         for j, hex_face in enumerate(hex_face_cols[0]):
             for k, hex_ax_slope in enumerate(hex_ax_slopes):
-                hex_ax = mdt.func.g(x=pos[:,0],
+                hex_ax = mdt.func.g(x=pos[:, 0],
                                     m=hex_ax_slope,
                                     c=hex_ax_intercepts[j][k])
                 # Minimum y distance to sampling axis
-                dist_ax = pos[:,1] - hex_ax
-                dist_ax -= np.floor(dist_ax/ly + 0.5) * ly  # MIC
+                dist_ax = pos[:, 1] - hex_ax
+                dist_ax -= np.floor(dist_ax / ly + 0.5) * ly  # MIC
                 # Distance orthogonal to sampling axis
                 dist_ax *= hex_ax_cos[k]
                 # Compounds that lie on the current sampling axis
-                np.less(np.abs(dist_ax), args.AX_WIDTH/2, out=on_axis)
+                np.less(np.abs(dist_ax), args.AX_WIDTH / 2, out=on_axis)
                 if not np.any(on_axis):
                     continue
                 # x axis is reference axis!
@@ -598,7 +598,7 @@ if __name__ == '__main__':
                 shift_x = dist_ax[on_axis] * hex_ax_sin[k]
                 # Distance to reference hexagon face:
                 # x component of the distance is of primary interest
-                dists_x = pos[:,0][on_axis] + shift_x
+                dists_x = pos[:, 0][on_axis] + shift_x
                 dists_x -= hex_face[0]
                 # y component is determined by x component and axis angle
                 dists_y = dists_x * hex_ax_slope  # y = x * tan(phi)
@@ -608,7 +608,7 @@ if __name__ == '__main__':
                 dists = dists_x + dists_y
                 np.sqrt(dists, out=dists)
                 # Minimum image convention along hexagonal axis
-                dists -= np.floor(dists/ax_lx + 0.5) * ax_lx
+                dists -= np.floor(dists / ax_lx + 0.5) * ax_lx
                 np.abs(dists, out=dists)
                 hist, _ = np.histogram(dists, bins, density=False)
                 hists[k] += hist.astype(hists.dtype, copy=False)
@@ -616,17 +616,17 @@ if __name__ == '__main__':
         # Axis with 0° to x axis
         for hex_face in np.concatenate(hex_face_cols, axis=0):
             # Minimum y distance to sampling axis
-            dist_ax = pos[:,1] - hex_face[1]
-            dist_ax -= np.floor(dist_ax/ly + 0.5) * ly  # MIC
+            dist_ax = pos[:, 1] - hex_face[1]
+            dist_ax -= np.floor(dist_ax / ly + 0.5) * ly  # MIC
             # Compounds that lie on the current sampling axis
-            np.less(np.abs(dist_ax), args.AX_WIDTH/2, out=on_axis)
+            np.less(np.abs(dist_ax), args.AX_WIDTH / 2, out=on_axis)
             if not np.any(on_axis):
                 continue
             # Distance to reference hexagon face:
             # Only the x component of the distance is of interest
-            dists_x = pos[:,0][on_axis] - hex_face[0]
+            dists_x = pos[:, 0][on_axis] - hex_face[0]
             # Minimum image convention along x axis
-            dists_x -= np.floor(dists_x/lx + 0.5) * lx
+            dists_x -= np.floor(dists_x / lx + 0.5) * lx
             np.abs(dists_x, out=dists_x)
             hist, _ = np.histogram(dists_x, bins, density=False)
             hists[-1] += hist.astype(hists.dtype, copy=False)
@@ -648,14 +648,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -665,7 +665,7 @@ if __name__ == '__main__':
     print("Creating output", flush=True)
     timer = datetime.now()
 
-    bin_vol = args.BIN_WIDTH * args.AX_WIDTH * (args.ZMAX-args.ZMIN)
+    bin_vol = args.BIN_WIDTH * args.AX_WIDTH * (args.ZMAX - args.ZMIN)
     # Due to the minimum image convention, every bin is sampled "twice"
     # (positive and negative distance)
     hists = hists / (2 * N_FRAMES * bin_vol)
@@ -769,17 +769,17 @@ if __name__ == '__main__':
     )
 
     mdt.fh.savetxt(fname=args.OUTFILE,
-                   data=np.column_stack([bins[1:]-np.diff(bins)/2,
+                   data=np.column_stack([bins[1:] - np.diff(bins) / 2,
                                          hists.T,
                                          hist_tot]),
                    header=header)
 
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -787,8 +787,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

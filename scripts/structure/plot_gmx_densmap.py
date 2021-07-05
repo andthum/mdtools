@@ -44,7 +44,7 @@ plt.rc('ytick.major', width=2)
 plt.rc('ytick.minor', width=2)
 plt.rc('text', usetex=True)
 plt.rcParams['text.latex.preview'] = True
-plt.rc('font',**{'family' : 'serif', 'serif' : 'Times'})
+plt.rc('font', **{'family': 'serif', 'serif': 'Times'})
 
 
 
@@ -76,9 +76,9 @@ def read_matrix(infile):
     """
 
     data = np.genfromtxt(infile)
-    x = data[1:,0]
-    y = data[0,1:]
-    z = data[1:,1:]
+    x = data[1:, 0]
+    y = data[0, 1:]
+    z = data[1:, 1:]
 
     # Make the upper left corner of the matrix the lower left corner,
     # i.e. invert the matrix vertically
@@ -154,8 +154,8 @@ def plot_rgb_matrix(ax, z, xmin=None, xmax=None, ymin=None, ymax=None,
                    direction='out',
                    top=False,
                    right=False,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
 
     return img
@@ -287,7 +287,7 @@ if __name__ == "__main__":
 
 
     rgb_args = np.array([args.RED, args.GREEN, args.BLUE])
-    rgb_code = {0 : 'red', 1 : 'green', 2 : 'blue'}
+    rgb_code = {0: 'red', 1: 'green', 2: 'blue'}
 
 
     if np.all(rgb_args == None):
@@ -312,19 +312,19 @@ if __name__ == "__main__":
             xtmp, ytmp, ztmp = read_matrix(rgb_args[i])
             x.append(xtmp)
             y.append(ytmp)
-            z.append(ztmp/ztmp.max())
+            z.append(ztmp / ztmp.max())
     x = np.array(x)
     y = np.array(y)
     z = np.array(z)
 
     for i in range(1, len(x)):
-        if np.any(x[i-1] != x[i]):
+        if np.any(x[i - 1] != x[i]):
             raise ValueError("The x values of the provided data are not"
                              " exactly the same")
-        if np.any(y[i-1] != y[i]):
+        if np.any(y[i - 1] != y[i]):
             raise ValueError("The y values of the provided data are not"
                              " exactly the same")
-        if z[i-1].shape != z[i].shape:
+        if z[i - 1].shape != z[i].shape:
             raise ValueError("The provided matrices have not the same"
                              " shape")
     x = x[0]
@@ -353,19 +353,19 @@ if __name__ == "__main__":
         print("\n\n\n", flush=True)
         for i in range(len(rgb_channel_used)):
             if rgb_channel_used[i]:
-                rgb_norm = np.round(rgb[..., i]*255).astype(np.uint8)
+                rgb_norm = np.round(rgb[..., i] * 255).astype(np.uint8)
                 thresh, rgb[..., i] = cv2.threshold(
                     src=rgb_norm,
                     thresh=0,
                     maxval=255,
-                    type=cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                    type=cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 rgb[..., i] /= rgb[..., i].max()
                 #print("Histogram:", flush=True)
                 #print(np.bincount(rgb_norm.flatten()), flush=True)
                 print("Otsu's threshold for {:>5} channel (0 - 255):"
                       " {:>3f}".format(rgb_code[i], thresh), flush=True)
     else:
-        rgb[rgb<args.CUTOFF] = 0
+        rgb[rgb < args.CUTOFF] = 0
 
 
     print("\n\n\n", flush=True)

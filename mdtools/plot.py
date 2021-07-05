@@ -34,7 +34,7 @@ plt.rc('ytick.major', width=2)
 plt.rc('ytick.minor', width=2)
 plt.rc('text', usetex=True)
 plt.rcParams['text.latex.preview'] = True
-plt.rc('font',**{'family' : 'serif', 'serif' : 'Times'})
+plt.rc('font', **{'family': 'serif', 'serif': 'Times'})
 
 
 
@@ -159,8 +159,8 @@ def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
                    direction='in',
                    top=True,
                    right=True,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
     if kwargs.get('label') is not None:
         ax.legend(loc=legend_loc,
@@ -262,8 +262,8 @@ def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
                    direction='in',
                    top=True,
                    right=True,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
     if kwargs.get('label') is not None:
         ax.legend(loc=legend_loc,
@@ -361,8 +361,8 @@ def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
                    direction='in',
                    top=True,
                    right=True,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
     if kwargs.get('label') is not None:
         ax.legend(loc=legend_loc,
@@ -445,8 +445,8 @@ def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
                    direction='in',
                    top=True,
                    right=True,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
     if kwargs.get('label') is not None:
         ax.legend(loc=legend_loc,
@@ -518,8 +518,8 @@ def hlines(ax, y, start, stop, xmin=None, xmax=None, ymin=None,
                    direction='in',
                    top=True,
                    right=True,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
     if kwargs.get('label') is not None:
         ax.legend(loc=legend_loc,
@@ -591,8 +591,8 @@ def vlines(ax, x, start, stop, xmin=None, xmax=None, ymin=None,
                    direction='in',
                    top=True,
                    right=True,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
     if kwargs.get('label') is not None:
         ax.legend(loc=legend_loc,
@@ -674,8 +674,8 @@ def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
                     which='minor',
                     direction='in',
                     labelcolor=kwargs.get('color'),
-                    length=0.5*tick_length,
-                    labelsize=0.8*fontsize_ticks)
+                    length=0.5 * tick_length,
+                    labelsize=0.8 * fontsize_ticks)
     if kwargs.get('label') is not None:
         ax2.legend(loc=legend_loc,
                    numpoints=1,
@@ -758,8 +758,8 @@ def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
                     which='minor',
                     direction='in',
                     labelcolor=kwargs.get('color'),
-                    length=0.5*tick_length,
-                    labelsize=0.8*fontsize_ticks,
+                    length=0.5 * tick_length,
+                    labelsize=0.8 * fontsize_ticks,
                     pad=tick_pad)
     if kwargs.get('label') is not None:
         ax2.legend(loc=legend_loc,
@@ -852,8 +852,8 @@ def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
                    direction='in',
                    top=True,
                    right=True,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
     if kwargs.get('label') is not None:
         ax.legend(loc=legend_loc,
@@ -947,8 +947,8 @@ def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
                    direction='in',
                    top=True,
                    right=True,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
     if kwargs.get('label') is not None:
         ax.legend(loc=legend_loc,
@@ -1052,8 +1052,8 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
                    direction='out',
                    top=False,
                    right=False,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
 
     cbar = plt.colorbar(heatmap, cax=cax, ax=ax)
@@ -1066,8 +1066,8 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
                         labelsize=fontsize_ticks)
     cbar.ax.tick_params(which='minor',
                         direction='out',
-                        length=0.5*tick_length,
-                        labelsize=0.8*fontsize_ticks)
+                        length=0.5 * tick_length,
+                        labelsize=0.8 * fontsize_ticks)
 
     return heatmap
 
@@ -1146,8 +1146,8 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
                    direction='out',
                    top=False,
                    right=False,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
 
     cbar = plt.colorbar(heatmap, cax=cax, ax=ax)
@@ -1160,8 +1160,8 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
                         labelsize=fontsize_ticks)
     cbar.ax.tick_params(which='minor',
                         direction='out',
-                        length=0.5*tick_length,
-                        labelsize=0.8*fontsize_ticks)
+                        length=0.5 * tick_length,
+                        labelsize=0.8 * fontsize_ticks)
 
     return heatmap
 
@@ -1234,8 +1234,8 @@ def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
                    direction='out',
                    top=False,
                    right=False,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
 
     cbar = plt.colorbar(heatmap, cax=cax, ax=ax)
@@ -1248,8 +1248,8 @@ def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
                         labelsize=fontsize_ticks)
     cbar.ax.tick_params(which='minor',
                         direction='out',
-                        length=0.5*tick_length,
-                        labelsize=0.8*fontsize_ticks)
+                        length=0.5 * tick_length,
+                        labelsize=0.8 * fontsize_ticks)
 
     return heatmap
 

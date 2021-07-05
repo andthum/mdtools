@@ -189,15 +189,15 @@ if __name__ == "__main__":
         raise ValueError("You must give at least two columns")
     if (args.BEGINFIT is not None and
         len(args.BEGINFIT) != 1 and
-            len(args.BEGINFIT) != len(args.COLS)-1):
+            len(args.BEGINFIT) != len(args.COLS) - 1):
         raise ValueError("You have to give either one start time for"
                          " fitting or exactly as many as MSDs to plot")
-    if (args.ENDFIT is not None and 
+    if (args.ENDFIT is not None and
         len(args.ENDFIT) != 1 and
-            len(args.ENDFIT) != len(args.COLS)-1):
+            len(args.ENDFIT) != len(args.COLS) - 1):
         raise ValueError("You have to give either one end time for"
                          " fitting or exactly as many as MSDs to plot")
-    if args.LABELS is not None and len(args.LABELS) != len(args.COLS)-1:
+    if args.LABELS is not None and len(args.LABELS) != len(args.COLS) - 1:
         raise ValueError("You have to give exactly as many labels as"
                          " MSDs to plot")
 
@@ -212,16 +212,16 @@ if __name__ == "__main__":
                       comments=['#', '@'],
                       usecols=args.COLS,
                       ndmin=2)
-    times = msds[:,0] * args.TCONV
-    msds = msds[:,1:] * args.LCONV**2
+    times = msds[:, 0] * args.TCONV
+    msds = msds[:, 1:] * args.LCONV**2
     if len(times) < 2:
         raise ValueError("The input must contain at least two rows")
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -233,16 +233,16 @@ if __name__ == "__main__":
         beginfit = np.searchsorted(times, args.BEGINFIT)
         if len(beginfit) == 1:
             beginfit = np.full(len(msds[0]), beginfit[0])
-    if np.any(beginfit > len(times)-2):
-        beginfit[beginfit>len(times)-2] = len(times) - 2
+    if np.any(beginfit > len(times) - 2):
+        beginfit[beginfit > len(times) - 2] = len(times) - 2
     if args.ENDFIT is None:
-        endfit = np.full(len(msds[0]), int(0.9 * len(times))+1)
+        endfit = np.full(len(msds[0]), int(0.9 * len(times)) + 1)
     else:
         endfit = np.searchsorted(times, args.ENDFIT) + 1
         if len(endfit) == 1:
             endfit = np.full(len(msds[0]), endfit[0])
     if np.any(endfit > len(times)):
-        endfit[endfit>len(times)] = len(times)
+        endfit[endfit > len(times)] = len(times)
 
     if args.XMIN is None:
         args.XMIN = np.min(times)
@@ -254,16 +254,16 @@ if __name__ == "__main__":
         args.YMAX = np.max(msds)
 
     if args.XMIN <= 0:
-        xmin_log = np.min(times[times>0])
+        xmin_log = np.min(times[times > 0])
     else:
         xmin_log = args.XMIN
     if args.YMIN <= 0:
-        ymin_log = np.min(msds[msds>0])
+        ymin_log = np.min(msds[msds > 0])
     else:
         ymin_log = args.YMIN
 
     if args.LABELS is None:
-        args.LABELS = [None,] * len(msds[0])
+        args.LABELS = [None, ] * len(msds[0])
 
 
 
@@ -274,7 +274,7 @@ if __name__ == "__main__":
 
     popt = np.zeros(len(msds[0]))
     pcov = np.zeros(len(msds[0]))
-    fit = [None,] * len(msds[0])
+    fit = [None, ] * len(msds[0])
     ymin_fit = np.zeros(len(msds[0]))
     ymax_fit = np.zeros(len(msds[0]))
     for i, msd in enumerate(msds.T):
@@ -296,10 +296,10 @@ if __name__ == "__main__":
     ymax_fit = np.max(ymax_fit)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -313,7 +313,7 @@ if __name__ == "__main__":
     with open(args.OUTFILE + ".txt", 'a') as outfile:
         outfile.write("# Diffusion coefficient(s) D\n")
         outfile.write("# Fitted from Mean Square Displacement (MSD) via\n")
-        outfile.write("#   MSD(t) = {}*D*t\n".format(2*args.NDIM))
+        outfile.write("#   MSD(t) = {}*D*t\n".format(2 * args.NDIM))
         outfile.write("#\n")
         outfile.write("#\n")
         outfile.write("# The columns contain:\n")
@@ -333,19 +333,19 @@ if __name__ == "__main__":
         outfile.write(" {:>12s}".format("Start"))
         outfile.write(" {:>12s}\n".format("End"))
         for i in range(len(popt)):
-            outfile.write("  {:>3d}".format(args.COLS[i+1]))
+            outfile.write("  {:>3d}".format(args.COLS[i + 1]))
             outfile.write(" {:>12s}".format(str(args.LABELS[i])))
             outfile.write(" {:16.9e}".format(popt[i]))
             outfile.write(" {:16.9e}".format(np.sqrt(pcov[i])))
             outfile.write(" {:>12.3f}".format(times[beginfit[i]]))
-            outfile.write(" {:>12.3f}\n".format(times[endfit[i]-1]))
+            outfile.write(" {:>12.3f}\n".format(times[endfit[i] - 1]))
 
     print("  Created {}".format(args.OUTFILE + ".txt"))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -368,7 +368,7 @@ if __name__ == "__main__":
                                  num=1)
         axis.ticklabel_format(axis='both',
                               style='scientific',
-                              scilimits=(0,0),
+                              scilimits=(0, 0),
                               useOffset=False)
         for i, msd in enumerate(msds.T):
             mdt.plot.plot(
@@ -397,7 +397,7 @@ if __name__ == "__main__":
                                  num=1)
         axis.ticklabel_format(axis='both',
                               style='scientific',
-                              scilimits=(0,0),
+                              scilimits=(0, 0),
                               useOffset=False)
         for msd in msds.T:
             mdt.plot.plot(
@@ -440,16 +440,16 @@ if __name__ == "__main__":
                                  num=1)
         axis.ticklabel_format(axis='both',
                               style='scientific',
-                              scilimits=(0,0),
+                              scilimits=(0, 0),
                               useOffset=False)
         for msd in msds.T:
             mdt.plot.plot(
                 ax=axis,
                 x=times,
                 y=msd,
-                xmin=xmin_fit if xmin_fit>0 else xmin_log,
+                xmin=xmin_fit if xmin_fit > 0 else xmin_log,
                 xmax=xmax_fit,
-                ymin=ymin_fit if ymin_fit>0 else ymin_log,
+                ymin=ymin_fit if ymin_fit > 0 else ymin_log,
                 ymax=ymax_fit,
                 logx=True,
                 logy=True,
@@ -460,9 +460,9 @@ if __name__ == "__main__":
                 ax=axis,
                 x=times[beginfit[i]:endfit[i]],
                 y=fit[i],
-                xmin=xmin_fit if xmin_fit>0 else xmin_log,
+                xmin=xmin_fit if xmin_fit > 0 else xmin_log,
                 xmax=xmax_fit,
-                ymin=ymin_fit if ymin_fit>0 else ymin_log,
+                ymin=ymin_fit if ymin_fit > 0 else ymin_log,
                 ymax=ymax_fit,
                 logx=True,
                 logy=True,
@@ -502,7 +502,7 @@ if __name__ == "__main__":
 
         # Semi log plot without fit
         for i in range(len(msds[0])):
-            msds[:,i][times!=0] /= (6 * times[times!=0])
+            msds[:, i][times != 0] /= (6 * times[times != 0])
         ymin_semilog = np.min(msds)
         ymax_semilog = np.max(msds)
 
@@ -513,7 +513,7 @@ if __name__ == "__main__":
                                  num=1)
         axis.ticklabel_format(axis='x',
                               style='scientific',
-                              scilimits=(0,0),
+                              scilimits=(0, 0),
                               useOffset=False)
         for i, msd in enumerate(msds.T):
             mdt.plot.plot(
@@ -545,7 +545,7 @@ if __name__ == "__main__":
                                  num=1)
         axis.ticklabel_format(axis='x',
                               style='scientific',
-                              scilimits=(0,0),
+                              scilimits=(0, 0),
                               useOffset=False)
         for i, msd in enumerate(msds.T):
             mdt.plot.plot(
@@ -567,7 +567,7 @@ if __name__ == "__main__":
             mdt.plot.plot(
                 ax=axis,
                 x=times[beginfit[i]:endfit[i]],
-                y=fit[i] / (6*times[beginfit[i]:endfit[i]]),
+                y=fit[i] / (6 * times[beginfit[i]:endfit[i]]),
                 xmin=xmin_log,
                 xmax=args.XMAX,
                 ymin=ymin_semilog,
@@ -597,14 +597,14 @@ if __name__ == "__main__":
                                  num=1)
         axis.ticklabel_format(axis='x',
                               style='scientific',
-                              scilimits=(0,0),
+                              scilimits=(0, 0),
                               useOffset=False)
         for msd in msds.T:
             mdt.plot.plot(
                 ax=axis,
                 x=times,
                 y=msd,
-                xmin=xmin_fit if xmin_fit>0 else xmin_log,
+                xmin=xmin_fit if xmin_fit > 0 else xmin_log,
                 xmax=xmax_fit,
                 ymin=ymin_fit_semilog,
                 ymax=ymax_fit_semilog,
@@ -619,8 +619,8 @@ if __name__ == "__main__":
             mdt.plot.plot(
                 ax=axis,
                 x=times[beginfit[i]:endfit[i]],
-                y=fit[i] / (6*times[beginfit[i]:endfit[i]]),
-                xmin=xmin_fit if xmin_fit>0 else xmin_log,
+                y=fit[i] / (6 * times[beginfit[i]:endfit[i]]),
+                xmin=xmin_fit if xmin_fit > 0 else xmin_log,
                 xmax=xmax_fit,
                 ymin=ymin_fit_semilog,
                 ymax=ymax_fit_semilog,
@@ -638,10 +638,10 @@ if __name__ == "__main__":
 
     print("  Created {}".format(outfile))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -650,8 +650,8 @@ if __name__ == "__main__":
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

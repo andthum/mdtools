@@ -187,14 +187,14 @@ probability
         step=args.EVERY,
         n_frames_tot=N_FRAMES_TOT
     )
-    dtrj = dtrj[:,BEGIN:END:EVERY]
+    dtrj = dtrj[:, BEGIN:END:EVERY]
     if np.any(np.modf(dtrj)[0] != 0):
         warnings.warn("At least one element of the discrete trajectory"
                       " is not an integer", RuntimeWarning)
     trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj)
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     # Given that at time t0 a state transition occurred...
     # prob_sym:    Probability that a compound is at time t0-dt in the
@@ -207,9 +207,9 @@ probability
     #              same state as directly after the state transition.
     # prob_a_as_b: Probability that a compound is at time t0+dt in the
     #              same state as directly before the state transition.
-    prob_sym = np.zeros(N_FRAMES//2, dtype=np.uint32)
+    prob_sym = np.zeros(N_FRAMES // 2, dtype=np.uint32)
     norm_sym = np.zeros_like(prob_sym)
-    prob_b_as_b = np.zeros(N_FRAMES-1, dtype=np.uint32)
+    prob_b_as_b = np.zeros(N_FRAMES - 1, dtype=np.uint32)
     prob_b_as_a = np.zeros_like(prob_b_as_b)
     norm_b = np.zeros_like(prob_b_as_b)
     prob_a_as_a = np.zeros_like(prob_b_as_b)
@@ -222,7 +222,7 @@ probability
     print("Total number of frames: {:>8d}".format(N_FRAMES_TOT))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
     print("First frame to read:    {:>8d}".format(BEGIN))
-    print("Last frame to read:     {:>8d}".format(END-1))
+    print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     timer = datetime.now()
     trj = mdt.rti.ProgressBar(dtrj, unit="compounds")
@@ -232,10 +232,10 @@ probability
         trans += 1  # Frames directly *after* state transitions
         for t0 in trans:
             # Trajectory before state transition, time reversed
-            cmp_trj_b = cmp_trj[t0-1::-1]
+            cmp_trj_b = cmp_trj[t0 - 1::-1]
             # Trajectory after state transition
             cmp_trj_a = cmp_trj[t0:]
-            max_lag = min(t0, N_FRAMES-t0)
+            max_lag = min(t0, N_FRAMES - t0)
             prob_sym[:max_lag] += (cmp_trj_b[:max_lag] ==
                                    cmp_trj_a[:max_lag])
             norm_sym[:max_lag] += 1
@@ -253,9 +253,9 @@ probability
                             refresh=False)
     trj.close()
     del dtrj, trj, trans, cmp_trj, cmp_trj_b, cmp_trj_a
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("Creating output...")
@@ -268,10 +268,10 @@ probability
                               fill_value=np.nan)
     data = np.column_stack([lag_times,
                             prob_sym,
-                            prob_b_as_b/norm_b,
-                            prob_b_as_a/norm_b,
-                            prob_a_as_a/norm_a,
-                            prob_a_as_b/norm_a])
+                            prob_b_as_b / norm_b,
+                            prob_b_as_a / norm_b,
+                            prob_a_as_a / norm_a,
+                            prob_a_as_b / norm_a])
     del prob_sym, prob_b_as_b, prob_b_as_a, prob_a_as_a, prob_a_as_b
     del norm_b, norm_a
     header = (
@@ -306,9 +306,9 @@ probability
     )
     mdt.fh.savetxt(fname=args.OUTFILE, data=data, header=header)
     print("Created {}".format(args.OUTFILE))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("Creating output for consistency...")
@@ -327,15 +327,15 @@ probability
         if np.any(prob < 0):
             raise ValueError("At least one element of '{}' is less than"
                              " zero.".format(names[i]))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

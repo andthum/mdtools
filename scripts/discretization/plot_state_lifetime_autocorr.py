@@ -130,10 +130,10 @@ if __name__ == '__main__':
     times *= args.TCONV
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -160,7 +160,7 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=args.YMIN,
                       ymax=args.YMAX,
-                      xlabel=r'$\Delta t$ / '+args.TUNIT,
+                      xlabel=r'$\Delta t$ / ' + args.TUNIT,
                       ylabel=r'$C(\Delta t)$',
                       linestyle='',
                       marker='x')
@@ -171,7 +171,7 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=args.YMIN,
                       ymax=args.YMAX,
-                      xlabel=r'$\Delta t$ / '+args.TUNIT,
+                      xlabel=r'$\Delta t$ / ' + args.TUNIT,
                       ylabel=r'$C(\Delta t)$',
                       label="Fit")
         plt.tight_layout()
@@ -199,7 +199,7 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=ymin,
                       ymax=ymax,
-                      xlabel=r'$\Delta t$ / '+args.TUNIT,
+                      xlabel=r'$\Delta t$ / ' + args.TUNIT,
                       ylabel=r'$\ln{C(\Delta t)}$',
                       linestyle='',
                       marker='x')
@@ -210,7 +210,7 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=ymin,
                       ymax=ymax,
-                      xlabel=r'$\Delta t$ / '+args.TUNIT,
+                      xlabel=r'$\Delta t$ / ' + args.TUNIT,
                       ylabel=r'$\ln{C(\Delta t)}$',
                       label="Fit")
         plt.tight_layout()
@@ -234,7 +234,7 @@ if __name__ == '__main__':
                       ymin=args.YMIN,
                       ymax=args.YMAX,
                       logx=True,
-                      xlabel=r'$\Delta t$ / '+args.TUNIT,
+                      xlabel=r'$\Delta t$ / ' + args.TUNIT,
                       ylabel=r'$C(\Delta t)$',
                       linestyle='',
                       marker='x')
@@ -246,7 +246,7 @@ if __name__ == '__main__':
                       ymin=args.YMIN,
                       ymax=args.YMAX,
                       logx=True,
-                      xlabel=r'$\Delta t$ / '+args.TUNIT,
+                      xlabel=r'$\Delta t$ / ' + args.TUNIT,
                       ylabel=r'$C(\Delta t)$',
                       label="Fit")
         plt.tight_layout()
@@ -255,10 +255,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -266,8 +266,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

@@ -190,9 +190,9 @@ if __name__ == '__main__':
     msd_tot = np.sum(msd, axis=1)
     if args.DCOLOR is not None:
         if args.SEL:
-            cols = 7+dim[args.DCOLOR]
+            cols = 7 + dim[args.DCOLOR]
         else:
-            cols = 4+dim[args.DCOLOR]
+            cols = 4 + dim[args.DCOLOR]
         pos_t0 = np.loadtxt(fname=args.INFILE, usecols=cols)
         pos_t0 *= args.LCONV
 
@@ -201,10 +201,10 @@ if __name__ == '__main__':
     running_average_tot = mdt.stats.running_average(msd_tot[sort_ix])
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -228,10 +228,10 @@ if __name__ == '__main__':
         ydata=msd_tot)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -265,8 +265,8 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logx=True,
                 logy=True,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 marker='x')
         else:
             img = mdt.plot.scatter(
@@ -280,8 +280,8 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logx=True,
                 logy=True,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 marker='x',
                 cmap='plasma')
             cbar = plt.colorbar(img, ax=axis)
@@ -295,8 +295,8 @@ if __name__ == '__main__':
                                 labelsize=fontsize_ticks)
             cbar.ax.tick_params(which='minor',
                                 direction='out',
-                                length=0.5*tick_length,
-                                labelsize=0.8*fontsize_ticks)
+                                length=0.5 * tick_length,
+                                labelsize=0.8 * fontsize_ticks)
         mask = (running_average_tot > 0)
         mdt.plot.plot(
             ax=axis,
@@ -308,8 +308,8 @@ if __name__ == '__main__':
             ymax=args.YMAX,
             logx=True,
             logy=True,
-            xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-            ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+            xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+            ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             label="Running average",
             color='red')
         fit = mdt.dyn.msd(t=trenew, D=popt[-1], d=3)
@@ -324,8 +324,8 @@ if __name__ == '__main__':
             ymax=args.YMAX,
             logx=True,
             logy=True,
-            xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-            ylabel=r'$\Delta r^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+            xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+            ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             label="Fit",
             color='black')
         plt.tight_layout()
@@ -352,8 +352,8 @@ if __name__ == '__main__':
                     ymax=args.YMAX,
                     logx=True,
                     logy=True,
-                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                    ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                    xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                    ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                     marker='x')
             else:
                 img = mdt.plot.scatter(
@@ -367,8 +367,8 @@ if __name__ == '__main__':
                     ymax=args.YMAX,
                     logx=True,
                     logy=True,
-                    xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                    ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                    xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                    ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                     marker='x',
                     cmap='plasma')
                 cbar = plt.colorbar(img, ax=axis)
@@ -382,8 +382,8 @@ if __name__ == '__main__':
                                     labelsize=fontsize_ticks)
                 cbar.ax.tick_params(which='minor',
                                     direction='out',
-                                    length=0.5*tick_length,
-                                    labelsize=0.8*fontsize_ticks)
+                                    length=0.5 * tick_length,
+                                    labelsize=0.8 * fontsize_ticks)
             mask = (running_average.T[i] > 0)
             mdt.plot.plot(
                 ax=axis,
@@ -395,8 +395,8 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logx=True,
                 logy=True,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 label="Running average",
                 color='red')
             fit = mdt.dyn.msd(t=trenew, D=popt[i], d=1)
@@ -411,8 +411,8 @@ if __name__ == '__main__':
                 ymax=args.YMAX,
                 logx=True,
                 logy=True,
-                xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
-                ylabel=r'$\Delta '+ylabel[i]+r'^2(\tau_{renew})$ / '+args.LUNIT+r'$^2$',
+                xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+                ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 label="Fit",
                 color='black')
             plt.tight_layout()
@@ -451,12 +451,12 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Mean / '+args.LUNIT+r'$^2$',
+                 s=r'Mean / ' + args.LUNIT + r'$^2$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT+r'$^2$',
+                 s=r'Std. dev. / ' + args.LUNIT + r'$^2$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
@@ -469,7 +469,7 @@ if __name__ == '__main__':
         plt.text(x=xpos, y=ypos, s=r'$\Delta r^2$', fontsize=fontsize)
         xpos += 0.10
         plt.text(x=xpos,
-                 y=ypos, 
+                 y=ypos,
                  s=r'${:>16.9e}$'.format(np.mean(msd_tot)),
                  fontsize=fontsize)
         xpos += 0.30
@@ -487,7 +487,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'^2$',
+                     s=r'$\Delta ' + ylabel[i] + r'^2$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -518,12 +518,12 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$D$ / '+args.LUNIT+r'$^2$ '+args.TUNIT+r'$^{-1}$',
+                 s=r'$D$ / ' + args.LUNIT + r'$^2$ ' + args.TUNIT + r'$^{-1}$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT+r'$^2$ '+args.TUNIT+r'$^{-1}$',
+                 s=r'Std. dev. / ' + args.LUNIT + r'$^2$ ' + args.TUNIT + r'$^{-1}$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos, y=ypos, s=r'$d$', fontsize=fontsize)
@@ -551,7 +551,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$\Delta '+ylabel[i]+r'^2$',
+                     s=r'$\Delta ' + ylabel[i] + r'^2$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -575,10 +575,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -586,8 +586,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

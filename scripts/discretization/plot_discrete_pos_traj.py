@@ -134,8 +134,8 @@ if __name__ == "__main__":
         TRAJ_IX = np.arange(n_particles)
     else:
         TRAJ_IX = np.asarray(args.TRAJ_IX)
-        pos = np.unique(TRAJ_IX[TRAJ_IX>=0])
-        neg = np.unique(TRAJ_IX[TRAJ_IX<0])
+        pos = np.unique(TRAJ_IX[TRAJ_IX >= 0])
+        neg = np.unique(TRAJ_IX[TRAJ_IX < 0])
         TRAJ_IX = np.concatenate((pos, neg))
 
     if (np.max(TRAJ_IX) >= n_particles or
@@ -144,17 +144,17 @@ if __name__ == "__main__":
         print("The particle indices you gave exceed the maximum number"
               " of particles in the input file ({}). Note that indexing"
               " starts at zero".format(n_particles), flush=True)
-        TRAJ_IX = TRAJ_IX[TRAJ_IX<n_particles]
-        TRAJ_IX = TRAJ_IX[TRAJ_IX>=-n_particles]
+        TRAJ_IX = TRAJ_IX[TRAJ_IX < n_particles]
+        TRAJ_IX = TRAJ_IX[TRAJ_IX >= -n_particles]
         print("Set TRAJ_IX to: {}".format(TRAJ_IX), flush=True)
     if TRAJ_IX.size == 0:
         raise ValueError("TRAJ_IX is empty. No trajectories selected")
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -214,10 +214,10 @@ if __name__ == "__main__":
             args.BINFILE = None
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -240,29 +240,29 @@ if __name__ == "__main__":
                       x=np.arange(len(dtrajs[i])) + offset,
                       y=dtrajs[i],
                       xmin=0,
-                      xmax=offset+len(dtrajs[i]),
-                      ymin=states[0]-0.5,
-                      ymax=states[-1]+0.5,
+                      xmax=offset + len(dtrajs[i]),
+                      ymin=states[0] - 0.5,
+                      ymax=states[-1] + 0.5,
                       xlabel=r'Time / steps',
                       ylabel=r'State $i$')
         offset += len(dtrajs[i])
     axis.ticklabel_format(axis='x',
                           style='scientific',
-                          scilimits=(0,0),
+                          scilimits=(0, 0),
                           useOffset=False)
 
     if args.BINFILE is not None:
         img, ax2 = mdt.plot.plot_2nd_yaxis(
             ax=axis,
-            x=np.arange(len(dtrajs[i]))+offset-len(dtrajs[i]),
+            x=np.arange(len(dtrajs[i])) + offset - len(dtrajs[i]),
             y=dtrajs[i],
-            ymin=states[0]-0.5,
-            ymax=states[-1]+0.5,
+            ymin=states[0] - 0.5,
+            ymax=states[-1] + 0.5,
             ylabel=YLABEL,
             alpha=0)
         ylim = axis.get_ylim()
         yticks = axis.get_yticks().astype(int)
-        yticks = yticks[np.logical_and(yticks>=ylim[0], yticks<=ylim[1])]
+        yticks = yticks[np.logical_and(yticks >= ylim[0], yticks <= ylim[1])]
         ax2.get_yaxis().set_ticks(yticks)
         yticklabels = np.around(bins[ax2.get_yticks()],
                                 decimals=args.DECS)
@@ -270,7 +270,7 @@ if __name__ == "__main__":
             yticklabels = yticklabels.astype(int)
         if args.DECS < 0:
             yticklabels = [str(int(l))[:args.DECS] for l in yticklabels]
-            ylabel=r'$'+args.DIRECTION+r'$ / $10^{'+str(abs(args.DECS))+r'}$ A'
+            ylabel = r'$' + args.DIRECTION + r'$ / $10^{' + str(abs(args.DECS)) + r'}$ A'
             ax2.set_ylabel(ylabel=ylabel)
         ax2.set_yticklabels(yticklabels)
         axis.set_xlim(xmin=0, xmax=offset, auto=True)
@@ -279,13 +279,13 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig(args.OUTFILE)
     plt.close(fig)
-    print("  Created "+args.OUTFILE, flush=True)
+    print("  Created " + args.OUTFILE, flush=True)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -294,8 +294,8 @@ if __name__ == "__main__":
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

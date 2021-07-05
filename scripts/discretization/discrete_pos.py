@@ -328,21 +328,21 @@ if __name__ == "__main__":
                   "Average box length in this direction: {:<.9e} A\n"
                   "Time step of discrete trajectory:     {:<.3f} ps\n"
                   .format(len(bins),
-                          len(bins)-1,
+                          len(bins) - 1,
                           args.DIRECTION,
                           lbox_av,
                           time_step))
         mdt.fh.savetxt(fname=args.OUTFILE_BINS, data=bins, header=header)
         print("Created {}".format(args.OUTFILE_BINS))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

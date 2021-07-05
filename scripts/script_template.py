@@ -272,16 +272,16 @@ if __name__ == '__main__':
     print("Total number of frames: {:>8d}".format(u.trajectory.n_frames))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
     print("First frame to read:    {:>8d}".format(BEGIN))
-    print("Last frame to read:     {:>8d}".format(END-1))
+    print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     print("Time first frame:       {:>12.3f} ps"
           .format(u.trajectory[BEGIN].time))
     print("Time last frame:        {:>12.3f} ps"
-          .format(u.trajectory[END-1].time))
+          .format(u.trajectory[END - 1].time))
     print("Time step first frame:  {:>12.3f} ps"
           .format(u.trajectory[BEGIN].dt))
     print("Time step last frame:   {:>12.3f} ps"
-          .format(u.trajectory[END-1].dt))
+          .format(u.trajectory[END - 1].dt))
     timer = datetime.now()
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
     for ts in trj:
@@ -291,9 +291,9 @@ if __name__ == '__main__':
         trj.set_postfix_str("{:>7.2f}MiB".format(progress_bar_mem),
                             refresh=False)
     trj.close()
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("Creating output...")
@@ -301,15 +301,15 @@ if __name__ == '__main__':
     # TODO: Create your output file(s).  When creating text files, use
     # mdtools.file_handler.savetxt or mdtools.file_handler.savetxt_matrix
     print("Created {}".format(args.OUTFILE))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

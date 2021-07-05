@@ -249,9 +249,9 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     if args.SEL:
-        cols = (3, 7+dim[args.DIRECTION], 13+dim[args.DIRECTION])
+        cols = (3, 7 + dim[args.DIRECTION], 13 + dim[args.DIRECTION])
     else:
-        cols = (3, 4+dim[args.DIRECTION], 10+dim[args.DIRECTION])
+        cols = (3, 4 + dim[args.DIRECTION], 10 + dim[args.DIRECTION])
     trenew, pos_t0, pos_trenew = np.loadtxt(fname=args.INFILE,
                                             usecols=cols,
                                             unpack=True)
@@ -264,7 +264,7 @@ if __name__ == '__main__':
         if args.START is None or args.START > np.min(pos_t0):
             args.START = np.min(pos_t0)
         if args.STOP is None or args.STOP <= np.max(pos_t0):
-            args.STOP = np.max(pos_t0) + (np.max(pos_t0)-args.START)/args.NUM
+            args.STOP = np.max(pos_t0) + (np.max(pos_t0) - args.START) / args.NUM
         bins = np.linspace(args.START, args.STOP, args.NUM)
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
@@ -274,7 +274,7 @@ if __name__ == '__main__':
         if bins[0] > np.min(pos_t0):
             bins = np.insert(bins, 0, np.min(pos_t0))
         if bins[-1] <= np.max(pos_t0):
-            bins = np.append(bins, np.max(pos_t0) + (np.max(pos_t0)-bins[0])/len(bins))
+            bins = np.append(bins, np.max(pos_t0) + (np.max(pos_t0) - bins[0]) / len(bins))
 
     if args.INFILE2 is not None:
         xdata, ydata = np.loadtxt(fname=args.INFILE2,
@@ -283,7 +283,7 @@ if __name__ == '__main__':
                                   unpack=True)
         n_compounds_per_bin = np.zeros(len(bins), dtype=np.float64)
         for i, b in enumerate(bins[1:], 1):
-            mask = (xdata >= bins[i-1]) & (xdata < b)
+            mask = (xdata >= bins[i - 1]) & (xdata < b)
             n_compounds_per_bin[i] = np.trapz(x=xdata[mask],
                                               y=ydata[mask])
         if n_compounds_per_bin[0] != 0:
@@ -296,10 +296,10 @@ if __name__ == '__main__':
               flush=True)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -318,9 +318,9 @@ if __name__ == '__main__':
         raise ValueError("At least one element of bin_ix_trenew is less"
                          " than zero. This should not have happened")
 
-    count_matrix = np.zeros((len(bins)-1, len(bins)-1), dtype=np.uint32)
-    trenew_matrix = np.full((len(bins)-1, len(bins)-1), np.nan)
-    nevents = np.zeros(len(bins)-1, dtype=np.uint32)
+    count_matrix = np.zeros((len(bins) - 1, len(bins) - 1), dtype=np.uint32)
+    trenew_matrix = np.full((len(bins) - 1, len(bins) - 1), np.nan)
+    nevents = np.zeros(len(bins) - 1, dtype=np.uint32)
     for i in np.unique(bin_ix_t0):
         mask = (bin_ix_t0 == i)
         nevents[i] = np.count_nonzero(mask)
@@ -334,7 +334,7 @@ if __name__ == '__main__':
 
     ####################################################################
     #print("count_matrix =")
-    #print(count_matrix)
+    # print(count_matrix)
     #count_matrix[-1][-1] -= 4
     #count_matrix[-1][-2] += 2
     #count_matrix[-1][-3] += 2
@@ -350,7 +350,7 @@ if __name__ == '__main__':
     #count_matrix[-5][-1] -= 1
     #count_matrix[-5][-2] += 1
     #print("count_matrix =")
-    #print(count_matrix)
+    # print(count_matrix)
     ####################################################################
 
     active_set = np.arange(1, len(bins), dtype=np.uint32)
@@ -365,7 +365,7 @@ if __name__ == '__main__':
     active_set = np.delete(active_set, inactive)
 
     norm = np.sum(count_matrix, axis=1)
-    transition_matrix = count_matrix / norm[:,None]
+    transition_matrix = count_matrix / norm[:, None]
     if not np.allclose(np.sum(transition_matrix, axis=1), 1):
         raise ValueError("Not all rows of the row-stochastic transition"
                          " matrix sum up to unity")
@@ -382,7 +382,7 @@ if __name__ == '__main__':
         raise ValueError("The transition matrix has no eigenvalue close"
                          " to unity")
     eigvals = np.abs(np.real(eigvals[mask]))
-    eigvecs = np.abs(np.real(eigvecs[:,mask]))
+    eigvecs = np.abs(np.real(eigvecs[:, mask]))
     eigvecs /= np.sum(eigvecs, axis=0)
     if not np.allclose(np.sum(eigvecs, axis=0), 1):
         raise ValueError("The stationary distribution does not sum up to"
@@ -395,10 +395,10 @@ if __name__ == '__main__':
                          " distribution is less than zero")
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -424,16 +424,16 @@ if __name__ == '__main__':
             axis.xaxis.set_major_locator(MaxNLocator(integer=True))
             axis.yaxis.set_major_locator(MaxNLocator(integer=True))
 
-            xy = np.append(active_set, active_set[-1]+1) - 0.5
+            xy = np.append(active_set, active_set[-1] + 1) - 0.5
             mdt.plot.pcolormesh(
                 ax=axis,
                 x=xy,
                 y=xy,
                 z=matrix[i],
                 xmin=0.5,
-                xmax=len(bins)-0.5,
+                xmax=len(bins) - 0.5,
                 ymin=0.5,
-                ymax=len(bins)-0.5,
+                ymax=len(bins) - 0.5,
                 xlabel=r'Bin $j$',
                 ylabel=r'Bin $i$',
                 cbarlabel=cbarlabel[i],
@@ -461,7 +461,7 @@ if __name__ == '__main__':
                       x=active_set,
                       y=eigvecs,
                       xmin=0.5,
-                      xmax=len(bins)-0.5,
+                      xmax=len(bins) - 0.5,
                       ymin=0,
                       xlabel=r'Bin $i$',
                       ylabel="Stationary distribution",
@@ -499,7 +499,7 @@ if __name__ == '__main__':
                 xmax=args.MAX,
                 ymin=args.MIN,
                 ymax=args.MAX,
-                xlabel=r'$'+args.DIRECTION+r'(t_0 + \tau_{renew})$ / '+args.LUNIT,
+                xlabel=r'$' + args.DIRECTION + r'(t_0 + \tau_{renew})$ / ' + args.LUNIT,
                 ylabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
                 cbarlabel=cbarlabel[i],
                 cmap=cmap[i])
@@ -530,17 +530,17 @@ if __name__ == '__main__':
             fig, axes = plt.subplots(
                 nrows=2,
                 sharex=True,
-                figsize=(11.69, 8.27+8.27/5),
+                figsize=(11.69, 8.27 + 8.27 / 5),
                 frameon=False,
                 clear=True,
                 constrained_layout=True,
-                gridspec_kw={'height_ratios': [1/5, 1]})
+                gridspec_kw={'height_ratios': [1 / 5, 1]})
             axis = axes[1]
 
         eigvecs = np.insert(eigvecs, inactive, np.nan, axis=0)
         mdt.plot.plot(
             ax=axis,
-            x=bins[1:]-np.diff(bins)/2,
+            x=bins[1:] - np.diff(bins) / 2,
             y=eigvecs,
             xmin=args.MIN,
             xmax=args.MAX,
@@ -595,16 +595,16 @@ if __name__ == '__main__':
                 fig, axes = plt.subplots(
                     nrows=2,
                     sharex=True,
-                    figsize=(11.69, 8.27+8.27/5),
+                    figsize=(11.69, 8.27 + 8.27 / 5),
                     frameon=False,
                     clear=True,
                     constrained_layout=True,
-                    gridspec_kw={'height_ratios': [1/5, 1]})
+                    gridspec_kw={'height_ratios': [1 / 5, 1]})
                 axis = axes[1]
 
             mdt.plot.errorbar(
                 ax=axis,
-                x=bins[1:]-np.diff(bins)/2,
+                x=bins[1:] - np.diff(bins) / 2,
                 y=nevents,
                 yerr=np.sqrt(nevents),
                 xmin=args.MIN,
@@ -626,8 +626,8 @@ if __name__ == '__main__':
                             linestyle='dotted')
             mdt.plot.plot(
                 ax=axis,
-                x=bins[1:]-np.diff(bins)/2,
-                y=eigvecs*np.sum(nevents),
+                x=bins[1:] - np.diff(bins) / 2,
+                y=eigvecs * np.sum(nevents),
                 xmin=args.MIN,
                 xmax=args.MAX,
                 ymin=ymin[i],
@@ -665,22 +665,22 @@ if __name__ == '__main__':
             fig, axes = plt.subplots(
                 nrows=2,
                 sharex=True,
-                figsize=(11.69, 8.27+8.27/5),
+                figsize=(11.69, 8.27 + 8.27 / 5),
                 frameon=False,
                 clear=True,
                 constrained_layout=True,
-                gridspec_kw={'height_ratios': [1/5, 1]})
+                gridspec_kw={'height_ratios': [1 / 5, 1]})
             mdt.plot.errorbar(
                 ax=axes[1],
-                x=bins[1:]-np.diff(bins)/2,
-                y=nevents/n_compounds_per_bin[1:],
-                yerr=np.sqrt(nevents)/n_compounds_per_bin[1:],
+                x=bins[1:] - np.diff(bins) / 2,
+                y=nevents / n_compounds_per_bin[1:],
+                yerr=np.sqrt(nevents) / n_compounds_per_bin[1:],
                 xmin=args.MIN,
                 xmax=args.MAX,
                 ymin=ymin[i],
                 logy=logy[i],
                 xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
-                ylabel=r'$N_{renew}$ / $\langle N_{'+args.NAME+r'} \rangle$',
+                ylabel=r'$N_{renew}$ / $\langle N_{' + args.NAME + r'} \rangle$',
                 label="Simulation",
                 marker='o')
             mdt.plot.vlines(ax=axes[1],
@@ -694,14 +694,14 @@ if __name__ == '__main__':
                             linestyle='dotted')
             mdt.plot.plot(
                 ax=axes[1],
-                x=bins[1:]-np.diff(bins)/2,
-                y=eigvecs*np.sum(nevents)/n_compounds_per_bin[1:][:,None],
+                x=bins[1:] - np.diff(bins) / 2,
+                y=eigvecs * np.sum(nevents) / n_compounds_per_bin[1:][:, None],
                 xmin=args.MIN,
                 xmax=args.MAX,
                 ymin=ymin[i],
                 logy=logy[i],
                 xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
-                ylabel=r'$N_{renew}$ / $\langle N_{'+args.NAME+r'} \rangle$',
+                ylabel=r'$N_{renew}$ / $\langle N_{' + args.NAME + r'} \rangle$',
                 label="Model",
                 marker='s')
             mdt.plot.plot(ax=axes[0],
@@ -723,10 +723,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -734,8 +734,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

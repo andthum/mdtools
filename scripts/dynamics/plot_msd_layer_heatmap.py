@@ -219,8 +219,8 @@ if __name__ == '__main__':
 
     msd = np.loadtxt(fname=args.INFILE)
     bins = msd[0] * args.LCONV
-    times = msd[1:,0] * args.TCONV
-    msd = msd[1:,1:] * args.LCONV**2
+    times = msd[1:, 0] * args.TCONV
+    msd = msd[1:, 1:] * args.LCONV**2
 
     if args.INFILE2 is not None:
         data = np.loadtxt(fname=args.INFILE2,
@@ -228,10 +228,10 @@ if __name__ == '__main__':
                           usecols=args.COLS)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -249,16 +249,16 @@ if __name__ == '__main__':
     else:
         fig, axes = plt.subplots(nrows=2,
                                  sharex=True,
-                                 figsize=(11.69, 8.27+8.27/5),
+                                 figsize=(11.69, 8.27 + 8.27 / 5),
                                  frameon=False,
                                  clear=True,
                                  constrained_layout=True,
-                                 gridspec_kw={'height_ratios': [1/5, 1]})
+                                 gridspec_kw={'height_ratios': [1 / 5, 1]})
         axis = axes[1]
 
-    times = np.append(times, times[-1]+(times[-1]-times[-2]))
-    dt = np.append(np.diff(times), times[-1]-times[-2])
-    times -= dt/2
+    times = np.append(times, times[-1] + (times[-1] - times[-2]))
+    dt = np.append(np.diff(times), times[-1] - times[-2])
+    times -= dt / 2
     mdt.plot.pcolormesh(
         ax=axis,
         x=bins,
@@ -270,17 +270,17 @@ if __name__ == '__main__':
         ymax=args.YMAX,
         xlabel=r'${}$ / {}'.format(args.BIN_DIRECTION, args.LUNIT),
         ylabel=r'$\Delta t$ / {}'.format(args.TUNIT),
-        cbarlabel=r'$\langle \Delta '+args.BIN_DIRECTION+r'^2(\Delta t) \rangle$ / '+args.LUNIT+r'$^2$'+args.TUNIT+r'$^{-1}$',
+        cbarlabel=r'$\langle \Delta ' + args.BIN_DIRECTION + r'^2(\Delta t) \rangle$ / ' + args.LUNIT + r'$^2$' + args.TUNIT + r'$^{-1}$',
         cmap='plasma')
 
     if args.INFILE2 is not None:
         mdt.plot.plot(ax=axes[0],
-                      x=data[:,0],
-                      y=data[:,1],
+                      x=data[:, 0],
+                      y=data[:, 1],
                       xmin=args.XMIN,
                       xmax=args.XMAX,
-                      ymin=np.min(data[:,1]),
-                      ymax=np.max(data[:,1]),
+                      ymin=np.min(data[:, 1]),
+                      ymax=np.max(data[:, 1]),
                       color='black')
         axes[0].xaxis.set_visible(False)
         axes[0].yaxis.set_visible(False)
@@ -297,10 +297,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -308,8 +308,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

@@ -248,9 +248,9 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     if args.SEL:
-        cols = 7+dim[args.DIRECTION]
+        cols = 7 + dim[args.DIRECTION]
     else:
-        cols = 4+dim[args.DIRECTION]
+        cols = 4 + dim[args.DIRECTION]
     pos_t0 = np.loadtxt(fname=args.INFILE, usecols=cols)
     pos_t0 *= args.LCONV
 
@@ -258,7 +258,7 @@ if __name__ == '__main__':
         if args.START is None or args.START > np.min(pos_t0):
             args.START = np.min(pos_t0)
         if args.STOP is None or args.STOP <= np.max(pos_t0):
-            args.STOP = np.max(pos_t0) + (np.max(pos_t0)-args.START)/args.NUM
+            args.STOP = np.max(pos_t0) + (np.max(pos_t0) - args.START) / args.NUM
         bins = np.linspace(args.START, args.STOP, args.NUM)
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
@@ -268,12 +268,12 @@ if __name__ == '__main__':
         if bins[0] > np.min(pos_t0):
             bins = np.insert(bins, 0, np.min(pos_t0))
         if bins[-1] <= np.max(pos_t0):
-            bins = np.append(bins, np.max(pos_t0) + (np.max(pos_t0)-bins[0])/len(bins))
+            bins = np.append(bins, np.max(pos_t0) + (np.max(pos_t0) - bins[0]) / len(bins))
 
     bin_ix = np.digitize(pos_t0, bins)
     nevents = np.zeros(len(bins), dtype=np.uint32)
     for i in np.unique(bin_ix):
-        nevents[i] = np.count_nonzero(bin_ix==i)
+        nevents[i] = np.count_nonzero(bin_ix == i)
     if nevents[0] != 0:
         raise ValueError("The first element of nevents is not zero. This"
                          " should not have happened")
@@ -285,7 +285,7 @@ if __name__ == '__main__':
                                   unpack=True)
         n_compounds_per_bin = np.zeros(len(bins), dtype=np.float64)
         for i, b in enumerate(bins[1:], 1):
-            mask = (xdata >= bins[i-1]) & (xdata < b)
+            mask = (xdata >= bins[i - 1]) & (xdata < b)
             n_compounds_per_bin[i] = np.trapz(x=xdata[mask],
                                               y=ydata[mask])
         if n_compounds_per_bin[0] != 0:
@@ -298,10 +298,10 @@ if __name__ == '__main__':
               flush=True)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -330,16 +330,16 @@ if __name__ == '__main__':
             else:
                 fig, axes = plt.subplots(nrows=2,
                                          sharex=True,
-                                         figsize=(11.69, 8.27+8.27/5),
+                                         figsize=(11.69, 8.27 + 8.27 / 5),
                                          frameon=False,
                                          clear=True,
                                          constrained_layout=True,
-                                         gridspec_kw={'height_ratios': [1/5, 1]})
+                                         gridspec_kw={'height_ratios': [1 / 5, 1]})
                 axis = axes[1]
 
             mdt.plot.errorbar(
                 ax=axis,
-                x=bins[1:]-np.diff(bins)/2,
+                x=bins[1:] - np.diff(bins) / 2,
                 y=nevents[1:],
                 yerr=np.sqrt(nevents[1:]),
                 xmin=args.XMIN,
@@ -389,15 +389,15 @@ if __name__ == '__main__':
                 # Number of compounds per bin
                 fig, axes = plt.subplots(nrows=2,
                                          sharex=True,
-                                         figsize=(11.69, 8.27+8.27/5),
+                                         figsize=(11.69, 8.27 + 8.27 / 5),
                                          frameon=False,
                                          clear=True,
                                          constrained_layout=True,
-                                         gridspec_kw={'height_ratios': [1/5, 1]})
+                                         gridspec_kw={'height_ratios': [1 / 5, 1]})
 
                 mdt.plot.plot(
                     ax=axes[1],
-                    x=bins[1:]-np.diff(bins)/2,
+                    x=bins[1:] - np.diff(bins) / 2,
                     y=n_compounds_per_bin[1:],
                     xmin=args.XMIN,
                     xmax=args.XMAX,
@@ -405,7 +405,7 @@ if __name__ == '__main__':
                     ymax=args.YMAX,
                     logy=logy[i],
                     xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
-                    ylabel=r'$\langle N_{'+args.NAME+r'} \rangle$',
+                    ylabel=r'$\langle N_{' + args.NAME + r'} \rangle$',
                     color='black',
                     marker='o')
 
@@ -442,24 +442,24 @@ if __name__ == '__main__':
                 # Number of renewal events / Number of  compounds per bin
                 fig, axes = plt.subplots(nrows=2,
                                          sharex=True,
-                                         figsize=(11.69, 8.27+8.27/5),
+                                         figsize=(11.69, 8.27 + 8.27 / 5),
                                          frameon=False,
                                          clear=True,
                                          constrained_layout=True,
-                                         gridspec_kw={'height_ratios': [1/5, 1]})
+                                         gridspec_kw={'height_ratios': [1 / 5, 1]})
 
                 mdt.plot.errorbar(
                     ax=axes[1],
-                    x=bins[1:]-np.diff(bins)/2,
-                    y=nevents[1:]/n_compounds_per_bin[1:],
-                    yerr=np.sqrt(nevents[1:])/n_compounds_per_bin[1:],
+                    x=bins[1:] - np.diff(bins) / 2,
+                    y=nevents[1:] / n_compounds_per_bin[1:],
+                    yerr=np.sqrt(nevents[1:]) / n_compounds_per_bin[1:],
                     xmin=args.XMIN,
                     xmax=args.XMAX,
                     ymin=ymin[i],
                     ymax=args.YMAX,
                     logy=logy[i],
                     xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
-                    ylabel=r'$N_{renew}$ / $\langle N_{'+args.NAME+r'} \rangle$',
+                    ylabel=r'$N_{renew}$ / $\langle N_{' + args.NAME + r'} \rangle$',
                     color='black',
                     marker='o')
 
@@ -494,10 +494,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -505,8 +505,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

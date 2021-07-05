@@ -53,7 +53,7 @@ def g(x, m=1, c=0):
     If more than one input argument is an array, all arrays must be
     broadcastable.
     """
-    return m*x + c
+    return m * x + c
 
 
 
@@ -85,7 +85,7 @@ def g_inverse(y, m=1, c=0):
     If more than one input argument is an array, all arrays must be
     broadcastable.
     """
-    return (y-c) / m
+    return (y - c) / m
 
 
 
@@ -193,7 +193,7 @@ def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
         warnings.warn("{} elements of ydata do not fulfill the"
                       " requirement 0 < ydata <= 1 and are discarded for"
                       " fitting"
-                      .format(len(valid)-np.count_nonzero(valid)),
+                      .format(len(valid) - np.count_nonzero(valid)),
                       RuntimeWarning)
     if not np.any(valid):
         warnings.warn("None of the y-data fulfills the requirement"
@@ -206,7 +206,7 @@ def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
     if ysd is not None:
         ysd = ysd[valid]
         ysd /= ydata[valid]  # Propagation of uncertainty when taking the logarithm of the data
-        ysd[ysd==0] = 1e-20  # SciPy's curve_fit can not handle zero standard deviations
+        ysd[ysd == 0] = 1e-20  # SciPy's curve_fit can not handle zero standard deviations
 
     try:
         popt, pcov = optimize.curve_fit(f=exp_decay_log,
@@ -214,7 +214,7 @@ def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
                                         ydata=np.log(ydata[valid]),
                                         sigma=ysd,
                                         absolute_sigma=True,
-                                        p0=1/(len(ydata)*np.mean(ydata)),
+                                        p0=1 / (len(ydata) * np.mean(ydata)),
                                         bounds=(0, np.inf))
     except (ValueError, RuntimeError) as err:
         print(flush=True)
@@ -284,7 +284,7 @@ def kww(t, tau=1, beta=1):
     broadcastable.
     """
 
-    return np.exp(-(t/tau)**beta)
+    return np.exp(-(t / tau)**beta)
 
 
 
@@ -338,7 +338,7 @@ def fit_kww(xdata, ydata, ysd=None, return_valid=False):
         warnings.warn("{} elements of ydata do not fulfill the"
                       " requirement 0 < ydata <= 1 and are discarded for"
                       " fitting"
-                      .format(len(valid)-np.count_nonzero(valid)),
+                      .format(len(valid) - np.count_nonzero(valid)),
                       RuntimeWarning)
     if not np.any(valid):
         warnings.warn("None of the y-data fulfills the requirement"
@@ -350,7 +350,7 @@ def fit_kww(xdata, ydata, ysd=None, return_valid=False):
             return np.full(2, np.nan), np.full(2, np.nan)
     if ysd is not None:
         ysd = ysd[valid]
-        ysd[ysd==0] = 1e-20  # SciPy's curve_fit can not handle zero standard deviations
+        ysd[ysd == 0] = 1e-20  # SciPy's curve_fit can not handle zero standard deviations
 
     try:
         popt, pcov = optimize.curve_fit(f=kww,
@@ -358,7 +358,7 @@ def fit_kww(xdata, ydata, ysd=None, return_valid=False):
                                         ydata=ydata[valid],
                                         sigma=ysd,
                                         absolute_sigma=True,
-                                        p0=[len(ydata)*np.mean(ydata), 1],
+                                        p0=[len(ydata) * np.mean(ydata), 1],
                                         bounds=([0, 0], [np.inf, 1]))
     except (ValueError, RuntimeError) as err:
         print(flush=True)

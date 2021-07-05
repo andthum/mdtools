@@ -362,16 +362,16 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
         mdt.check.array(data, shape=(len(var1), len(var2)))
     elif init_values1 is not None and init_values2 is None:
         mdt.check.array(init_values1, shape=var2.shape)
-        mdt.check.array(data, shape=(len(var1)-1, len(var2)))
+        mdt.check.array(data, shape=(len(var1) - 1, len(var2)))
         data = np.vstack((init_values1, data))
     elif init_values1 is None and init_values2 is not None:
         mdt.check.array(init_values2, shape=var1.shape)
-        mdt.check.array(data, shape=(len(var1), len(var2)-1))
+        mdt.check.array(data, shape=(len(var1), len(var2) - 1))
         data = np.column_stack((init_values2, data))
     elif init_values1 is not None and init_values2 is not None:
         mdt.check.array(init_values1, shape=var2.shape)
         mdt.check.array(init_values2, shape=var1.shape)
-        mdt.check.array(data, shape=(len(var1)-1, len(var2)-1))
+        mdt.check.array(data, shape=(len(var1) - 1, len(var2) - 1))
         if init_values2[0] != init_values1[0]:
             warnings.warn("init_values2[0] ({}) is not the same as"
                           " init_values1[0] ({}). Using init_values1[0]"
@@ -473,14 +473,14 @@ def write_matrix_block(
         mdt.check.array(data, shape=(len(var1), len(var2)))
     elif init_values1 is not None and init_values2 is None:
         mdt.check.array(init_values1, shape=var2.shape)
-        mdt.check.array(data, shape=(len(var1)-1, len(var2)))
+        mdt.check.array(data, shape=(len(var1) - 1, len(var2)))
     elif init_values1 is None and init_values2 is not None:
         mdt.check.array(init_values2, shape=var1.shape)
-        mdt.check.array(data, shape=(len(var1), len(var2)-1))
+        mdt.check.array(data, shape=(len(var1), len(var2) - 1))
     elif init_values1 is not None and init_values2 is not None:
         mdt.check.array(init_values1, shape=var2.shape)
         mdt.check.array(init_values2, shape=var1.shape)
-        mdt.check.array(data, shape=(len(var1)-1, len(var2)-1))
+        mdt.check.array(data, shape=(len(var1) - 1, len(var2) - 1))
         if init_values2[0] != init_values1[0]:
             warnings.warn("init_values2[0] ({}) is not the same as"
                           " init_values1[0] ({}). Using init_values1[0]"
@@ -515,7 +515,7 @@ def write_matrix_block(
         num_cols = len(var2)
         outfile.write("# Column number:\n")
         outfile.write("# {:>16}".format("1"))
-        for col_num in range(2, num_cols+2):
+        for col_num in range(2, num_cols + 2):
             outfile.write(" {:>16}".format(col_num))
         outfile.write("\n")
         # The row after the row with the column numbers contains the
@@ -554,7 +554,7 @@ def write_matrix_block(
             for col_num in range(start_col, num_cols):
                 outfile.write(
                     " {:16.9e}"
-                    .format(data[row_num-start_row][col_num-start_col])
+                    .format(data[row_num - start_row][col_num - start_col])
                 )
             outfile.write("\n")
         outfile.flush()

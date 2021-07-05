@@ -36,21 +36,21 @@ import mdtools as mdt
 
 # This function is also used by: lifetime_autocorr_parallel.py
 def parse_user_input(add_description=""):
-    description=("Compute the average lifetime of reference-selection"
-                 " complexes, i.e. the mean residence time how long a"
-                 " compound of the selection group is within the given"
-                 " cutoff of a compound of the reference group. This is"
-                 " done by first evaluating the existence function"
-                 " (which is one, if a contact exists, and zero"
-                 " otherwise) for each compound at each frame and"
-                 " afterwards calculating its autocorrelation function."
-                 " The autocorrelation function is then fitted by a"
-                 " stretched exponential function, whose integral from"
-                 " zero to infinity is the averave lifetime."
-                 " Additionally the lifetime of unbound reference and"
-                 " selection compounds is calculated.")
+    description = ("Compute the average lifetime of reference-selection"
+                   " complexes, i.e. the mean residence time how long a"
+                   " compound of the selection group is within the given"
+                   " cutoff of a compound of the reference group. This is"
+                   " done by first evaluating the existence function"
+                   " (which is one, if a contact exists, and zero"
+                   " otherwise) for each compound at each frame and"
+                   " afterwards calculating its autocorrelation function."
+                   " The autocorrelation function is then fitted by a"
+                   " stretched exponential function, whose integral from"
+                   " zero to infinity is the averave lifetime."
+                   " Additionally the lifetime of unbound reference and"
+                   " selection compounds is calculated.")
     parser = argparse.ArgumentParser(
-        description=description+add_description
+        description=description + add_description
     )
 
     parser.add_argument(
@@ -377,24 +377,24 @@ def autocorr_bound(cms, restart=1, debug=False):
 
     timer_lag = datetime.now()
     for lag in range(n_frames):
-        if lag % 10**(len(str(lag))-1) == 0 or lag == n_frames-1:
+        if lag % 10**(len(str(lag)) - 1) == 0 or lag == n_frames - 1:
             print("  Lag     {:12d} of {:12d}"
-                  .format(lag, n_frames-1),
+                  .format(lag, n_frames - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_lag),
+                  .format(datetime.now() - timer_lag),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_lag = datetime.now()
 
         norm = 0
         corr = 0
-        for t0 in range(0, n_frames-lag, restart):
+        for t0 in range(0, n_frames - lag, restart):
             norm += cms[t0].sum()  # = cms[t0].multiply(cms[t0]).sum(), because 1*1=1 and 0*0=0
-            corr += cms[t0].multiply(cms[t0+lag]).sum()
-        if norm: # != 0:
+            corr += cms[t0].multiply(cms[t0 + lag]).sum()
+        if norm:  # != 0:
             autocorr[lag] = corr / norm
 
     return autocorr
@@ -478,30 +478,30 @@ def autocorr_unbound(cms, axis, restart=1, debug=False):
 
     timer_lag = datetime.now()
     for lag in range(n_frames):
-        if lag % 10**(len(str(lag))-1) == 0 or lag == n_frames-1:
+        if lag % 10**(len(str(lag)) - 1) == 0 or lag == n_frames - 1:
             print("  Lag     {:12d} of {:12d}"
-                  .format(lag, n_frames-1),
+                  .format(lag, n_frames - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_lag),
+                  .format(datetime.now() - timer_lag),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_lag = datetime.now()
 
         norm = 0
         corr = 0
-        for t0 in range(0, n_frames-lag, restart):
+        for t0 in range(0, n_frames - lag, restart):
             unbound_t0 = unbound_compounds(contact_matrix=cms[t0],
                                            axis=axis,
                                            debug=debug)
             norm += np.sum(unbound_t0)  # = np.sum(unbound_t0*unbound_t0), because 1*1=1 and 0*0=0
-            unbound_lag = unbound_compounds(contact_matrix=cms[t0+lag],
+            unbound_lag = unbound_compounds(contact_matrix=cms[t0 + lag],
                                             axis=axis,
                                             debug=debug)
             corr += np.sum(unbound_t0 * unbound_lag)
-        if norm: # != 0:
+        if norm:  # != 0:
             autocorr[lag] = corr / norm
 
     return autocorr
@@ -530,7 +530,7 @@ def kww(t, tau, beta):
         f(t) = \exp \left[ -\left( \frac{t}{\tau} \right)^\beta \right]
     """
 
-    return np.exp(-(t/tau)**beta)
+    return np.exp(-(t / tau)**beta)
 
 
 
@@ -574,7 +574,7 @@ def fit_kww(xdata, ydata, ysd=None):
                                         sigma=ysd,
                                         absolute_sigma=True,
                                         check_finite=False,
-                                        p0=[len(ydata)*np.mean(ydata), 1],
+                                        p0=[len(ydata) * np.mean(ydata), 1],
                                         bounds=([0, 0], [np.inf, 1]))
     except (ValueError, RuntimeError, optimize.OptimizeWarning) as err:
         print(flush=True)
@@ -640,10 +640,10 @@ if __name__ == '__main__':
         raise ValueError("The selection group contains no atoms")
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -654,7 +654,7 @@ if __name__ == '__main__':
         stop=args.END,
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
     NBLOCKS, blocksize = mdt.check.block_averaging(n_blocks=args.NBLOCKS,
                                                    n_frames=n_frames)
     RESTART, effective_restart = mdt.check.restarts(
@@ -705,14 +705,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -730,10 +730,10 @@ if __name__ == '__main__':
             debug=args.DEBUG)
 
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
 
 
@@ -745,65 +745,65 @@ if __name__ == '__main__':
     timer_block = datetime.now()
 
     print("  Bound reference-selection complexes", flush=True)
-    acorr_bound = [None,] * NBLOCKS
+    acorr_bound = [None, ] * NBLOCKS
     for block in range(NBLOCKS):
-        if block % 10**(len(str(block))-1) == 0 or block == NBLOCKS-1:
+        if block % 10**(len(str(block)) - 1) == 0 or block == NBLOCKS - 1:
             print(flush=True)
             print("  Block   {:12d} of {:12d}"
-                  .format(block, NBLOCKS-1),
+                  .format(block, NBLOCKS - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_block),
+                  .format(datetime.now() - timer_block),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_block = datetime.now()
         acorr_bound[block] = autocorr_bound(
-            cms=cms[block*blocksize:(block+1)*blocksize],
+            cms=cms[block * blocksize:(block + 1) * blocksize],
             restart=effective_restart,
             debug=args.DEBUG)
 
     print("\n", flush=True)
     print("  Unbound reference compounds", flush=True)
-    acorr_unbound_ref = [None,] * NBLOCKS
+    acorr_unbound_ref = [None, ] * NBLOCKS
     for block in range(NBLOCKS):
-        if block % 10**(len(str(block))-1) == 0 or block == NBLOCKS-1:
+        if block % 10**(len(str(block)) - 1) == 0 or block == NBLOCKS - 1:
             print(flush=True)
             print("  Block   {:12d} of {:12d}"
-                  .format(block, NBLOCKS-1),
+                  .format(block, NBLOCKS - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_block),
+                  .format(datetime.now() - timer_block),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_block = datetime.now()
         acorr_unbound_ref[block] = autocorr_unbound(
-            cms=cms[block*blocksize:(block+1)*blocksize],
+            cms=cms[block * blocksize:(block + 1) * blocksize],
             axis=1,
             restart=effective_restart,
             debug=args.DEBUG)
 
     print("\n", flush=True)
     print("  Unbound selection compounds", flush=True)
-    acorr_unbound_sel = [None,] * NBLOCKS
+    acorr_unbound_sel = [None, ] * NBLOCKS
     for block in range(NBLOCKS):
-        if block % 10**(len(str(block))-1) == 0 or block == NBLOCKS-1:
+        if block % 10**(len(str(block)) - 1) == 0 or block == NBLOCKS - 1:
             print(flush=True)
             print("  Block   {:12d} of {:12d}"
-                  .format(block, NBLOCKS-1),
+                  .format(block, NBLOCKS - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_block),
+                  .format(datetime.now() - timer_block),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_block = datetime.now()
         acorr_unbound_sel[block] = autocorr_unbound(
-            cms=cms[block*blocksize:(block+1)*blocksize],
+            cms=cms[block * blocksize:(block + 1) * blocksize],
             axis=0,
             restart=effective_restart,
             debug=args.DEBUG)
@@ -816,13 +816,13 @@ if __name__ == '__main__':
     if NBLOCKS > 1:
         acorr_bound, acorr_bound_sd = mdt.stats.block_average(acorr_bound)
         acorr_bound_sd_fit = np.copy(acorr_bound_sd)
-        acorr_bound_sd_fit[acorr_bound_sd_fit==0] = 1e-20
+        acorr_bound_sd_fit[acorr_bound_sd_fit == 0] = 1e-20
         acorr_unbound_ref, acorr_unbound_ref_sd = mdt.stats.block_average(acorr_unbound_ref)
         acorr_unbound_ref_sd_fit = np.copy(acorr_unbound_ref_sd)
-        acorr_unbound_ref_sd_fit[acorr_unbound_ref_sd_fit==0] = 1e-20
+        acorr_unbound_ref_sd_fit[acorr_unbound_ref_sd_fit == 0] = 1e-20
         acorr_unbound_sel, acorr_unbound_sel_sd = mdt.stats.block_average(acorr_unbound_sel)
         acorr_unbound_sel_sd_fit = np.copy(acorr_unbound_sel_sd)
-        acorr_unbound_sel_sd_fit[acorr_unbound_sel_sd_fit==0] = 1e-20
+        acorr_unbound_sel_sd_fit[acorr_unbound_sel_sd_fit == 0] = 1e-20
     else:
         acorr_bound = np.squeeze(acorr_bound)
         acorr_bound_sd_fit = None
@@ -832,10 +832,10 @@ if __name__ == '__main__':
         acorr_unbound_sel_sd_fit = None
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -846,8 +846,8 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     lag_times = np.arange(0,
-                          timestep*blocksize*EVERY,
-                          timestep*EVERY,
+                          timestep * blocksize * EVERY,
+                          timestep * EVERY,
                           dtype=np.float32)
     if args.ENDFIT is None:
         endfit = int(0.9 * len(lag_times))
@@ -876,8 +876,8 @@ if __name__ == '__main__':
                             ysd=ysd)
     else:
         fit_bound = np.full(4, np.nan)
-    lifetime_bound = (fit_bound[0]/fit_bound[2] *
-                      special.gamma(1/fit_bound[2]))
+    lifetime_bound = (fit_bound[0] / fit_bound[2] *
+                      special.gamma(1 / fit_bound[2]))
     kww_bound = kww(t=lag_times, tau=fit_bound[0], beta=fit_bound[2])
     kww_bound[~valid] = np.nan
 
@@ -899,8 +899,8 @@ if __name__ == '__main__':
                                   ysd=ysd)
     else:
         fit_unbound_ref = np.full(4, np.nan)
-    lifetime_unbound_ref = (fit_unbound_ref[0]/fit_unbound_ref[2] *
-                            special.gamma(1/fit_unbound_ref[2]))
+    lifetime_unbound_ref = (fit_unbound_ref[0] / fit_unbound_ref[2] *
+                            special.gamma(1 / fit_unbound_ref[2]))
     kww_unbound_ref = kww(t=lag_times,
                           tau=fit_unbound_ref[0],
                           beta=fit_unbound_ref[2])
@@ -924,8 +924,8 @@ if __name__ == '__main__':
                                   ysd=ysd)
     else:
         fit_unbound_sel = np.full(4, np.nan)
-    lifetime_unbound_sel = (fit_unbound_sel[0]/fit_unbound_sel[2] *
-                            special.gamma(1/fit_unbound_sel[2]))
+    lifetime_unbound_sel = (fit_unbound_sel[0] / fit_unbound_sel[2] *
+                            special.gamma(1 / fit_unbound_sel[2]))
     kww_unbound_sel = kww(t=lag_times,
                           tau=fit_unbound_sel[0],
                           beta=fit_unbound_sel[2])
@@ -939,10 +939,10 @@ if __name__ == '__main__':
     del ysd
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -1162,14 +1162,14 @@ if __name__ == '__main__':
 
     mdt.fh.savetxt(fname=args.OUTFILE,
                    data=data,
-                   header=header+columns)
+                   header=header + columns)
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -1178,8 +1178,8 @@ if __name__ == '__main__':
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

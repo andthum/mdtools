@@ -408,13 +408,13 @@ def discrete_pos_trj(
             STOP = lbox
         else:
             STOP = bin_stop
-        START, STOP, STEP, NUM = mdt.check.bins(start=bin_start/lbox,
-                                                stop=STOP/lbox,
+        START, STOP, STEP, NUM = mdt.check.bins(start=bin_start / lbox,
+                                                stop=STOP / lbox,
                                                 num=bin_num,
                                                 amin=0,
                                                 amax=1,
                                                 verbose=verbose)
-        bins = np.linspace(START, STOP, NUM+1)
+        bins = np.linspace(START, STOP, NUM + 1)
     else:
         bins = np.unique(bins) / lbox
     mdt.check.bin_edges(bins=bins,
@@ -423,9 +423,9 @@ def discrete_pos_trj(
                         tol=tol,
                         verbose=verbose)
     if verbose:
-        print("Elapsed time:         {}".format(datetime.now()-timer))
+        print("Elapsed time:         {}".format(datetime.now() - timer))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
 
     # Prepare discrete trajectory:
     if compound == 'group':
@@ -455,16 +455,16 @@ def discrete_pos_trj(
         print("Total number of frames: {:>8d}".format(N_FRAMES_TOT))
         print("Frames to read:         {:>8d}".format(N_FRAMES))
         print("First frame to read:    {:>8d}".format(BEGIN))
-        print("Last frame to read:     {:>8d}".format(END-1))
+        print("Last frame to read:     {:>8d}".format(END - 1))
         print("Read every n-th frame:  {:>8d}".format(EVERY))
         print("Time first frame:       {:>12.3f} (ps)"
               .format(trj[BEGIN].time))
         print("Time last frame:        {:>12.3f} (ps)"
-              .format(trj[END-1].time))
+              .format(trj[END - 1].time))
         print("Time step first frame:  {:>12.3f} (ps)"
               .format(trj[BEGIN].dt))
         print("Time step last frame:   {:>12.3f} (ps)"
-              .format(trj[END-1].dt))
+              .format(trj[END - 1].dt))
         timer = datetime.now()
         trj = mdt.rti.ProgressBar(trj)
     lbox_av = 0  # Average box length in the given direction
@@ -482,7 +482,7 @@ def discrete_pos_trj(
                                compound=compound,
                                make_whole=True,
                                debug=debug)
-        pos = pos[:,ixd]
+        pos = pos[:, ixd]
         pos /= ts.dimensions[ixd]
         if debug:
             mdt.check.array(pos, shape=(N_CMPS,), amin=0, amax=1)
@@ -501,12 +501,12 @@ def discrete_pos_trj(
     bins *= lbox_av  # Convert relative box coordinates to real space
     if verbose:
         trj.close()
-        print("Elapsed time:         {}".format(datetime.now()-timer))
+        print("Elapsed time:         {}".format(datetime.now() - timer))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
 
     # Internal consistency check
-    if np.any(dtrj < 0) or np.any(dtrj >= len(bins)-1):
+    if np.any(dtrj < 0) or np.any(dtrj >= len(bins) - 1):
         raise ValueError("At least one compound position lies outside"
                          " the primary unit cell. This should not have"
                          " happened")
@@ -514,19 +514,19 @@ def discrete_pos_trj(
     if verbose:
         print()
         print("mdtools.structure.discrete_pos_trj() done")
-        print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+        print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
         print("CPU time:             {}"
               .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
         print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
 
     if not np.any([return_bins, return_lbox, return_dt]):
         return dtrj
     else:
         output = np.array([bins, lbox_av, time_step], dtype=object)
         output = output[[return_bins, return_lbox, return_dt]].tolist()
-        return tuple([dtrj,] + output)
+        return tuple([dtrj, ] + output)
 
 
 def natms_per_cmp(
@@ -806,7 +806,7 @@ def cmp_contact_count_matrix(
                     " 'cm.shape[{}]' ({})"
                     .format(arg_names[i], napc, i, cm.shape[i])
                 )
-            napc = np.full(cm.shape[i]//napc, napc, dtype=np.uint32)
+            napc = np.full(cm.shape[i] // napc, napc, dtype=np.uint32)
         elif np.ndim(napc) == 1:
             if np.sum(napc) != cm.shape[i]:
                 raise ValueError(
@@ -1079,7 +1079,7 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
             shape = list(cm.shape)
             shape.pop(i)  # Remove current axis from shape => Number of compounds
             insertion = np.zeros(shape, dtype=cm.dtype)
-            missing_ix = np.setdiff1d(np.arange(ix[-1]+1),
+            missing_ix = np.setdiff1d(np.arange(ix[-1] + 1),
                                       ix,
                                       assume_unique=True)
             for m_ix in missing_ix:
@@ -1088,7 +1088,7 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
         if cm.shape[i] != ix[-1] + 1:
             raise ValueError("'cm.shape[{}]' is {} but must be {}. This"
                              " should not have happened"
-                             .format(i, cm.shape[i], ix[-1]+1))
+                             .format(i, cm.shape[i], ix[-1] + 1))
     return cm
 
 
@@ -1253,8 +1253,8 @@ def contact_matrix(
     if len(compound) != n_ags:
         raise ValueError("'compound' must either be a string or a 1d"
                          " array containing {} strings".format(n_ags))
-    cmp_ix = [None,] * n_ags
-    napc = [None,] * n_ags
+    cmp_ix = [None, ] * n_ags
+    napc = [None, ] * n_ags
     for i, ag in enumerate(ags):
         napc[i], cmp_ix[i] = natms_per_cmp(ag=ag,
                                            compound=compound[i],
@@ -1441,9 +1441,9 @@ def contact_matrices(
             print(mdt.rti.ag_info_str(ag=ref, indent=2))
             print("Selection group: '{}'".format(sel_str))
             print(mdt.rti.ag_info_str(ag=sel, indent=2))
-            print("Elapsed time:         {}".format(datetime.now()-timer))
+            print("Elapsed time:         {}".format(datetime.now() - timer))
             print("Current memory usage: {:.2f} MiB"
-                  .format(proc.memory_info().rss/2**20))
+                  .format(proc.memory_info().rss / 2**20))
             print()
         N_FRAMES_TOT = u.trajectory.n_frames
         BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
@@ -1462,7 +1462,7 @@ def contact_matrices(
                              " 'sel' must be a"
                              " MDAnalysis.core.groups.AtomGroup instance")
 
-    cms = [None,] * N_FRAMES
+    cms = [None, ] * N_FRAMES
     if not updating_ref:
         natms_per_refcmp, refcmp_ix = mdt.strc.natms_per_cmp(
             ag=ref,
@@ -1490,16 +1490,16 @@ def contact_matrices(
         print("Total number of frames: {:>8d}".format(N_FRAMES_TOT))
         print("Frames to read:         {:>8d}".format(N_FRAMES))
         print("First frame to read:    {:>8d}".format(BEGIN))
-        print("Last frame to read:     {:>8d}".format(END-1))
+        print("Last frame to read:     {:>8d}".format(END - 1))
         print("Read every n-th frame:  {:>8d}".format(EVERY))
         print("Time first frame:       {:>12.3f} (ps)"
               .format(trj[BEGIN].time))
         print("Time last frame:        {:>12.3f} (ps)"
-              .format(trj[END-1].time))
+              .format(trj[END - 1].time))
         print("Time step first frame:  {:>12.3f} (ps)"
               .format(trj[BEGIN].dt))
         print("Time step last frame:   {:>12.3f} (ps)"
-              .format(trj[END-1].dt))
+              .format(trj[END - 1].dt))
         timer = datetime.now()
         trj = mdt.rti.ProgressBar(trj)
     for i, ts in enumerate(trj):
@@ -1539,17 +1539,17 @@ def contact_matrices(
                                 refresh=False)
     if verbose:
         trj.close()
-        print("Elapsed time:         {}".format(datetime.now()-timer))
+        print("Elapsed time:         {}".format(datetime.now() - timer))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
         print()
         print("mdtools.structure.contact_matrices() done")
-        print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+        print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
         print("CPU time:             {}"
               .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
         print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
 
     return cms
 
@@ -1693,7 +1693,7 @@ def cms_n_contacts(cms, dtype=int):
     array([4, 2, 3, 2])
     """
     mdt.check.list_of_cms(cms)
-    n_contacts = np.zeros(len(cms)+1, dtype=dtype)
+    n_contacts = np.zeros(len(cms) + 1, dtype=dtype)
     if sparse.issparse(cms[0]):
         for i, cm in enumerate(cms):
             n_contacts[i] = cm.count_nonzero()
@@ -2274,11 +2274,11 @@ def contact_hist_refcmp_same_selcmp(
     occurring_contacts = np.unique(cm)  # Unique and sorted contacts
     if occurring_contacts[0] == 0:
         zero_contacts_exist = True
-        hist_length = max(occurring_contacts[-1]+1, minlength)
+        hist_length = max(occurring_contacts[-1] + 1, minlength)
         occurring_contacts = occurring_contacts[1:]
     elif occurring_contacts[0] > 0:
         zero_contacts_exist = False
-        hist_length = max(occurring_contacts[-1]+1, minlength)
+        hist_length = max(occurring_contacts[-1] + 1, minlength)
     elif occurring_contacts[0] < 0:
         raise ValueError("'cm' must not contain negative elements")
     hist = np.zeros(hist_length, dtype=dtype)
@@ -2306,7 +2306,7 @@ def contact_hist_refcmp_same_selcmp(
         # all_pairs_have_n_contacts
         np.all(pair_has_n_contacts, axis=1, out=any_pair_has_n_contacts)
         n_unbound_ref = np.count_nonzero(any_pair_has_n_contacts)
-        hist_test = np.array([n_unbound_ref, cm.shape[0]-n_unbound_ref])
+        hist_test = np.array([n_unbound_ref, cm.shape[0] - n_unbound_ref])
         hist_test = mdt.nph.extend(hist_test, len(hist))
         if not np.array_equal(hist, hist_test):
             raise ValueError("refcmp == refatm and selcmp == selatm, but"
@@ -2991,7 +2991,7 @@ def contact_hists(
                              " 'hist_refcmp_selcmp_tot'")
         if not np.any(np.equal(cm.shape, 0)):
             hist_test = np.array([hist_refcmp_diff_selcmp[0],
-                                  cm.shape[0]-hist_refcmp_diff_selcmp[0]])
+                                  cm.shape[0] - hist_refcmp_diff_selcmp[0]])
             hist_test = mdt.nph.extend(hist_test, length)
             if not np.array_equal(hist_refcmp_same_selcmp, hist_test):
                 raise ValueError("refcmp == refatm and selcmp == selatm,"

@@ -213,10 +213,10 @@ if __name__ == '__main__':
         markersize = markersize[valid][::args.EVERY]
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -241,7 +241,7 @@ if __name__ == '__main__':
         axis.yaxis.set_major_locator(MaxNLocator(integer=True))
         axis.ticklabel_format(axis='x',
                               style='scientific',
-                              scilimits=(0,0),
+                              scilimits=(0, 0),
                               useOffset=False)
         mdt.plot.scatter(ax=axis,
                          x=frames,
@@ -266,8 +266,8 @@ if __name__ == '__main__':
                                  tight_layout=True)
 
         mdt.plot.scatter(ax=axis,
-                         x=latverts[:,0],
-                         y=latverts[:,1],
+                         x=latverts[:, 0],
+                         y=latverts[:, 1],
                          xmin=args.XMIN,
                          xmax=args.XMAX,
                          ymin=args.YMIN,
@@ -278,8 +278,8 @@ if __name__ == '__main__':
                          color='black')
 
         img = mdt.plot.scatter(ax=axis,
-                               x=latfaces[dtraj][:,0],
-                               y=latfaces[dtraj][:,1],
+                               x=latfaces[dtraj][:, 0],
+                               y=latfaces[dtraj][:, 1],
                                c=frames,
                                s=markersize,
                                xmin=args.XMIN,
@@ -302,12 +302,12 @@ if __name__ == '__main__':
                             labelsize=fontsize_ticks)
         cbar.ax.tick_params(which='minor',
                             direction='out',
-                            length=0.5*tick_length,
-                            labelsize=0.8*fontsize_ticks)
+                            length=0.5 * tick_length,
+                            labelsize=0.8 * fontsize_ticks)
         cbar.ax.yaxis.set_major_locator(MaxNLocator(integer=True))
         cbar.ax.ticklabel_format(axis='y',
                                  style='scientific',
-                                 scilimits=(0,0),
+                                 scilimits=(0, 0),
                                  useOffset=False)
 
         xsize = abs(axis.get_xlim()[0] - axis.get_xlim()[1])
@@ -332,8 +332,8 @@ if __name__ == '__main__':
                                  tight_layout=True)
 
         mdt.plot.scatter(ax=axis,
-                         x=latverts[:,0],
-                         y=latverts[:,1],
+                         x=latverts[:, 0],
+                         y=latverts[:, 1],
                          xmin=args.XMIN,
                          xmax=args.XMAX,
                          ymin=args.YMIN,
@@ -346,7 +346,7 @@ if __name__ == '__main__':
         latface_num = np.arange(len(latfaces))
         for i, txt in enumerate(latface_num):
             axis.annotate(txt,
-                          xy=(latfaces[:,0][i], latfaces[:,1][i]),
+                          xy=(latfaces[:, 0][i], latfaces[:, 1][i]),
                           horizontalalignment='center',
                           verticalalignment='center')
 
@@ -365,10 +365,10 @@ if __name__ == '__main__':
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -376,8 +376,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

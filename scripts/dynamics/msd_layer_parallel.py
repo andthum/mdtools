@@ -86,7 +86,7 @@ if __name__ == '__main__':
         restart_every_nth_frame=args.RESTART,
         read_every_nth_frame=EVERY,
         n_frames=blocksize)
-    last_frame = u.trajectory[END-1].frame
+    last_frame = u.trajectory[END - 1].frame
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     lbox_max = [ts.dimensions[d] for ts in u.trajectory[BEGIN:END:EVERY]]
     lbox_max = np.max(lbox_max)
     if args.BINFILE is None:
-        bins = np.linspace(0, lbox_max, args.NUM+1)
+        bins = np.linspace(0, lbox_max, args.NUM + 1)
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
         bins = np.unique(bins)
@@ -119,16 +119,16 @@ if __name__ == '__main__':
               .format(bins[-1]),
               flush=True)
     elif bins[-1] <= lbox_max:
-        bins = np.append(bins, lbox_max+1e-9)
+        bins = np.append(bins, lbox_max + 1e-9)
         print("  Appending new last bin edge: {}"
               .format(bins[-1]),
               flush=True)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -145,14 +145,14 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     nchunks = num_CPUs
-    if nchunks > int(n_frames/10):
-        nchunks = int(n_frames/10)
+    if nchunks > int(n_frames / 10):
+        nchunks = int(n_frames / 10)
     pool = mdt.parallel.ProcessPool(nprocs=nchunks)
 
-    chunk_size = int((END-BEGIN) / nchunks)
+    chunk_size = int((END - BEGIN) / nchunks)
     chunk_size -= chunk_size % EVERY
-    if chunk_size: # !=0
-        nchunks = int((END-BEGIN) / chunk_size)
+    if chunk_size:  # !=0
+        nchunks = int((END - BEGIN) / chunk_size)
     else:
         nchunks = 1
 
@@ -162,22 +162,22 @@ if __name__ == '__main__':
                                args.TRJFILE,
                                args.SEL,
                                args.COM,
-                               BEGIN+chunk*chunk_size,
-                               BEGIN+(chunk+1)*chunk_size,
+                               BEGIN + chunk * chunk_size,
+                               BEGIN + (chunk + 1) * chunk_size,
                                EVERY,
                                args.DEBUG))
-    if BEGIN+(chunk+1)*chunk_size < END:
+    if BEGIN + (chunk + 1) * chunk_size < END:
         chunk += 1
         pool.submit_task(func=get_COMs,
                          args=(args.TOPFILE,
                                args.TRJFILE,
                                args.SEL,
                                args.COM,
-                               BEGIN+chunk*chunk_size,
+                               BEGIN + chunk * chunk_size,
                                END,
                                EVERY,
                                args.DEBUG))
-    elif BEGIN+(chunk+1)*chunk_size > END:
+    elif BEGIN + (chunk + 1) * chunk_size > END:
         raise ValueError("I've read more frames than given with -e. This"
                          " should not have happened")
 
@@ -203,14 +203,14 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     pool = mdt.parallel.ProcessPool(nprocs=num_CPUs)
     for block in range(NBLOCKS):
         pool.submit_task(func=msd_layer,
-                         args=(pos[block*blocksize:(block+1)*blocksize],
+                         args=(pos[block * blocksize:(block + 1) * blocksize],
                                bins,
                                args.DIRECTION,
                                effective_restart,
@@ -258,15 +258,15 @@ if __name__ == '__main__':
         msd = np.squeeze(msd, axis=0)
     msd_tot = np.sum(msd, axis=2)
     lag_times = np.arange(0,
-                          timestep*blocksize*EVERY,
-                          timestep*EVERY,
+                          timestep * blocksize * EVERY,
+                          timestep * EVERY,
                           dtype=np.float32)
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -325,13 +325,13 @@ if __name__ == '__main__':
         .format(args.DIRECTION, args.DIRECTION, args.DIRECTION, args.DIRECTION)
     )
     suffix = "The remaining matrix elements contain the respective MSD values.\n"
-    mdt.fh.savetxt_matrix(fname=args.OUTFILE+"_msd_layer.txt",
+    mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_msd_layer.txt",
                           data=msd_tot,
                           var1=lag_times,
                           var2=bins[1:],
                           upper_left=bins[0],
-                          header=prefix+header+suffix)
-    print("  Created {}".format(args.OUTFILE+"_msd_layer.txt"))
+                          header=prefix + header + suffix)
+    print("  Created {}".format(args.OUTFILE + "_msd_layer.txt"))
     if args.NBLOCKS > 1:
         prefix = (
             "Standard deviation of the total mean square displacement (MSD)\n"
@@ -340,13 +340,13 @@ if __name__ == '__main__':
             .format(args.DIRECTION, args.DIRECTION, args.DIRECTION, args.DIRECTION)
         )
         suffix = "The remaining matrix elements contain the respective MSD values.\n"
-        mdt.fh.savetxt_matrix(fname=args.OUTFILE+"_msd_layer_sd.txt",
+        mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_msd_layer_sd.txt",
                               data=msd_tot_sd,
                               var1=lag_times,
                               var2=bins[1:],
                               upper_left=bins[0],
-                              header=prefix+header+suffix)
-        print("  Created {}".format(args.OUTFILE+"_msd_layer_sd.txt"))
+                              header=prefix + header + suffix)
+        print("  Created {}".format(args.OUTFILE + "_msd_layer_sd.txt"))
 
     for i, x in enumerate(['x', 'y', 'z']):
         prefix = (
@@ -356,13 +356,13 @@ if __name__ == '__main__':
             .format(x, args.DIRECTION, x, args.DIRECTION, x, x, args.DIRECTION, args.DIRECTION)
         )
         suffix = "The remaining matrix elements contain the respective MSD values.\n"
-        mdt.fh.savetxt_matrix(fname=args.OUTFILE+"_msd"+x+"_layer.txt",
-                              data=msd[:,:,i],
+        mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_msd" + x + "_layer.txt",
+                              data=msd[:, :, i],
                               var1=lag_times,
                               var2=bins[1:],
                               upper_left=bins[0],
-                              header=prefix+header+suffix)
-        print("  Created {}".format(args.OUTFILE+"_msd"+x+"_layer.txt"))
+                              header=prefix + header + suffix)
+        print("  Created {}".format(args.OUTFILE + "_msd" + x + "_layer.txt"))
         if args.NBLOCKS > 1:
             prefix = (
                 "Standard deviation of the {}-component of the mean square\n"
@@ -372,13 +372,13 @@ if __name__ == '__main__':
                 .format(x, args.DIRECTION, x, args.DIRECTION, x, x, args.DIRECTION, args.DIRECTION)
             )
             suffix = "The remaining matrix elements contain the respective MSD values.\n"
-            mdt.fh.savetxt_matrix(fname=args.OUTFILE+"_msd"+x+"_layer_sd.txt",
-                                  data=msd_sd[:,:,i],
+            mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_msd" + x + "_layer_sd.txt",
+                                  data=msd_sd[:, :, i],
                                   var1=lag_times,
                                   var2=bins[1:],
                                   upper_left=bins[0],
-                                  header=prefix+header+suffix)
-            print("  Created {}".format(args.OUTFILE+"_msd"+x+"_layer_sd.txt"))
+                                  header=prefix + header + suffix)
+            print("  Created {}".format(args.OUTFILE + "_msd" + x + "_layer_sd.txt"))
 
 
     # MDs
@@ -390,13 +390,13 @@ if __name__ == '__main__':
             .format(x, args.DIRECTION, x, args.DIRECTION, x, x, args.DIRECTION, args.DIRECTION)
         )
         suffix = "The remaining matrix elements contain the respective MD values.\n"
-        mdt.fh.savetxt_matrix(fname=args.OUTFILE+"_md"+x+"_layer.txt",
-                              data=md[:,:,i],
+        mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_md" + x + "_layer.txt",
+                              data=md[:, :, i],
                               var1=lag_times,
                               var2=bins[1:],
                               upper_left=bins[0],
-                              header=prefix+header+suffix)
-        print("  Created {}".format(args.OUTFILE+"_md"+x+"_layer.txt"))
+                              header=prefix + header + suffix)
+        print("  Created {}".format(args.OUTFILE + "_md" + x + "_layer.txt"))
         if args.NBLOCKS > 1:
             prefix = (
                 "Standard deviation of the {}-component of the mean\n"
@@ -406,19 +406,19 @@ if __name__ == '__main__':
                 .format(x, args.DIRECTION, x, args.DIRECTION, x, x, args.DIRECTION, args.DIRECTION)
             )
             suffix = "The remaining matrix elements contain the respective MD values.\n"
-            mdt.fh.savetxt_matrix(fname=args.OUTFILE+"_md"+x+"_layer_sd.txt",
-                                  data=md_sd[:,:,i],
+            mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_md" + x + "_layer_sd.txt",
+                                  data=md_sd[:, :, i],
                                   var1=lag_times,
                                   var2=bins[1:],
                                   upper_left=bins[0],
-                                  header=prefix+header+suffix)
-            print("  Created {}".format(args.OUTFILE+"_md"+x+"_layer_sd.txt"))
+                                  header=prefix + header + suffix)
+            print("  Created {}".format(args.OUTFILE + "_md" + x + "_layer_sd.txt"))
 
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
 
 
@@ -426,8 +426,8 @@ if __name__ == '__main__':
 
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

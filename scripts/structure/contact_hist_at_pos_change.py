@@ -283,9 +283,9 @@ if __name__ == '__main__':
     print(mdt.rti.ag_info_str(ag=ref, indent=2))
     print("Selection group: '{}'".format(' '.join(args.SEL)))
     print(mdt.rti.ag_info_str(ag=sel, indent=2))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
     print("\n")
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
         start=args.BEGIN,
@@ -304,7 +304,7 @@ if __name__ == '__main__':
                          " or equal to zero".format(lbox, args.DIRECTION))
     tol = 1e-9
     if args.BINFILE is None:
-        bins = np.linspace(0, lbox, args.NUM+1)
+        bins = np.linspace(0, lbox, args.NUM + 1)
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
         bins = np.unique(bins)
@@ -318,11 +318,11 @@ if __name__ == '__main__':
         print("Changed last bin edge to {:.6f}".format(bins[-1]))
         print("(Maximum box length plus small tolerance)")
     elif bins[-1] < lbox:
-        bins = np.append(bins, lbox+tol)
+        bins = np.append(bins, lbox + tol)
         print("Appended new last bin edge: {:.6f}".format(bins[-1]))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     natms_per_refcmp = mdt.strc.natms_per_cmp(ag=ref,
                                               compound=args.REFCMP,
@@ -337,7 +337,7 @@ if __name__ == '__main__':
     refatm_motion = np.zeros((2, ref.n_atoms), dtype=bool)
     if args.REFCMP == 'segments':
         refcmp = ref.segments.atoms
-        refcmp_motion = np.zeros((2, ref.n_segments),dtype=bool)
+        refcmp_motion = np.zeros((2, ref.n_segments), dtype=bool)
     elif args.REFCMP == 'residues':
         refcmp = ref.residues.atoms
         refcmp_motion = np.zeros((2, ref.n_residues), dtype=bool)
@@ -369,28 +369,28 @@ if __name__ == '__main__':
     print("Total number of frames: {:>8d}".format(u.trajectory.n_frames))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
     print("First frame to read:    {:>8d}".format(BEGIN))
-    print("Last frame to read:     {:>8d}".format(END-1))
+    print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     print("Time first frame:       {:>12.3f} (ps)"
           .format(u.trajectory[BEGIN].time))
     print("Time last frame:        {:>12.3f} (ps)"
-          .format(u.trajectory[END-1].time))
+          .format(u.trajectory[END - 1].time))
     print("Time step first frame:  {:>12.3f} (ps)"
           .format(u.trajectory[BEGIN].dt))
     print("Time step last frame:   {:>12.3f} (ps)"
-          .format(u.trajectory[END-1].dt))
+          .format(u.trajectory[END - 1].dt))
     timer = datetime.now()
     # Read first frame:
     ts = u.trajectory[BEGIN]
-    refatm_bin_ix_prev = np.digitize(ref.positions[:,ixd], bins=bins)
+    refatm_bin_ix_prev = np.digitize(ref.positions[:, ixd], bins=bins)
     refcmp_coms = mdt.strc.com(ag=refcmp,
                                pbc=True,
                                compound=args.REFCMP,
                                make_whole=True,
                                debug=args.DEBUG)
-    refcmp_bin_ix_prev = np.digitize(refcmp_coms[:,ixd], bins=bins)
+    refcmp_bin_ix_prev = np.digitize(refcmp_coms[:, ixd], bins=bins)
     # Read remaining frames:
-    trj = mdt.rti.ProgressBar(u.trajectory[BEGIN+EVERY:END:EVERY],
+    trj = mdt.rti.ProgressBar(u.trajectory[BEGIN + EVERY:END:EVERY],
                               initial=1,
                               total=END)
     for ts in trj:
@@ -410,7 +410,7 @@ if __name__ == '__main__':
             dtype=np.uint32
         )
         # Find refatms that stayed in or left their initial position bin:
-        refatm_bin_ix = np.digitize(ref.positions[:,ixd], bins=bins)
+        refatm_bin_ix = np.digitize(ref.positions[:, ixd], bins=bins)
         np.equal(refatm_bin_ix, refatm_bin_ix_prev, out=refatm_motion[0])
         np.invert(refatm_motion[0], out=refatm_motion[1])
         refatm_bin_ix_prev = refatm_bin_ix
@@ -446,7 +446,7 @@ if __name__ == '__main__':
                                    compound=args.REFCMP,
                                    make_whole=True,
                                    debug=args.DEBUG)
-        refcmp_bin_ix = np.digitize(refcmp_coms[:,ixd], bins=bins)
+        refcmp_bin_ix = np.digitize(refcmp_coms[:, ixd], bins=bins)
         np.equal(refcmp_bin_ix, refcmp_bin_ix_prev, out=refcmp_motion[0])
         np.invert(refcmp_motion[0], out=refcmp_motion[1])
         refcmp_bin_ix_prev = refcmp_bin_ix
@@ -475,9 +475,9 @@ if __name__ == '__main__':
     del refatm_motion, refatm_bin_ix, refatm_bin_ix_prev, valid_refatms
     del refcmp_motion, refcmp_bin_ix, refcmp_bin_ix_prev, valid_refcmps
     del refcmp_coms
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     if np.any(n_atms[0] == 0):
         warnings.warn("The total number of reference or selection atoms"
@@ -614,19 +614,19 @@ if __name__ == '__main__':
             outfile.write("# Cutoff (Angstrom):     {}\n".format(args.CUTOFF))
             outfile.write("# Reference compound =  '{}'\n".format(args.REFCMP))
             outfile.write("# Selection compound =  '{}'\n".format(args.SELCMP))
-            outfile.write("# Number of frames available for computation:   {:>12d}\n".format((N_FRAMES-1)))
-            outfile.write("# Total No. of reference atoms     (per frame): {:>12d}  ({:>12.3f})\n".format(n_atms[m][0], n_atms[m][0]/(N_FRAMES-1)))
-            outfile.write("# Total No. of reference compounds (per frame): {:>12d}  ({:>12.3f})\n".format(n_cmps[m][0], n_cmps[m][0]/(N_FRAMES-1)))
-            outfile.write("# Total No. of selection atoms     (per frame): {:>12d}  ({:>12.3f})\n".format(n_atms[m][1], n_atms[m][1]/(N_FRAMES-1)))
-            outfile.write("# Total No. of selection compounds (per frame): {:>12d}  ({:>12.3f})\n".format(n_cmps[m][1], n_cmps[m][1]/(N_FRAMES-1)))
-            outfile.write("# Total No. of refatm-selcmp pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[m][0], n_pairs[m][0]/(N_FRAMES-1)))
-            outfile.write("# Total No. of refcmp-selatm pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[m][1], n_pairs[m][1]/(N_FRAMES-1)))
-            outfile.write("# Total No. of refcmp-selcmp pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[m][2], n_pairs[m][2]/(N_FRAMES-1)))
+            outfile.write("# Number of frames available for computation:   {:>12d}\n".format((N_FRAMES - 1)))
+            outfile.write("# Total No. of reference atoms     (per frame): {:>12d}  ({:>12.3f})\n".format(n_atms[m][0], n_atms[m][0] / (N_FRAMES - 1)))
+            outfile.write("# Total No. of reference compounds (per frame): {:>12d}  ({:>12.3f})\n".format(n_cmps[m][0], n_cmps[m][0] / (N_FRAMES - 1)))
+            outfile.write("# Total No. of selection atoms     (per frame): {:>12d}  ({:>12.3f})\n".format(n_atms[m][1], n_atms[m][1] / (N_FRAMES - 1)))
+            outfile.write("# Total No. of selection compounds (per frame): {:>12d}  ({:>12.3f})\n".format(n_cmps[m][1], n_cmps[m][1] / (N_FRAMES - 1)))
+            outfile.write("# Total No. of refatm-selcmp pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[m][0], n_pairs[m][0] / (N_FRAMES - 1)))
+            outfile.write("# Total No. of refcmp-selatm pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[m][1], n_pairs[m][1] / (N_FRAMES - 1)))
+            outfile.write("# Total No. of refcmp-selcmp pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[m][2], n_pairs[m][2] / (N_FRAMES - 1)))
             outfile.write("# \n")
             outfile.write("# \n")
             outfile.write("# Histogram averages:\n")
-            outfile.write("# Percentage of refatms bound to at least one selatm:       {:10.4e}\n".format(1-hist_refatm_selatm[m][0]))
-            outfile.write("# Percentage of refcmps bound to at least one selatm:       {:10.4e}\n".format(1-hists_cmp[m][1][0][0]))  # refcmp_diff_selatm
+            outfile.write("# Percentage of refatms bound to at least one selatm:       {:10.4e}\n".format(1 - hist_refatm_selatm[m][0]))
+            outfile.write("# Percentage of refcmps bound to at least one selatm:       {:10.4e}\n".format(1 - hists_cmp[m][1][0][0]))  # refcmp_diff_selatm
             outfile.write("# \n")
             outfile.write("#  (2)* Av.       selatm coordination No. of all   refatms: {:10.4e}  (Every refatm                  has on average           contact  with this many           selatms)\n".format(avs_refatm_selatm[m][0]))
             outfile.write("#  (2)' Av.       selatm coordination No. of bound refatms: {:10.4e}  (Every refatm bound to selatms has on average           contact  with this many           selatms)\n".format(avs_refatm_selatm[m][1]))
@@ -694,7 +694,7 @@ if __name__ == '__main__':
                                   "refcmp_s_selcmp",   # 12
                                   "refcmp_selcmp_t",   # 13
                                   "refcmp_selcmp_p"))  # 14
-            for i in range(last_nonzero[m]+1):
+            for i in range(last_nonzero[m] + 1):
                 outfile.write("  {:3d}   {:>16.9e}"
                               .format(i, hist_refatm_selatm[m][i]))
                 for hists in hists_cmp[m]:
@@ -706,7 +706,7 @@ if __name__ == '__main__':
             outfile.write("\n")
             outfile.write("# Sums\n")
             outfile.write("  {:3d}   {:>16.9e}"
-                          .format(np.sum(np.arange(last_nonzero[m]+1)),
+                          .format(np.sum(np.arange(last_nonzero[m] + 1)),
                                   np.sum(hist_refatm_selatm[m])))
             for hists in hists_cmp[m]:
                 outfile.write(2 * " ")
@@ -721,9 +721,9 @@ if __name__ == '__main__':
               "Discretized dimension: {}\n".format(args.DIRECTION))
     mdt.fh.savetxt(fname=fname, data=bins, header=header)
     print("Created {}".format(fname))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("Checking output for consistency...")
@@ -821,7 +821,7 @@ if __name__ == '__main__':
     for m, avs_p in enumerate(avs_pair):
         for i, av_pair in enumerate(avs_p):
             for k in range(2):
-                if not np.isclose(avs_cmp[m][i][0][k]*av_pair,
+                if not np.isclose(avs_cmp[m][i][0][k] * av_pair,
                                   avs_cmp[m][i][2][k],
                                   rtol=0, atol=tol):
                     # av(refcmp_diff_selcmp)*av(refcmp_selcmp_pair) !=
@@ -829,7 +829,7 @@ if __name__ == '__main__':
                     raise ValueError(
                         "'avs_cmp[{}][{}][0][{}]*avs_pair[{}][{}]' ({}) !="
                         " 'avs_cmp[{}][{}][2][{}]' ({})"
-                        .format(m, i, k, m, i, avs_cmp[m][i][0][k]*av_pair,
+                        .format(m, i, k, m, i, avs_cmp[m][i][0][k] * av_pair,
                                 m, i, k, avs_cmp[m][i][2][k])
                     )
     for m, hist_a in enumerate(hist_refatm_selatm):
@@ -863,7 +863,7 @@ if __name__ == '__main__':
                         )
 
     for m, hist_a in enumerate(hist_refatm_selatm):
-        hist_refatm_same_selatm = np.array([hist_a[0], 1-hist_a[0]])
+        hist_refatm_same_selatm = np.array([hist_a[0], 1 - hist_a[0]])
         hist_refatm_same_selatm = mdt.nph.extend(hist_refatm_same_selatm,
                                                  len(hists_cmp[m][1][1]))
         hist_refatm_selatm_pair = np.array([0, 1])
@@ -937,15 +937,15 @@ if __name__ == '__main__':
                         "selcmp = selatm, but hists_cmp[{}][2][{}]"
                         " != hists_cmp[{}][1][{}]".format(m, j, m, j)
                     )
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

@@ -97,7 +97,7 @@ def excel_colname(n, upper=True):
         first_letter = 'a'
     col_name = ''
     while n > 0:
-        n, remainder = divmod(n-1, 26)
+        n, remainder = divmod(n - 1, 26)
         col_name = chr(ord(first_letter) + remainder) + col_name
     return col_name
 
@@ -154,9 +154,9 @@ def excel_colnum(name):
     col_num = 0
     for char in name:
         if char.isupper():
-            col_num = col_num*26+1 + ord(char)-ord('A')
+            col_num = col_num * 26 + 1 + ord(char) - ord('A')
         else:
-            col_num = col_num*26+1 + ord(char)-ord('a')
+            col_num = col_num * 26 + 1 + ord(char) - ord('a')
     return col_num
 
 
@@ -1231,7 +1231,7 @@ def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
     if sort:
         a = np.sort(a)
 
-    return np.split(a, np.flatnonzero((np.diff(a)!=step))+1)
+    return np.split(a, np.flatnonzero((np.diff(a) != step)) + 1)
 
 
 
@@ -1358,7 +1358,7 @@ def get_middle(a, n=1, debug=False):
     if n > len(a):
         raise ValueError("n exceeds the length of a")
 
-    b = a[(len(a)-n)//2 : len(a)-(len(a)-n)//2]
+    b = a[(len(a) - n) // 2: len(a) - (len(a) - n) // 2]
     if len(b) > n:
         b = b[:n]
     else:
@@ -1437,18 +1437,18 @@ def tilt_diagonals(a, clockwise=True, diagpos=None, debug=False):
         mdt.check.array(a, dim=2)
 
     if a.shape[0] > a.shape[1]:
-        reps = int(np.ceil((a.shape[1] + a.shape[0])/a.shape[1]))
+        reps = int(np.ceil((a.shape[1] + a.shape[0]) / a.shape[1]))
         diags = np.tile(a, reps)
         diags = np.array([np.diagonal(diags, offset=i)
                           for i in range(a.shape[1])])
     else:
         diags = np.array([np.concatenate((
             np.diagonal(a, offset=i),
-            np.diagonal(a, offset=-a.shape[1]+i)))
+            np.diagonal(a, offset=-a.shape[1] + i)))
             for i in range(a.shape[1])])
 
     if diagpos is None:
-        diagpos = int(a.shape[1]/2)
+        diagpos = int(a.shape[1] / 2)
 
     if clockwise:
         return np.roll(diags, shift=diagpos, axis=0).T
@@ -1549,14 +1549,14 @@ def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
         slice_a = [0] * len(shape)
     slice_b = slice_a.copy()
 
-    slice_a[len(slice_a)-a.ndim:] = [slice(None, a.shape[i], None)
-                                     for i in range(a.ndim)]
+    slice_a[len(slice_a) - a.ndim:] = [slice(None, a.shape[i], None)
+                                       for i in range(a.ndim)]
     slice_a = tuple(slice_a)
     a_new = np.full(shape, fill_value, dtype=a.dtype)
     a_new[slice_a] = a
 
-    slice_b[len(slice_b)-b.ndim:] = [slice(None, b.shape[i], None)
-                                     for i in range(b.ndim)]
+    slice_b[len(slice_b) - b.ndim:] = [slice(None, b.shape[i], None)
+                                       for i in range(b.ndim)]
     slice_b = tuple(slice_b)
     b_new = np.full(shape, fill_value, dtype=b.dtype)
     b_new[slice_b] = b
@@ -1621,7 +1621,7 @@ def cross_section(z, x, y, line, num=None, order=1):
 
     # Convert line from world coordinates to pixel coordinates
     x_world, y_world = np.asarray(list(zip(*line)))
-    l_world = np.hypot(x_world[1]-x_world[0], y_world[1]-y_world[0])
+    l_world = np.hypot(x_world[1] - x_world[0], y_world[1] - y_world[0])
     x_world_min = np.min(x)
     y_world_min = np.min(y)
     if np.any(x_world < x_world_min) or np.any(x_world > np.max(x)):
@@ -1637,7 +1637,7 @@ def cross_section(z, x, y, line, num=None, order=1):
         _, x1_ix = find_nearest(x, x_world[1], return_index=True)
         _, y0_ix = find_nearest(y, y_world[0], return_index=True)
         _, y1_ix = find_nearest(y, y_world[1], return_index=True)
-        num = max(abs(x1_ix-x0_ix), abs(y1_ix-y0_ix))
+        num = max(abs(x1_ix - x0_ix), abs(y1_ix - y0_ix))
     if num <= 0:
         raise ValueError("num must be positive")
     cols = np.linspace(x_pix[0], x_pix[1], num)
@@ -1735,12 +1735,12 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
 
     width2 = width / 2
     cross_sec = np.full(z.shape[zax], np.nan, dtype=np.float64)
-    for i, zz in enumerate(z if zax==0 else z.T):
+    for i, zz in enumerate(z if zax == 0 else z.T):
         if width == 0:
             mask = (var == ax[i])
         else:
-            mask = (var >= ax[i]-width2) & (var <= ax[i]+width2)
-        #print(mask)
+            mask = (var >= ax[i] - width2) & (var <= ax[i] + width2)
+        # print(mask)
         if mean == 'arithmetic':
             cross_sec[i] = np.mean(zz[mask])
         elif mean == 'integral':
@@ -1789,11 +1789,11 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
 
     z = np.asarray(z)
     if x is None:
-        x = np.arange(0, z.shape[0]*dx, dx)
+        x = np.arange(0, z.shape[0] * dx, dx)
     else:
         x = np.asarray(x)
     if y is None:
-        y = np.arange(0, z.shape[1]*dy, dy)
+        y = np.arange(0, z.shape[1] * dy, dy)
     else:
         y = np.asarray(y)
 

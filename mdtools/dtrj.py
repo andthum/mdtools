@@ -102,7 +102,7 @@ def trans_per_state(dtrj, axis=-1):
     # States in which transitions end
     trans_end = np.concatenate([insertion, trans], axis=axis)
     del trans, insertion
-    bins = np.arange(np.min(dtrj), np.max(dtrj)+2)
+    bins = np.arange(np.min(dtrj), np.max(dtrj) + 2)
     hist_start = np.histogram(dtrj[trans_start], bins)[0]
     hist_end = np.histogram(dtrj[trans_end], bins)[0]
     return hist_start, hist_end
