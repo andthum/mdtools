@@ -22,7 +22,7 @@ r"""
 Count the number of transitions leading into or out of a given state.
 
 .. todo::
-    
+
     Finish docstring
 
 Options

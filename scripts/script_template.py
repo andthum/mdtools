@@ -29,7 +29,7 @@ Script template for scripts that process MD trajectories.
     additional functionality xyz.
 
 .. todo::
-    
+
     * **Example todo list**.
     * Implement feature xyz.
 
@@ -70,7 +70,7 @@ be called and their meaning.
 --sel       Selection string to select a group of atoms for the analysis.
             See MDAnalysis' |selection_syntax| for possible choices.
 --cmp       {'group', 'segments', 'residues', 'fragments', 'atoms'}
-            
+
             The compounds of the selection group to use for the analysis.
             Compounds can be 'group' (the entire selection group),
             'segments', 'residues', 'fragments', or 'atoms'.  Refer to
@@ -81,7 +81,7 @@ be called and their meaning.
             compound might comprise additional atoms that are not
             contained in the selection group.  Default: ``'atoms'``
 --center    {'cog', 'com'}
-            
+
             The center of the compounds to use for the analysis.  Choose
             'cog' for center of geometry or 'com' for center of mass.
             Default: ``'cog'``

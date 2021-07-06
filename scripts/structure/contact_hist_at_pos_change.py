@@ -26,7 +26,7 @@ distinct between reference
 their initial position or leave it.
 
 .. todo::
-    
+
     * Account for fluctuating simulation boxes (see :mod:`discrete_pos`).
     * Add \--bin-start and \--bin-stop argument (see :mod:`discrete_pos`).
     * Finish docstring.

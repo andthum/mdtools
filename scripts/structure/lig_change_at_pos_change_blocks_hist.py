@@ -23,7 +23,7 @@ Compare the coordination environment of reference compounds before and
 after they have changed their position.
 
 .. todo::
-    
+
     * Properly account for periodic boundary conditions in the direction
       given with \--d.  At the moment the assignment 'left to right' or
       'right to left' is wrong for jumps across periodic boundaries.
@@ -79,7 +79,7 @@ Options
             are considered to be in contact, if their distance is less
             than or equal to this cutoff.
 --refcmp    {'group', 'segments', 'residues', 'fragments', 'atoms'}
-            
+
             The compounds of the reference group whose center of mass
             positions should be discretized and whose contacts to
             selection atoms and compounds should be compared before and
@@ -98,7 +98,7 @@ Options
             considering all atoms of a compound, including those that
             are not part of the reference group.  Default: ``'atoms'``
 --selcmp    {'group', 'segments', 'residues', 'fragments'}
-            
+
             The compounds of the selection group to use for calculating
             the contact histograms.  Contacts between reference
             compounds and selection atoms are always counted.
@@ -134,7 +134,7 @@ Options
             ``MIN_BLOCK_SIZE``.  It must be an integer multiple of
             ``EVERY``.  Default: ``LAG//(2*EVERY)``
 -d          {'x', 'y', 'z'}
-            
+
             Direction.  The spatial direction in which to bin the
             positions of the reference compounds.  Default: ``'z'``
 --bin-start

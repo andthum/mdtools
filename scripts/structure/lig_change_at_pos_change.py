@@ -68,7 +68,7 @@ To chose an appropriate lag time :math:`\Delta t`, you can first apply
 :mod:`state_probs_around_trans` on the output of :mod:`discrete_pos`.
 
 .. todo::
-    
+
     * Allow choice between center of mass and center of geometry.
     * Instead of calculating all contact matrices for all frames at once,
       only calculate the contact matrices in the window

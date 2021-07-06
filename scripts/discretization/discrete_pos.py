@@ -26,7 +26,7 @@ Discretize the positions of compounds of a MDAnalysis
 direction.
 
 .. todo::
-    
+
     * Allow to choose between center of mass and center of geometry
       (This feature has to be implemented in
       :func:`mdtools.structure.discrete_pos_trj`).
@@ -59,7 +59,7 @@ Options
 --sel       Selection string to select a group of atoms for the analysis.
             See MDAnalysis' |selection_syntax| for possible choices.
 --cmp       {'group', 'segments', 'residues', 'fragments', 'atoms'}
-            
+
             The compounds of the selection group whose center of mass
             positions should be discretized.  Compounds can be 'group'
             (the entire selection group), 'segments', 'residues',
@@ -73,7 +73,7 @@ Options
             compound might comprise additional atoms that are not
             contained in the selection group.  Default: ``'atoms'``
 -d          {'x', 'y', 'z'}
-            
+
             Direction.  The spatial direction in which to bin the
             positions of the reference compounds.  Default: ``'z'``
 --bin-start

@@ -28,14 +28,14 @@ after a state transition as function of time passed since the transition.
 
 Given that at time :math:`t_0` a state transition occurred, compute the
 probability
-    
+
     * that a compound is at time :math:`t_0 - \Delta t` in the same
       state as directly before the state transition ('prob_b_as_b').
     * that a compound is from time :math:`t_0 - \Delta t` until
       :math:`t_0` *continously* in the same state ('prob_b_as_b_con').
     * that a compound is at time :math:`t_0 - \Delta t` in the same
       state as directly after the state transition ('prob_b_as_a').
-    
+
     * that a compound is at time :math:`t_0 + \Delta t` in the same
       state as directly after the state transition ('prob_a_as_a').
     * that a compound is from time :math:`t_0` until
@@ -43,7 +43,7 @@ probability
       ('prob_a_as_a_con').
     * that a compound is at time :math:`t_0 + \Delta t` in the same
       state as directly before the state transition ('prob_a_as_b').
-    
+
     * that a compound is at time :math:`t_0 - \Delta t` in the same
       state as directly before the state transition and at time
       :math:`t_0 + \Delta t` in the same state as directly after the
@@ -52,7 +52,7 @@ probability
       :math:`t_0` *continously* in one state and from time :math:`t_0`
       until :math:`t_0 + \Delta t` *continously* in another state
       ('prob_bb_aa_con').
-    
+
     * that a compound is at time :math:`t_0 - \Delta t` in the same
       state as at time :math:`t_0 + \Delta t` ('prob_same_sym').
 
@@ -61,7 +61,7 @@ See Also
 :mod:`lig_change_at_pos_change`
 
 .. todo::
-    
+
     Finish docstring.
 """
 
@@ -95,28 +95,28 @@ after a state transition as function of time passed since the transition.
 
 Given that at time t0 a state transition occurred, compute the
 probability
-    
+
     * that a compound is at time t0-dt in the same state as directly
       before the state transition ('prob_b_as_b').
     * that a compound is from time t0-dt until t0 continously in the
       same state ('prob_b_as_b_con').
     * that a compound is at time t0-dt in the same state as directly
       after the state transition ('prob_b_as_a').
-    
+
     * that a compound is at time t0+dt in the same state as directly
       after the state transition ('prob_a_as_a').
     * that a compound is from time t0 until t0+dt continously in the
       same state ('prob_a_as_a_con').
     * that a compound is at time t0+dt in the same state as directly
       before the state transition ('prob_a_as_b').
-    
+
     * that a compound is at time t0-dt in the same state as directly
       before the state transition and at time t0+dt in the same state as
       directly after the state transition ('prob_bb_aa').
     * that a compound is from time t0-dt until t0 continously in one
       state and from time t0 until t0+dt continously in another state
       ('prob_bb_aa_con').
-    
+
     * that a compound is at time t0-dt in the same state as at time
       t0+dt ('prob_same_sym').
 """))

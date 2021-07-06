@@ -26,7 +26,7 @@ This module can be called from :mod:`mdtools` via the shortcut ``nph``::
     mdt.nph  # insetad of mdt.numpy_helper_functions
 
 .. todo::
-    
+
     Finish/revise the implementation of the functions and their
     docstrings.  Revision is finished until
     :func:`mdtools.numpy_helper_functions.ceil_divide` (in source code

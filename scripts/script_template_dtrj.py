@@ -30,7 +30,7 @@ Script template for scripts that process discrete trajectories stored as
     additional functionality xyz.
 
 .. todo::
-    
+
     * **Example todo list**.
     * Implement feature xyz.
 

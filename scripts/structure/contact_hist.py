@@ -23,7 +23,7 @@ Calculate the number of contacts between two MDAnalysis
 :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>`.
 
 .. todo::
-    
+
     Finish docstring.
 
 Contacts are binned into histograms according to how many different
@@ -54,7 +54,7 @@ Options
             are considered to be in contact, if their distance is less
             than or equal to this cutoff.
 --refcmp    {'segments', 'residues', 'fragments'}
-            
+
             The compounds of the reference group to use for calculating
             the contact histograms.  Contact histograms are always
             calculated for single atom contacts, but also for contacts
@@ -68,7 +68,7 @@ Options
             are not contained in the reference group.  Default:
             ``'residues'``
 --selcmp    {'segments', 'residues', 'fragments'}
-            
+
             Same for the selection group.  Default: ``'residues'``
 --updating-ref
             Use an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup`
