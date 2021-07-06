@@ -412,8 +412,8 @@ if __name__ == '__main__':
     # Used later for projection of compound position on hexagonal axes
     hex_ax_sin = np.sin(hex_ax_radians)
     hex_ax_cos = np.cos(hex_ax_radians)
-    #hex_ax_tan = hex_ax_slopes
-    #shift_x_max = abs(args.AX_WIDTH/2 * hex_ax_sin[0])
+    # hex_ax_tan = hex_ax_slopes
+    # shift_x_max = abs(args.AX_WIDTH/2 * hex_ax_sin[0])
 
     # Maximal axis length when the hexagonal axis is allowed to leave
     # the box in y direction but not in x direction -> x-limited

@@ -319,11 +319,11 @@ if __name__ == '__main__':
             ylabel = (r'$\langle \Delta ' + args.MSD_DIRECTION +
                       r'^2(\Delta t) \rangle$' +
                       r' / ' + args.LUNIT + r'$^2$')
-        #cmap = plt.get_cmap('gist_rainbow')
+        # cmap = plt.get_cmap('gist_rainbow')
         # axis.set_prop_cycle(color=[cmap(i/len(layer))
             # for i in range(len(layer))])
-        #ls = ['-', '--', '-.', ':']
-        #ls *= (1 + len(layer)//len(ls))
+        # ls = ['-', '--', '-.', ':']
+        # ls *= (1 + len(layer)//len(ls))
         for i, l in enumerate(layer):
             mdt.plot.plot(ax=axis,
                           x=times,

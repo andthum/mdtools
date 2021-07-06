@@ -320,23 +320,23 @@ if __name__ == '__main__':
                 trenew_matrix[i][j] = np.mean(trenew[mask2])
 
     ####################################################################
-    #print("count_matrix =")
+    # print("count_matrix =")
     # print(count_matrix)
-    #count_matrix[-1][-1] -= 4
-    #count_matrix[-1][-2] += 2
-    #count_matrix[-1][-3] += 2
+    # count_matrix[-1][-1] -= 4
+    # count_matrix[-1][-2] += 2
+    # count_matrix[-1][-3] += 2
 
-    #count_matrix[-2][-1] -= 1
-    #count_matrix[-2][-3] += 1
+    # count_matrix[-2][-1] -= 1
+    # count_matrix[-2][-3] += 1
 
-    #count_matrix[-4][-1] -= 1
-    #count_matrix[-4][-4] -= 1
-    #count_matrix[-4][-2] += 1
-    #count_matrix[-4][-3] += 1
+    # count_matrix[-4][-1] -= 1
+    # count_matrix[-4][-4] -= 1
+    # count_matrix[-4][-2] += 1
+    # count_matrix[-4][-3] += 1
 
-    #count_matrix[-5][-1] -= 1
-    #count_matrix[-5][-2] += 1
-    #print("count_matrix =")
+    # count_matrix[-5][-1] -= 1
+    # count_matrix[-5][-2] += 1
+    # print("count_matrix =")
     # print(count_matrix)
     ####################################################################
 

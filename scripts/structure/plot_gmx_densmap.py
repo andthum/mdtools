@@ -340,8 +340,8 @@ if __name__ == "__main__":
                     maxval=255,
                     type=cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 rgb[..., i] /= rgb[..., i].max()
-                #print("Histogram:", flush=True)
-                #print(np.bincount(rgb_norm.flatten()), flush=True)
+                # print("Histogram:", flush=True)
+                # print(np.bincount(rgb_norm.flatten()), flush=True)
                 print("Otsu's threshold for {:>5} channel (0 - 255):"
                       " {:>3f}".format(rgb_code[i], thresh), flush=True)
     else:
