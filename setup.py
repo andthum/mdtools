@@ -114,6 +114,7 @@ if __name__ == "__main__":
             "Documentation": "https://mdtools.readthedocs.io/en/latest/",
             "Issue Tracker": "https://github.com/andthum/mdtools/issues",
             "Feature Requests": "https://github.com/andthum/mdtools/issues",
+            "Q&A": "https://github.com/andthum/mdtools/discussions/categories/q-a",
         },
         description="Python scripts to prepare and analyze molecular dynamics simulations",
         long_description=get_content("README.rst"),
