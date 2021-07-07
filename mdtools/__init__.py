@@ -43,15 +43,18 @@ core package.
 
 
 from mdtools.version import __version__
-from mdtools._metadata import (__title__, __author__,
-                               __copyright__, __copyright_notice__)
+from mdtools._metadata import (
+    __title__,
+    __author__,
+    __copyright__,
+    __copyright_notice__,
+)
 import mdtools.box
 import mdtools.check
 import mdtools.dtrj
 import mdtools.dynamics as dyn
 import mdtools.file_handler as fh
 import mdtools.functions as func
-import mdtools.markov_state_modeling as msm
 import mdtools.numpy_helper_functions as nph
 import mdtools.parallel
 import mdtools.plot

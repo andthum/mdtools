@@ -58,7 +58,7 @@ __email__ = "andr.thum@gmail.com"
 #: Acknowledgments to people that advanced the project without writing
 #: code or documentation and acknowledgments to other projects without
 #: which this project would not exist.
-__credits__ = "MDAnalysis, NumPy, Scipy, matplotlib, PyEMMA"
+__credits__ = "MDAnalysis, NumPy, Scipy, matplotlib"
 # Remove possible dublicates and ensure alphabetical order
 credits_list = sorted(set(__credits__.split(", ")), key=str.lower)
 # Make sure that no authors are mentioned in the credits:
