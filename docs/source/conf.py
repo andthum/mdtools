@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-#
-# Configuration file for the Sphinx documentation builder.
-#
-# This file does only contain a selection of the most common options.
-# For a full list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
+
+"""
+Configuration file for the Sphinx documentation builder.
+
+For a full list of options see the documentation:
+http://www.sphinx-doc.org/en/master/config
+"""
 
 
 # Standard libraries
@@ -54,13 +55,13 @@ release = mdt.__version__
 # -- General configuration ---------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '3.1'
+needs_sphinx = "3.0"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # The suffix(es) of source filenames.
-source_suffix = {'.rst': 'restructuredtext'}
+source_suffix = {".rst": "restructuredtext"}
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.  This pattern
@@ -68,41 +69,41 @@ source_suffix = {'.rst': 'restructuredtext'}
 exclude_patterns = []
 
 # The name of the default domain.
-primary_domain = 'py'
+primary_domain = "py"
 
 # The name of a reStructuredText role (builtin or Sphinx extension) to
 # use as the default role, that is, for text marked up `like this`.
 # default_role = None
 
 # The default language to highlight source code in.
-highlight_language = 'python3'
+highlight_language = "python3"
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
 # Add any Sphinx extension module names here, as strings.  They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
+# extensions coming with Sphinx (named "sphinx.ext.*") or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',  # Include documentation from docstrings
-    # 'sphinx.ext.autosectionlabel',  # Allow reference sections using its title
-    'sphinx.ext.autosummary',  # Generate autodoc summaries
-    'sphinx.ext.coverage',  # Collect doc coverage stats
-    'sphinx.ext.doctest',  # Test snippets in the documentation
-    'sphinx.ext.duration',  # Measure durations of Sphinx processing
-    # 'sphinx.ext.githubpages',  # Publish HTML docs in GitHub Pages
-    # 'sphinx.ext.inheritance_diagram',  # Include inheritance diagrams
-    'sphinx.ext.intersphinx',  # Link to other projects' documentation
-    'sphinx.ext.mathjax',  # Render math via JavaScript for HTML output
-    'sphinx.ext.napoleon',  # Support for NumPy and Google style docstrings
-    'sphinx.ext.todo',  # Support for todo items
-    'sphinx.ext.viewcode',  # Add links to highlighted source code
-    'sphinx_rtd_theme',  # Read the Docs Sphinx Theme
-    'sphinx_search.extension',  # Enable "search-as-you-type" on Read the Docs
+    "sphinx.ext.autodoc",  # Include documentation from docstrings
+    # "sphinx.ext.autosectionlabel",  # Allow reference sections using its title
+    "sphinx.ext.autosummary",  # Generate autodoc summaries
+    "sphinx.ext.coverage",  # Collect doc coverage stats
+    "sphinx.ext.doctest",  # Test snippets in the documentation
+    "sphinx.ext.duration",  # Measure durations of Sphinx processing
+    # "sphinx.ext.githubpages",  # Publish HTML docs in GitHub Pages
+    # "sphinx.ext.inheritance_diagram",  # Include inheritance diagrams
+    "sphinx.ext.intersphinx",  # Link to other projects' documentation
+    "sphinx.ext.mathjax",  # Render math via JavaScript for HTML output
+    "sphinx.ext.napoleon",  # Support for NumPy and Google style docstrings
+    "sphinx.ext.todo",  # Support for todo items
+    "sphinx.ext.viewcode",  # Add links to highlighted source code
+    "sphinx_rtd_theme",  # Read the Docs Sphinx Theme
+    "sphinx_search.extension",  # Enable "search-as-you-type" on Read the Docs
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # A string of reStructuredText that will be included at the beginning of
 # every source file that is read.  This is a possible place to add
@@ -188,27 +189,27 @@ rst_prolog = """
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'en'
+language = "en"
 
 
 # -- Options for HTML output -------------------------------------------
 
 # The "theme" that the HTML output should use.
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see
 # the documentation.
 html_theme_options = {
-    'logo_only': True,
-    'display_version': True,
-    'prev_next_buttons_location': 'both',
+    "logo_only": True,
+    "display_version": True,
+    "prev_next_buttons_location": "both",
     # Toc options
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False,
+    "collapse_navigation": True,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
+    "titles_only": False,
 }
 
 # If given, this must be the name of an image file (path relative to the
@@ -227,23 +228,23 @@ html_favicon = "../logo/mdtools_favicon_32x32.png"
 # here, relative to this directory.  They are copied after the builtin
 # static files, so a file named "default.css" will overwrite the builtin
 # "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 
 def setup(app):
     """
     Limit the line length of tables to avoid horizontal scrollbars.
-    
+
     See
     https://stackoverflow.com/questions/40641252/how-can-i-avoid-the-horizontal-scrollbar-in-a-rest-table
     """
-    app.add_css_file('custom.css')
+    app.add_css_file("custom.css")
 
 
 # If this is not None, a "Last updated on:" timestamp is inserted at
 # every page bottom, using the given strftime() format.  The empty
-# string is equivalent to '%b %d, %Y' (or a locale-dependent equivalent).
-# html_last_updated_fmt = ''
+# string is equivalent to "%b %d, %Y" (or a locale-dependent equivalent).
+# html_last_updated_fmt = ""
 
 # If True, add an index to the HTML documents.
 html_use_index = True
@@ -266,13 +267,13 @@ html_show_sphinx = True
 # -- Options for HTML help output --------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'mdtoolsdoc'
+htmlhelp_basename = "mdtoolsdoc"
 
 
 # -- Options for Epub output -------------------------------------------
 
 # The HTML theme for the epub output.
-epub_theme = 'epub'
+epub_theme = "epub"
 
 # The description of the document. The default value is 'unknown'.
 epub_description = "MDTools' Documentation"
@@ -281,7 +282,7 @@ epub_description = "MDTools' Documentation"
 # -- Options for LaTeX output ------------------------------------------
 
 # The LaTeX engine to build the docs.
-latex_engine = 'pdflatex'
+latex_engine = "pdflatex"
 
 # If given, this must be the name of an image file (relative to the
 # configuration directory) that is the logo of the docs.
@@ -293,7 +294,7 @@ latex_show_pagerefs = True
 
 # Control whether to display URL addresses.  This is very useful for
 # printed copies of the manual.
-latex_show_urls = 'footnote'
+latex_show_urls = "footnote"
 
 
 # -- Extension configuration -------------------------------------------
@@ -302,11 +303,13 @@ latex_show_urls = 'footnote'
 # This value selects what content will be inserted into the main body of
 # an autoclass directive.
 # See also napoleon_include_init_with_doc
-autoclass_content = 'both'  # class and __init__ docstring are concatenated
+autoclass_content = (
+    "both"  # class and __init__ docstring are concatenated
+)
 
 # This value selects how automatically documented members are sorted.
 # See also autodoc_default_options
-autodoc_member_order = 'groupwise'
+autodoc_member_order = "groupwise"
 
 # This value is a list of autodoc directive flags that should be
 # automatically applied to all autodoc directives.
@@ -314,8 +317,7 @@ autodoc_member_order = 'groupwise'
 # See also napoleon_include_init_with_doc
 # See also napoleon_include_private_with_doc
 # See also napoleon_include_special_with_doc
-autodoc_default_flags = ['members',
-                         'undoc-members']
+autodoc_default_flags = ["members", "undoc-members"]
 
 # The default options for autodoc directives.
 # See also autodoc_default_flags
@@ -323,14 +325,14 @@ autodoc_default_flags = ['members',
 # See also napoleon_include_init_with_doc
 # See also napoleon_include_private_with_doc
 # See also napoleon_include_special_with_doc
-# autodoc_default_options = {'members': True,
-#                            'member-order': 'groupwise',
-#                            'undoc-members': True,
-#                            'private-members': False,
-#                            'special-members': False,
-#                            'inherited-members': False,
-#                            'show-inheritance': False,
-#                            'imported-members': False}
+# autodoc_default_options = {"members": True,
+#                            "member-order": "groupwise",
+#                            "undoc-members": True,
+#                            "private-members": False,
+#                            "special-members": False,
+#                            "inherited-members": False,
+#                            "show-inheritance": False,
+#                            "imported-members": False}
 
 # If True, the default argument values of functions will be not
 # evaluated on generating document.  It preserves them as is in the
@@ -364,14 +366,14 @@ doctest_path = [os.path.abspath("./../..")]
 
 # Python code that is treated like it were put in a testsetup directive
 # for every file that is tested.
-doctest_global_setup = '''
+doctest_global_setup = """
 import numpy as np
 import mdtools as mdt
-'''
+"""
 
-# If this is a nonempty string (the default is 'default'), standard
+# If this is a nonempty string (the default is "default"), standard
 # reStructuredText doctest blocks will be tested too.
-doctest_test_doctest_blocks = 'default'
+doctest_test_doctest_blocks = "default"
 
 
 # -- Options for intersphinx extension ---------------------------------
@@ -379,14 +381,14 @@ doctest_test_doctest_blocks = 'default'
 # Locations and names of other projects that should be linked to in this
 # documentation.
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'psutil': ('https://psutil.readthedocs.io/en/latest/', None),
-    # 'tqdm': ('https://tqdm.github.io/', None),
-    'numpy': ('https://numpy.org/doc/stable/', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-    'matplotlib': ('https://matplotlib.org', None),
-    'MDAnalysis': ('https://docs.mdanalysis.org/stable/', None),
-    'pyemma': ('http://emma-project.org/latest/', None)
+    "python": ("https://docs.python.org/3", None),
+    "psutil": ("https://psutil.readthedocs.io/en/latest/", None),
+    # "tqdm": ("https://tqdm.github.io/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
+    "matplotlib": ("https://matplotlib.org", None),
+    "MDAnalysis": ("https://docs.mdanalysis.org/stable/", None),
+    "pyemma": ("http://emma-project.org/latest/", None),
 }
 
 
