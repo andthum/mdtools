@@ -33,20 +33,22 @@ contained in :mod:`mdtools.version`.
 __title__ = "mdtools"
 
 #: String containig the names of all contributors to MDTools, separated
-#: by commas.  Append your name, if you have contributed to MDTools
-#: (either to the core package or the scripts or the documetation).
-#: Additionally, append your name in the authors list in AUTHORS.rst
+#: by commas and ordered alphabetically by the contributors' full names.
+#: Add your name, if you have contributed to MDTools (either to the core
+#: package, the scripts or the documetation).  Additionally, add your
+#: name in the authors list in AUTHORS.rst
 __author__ = "Andreas Thum, Len Kimms"
-# Remove possible dublicates but keep order
-author_list = list(dict.fromkeys(__author__.split(', ')))
-__author__ = ', '.join(author_list)
+# Remove possible dublicates and ensure alphabetical order
+author_list = sorted(set(__author__.split(", ")), key=str.lower)
+__author__ = ", ".join(author_list)
 
 #: String containig the name(s) of the maintainer(s) of this project,
-#: separated by commas.
+#: separated by commas and ordered alphabetically by the maintainers'
+#: full names.
 __maintainer__ = "Andreas Thum"
-# Remove possible dublicates but keep order
-maintainer_list = list(dict.fromkeys(__maintainer__.split(', ')))
-__maintainer__ = ', '.join(maintainer_list)
+# Remove possible dublicates and ensure alphabetical order
+maintainer_list = sorted(set(__maintainer__.split(", ")), key=str.lower)
+__maintainer__ = ", ".join(maintainer_list)
 del maintainer_list
 
 #: String containing one(!) e-mail address under which the person(s)
@@ -57,14 +59,15 @@ __email__ = "andr.thum@gmail.com"
 #: code or documentation and acknowledgments to other projects without
 #: which this project would not exist.
 __credits__ = "MDAnalysis, NumPy, Scipy, matplotlib, PyEMMA"
-# Remove possible dublicates but keep order
-credits_list = list(dict.fromkeys(__credits__.split(', ')))
-__credits__ = ', '.join(credits_list)
+# Remove possible dublicates and ensure alphabetical order
+credits_list = sorted(set(__credits__.split(", ")), key=str.lower)
 # Make sure that no authors are mentioned in the credits:
 for a in author_list:
     if a in credits_list:
         credits_list.remove(a)
-del author_list, credits_list
+del author_list
+__credits__ = ", ".join(credits_list)
+del credits_list
 
 # from datetime import datetime
 # now = datetime.now()
@@ -88,8 +91,7 @@ __copyright_notice__ = (
     "This program is free software: you can redistribute it and/or\n"
     "modify it under the terms of the GNU General Public License as\n"
     "published by the Free Software Foundation, either version 3 of\n"
-    "the License, or (at your option) any later version."
-    .format(years)
+    "the License, or (at your option) any later version.".format(years)
 )
 del years
 

@@ -37,7 +37,11 @@ Given a version number MAJOR.MINOR.PATCH, we increment the
     3. **PATCH** version when we make backwards-compatible **bug fixes**.
 
 Additionally, pre-release, post-release and developmental release
-specifiers can be appended in accordance to :pep:`440`.
+specifiers can be appended in accordance to :pep:`440`.  Note that in
+these cases, :pep:`440` differs slightly from the guidlines given in
+`semantic versioning`_.  Namely, :pep:`440` states that additional
+release identifiers are separated from the release version by a dot,
+whereas `semantic versioning`_ requires a hyphen.
 
 .. note::
 
@@ -50,4 +54,4 @@ specifiers can be appended in accordance to :pep:`440`.
 
 
 #: Release of MDTools as a string, using `semantic versioning`_.
-__version__ = "0.0.0.dev0"
+__version__ = "0.0.0.dev1"
