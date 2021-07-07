@@ -1,40 +1,25 @@
-# Date: 2021/06/30
+# Date: 2021/07/07
 # With the following requirements the installation of MDTools succeeds
-# without errors using Python version 3.8.5 on Ubuntu 20.04.2 LTS
+# without errors using Python version 3.8.10 on Ubuntu 20.04.2 LTS
 
-astunparse==1.6.3
-bhmm==0.6.3
 biopython==1.79
 cycler==0.10.0
 decorator==4.4.2
-deeptime==0.2.7
-dill==0.3.4
 funcsigs==1.0.2
 GridDataFormats==0.5.0
 gsd==2.4.2
-h5py==3.3.0
 joblib==1.0.1
 kiwisolver==1.3.1
 matplotlib==3.2.2
 MDAnalysis==1.1.1
-mdtraj==1.9.6
 mmtf-python==1.1.2
 mock==4.0.3
 msgpack==1.0.2
-msmtools==1.2.6
-multiprocess==0.70.12.2
 networkx==2.5.1
 numpy==1.21.0
-pathos==0.2.8
-pox==0.3.0
-ppft==1.6.6.4
 psutil==5.8.0
-pyEMMA==2.5.9
 pyparsing==2.4.7
 python-dateutil==2.8.1
-PyYAML==5.4.1
-scikit-learn==0.24.2
 scipy==1.7.0
 six==1.16.0
-threadpoolctl==2.1.0
-tqdm==4.61.1
+tqdm==4.61.2
