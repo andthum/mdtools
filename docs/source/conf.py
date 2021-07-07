@@ -151,8 +151,6 @@ rst_prolog = """
     :raw-html:`<a href="https://www.mdanalysis.org/">MDAnalysis</a>`
 .. |mda_user_guide| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/index.html">MDAnalysis user guide</a>`
-.. |PyEMMA| replace::
-    :raw-html:`<a href="http://emma-project.org/latest/">PyEMMA</a>`
 
 .. |RTD| replace::
     :raw-html:`<a href="https://readthedocs.org/">Read the Docs</a>`
@@ -381,14 +379,12 @@ doctest_test_doctest_blocks = "default"
 # Locations and names of other projects that should be linked to in this
 # documentation.
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-    "psutil": ("https://psutil.readthedocs.io/en/latest/", None),
-    # "tqdm": ("https://tqdm.github.io/", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
     "matplotlib": ("https://matplotlib.org", None),
     "MDAnalysis": ("https://docs.mdanalysis.org/stable/", None),
-    "pyemma": ("http://emma-project.org/latest/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "psutil": ("https://psutil.readthedocs.io/en/latest/", None),
+    "python": ("https://docs.python.org/3", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
 }
 
 

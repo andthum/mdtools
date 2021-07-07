@@ -10,7 +10,7 @@ MDTools Python package.  If you are interested in using the MDTools
 instead.
 
 .. todo::
-    
+
     * Write/finish docstring of all scripts.
     * Revise all scripts that are not already contained in this
       documentation.
@@ -28,9 +28,8 @@ Scripts by Application
     :maxdepth: 1
     :titlesonly:
     :glob:
-    
+
     discretization
-    markov_modeling
     structure
 
 
@@ -44,7 +43,7 @@ Scripts for Developers
     :template: custom-module-template.rst
     :recursive:
     :nosignatures:
-    
+
     script_template
     script_template_dtrj
 

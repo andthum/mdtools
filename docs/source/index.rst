@@ -57,8 +57,7 @@ interact with the MDTools package directly, when
       package.
 
 MDTools is written in pure Python and is mainly based on the Python
-packages |MDAnalysis|, |NumPy|, |SciPy| and |matplotlib|.  The scripts
-on Markov modeling are based on |PyEMMA|.
+packages |MDAnalysis|, |NumPy|, |SciPy| and |matplotlib|.
 
 .. note::
 
