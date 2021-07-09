@@ -16,20 +16,16 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import numpy as np
-
-
 
 
 def gaussian(x, mu=0, sigma=1):
     """
     Gaussian distribution:
-    
+
     .. math::
         f(x) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}
-    
+
     Parameters
     ----------
     x : scalar or array_like
@@ -38,17 +34,15 @@ def gaussian(x, mu=0, sigma=1):
         Mean of the distribution.
     sigma : scalar, optional
         Standard deviation of the distribution.
-    
+
     Returns
     -------
     f : scalar or array_like
         :math:`f(x)`.
     """
-    
+
     s2 = 2 * sigma**2
-    return np.exp(-(x-mu)**2 / s2) / np.sqrt(np.pi*s2)
-
-
+    return np.exp(-(x - mu)**2 / s2) / np.sqrt(np.pi * s2)
 
 
 def non_gaussian_parameter(x, d=1, is_squared=False, axis=None):
@@ -56,17 +50,17 @@ def non_gaussian_parameter(x, d=1, is_squared=False, axis=None):
     Non-Gaussian parameter as first introduced by Rahman, Singwi, and
     Sjölander in Phys. Rev., 1962, 126 to test if the distribution of
     particle displacements is Gaussian (test for Gaussian diffusion).
-    
+
     The definition used here is taken from Song et al., PNAS, 2019, 116,
     12733-12742:
-    
+
     .. math::
         A_{n,d}(t) = \frac{\langle x^{2n}(t) \rangle}{(1+\frac{2}{d}) \cdot \langle x^2 \rangle^n} - 1
-    
+
     where :math:`d` is the number of spatial dimensions and :math:`t` is
     the time. If the distribution of :math:`x` is Gaussian,
     :math:`A_{n,d}(t)` is zero.
-    
+
     Parameters
     ----------
     x : array_like
@@ -81,93 +75,87 @@ def non_gaussian_parameter(x, d=1, is_squared=False, axis=None):
         (``None``) is to compute the mean of the flattened array. If
         `axis` is a tuple of ints, a the non-Gaussian parameter is
         calculated over multiple axes.
-    
+
     Returns
     -------
     a : scalar
         The non-Gaussian parameter :math:`A_{n,d}(t)`.
     """
-    
+
     if is_squared:
         x2 = x
     else:
         x2 = x**2
     x4 = np.mean(x2**2, axis=axis)
     x2 = np.mean(x2, axis=axis)
-    return x4 / ((1+2/d) * x2**2) - 1
-
-
+    return x4 / ((1 + 2 / d) * x2**2) - 1
 
 
 def exp_dist(x, rate=1):
     """
     Exponential distribution:
-    
+
     .. math::
         f(x) = \lambda e^{-\lambda x}
-    
+
     The mean and standard deviation are given by :math:`1/\lambda`.
-    
+
     Parameters
     ----------
     x : scalar or array_like
         Array of :math:`x` values for wich to evaluate :math:`f(x)`.
     rate : scalar, optional
         The value for :math:`lambda`.
-    
+
     Returns
     -------
     f : scalar or array_like
         :math:`f(x)`.
     """
-    
-    return rate * np.exp(-rate*x)
 
-
+    return rate * np.exp(-rate * x)
 
 
 def exp_dist_log(x, rate):
     """
     Logarithm of the exponential distribution (see also :func:`exp_dist`):
-    
+
     .. math::
         f(x) = \ln(\lambda) - \lambda x
-    
+
     Parameters
     ----------
     x : scalar or array_like
         Array of :math:`x` values for wich to evaluate :math:`f(x)`.
     rate : scalar, optional
         The value for :math:`lambda`.
-    
+
     Returns
     -------
     f : scalar or array_like
         :math:`f(x)`.
     """
-    
-    return np.log(rate) - rate*x
 
-
+    return np.log(rate) - rate * x
 
 
 def var_weighted(a, weights=None, axis=None, return_average=True):
     """
     Compute a weighted variance along the specified axis according to
-    
+
     .. math::
         \sigma^2 = \sum_i (a_i - \mu)**2 \cdot p(a_i)
-    
+
     with
-    
+
     .. math::
         p(a_i) = \frac{\sum_i a_i * weight_i}{\sum_j weight_j}
-    
+
     and
-    
+
     .. math::
         \mu = \sum_i a_i \cdot p(a_i)
-    
+
     Parameters
     ----------
     a : array_like
@@ -187,7 +175,7 @@ def var_weighted(a, weights=None, axis=None, return_average=True):
     return_average : bool, optional
         If ``True`` (default), also return the weighted average
         (:math:`\mu`) used to calculate the weighted variance.
-    
+
     Returns
     -------
     average : scalar
@@ -195,31 +183,30 @@ def var_weighted(a, weights=None, axis=None, return_average=True):
     var : scalar
         Weighted variance.
     """
-    
+
     average = np.average(a, axis=axis, weights=weights)
     var = np.average(np.abs(a - average)**2, axis=axis, weights=weights)
     return average, var
-
 
 
 def std_weighted(a, weights=None, axis=None, return_average=True):
     """
     Compute a weighted standard deviation along the specified axis
     according to
-    
+
     .. math::
         \sigma = \sqrt{\sum_i (a_i - \mu)**2 \cdot p(a_i)}
-    
+
     with
-    
+
     .. math::
         p(a_i) = \frac{\sum_i a_i * weight_i}{\sum_j weight_j}
-    
+
     and
-    
+
     .. math::
         \mu = \sum_i a_i \cdot p(a_i)
-    
+
     Parameters
     ----------
     a : array_like
@@ -240,7 +227,7 @@ def std_weighted(a, weights=None, axis=None, return_average=True):
     return_average : bool, optional
         If ``True`` (default), also return the weighted average
         (:math:`\mu`) used to calculate the weighted standard deviation.
-    
+
     Returns
     -------
     average : scalar
@@ -248,7 +235,7 @@ def std_weighted(a, weights=None, axis=None, return_average=True):
     std : scalar
         Weighted standard deviation.
     """
-    
+
     average = np.average(a, axis=axis, weights=weights)
     std = np.sqrt(np.average(np.abs(a - average)**2,
                              axis=axis,
@@ -256,15 +243,13 @@ def std_weighted(a, weights=None, axis=None, return_average=True):
     return average, std
 
 
-
-
 def running_average(a, axis=None, out=None):
     """
     Calculate the running average
-    
+
     .. math::
         \mu_n = \frac{1}{n} \sum_{i=1}^{n} a_i
-    
+
     Parameters
     ----------
     a : array_like
@@ -277,7 +262,7 @@ def running_average(a, axis=None, out=None):
         Alternative output array in which to place the result. It must
         have the same shape and buffer length as the expected output but
         the type will be cast if necessary.
-    
+
     Returns
     -------
     rav : numpy.ndarray
@@ -285,26 +270,24 @@ def running_average(a, axis=None, out=None):
         same size as `a`, and also the same shape as `a` if `axis` is
         not ``None`` or `a` is a 1-d array.
     """
-    
+
     a = np.asarray(a)
     rav = np.cumsum(a, axis=axis, out=out)
     if axis is None:
-        norm = np.arange(1, a.size+1)
+        norm = np.arange(1, a.size + 1)
     else:
         s = [1 for i in range(a.ndim)]
         s[axis] = a.shape[axis]
-        norm = np.arange(1, a.shape[axis]+1, dtype=np.uint32).reshape(s)
+        norm = np.arange(1, a.shape[axis] + 1, dtype=np.uint32).reshape(s)
     rav /= norm
     return rav
-
-
 
 
 def block_average(data, axis=0, ddof=0, dtype=np.float64):
     """
     Calculate the arithmetic mean values and their standard deviations
     over multiple series of measurement.
-    
+
     Parameters
     ----------
     data : array_like
@@ -324,7 +307,7 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
         computing the means and standard deviations. Note: Computing
         means and standard deviation using ``numpy.float32`` can be
         inaccurate.
-    
+
     Returns
     -------
     mean : numpy.ndarray
@@ -332,7 +315,7 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
     sd : numpy.ndarray
         The standard deviations of the mean values.
     """
-    
+
     data = np.asarray(data)
     num_measurments = data.shape[axis]
     mean = np.mean(data, axis=axis, dtype=dtype)
@@ -341,5 +324,5 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
     # sd_n = sd / sqrt(n)
     # The mean value remains always the same inside the error region.
     np.divide(sd, np.sqrt(num_measurments), out=sd, dtype=dtype)
-    
+
     return mean, sd

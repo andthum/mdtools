@@ -23,7 +23,7 @@ Calculate the number of contacts between two MDAnalysis
 :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>`.
 
 .. todo::
-    
+
     Finish docstring.
 
 Contacts are binned into histograms according to how many different
@@ -54,7 +54,7 @@ Options
             are considered to be in contact, if their distance is less
             than or equal to this cutoff.
 --refcmp    {'segments', 'residues', 'fragments'}
-            
+
             The compounds of the reference group to use for calculating
             the contact histograms.  Contact histograms are always
             calculated for single atom contacts, but also for contacts
@@ -68,7 +68,7 @@ Options
             are not contained in the reference group.  Default:
             ``'residues'``
 --selcmp    {'segments', 'residues', 'fragments'}
-            
+
             Same for the selection group.  Default: ``'residues'``
 --updating-ref
             Use an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup`
@@ -119,7 +119,7 @@ def cmp_contact_count_matrices(
     """
     Take a contact matrix and return all possible compound contact
     **count** matrices.
-    
+
     A compound is usually a chemically meaningfull subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
@@ -133,7 +133,7 @@ def cmp_contact_count_matrices(
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
     in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Parameters
     ----------
     cm : array_like
@@ -159,7 +159,7 @@ def cmp_contact_count_matrices(
         against ``cm.shape[1]``).
     dtype : dtype, optional
         Data type of the output arrays.
-    
+
     Returns
     -------
     ccm_refatm_selcmp : numpy.ndarray
@@ -171,7 +171,7 @@ def cmp_contact_count_matrices(
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.
     ccm_refcmp_selcmp : numpy.ndarray
         Same for reference and selection compounds.
-    
+
     See Also
     --------
     :func:`mdtools.structure.cmp_contact_count_matrix` :
@@ -325,7 +325,7 @@ if __name__ == '__main__':
         mdabackend = 'OpenMP'
     else:
         mdabackend = 'serial'
-    
+
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
     print("\n")
@@ -341,9 +341,9 @@ if __name__ == '__main__':
     print(mdt.rti.ag_info_str(ag=ref, indent=2))
     print("Selection group: '{}'".format(' '.join(args.SEL)))
     print(mdt.rti.ag_info_str(ag=sel, indent=2))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
     print("\n")
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
         start=args.BEGIN,
@@ -351,7 +351,7 @@ if __name__ == '__main__':
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames
     )
-    
+
     if not args.UPDATING_REF:
         natms_per_refcmp = mdt.strc.natms_per_cmp(ag=ref,
                                                   compound=args.REFCMP,
@@ -366,7 +366,7 @@ if __name__ == '__main__':
                                  dtype=np.float64)
     else:
         dist_array_tmp = None
-    
+
     expected_max_contacts = 16  # Will be increased if necessary
     # Histogram for refatm_selatm:
     hist_refatm_selatm = np.zeros(expected_max_contacts, dtype=np.uint32)
@@ -376,22 +376,22 @@ if __name__ == '__main__':
     n_atms = np.zeros(2, dtype=int)  # refatms and selatms
     n_cmps = np.zeros_like(n_atms)   # refcmps and selcmps
     n_pairs = np.zeros(len(hists_cmp), dtype=np.uint32)
-    
+
     print("\n")
     print("Reading trajectory...")
     print("Total number of frames: {:>8d}".format(u.trajectory.n_frames))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
     print("First frame to read:    {:>8d}".format(BEGIN))
-    print("Last frame to read:     {:>8d}".format(END-1))
+    print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     print("Time first frame:       {:>12.3f} (ps)"
           .format(u.trajectory[BEGIN].time))
     print("Time last frame:        {:>12.3f} (ps)"
-          .format(u.trajectory[END-1].time))
+          .format(u.trajectory[END - 1].time))
     print("Time step first frame:  {:>12.3f} (ps)"
           .format(u.trajectory[BEGIN].dt))
     print("Time step last frame:   {:>12.3f} (ps)"
-          .format(u.trajectory[END-1].dt))
+          .format(u.trajectory[END - 1].dt))
     timer = datetime.now()
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
     for ts in trj:
@@ -456,10 +456,10 @@ if __name__ == '__main__':
                             refresh=False)
     trj.close()
     del cm_refatm_selatm, cmp_ccms, dist_array_tmp
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     if np.any(n_atms == 0):
         warnings.warn("The total number of reference or selection atoms"
                       " is zero. The output will be meaningless",
@@ -468,7 +468,7 @@ if __name__ == '__main__':
         warnings.warn("At least one of the pair histograms is void."
                       " This histogram will be meaningless",
                       RuntimeWarning)
-    
+
     # Average contact numbers:
     n_refatms_bound = np.sum(hist_refatm_selatm[1:])
     n_refcmps_bound = np.sum(hists_cmp[1][0][1:])  # refcmp_diff_selatm
@@ -499,7 +499,7 @@ if __name__ == '__main__':
         tot_contacts = np.sum(hists_cmp[i][-1] *
                               np.arange(len(hists_cmp[i][-1])))
         avs_pair[i] = tot_contacts / n
-    
+
     # Normalization:
     hist_refatm_selatm = hist_refatm_selatm / n_atms[0]
     for i in range(len(hists_cmp)):
@@ -510,7 +510,7 @@ if __name__ == '__main__':
             hists_cmp[i][:-1] /= n_cmps[0]
     for i, n in enumerate(n_pairs):
         hists_cmp[i][-1] /= n
-    
+
     # Bring all histograms to the same length:
     max_length = len(hist_refatm_selatm)
     for hists in hists_cmp:
@@ -518,7 +518,7 @@ if __name__ == '__main__':
     hist_refatm_selatm = mdt.nph.extend(hist_refatm_selatm, max_length)
     for i, hists in enumerate(hists_cmp):
         hists_cmp[i] = mdt.nph.extend(hists, max_length, axis=-1)
-    
+
     # Find the last non-zero value up to which to write the histograms
     # to file:
     if np.any(hist_refatm_selatm != 0):
@@ -529,7 +529,7 @@ if __name__ == '__main__':
         if np.any(hists != 0):
             last_nonzero = max(last_nonzero,
                                np.max(np.nonzero(hists)[1]))
-    
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -555,18 +555,18 @@ if __name__ == '__main__':
         outfile.write("# Reference compound = '{}'\n".format(args.REFCMP))
         outfile.write("# Selection compound = '{}'\n".format(args.SELCMP))
         outfile.write("# Number of frames:                             {:>12d}\n".format(N_FRAMES))
-        outfile.write("# Total No. of reference atoms     (per frame): {:>12d}  ({:>12.3f})\n".format(n_atms[0], n_atms[0]/N_FRAMES))
-        outfile.write("# Total No. of reference compounds (per frame): {:>12d}  ({:>12.3f})\n".format(n_cmps[0], n_cmps[0]/N_FRAMES))
-        outfile.write("# Total No. of selection atoms     (per frame): {:>12d}  ({:>12.3f})\n".format(n_atms[1], n_atms[1]/N_FRAMES))
-        outfile.write("# Total No. of selection compounds (per frame): {:>12d}  ({:>12.3f})\n".format(n_cmps[1], n_cmps[1]/N_FRAMES))
-        outfile.write("# Total No. of refatm-selcmp pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[0], n_pairs[0]/N_FRAMES))
-        outfile.write("# Total No. of refcmp-selatm pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[1], n_pairs[1]/N_FRAMES))
-        outfile.write("# Total No. of refcmp-selcmp pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[2], n_pairs[2]/N_FRAMES))
+        outfile.write("# Total No. of reference atoms     (per frame): {:>12d}  ({:>12.3f})\n".format(n_atms[0], n_atms[0] / N_FRAMES))
+        outfile.write("# Total No. of reference compounds (per frame): {:>12d}  ({:>12.3f})\n".format(n_cmps[0], n_cmps[0] / N_FRAMES))
+        outfile.write("# Total No. of selection atoms     (per frame): {:>12d}  ({:>12.3f})\n".format(n_atms[1], n_atms[1] / N_FRAMES))
+        outfile.write("# Total No. of selection compounds (per frame): {:>12d}  ({:>12.3f})\n".format(n_cmps[1], n_cmps[1] / N_FRAMES))
+        outfile.write("# Total No. of refatm-selcmp pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[0], n_pairs[0] / N_FRAMES))
+        outfile.write("# Total No. of refcmp-selatm pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[1], n_pairs[1] / N_FRAMES))
+        outfile.write("# Total No. of refcmp-selcmp pairs (per frame): {:>12d}  ({:>12.3f})\n".format(n_pairs[2], n_pairs[2] / N_FRAMES))
         outfile.write("# \n")
         outfile.write("# \n")
         outfile.write("# Histogram averages:\n")
-        outfile.write("# Percentage of refatms bound to at least one selatm:       {:10.4e}\n".format(1-hist_refatm_selatm[0]))
-        outfile.write("# Percentage of refcmps bound to at least one selatm:       {:10.4e}\n".format(1-hists_cmp[1][0][0]))  # refcmp_diff_selatm
+        outfile.write("# Percentage of refatms bound to at least one selatm:       {:10.4e}\n".format(1 - hist_refatm_selatm[0]))
+        outfile.write("# Percentage of refcmps bound to at least one selatm:       {:10.4e}\n".format(1 - hists_cmp[1][0][0]))  # refcmp_diff_selatm
         outfile.write("# \n")
         outfile.write("#  (2)* Av.       selatm coordination No. of all   refatms: {:10.4e}  (Every refatm                  has on average           contact  with this many           selatms)\n".format(avs_refatm_selatm[0]))
         outfile.write("#  (2)' Av.       selatm coordination No. of bound refatms: {:10.4e}  (Every refatm bound to selatms has on average           contact  with this many           selatms)\n".format(avs_refatm_selatm[1]))
@@ -634,7 +634,7 @@ if __name__ == '__main__':
                               "refcmp_s_selcmp",   # 12
                               "refcmp_selcmp_t",   # 13
                               "refcmp_selcmp_p"))  # 14
-        for i in range(last_nonzero+1):
+        for i in range(last_nonzero + 1):
             outfile.write("  {:3d}   {:16.9e}"
                           .format(i, hist_refatm_selatm[i]))
             for hists in hists_cmp:
@@ -646,7 +646,7 @@ if __name__ == '__main__':
         outfile.write("\n")
         outfile.write("# Sums\n")
         outfile.write("  {:3d}   {:16.9e}"
-                      .format(np.sum(np.arange(last_nonzero+1)),
+                      .format(np.sum(np.arange(last_nonzero + 1)),
                               np.sum(hist_refatm_selatm)))
         for hists in hists_cmp:
             outfile.write(2 * " ")
@@ -655,10 +655,10 @@ if __name__ == '__main__':
         outfile.write("\n")
         outfile.flush()
     print("Created {}".format(args.OUTFILE))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("Checking output for consistency...")
     timer = datetime.now()
@@ -734,14 +734,14 @@ if __name__ == '__main__':
                                      i, av_refcmp_selatm_tot))
     for i, av_pair in enumerate(avs_pair):
         for k in range(2):
-            if not np.isclose(avs_cmp[i][0][k]*av_pair, avs_cmp[i][2][k],
+            if not np.isclose(avs_cmp[i][0][k] * av_pair, avs_cmp[i][2][k],
                               rtol=0, atol=tol):
                 # av(refcmp_diff_selcmp)*av(refcmp_selcmp_pair) !=
                 # av(refcmp_selcmp_tot)
                 raise ValueError(
                     "'avs_cmp[{}][0][{}]*avs_pair[{}]' ({}) !="
                     " 'avs_cmp[{}][2][{}]' ({})"
-                    .format(i, k, i, avs_cmp[i][0][k]*av_pair,
+                    .format(i, k, i, avs_cmp[i][0][k] * av_pair,
                             i, k, avs_cmp[i][2][k])
                 )
     if np.isclose(hist_refatm_selatm[0], 0, rtol=0, atol=tol):
@@ -768,9 +768,9 @@ if __name__ == '__main__':
                                      " but 'avs_cmp[{}][{}][0]' ({}) !="
                                      " 'avs_cmp[{}][{}][1]' ({})"
                                      .format(i, j, av[0], i, j, av[1]))
-    
+
     hist_refatm_same_selatm = np.array([hist_refatm_selatm[0],
-                                        1-hist_refatm_selatm[0]])
+                                        1 - hist_refatm_selatm[0]])
     hist_refatm_same_selatm = mdt.nph.extend(hist_refatm_same_selatm,
                                              len(hists_cmp[1][1]))
     hist_refatm_selatm_pair = np.array([0, 1])
@@ -826,15 +826,15 @@ if __name__ == '__main__':
                                rtol=0, atol=tol, equal_nan=True):
                 raise ValueError("selcmp = selatm, but hists_cmp[2][{}]"
                                  " != hists_cmp[1][{}]".format(j, j))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -32,23 +30,20 @@ from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
 
 
-
-
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py and plot"
-                     " the displacement histograms for all three spatial"
-                     " directions."
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py and plot"
+            " the displacement histograms for all three spatial"
+            " directions."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -74,7 +69,7 @@ if __name__ == '__main__':
         help="Use the selection compounds instead of the reference"
              " compounds."
     )
-    
+
     parser.add_argument(
         '--bin-start',
         dest='START',
@@ -100,7 +95,7 @@ if __name__ == '__main__':
         default=50,
         help="Number of bins to use. Default: 50"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -136,7 +131,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--length-conv',
         dest='LCONV',
@@ -154,25 +149,21 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     if args.SEL:
         cols = (13, 14, 15)
     else:
         cols = (10, 11, 12)
     displ = np.loadtxt(fname=args.INFILE, usecols=cols)
     displ *= args.LCONV
-    
+
     mean = np.mean(displ, axis=0)
     std = np.std(displ, axis=0)
     non_gaus = mdt.stats.non_gaussian_parameter(displ,
@@ -180,10 +171,10 @@ if __name__ == '__main__':
                                                 is_squared=False,
                                                 axis=0)
     non_gaus_tot = mdt.stats.non_gaussian_parameter(
-                       np.sum(displ**2, axis=1),
-                       d=3,
-                       is_squared=True)
-    
+        np.sum(displ**2, axis=1),
+        d=3,
+        is_squared=True)
+
     if args.START is None:
         args.START = np.min(displ)
     if args.STOP is None:
@@ -195,45 +186,39 @@ if __name__ == '__main__':
                                         bins=args.NUM,
                                         range=(args.START, args.STOP),
                                         density=True)
-    
+
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Fitting histogram", flush=True)
     timer = datetime.now()
-    
+
     x = [None for i in range(displ.shape[1])]
     popt = np.zeros((displ.shape[1], 2))
     pcov = np.zeros((displ.shape[1], 2, 2))
     for i in range(displ.shape[1]):
-        x[i] = bins[i][1:] - np.diff(bins[i])/2
+        x[i] = bins[i][1:] - np.diff(bins[i]) / 2
         popt[i], pcov[i] = curve_fit(f=mdt.stats.gaussian,
                                      xdata=x[i],
                                      ydata=hist[i],
                                      p0=(mean[i], std[i]))
-    
+
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         xlabel = (r'\Delta x', r'\Delta y', r'\Delta z')
@@ -248,8 +233,8 @@ if __name__ == '__main__':
                           xmax=args.XMAX,
                           ymin=args.YMIN,
                           ymax=args.YMAX,
-                          xlabel=r'$'+xlabel[i]+r'$ / '+args.LUNIT,
-                          ylabel=r'$p('+xlabel[i]+r')$',
+                          xlabel=r'$' + xlabel[i] + r'$ / ' + args.LUNIT,
+                          ylabel=r'$p(' + xlabel[i] + r')$',
                           bins=bins[i],
                           range=(args.START, args.STOP),
                           density=True)
@@ -263,15 +248,14 @@ if __name__ == '__main__':
                 xmax=args.XMAX,
                 ymin=args.YMIN,
                 ymax=args.YMAX,
-                xlabel=r'$'+xlabel[i]+r'$ / '+args.LUNIT,
-                ylabel=r'$p('+xlabel[i]+r')$',
+                xlabel=r'$' + xlabel[i] + r'$ / ' + args.LUNIT,
+                ylabel=r'$p(' + xlabel[i] + r')$',
                 label="Fit",
                 color='black')
             plt.tight_layout()
             pdf.savefig()
             plt.close()
-        
-        
+
         # Statistics
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
@@ -279,7 +263,7 @@ if __name__ == '__main__':
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         xpos = 0.05
         ypos = 0.95
         if args.SEL:
@@ -303,12 +287,12 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Mean / '+args.LUNIT,
+                 s=r'Mean / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
@@ -320,7 +304,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$'+xlabel[i]+r'$',
+                     s=r'$' + xlabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -335,10 +319,9 @@ if __name__ == '__main__':
             xpos += 0.30
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'${:>16d}$'.format(np.count_nonzero(data==0)),
+                     s=r'${:>16d}$'.format(np.count_nonzero(data == 0)),
                      fontsize=fontsize)
-        
-        
+
         # Histogram parameters
         xpos = 0.05
         ypos -= 0.10
@@ -349,7 +332,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="First bin edge / "+args.LUNIT,
+                 s="First bin edge / " + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -360,7 +343,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="Last bin edge / "+args.LUNIT,
+                 s="Last bin edge / " + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -375,12 +358,11 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16d}$'.format(args.NUM),
                  fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
         # Fit parameters
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
@@ -388,7 +370,7 @@ if __name__ == '__main__':
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         xpos = 0.05
         ypos = 0.95
         plt.text(x=xpos, y=ypos, s="Fit parameters:", fontsize=fontsize)
@@ -406,19 +388,19 @@ if __name__ == '__main__':
         ypos -= 0.08
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\mu$ / '+args.LUNIT,
+                 s=r'$\mu$ / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         for i in range(displ.shape[1]):
             xpos = 0.05
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$'+xlabel[i]+r'$',
+                     s=r'$' + xlabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -430,24 +412,24 @@ if __name__ == '__main__':
                      y=ypos,
                      s=r'${:>16.9e}$'.format(np.sqrt(np.diag(pcov[i])[0])),
                      fontsize=fontsize)
-        
+
         xpos = 0.15
         ypos -= 0.08
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\sigma$ / '+args.LUNIT,
+                 s=r'$\sigma$ / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         for i in range(displ.shape[1]):
             xpos = 0.05
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$'+xlabel[i]+r'$',
+                     s=r'$' + xlabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -459,7 +441,7 @@ if __name__ == '__main__':
                      y=ypos,
                      s=r'${:>16.9e}$'.format(np.sqrt(np.diag(pcov[i])[1])),
                      fontsize=fontsize)
-        
+
         xpos = 0.15
         ypos -= 0.08
         plt.text(x=xpos,
@@ -473,7 +455,7 @@ if __name__ == '__main__':
             ypos -= 0.05
             plt.text(x=xpos,
                      y=ypos,
-                     s=r'$'+xlabel[i]+r'$',
+                     s=r'$' + xlabel[i] + r'$',
                      fontsize=fontsize)
             xpos += 0.10
             plt.text(x=xpos,
@@ -495,26 +477,23 @@ if __name__ == '__main__':
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos, y=ypos, s=r'$3$', fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

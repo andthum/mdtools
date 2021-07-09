@@ -26,7 +26,7 @@ Discretize the positions of compounds of a MDAnalysis
 direction.
 
 .. todo::
-    
+
     * Allow to choose between center of mass and center of geometry
       (This feature has to be implemented in
       :func:`mdtools.structure.discrete_pos_trj`).
@@ -59,7 +59,7 @@ Options
 --sel       Selection string to select a group of atoms for the analysis.
             See MDAnalysis' |selection_syntax| for possible choices.
 --cmp       {'group', 'segments', 'residues', 'fragments', 'atoms'}
-            
+
             The compounds of the selection group whose center of mass
             positions should be discretized.  Compounds can be 'group'
             (the entire selection group), 'segments', 'residues',
@@ -73,7 +73,7 @@ Options
             compound might comprise additional atoms that are not
             contained in the selection group.  Default: ``'atoms'``
 -d          {'x', 'y', 'z'}
-            
+
             Direction.  The spatial direction in which to bin the
             positions of the reference compounds.  Default: ``'z'``
 --bin-start
@@ -289,7 +289,7 @@ if __name__ == "__main__":
         bins = None
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
-    
+
     print("\n")
     dtrj, bins, lbox_av, time_step = mdt.strc.discrete_pos_trj(
         sel=' '.join(args.SEL),
@@ -311,7 +311,7 @@ if __name__ == "__main__":
         verbose=True,
         debug=args.DEBUG
     )
-    
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -328,21 +328,21 @@ if __name__ == "__main__":
                   "Average box length in this direction: {:<.9e} A\n"
                   "Time step of discrete trajectory:     {:<.3f} ps\n"
                   .format(len(bins),
-                          len(bins)-1,
+                          len(bins) - 1,
                           args.DIRECTION,
                           lbox_av,
                           time_step))
         mdt.fh.savetxt(fname=args.OUTFILE_BINS, data=bins, header=header)
         print("Created {}".format(args.OUTFILE_BINS))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

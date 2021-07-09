@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import warnings
@@ -30,8 +28,6 @@ import numpy as np
 import mdtools as mdt
 
 
-
-
 def discrete_coord(cms, verbose=False, debug=False):
     """
     Generate a trajectory containing for each single reference compound
@@ -39,7 +35,7 @@ def discrete_coord(cms, verbose=False, debug=False):
     continuously bound the longest to the reference compound. This
     function is closely related to :func:`extract_renewal_events` from
     extract_renewal_events.py.
-    
+
     Parameters
     ----------
     cms : array_like
@@ -52,7 +48,7 @@ def discrete_coord(cms, verbose=False, debug=False):
         If ``True``, print progress information to standard output.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     traj : numpy.ndarray
@@ -63,7 +59,7 @@ def discrete_coord(cms, verbose=False, debug=False):
         An index of -1 indicates that in the given frame no selection
         compound was bound to the given reference compound.
     """
-    
+
     if debug:
         for i, cm in enumerate(cms):
             if cm.ndim != 2:
@@ -77,8 +73,7 @@ def discrete_coord(cms, verbose=False, debug=False):
             if type(cm) != type(cms[0]):
                 raise TypeError("All arrays in cms must be of the same"
                                 " type")
-    
-    
+
     refix2refix_t0 = -np.ones(cms[0].shape[0], dtype=np.int32)
     # If refix2refix_t0[rix] < 0, reference compound rix was not bound
     # to any selection compound
@@ -86,58 +81,56 @@ def discrete_coord(cms, verbose=False, debug=False):
     selix_t0 = []
     t0 = []
     trenew = []
-    
-    
+
     if verbose:
         timer = datetime.now()
         proc = psutil.Process(os.getpid())
         print("  Frame   {:12d} of {:12d}"
-              .format(0, len(cms)-1),
+              .format(0, len(cms) - 1),
               flush=True)
         print("    Elapsed time:             {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("    Current memory usage: {:18.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
         timer = datetime.now()
-    
+
     refix, selix = cms[0].nonzero()
     refix_unique, selix = mdt.nph.group_by(
-                              keys=refix.astype(np.uint32),
-                              values=selix.astype(np.uint32),
-                              assume_sorted=True,
-                              return_keys=True)
+        keys=refix.astype(np.uint32),
+        values=selix.astype(np.uint32),
+        assume_sorted=True,
+        return_keys=True)
     refix_t0.extend(refix_unique)
     refix2refix_t0[refix_unique] = np.arange(len(refix_t0))
     selix_t0.extend(selix)
     t0.extend(np.uint32(0) for i in refix_t0)
     trenew.extend(np.int32(-1) for i in refix_t0)
-    
-    
+
     for i, cm in enumerate(cms[1:], 1):
         if (verbose and
-            (i % 10**(len(str(i))-1) == 0 or i == len(cms)-1)):
+                (i % 10**(len(str(i)) - 1) == 0 or i == len(cms) - 1)):
             print("  Frame   {:12d} of {:12d}"
-                  .format(i, len(cms)-1),
+                  .format(i, len(cms) - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer),
+                  .format(datetime.now() - timer),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer = datetime.now()
-        
-        bound_now_and_before = cm.multiply(cms[i-1])
+
+        bound_now_and_before = cm.multiply(cms[i - 1])
         attached = cm - bound_now_and_before
         refix, selix = attached.nonzero()
         if len(refix) > 0 and np.any(refix2refix_t0[refix] < 0):
             refix_unique, selix = mdt.nph.group_by(
-                                      keys=refix.astype(np.uint32),
-                                      values=selix.astype(np.uint32),
-                                      assume_sorted=True,
-                                      return_keys=True)
+                keys=refix.astype(np.uint32),
+                values=selix.astype(np.uint32),
+                assume_sorted=True,
+                return_keys=True)
             for j, rix in enumerate(refix_unique):
                 if refix2refix_t0[rix] >= 0:
                     # Reference compound rix is already bound to a
@@ -148,15 +141,15 @@ def discrete_coord(cms, verbose=False, debug=False):
                 selix_t0.append(selix[j])
                 t0.append(np.uint32(i))
                 trenew.append(np.int32(-1))
-        
-        detached = cms[i-1] - bound_now_and_before
+
+        detached = cms[i - 1] - bound_now_and_before
         refix, selix = detached.nonzero()
         if len(refix) > 0:
             refix_unique, selix = mdt.nph.group_by(
-                                      keys=refix.astype(np.uint32),
-                                      values=selix.astype(np.uint32),
-                                      assume_sorted=True,
-                                      return_keys=True)
+                keys=refix.astype(np.uint32),
+                values=selix.astype(np.uint32),
+                assume_sorted=True,
+                return_keys=True)
             for j, rix in enumerate(refix_unique):
                 rix_t0 = refix2refix_t0[rix]
                 remain = np.isin(selix_t0[rix_t0],
@@ -179,11 +172,10 @@ def discrete_coord(cms, verbose=False, debug=False):
                         trenew.append(np.int32(-1))
                 else:
                     selix_t0[rix_t0] = selix_t0[rix_t0][remain]
-    
-    
+
     del refix, selix, refix_unique, refix2refix_t0
     del cm, bound_now_and_before, attached, detached
-    
+
     if len(selix_t0) != len(refix_t0):
         raise ValueError("The number of selection indices does not match"
                          " the number of reference indices. This should"
@@ -196,13 +188,12 @@ def discrete_coord(cms, verbose=False, debug=False):
         raise ValueError("The number of renewal times does not match the"
                          " number of reference indices. This should not"
                          " have happened")
-    
-    
+
     refix_t0 = np.asarray(refix_t0, dtype=np.uint32)
     selix_t0 = np.asarray(selix_t0, dtype=object)
     t0 = np.asarray(t0, dtype=np.uint32)
     trenew = np.asarray(trenew, dtype=np.int32)
-    
+
     # Set the renewal time for the last renewal event for each compound
     # where a start time t0 is already set but a renewal event was
     # actually not seen, to "end of trajectory - t0"
@@ -212,48 +203,41 @@ def discrete_coord(cms, verbose=False, debug=False):
         selix_t0[i] = selix_t0[i][0]
     selix_t0 = selix_t0.astype(np.uint32)
     del mask
-    
+
     ix_sort = np.lexsort((selix_t0, trenew, t0, refix_t0))
     refix_t0 = refix_t0[ix_sort]
     selix_t0 = selix_t0[ix_sort]
     t0 = t0[ix_sort]
     trenew = trenew[ix_sort]
     del ix_sort
-    
+
     traj = -np.ones((cms[0].shape[0], len(cms)), dtype=np.int32)
     for i, rix in enumerate(refix_t0):
         start = t0[i]
         stop = start + trenew[i]
         traj[rix][start:stop] = selix_t0[i]
-    
+
     return traj
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Generate a trajectory containing for each single"
-                     " reference compound for each frame the index of"
-                     " the selection compound that is continuously bound"
-                     " the longest to the reference compound. This"
-                     " script is closely related to"
-                     " extract_renewal_events.py. In fact,"
-                     " extract_renewal_events.py gives you the same"
-                     " output when using the --dtraj flag."
-                     )
+        description=(
+            "Generate a trajectory containing for each single"
+            " reference compound for each frame the index of"
+            " the selection compound that is continuously bound"
+            " the longest to the reference compound. This"
+            " script is closely related to"
+            " extract_renewal_events.py. In fact,"
+            " extract_renewal_events.py gives you the same"
+            " output when using the --dtraj flag."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -285,7 +269,7 @@ if __name__ == '__main__':
              " indicates that in the given frame no selection compound"
              " was bound to the given reference compound."
     )
-    
+
     parser.add_argument(
         '--ref',
         dest='REF',
@@ -352,7 +336,7 @@ if __name__ == '__main__':
              " reference atom, if it has been bound to it for at least"
              " this number of consecutive frames. Default: 0"
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -380,7 +364,7 @@ if __name__ == '__main__':
         default=1,
         help="Read every n-th frame. Default: 1"
     )
-    
+
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -389,19 +373,17 @@ if __name__ == '__main__':
         action='store_true',
         help="Run in debug mode."
     )
-    
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
     if args.CUTOFF <= 0:
         raise ValueError("-c must be greater than zero, but you gave {}"
                          .format(args.CUTOFF))
     if (args.COMPOUND != 'atoms' and
         args.COMPOUND != 'segments' and
         args.COMPOUND != 'residues' and
-        args.COMPOUND != 'fragments'):
+            args.COMPOUND != 'fragments'):
         raise ValueError("--compound must be either 'atoms', 'segments',"
                          " 'residues' or 'fragments', but you gave {}"
                          .format(args.COMPOUND))
@@ -418,20 +400,16 @@ if __name__ == '__main__':
         raise ValueError("--intermittency must be equal to or greater"
                          " than zero, but you gave {}"
                          .format(args.INTERMITTENCY))
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
     timer = datetime.now()
-    
+
     ref = u.select_atoms(' '.join(args.REF))
     sel = u.select_atoms(' '.join(args.SEL))
     print("  Reference group: '{}'"
@@ -443,32 +421,26 @@ if __name__ == '__main__':
           .format(' '.join(args.SEL)),
           flush=True)
     print(mdt.rti.ag_info_str(ag=sel, indent=4))
-    
+
     if ref.n_atoms <= 0:
         raise ValueError("The reference atom group contains no atoms")
     if sel.n_atoms <= 0:
         raise ValueError("The selection atom group contains no atoms")
-    
+
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
-    last_frame = u.trajectory[END-1].frame
-    
-    
-    
-    
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
+    last_frame = u.trajectory[END - 1].frame
+
     print("\n\n\n", flush=True)
     print("Calculating contact matrices", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -478,7 +450,7 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-    
+
     cms = mdt.strc.contact_matrices(topfile=args.TOPFILE,
                                     trjfile=args.TRJFILE,
                                     ref=args.REF,
@@ -495,7 +467,7 @@ if __name__ == '__main__':
         raise ValueError("The number of contact matrices does not equal"
                          " the number of frames to read. This should not"
                          " have happened")
-    
+
     print(flush=True)
     print("Frames read: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -505,80 +477,68 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     if args.INTERMITTENCY > 0:
         print("\n\n\n", flush=True)
         print("Correcting for intermittency", flush=True)
         timer = datetime.now()
-        
+
         cms = mdt.dyn.correct_intermittency(
-                  list_of_arrays=cms,
-                  intermittency=args.INTERMITTENCY,
-                  verbose=True,
-                  debug=args.DEBUG)
-        
+            list_of_arrays=cms,
+            intermittency=args.INTERMITTENCY,
+            verbose=True,
+            debug=args.DEBUG)
+
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Extracting renewal events", flush=True)
     timer = datetime.now()
-    
+
     dtrajs = discrete_coord(cms=cms, verbose=True, debug=args.DEBUG)
     del cms
-    
+
     print(flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     mdt.fh.backup(args.OUTFILE)
     np.save(args.OUTFILE, dtrajs, allow_pickle=False)
-    
+
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

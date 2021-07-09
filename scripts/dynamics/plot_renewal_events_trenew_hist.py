@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -32,24 +30,21 @@ from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
 
 
-
-
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py and plot"
-                     " the renewal time histogram (renewal time"
-                     " distribution). The histogram is fitted by an"
-                     " exponential distribution"
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py and plot"
+            " the renewal time histogram (renewal time"
+            " distribution). The histogram is fitted by an"
+            " exponential distribution"
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -66,7 +61,7 @@ if __name__ == '__main__':
         help="Output filename. Plots are optimized for PDF format with"
              " TeX support."
     )
-    
+
     parser.add_argument(
         '--bin-start',
         dest='START',
@@ -91,7 +86,7 @@ if __name__ == '__main__':
         default=50,
         help="Number of bins to use. Default: 50"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -126,7 +121,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -144,68 +139,58 @@ if __name__ == '__main__':
         default="ps",
         help="Time unit. Default: ps"
     )
-    
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     trenew = np.loadtxt(fname=args.INFILE, usecols=3)
     trenew *= args.TCONV
-    
+
     if args.STOP is None:
         args.STOP = np.max(trenew)
     hist, bins = np.histogram(trenew,
                               bins=args.NUM,
                               range=(args.START, args.STOP),
                               density=True)
-    
+
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Fitting histogram", flush=True)
     timer = datetime.now()
-    
-    x = bins[1:] - np.diff(bins)/2
+
+    x = bins[1:] - np.diff(bins) / 2
     valid = (hist > 0)
     if not np.any(valid):
         raise ValueError("All histogram elements are zero")
     popt, pcov = curve_fit(f=mdt.stats.exp_dist_log,
                            xdata=x[valid],
                            ydata=np.log(hist[valid]),
-                           p0=1/np.mean(hist),
+                           p0=1 / np.mean(hist),
                            bounds=(0, np.inf))
     popt = popt[0]
     pcov = np.diag(pcov)[0]
-    
+
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         # Renewal time histogram, counts
@@ -219,7 +204,7 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=args.YMIN,
                       ymax=args.YMAX,
-                      xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                       ylabel="Counts",
                       bins=bins,
                       range=(args.START, args.STOP),
@@ -227,8 +212,7 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
         # Renewal time histogram, density
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -240,7 +224,7 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=args.YMIN,
                       ymax=args.YMAX,
-                      xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                       ylabel=r'$p(\tau_{renew})$',
                       bins=bins,
                       range=(args.START, args.STOP),
@@ -252,15 +236,14 @@ if __name__ == '__main__':
                       xmax=args.XMAX,
                       ymin=args.YMIN,
                       ymax=args.YMAX,
-                      xlabel=r'$\tau_{renew}$ / '+args.TUNIT,
+                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                       ylabel=r'$p(\tau_{renew})$',
                       label="Fit",
                       color='black')
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
         # Statistics
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
@@ -268,7 +251,7 @@ if __name__ == '__main__':
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         xpos = 0.05
         ypos = 0.95
         plt.text(x=xpos, y=ypos, s="Statistics:", fontsize=fontsize)
@@ -276,22 +259,22 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="Mean / "+args.TUNIT,
+                 s="Mean / " + args.TUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s="Std. dev. / "+args.TUNIT,
+                 s="Std. dev. / " + args.TUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos, y=ypos, s="Tot. counts", fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos, y=ypos, s=r'$\tau_{renew}$', fontsize=fontsize)
         xpos += 0.10
         plt.text(x=xpos,
-                 y=ypos, 
+                 y=ypos,
                  s=r'${:>16.9e}$'.format(np.mean(trenew)),
                  fontsize=fontsize)
         xpos += 0.30
@@ -304,8 +287,7 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16d}$'.format(len(trenew)),
                  fontsize=fontsize)
-        
-        
+
         # Histogram parameters
         xpos = 0.05
         ypos -= 0.10
@@ -316,7 +298,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="First bin edge / "+args.TUNIT,
+                 s="First bin edge / " + args.TUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -327,7 +309,7 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s="Last bin edge / "+args.TUNIT,
+                 s="Last bin edge / " + args.TUNIT,
                  fontsize=fontsize)
         xpos += 0.40
         plt.text(x=xpos,
@@ -342,8 +324,7 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16d}$'.format(args.NUM),
                  fontsize=fontsize)
-        
-        
+
         # Fit parameters
         xpos = 0.05
         ypos -= 0.10
@@ -357,14 +338,14 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Opt. param. / '+args.TUNIT+r'$^{-1}$',
+                 s=r'Opt. param. / ' + args.TUNIT + r'$^{-1}$',
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.TUNIT+r'$^{-1}$',
+                 s=r'Std. dev. / ' + args.TUNIT + r'$^{-1}$',
                  fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos, y=ypos, s=r'$\lambda$', fontsize=fontsize)
@@ -378,26 +359,23 @@ if __name__ == '__main__':
                  y=ypos,
                  s=r'${:>16.9e}$'.format(np.sqrt(pcov)),
                  fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

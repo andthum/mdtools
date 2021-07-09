@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -32,23 +30,20 @@ from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
 
 
-
-
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Read a trajectory of renewal events as e.g."
-                     " generated with extract_renewal_events.py and"
-                     " correlate the displacements of two different"
-                     " spatial directions in a scatter plot."
-                     )
+        description=(
+            "Read a trajectory of renewal events as e.g."
+            " generated with extract_renewal_events.py and"
+            " correlate the displacements of two different"
+            " spatial directions in a scatter plot."
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='INFILE',
@@ -88,7 +83,7 @@ if __name__ == '__main__':
         help="Use the selection compounds instead of the reference"
              " compounds."
     )
-    
+
     parser.add_argument(
         '--d3',
         dest='DIRECTION3',
@@ -121,7 +116,7 @@ if __name__ == '__main__':
              " meaningless if --d3 is not given. Default: Maximum"
              " position plus one"
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -158,7 +153,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--time-conv',
         dest='TCONV',
@@ -193,53 +188,48 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
     if (args.DIRECTION1 != 'x' and
         args.DIRECTION1 != 'y' and
-        args.DIRECTION1 != 'z'):
+            args.DIRECTION1 != 'z'):
         raise ValueError("--d1 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION))
     if (args.DIRECTION2 != 'x' and
         args.DIRECTION2 != 'y' and
-        args.DIRECTION2 != 'z'):
+            args.DIRECTION2 != 'z'):
         raise ValueError("--d2 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION))
     if (args.DIRECTION3 is not None and
         args.DIRECTION3 != 'x' and
         args.DIRECTION3 != 'y' and
-        args.DIRECTION3 != 'z'):
+            args.DIRECTION3 != 'z'):
         raise ValueError("--d3 must be either 'x', 'y' or 'z', but you"
                          " gave {}".format(args.DIRECTION3))
     dim = {'x': 0, 'y': 1, 'z': 2}
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     if args.SEL:
-        cols = (3, 13+dim[args.DIRECTION1], 13+dim[args.DIRECTION2])
+        cols = (3, 13 + dim[args.DIRECTION1], 13 + dim[args.DIRECTION2])
     else:
-        cols = (3, 10+dim[args.DIRECTION1], 10+dim[args.DIRECTION2])
+        cols = (3, 10 + dim[args.DIRECTION1], 10 + dim[args.DIRECTION2])
     trenew, displ1, displ2 = np.loadtxt(fname=args.INFILE,
                                         usecols=cols,
                                         unpack=True)
     trenew *= args.TCONV
     displ1 *= args.LCONV
     displ2 *= args.LCONV
-    
+
     if args.DIRECTION3 is not None:
         if args.SEL:
-            cols = 7+dim[args.DIRECTION3]
+            cols = 7 + dim[args.DIRECTION3]
         else:
-            cols = 4+dim[args.DIRECTION3]
+            cols = 4 + dim[args.DIRECTION3]
         pos_t0 = np.loadtxt(fname=args.INFILE, usecols=cols)
         pos_t0 *= args.LCONV
         if args.POS_T0_MIN is not None and args.POS_T0_MAX is None:
@@ -258,53 +248,50 @@ if __name__ == '__main__':
             displ1 = displ1[valid]
             displ2 = displ2[valid]
             pos_t0 = pos_t0[valid]
-    
+
     r, p = pearsonr(x=displ1, y=displ2)
-    
+
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     fontsize_legend = 28
     tick_length = 10
     label_pad = 16
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
-        
+
         axis.axhline(y=0, color='black')
         axis.axvline(x=0, color='black')
         img = mdt.plot.scatter(
-                  ax=axis,
-                  x=displ1,
-                  y=displ2,
-                  c=trenew,
-                  xmin=args.XMIN,
-                  xmax=args.XMAX,
-                  ymin=args.YMIN,
-                  ymax=args.YMAX,
-                  xlabel=r'$\Delta '+args.DIRECTION1+r'(\tau_{renew})$ / '+args.LUNIT,
-                  ylabel=r'$\Delta '+args.DIRECTION2+r'(\tau_{renew})$ / '+args.LUNIT,
-                  marker='x',
-                  cmap='plasma')
+            ax=axis,
+            x=displ1,
+            y=displ2,
+            c=trenew,
+            xmin=args.XMIN,
+            xmax=args.XMAX,
+            ymin=args.YMIN,
+            ymax=args.YMAX,
+            xlabel=r'$\Delta ' + args.DIRECTION1 + r'(\tau_{renew})$ / ' + args.LUNIT,
+            ylabel=r'$\Delta ' + args.DIRECTION2 + r'(\tau_{renew})$ / ' + args.LUNIT,
+            marker='x',
+            cmap='plasma')
         cbar = plt.colorbar(img, ax=axis)
-        cbar.set_label(label=r'$\tau_{renew}$ / '+args.TUNIT,
+        cbar.set_label(label=r'$\tau_{renew}$ / ' + args.TUNIT,
                        fontsize=fontsize_labels)
         cbar.ax.yaxis.labelpad = label_pad
         cbar.ax.yaxis.offsetText.set(size=fontsize_ticks)
@@ -314,9 +301,9 @@ if __name__ == '__main__':
                             labelsize=fontsize_ticks)
         cbar.ax.tick_params(which='minor',
                             direction='out',
-                            length=0.5*tick_length,
-                            labelsize=0.8*fontsize_ticks)
-        
+                            length=0.5 * tick_length,
+                            labelsize=0.8 * fontsize_ticks)
+
         diagonal = np.linspace(*axis.get_xlim())
         mdt.plot.plot(
             ax=axis,
@@ -326,12 +313,12 @@ if __name__ == '__main__':
             xmax=args.XMAX,
             ymin=args.YMIN,
             ymax=args.YMAX,
-            xlabel=r'$\Delta '+args.DIRECTION1+r'(\tau_{renew})$ / '+args.LUNIT,
-            ylabel=r'$\Delta '+args.DIRECTION2+r'(\tau_{renew})$ / '+args.LUNIT,
+            xlabel=r'$\Delta ' + args.DIRECTION1 + r'(\tau_{renew})$ / ' + args.LUNIT,
+            ylabel=r'$\Delta ' + args.DIRECTION2 + r'(\tau_{renew})$ / ' + args.LUNIT,
             label="Diagonal",
             color='black',
             linestyle='--')
-        
+
         axis.axvline(x=np.mean(displ1),
                      color='red',
                      linestyle='--',
@@ -347,7 +334,7 @@ if __name__ == '__main__':
         axis.axhline(y=np.mean(displ2), color='red', linestyle='--')
         axis.axhline(y=np.mean(displ2**2), color='blue', linestyle='-.')
         axis.axhline(y=np.var(displ2), color='green', linestyle='dotted')
-        
+
         axis.legend(loc='upper center',
                     bbox_to_anchor=(0.5, 1.3),
                     ncol=2,
@@ -357,19 +344,18 @@ if __name__ == '__main__':
                     framealpha=1,
                     edgecolor='black',
                     fancybox=False)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
+
         fig, axis = plt.subplots(figsize=(11.69, 8.27),
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
         axis.axis('off')
         fontsize = 26
-        
+
         xpos = 0.05
         ypos = 0.95
         if args.SEL:
@@ -382,7 +368,7 @@ if __name__ == '__main__':
                      y=ypos,
                      s="Reference compound displacements",
                      fontsize=fontsize)
-        
+
         # Input
         if args.DIRECTION3 is not None:
             ypos -= 0.10
@@ -391,29 +377,29 @@ if __name__ == '__main__':
             if args.POS_T0_MIN is None:
                 plt.text(x=xpos,
                          y=ypos,
-                         s=r'$'+args.DIRECTION3+r' \geq None$',
+                         s=r'$' + args.DIRECTION3 + r' \geq None$',
                          fontsize=fontsize)
             else:
                 plt.text(x=xpos,
                          y=ypos,
-                         s=(r'$'+args.DIRECTION3 +
+                         s=(r'$' + args.DIRECTION3 +
                             r' \geq {:>16.9e}$'.format(args.POS_T0_MIN) +
-                            r' '+args.LUNIT),
+                            r' ' + args.LUNIT),
                          fontsize=fontsize)
             ypos -= 0.05
             if args.POS_T0_MAX is None:
                 plt.text(x=xpos,
                          y=ypos,
-                         s=r'$'+args.DIRECTION3+r' < None$',
+                         s=r'$' + args.DIRECTION3 + r' < None$',
                          fontsize=fontsize)
             else:
                 plt.text(x=xpos,
                          y=ypos,
-                         s=(r'$'+args.DIRECTION3 +
+                         s=(r'$' + args.DIRECTION3 +
                             r' < {:>16.9e}$'.format(args.POS_T0_MAX) +
-                            r' '+args.LUNIT),
+                            r' ' + args.LUNIT),
                          fontsize=fontsize)
-        
+
         # Statistics
         ypos -= 0.10
         plt.text(x=xpos, y=ypos, s="Statistics:", fontsize=fontsize)
@@ -436,24 +422,24 @@ if __name__ == '__main__':
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Mean / '+args.LUNIT,
+                 s=r'Mean / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'Std. dev. / '+args.LUNIT,
+                 s=r'Std. dev. / ' + args.LUNIT,
                  fontsize=fontsize)
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
                  s=r'$N(\Delta a = 0)$',
                  fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\Delta '+args.DIRECTION1+r'$',
+                 s=r'$\Delta ' + args.DIRECTION1 + r'$',
                  fontsize=fontsize)
         xpos += 0.10
         plt.text(x=xpos,
@@ -468,14 +454,14 @@ if __name__ == '__main__':
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'${:>16d}$'.format(np.count_nonzero(displ1==0)),
+                 s=r'${:>16d}$'.format(np.count_nonzero(displ1 == 0)),
                  fontsize=fontsize)
-        
+
         xpos = 0.05
         ypos -= 0.05
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'$\Delta '+args.DIRECTION2+r'$',
+                 s=r'$\Delta ' + args.DIRECTION2 + r'$',
                  fontsize=fontsize)
         xpos += 0.10
         plt.text(x=xpos,
@@ -490,28 +476,25 @@ if __name__ == '__main__':
         xpos += 0.30
         plt.text(x=xpos,
                  y=ypos,
-                 s=r'${:>16d}$'.format(np.count_nonzero(displ2==0)),
+                 s=r'${:>16d}$'.format(np.count_nonzero(displ2 == 0)),
                  fontsize=fontsize)
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

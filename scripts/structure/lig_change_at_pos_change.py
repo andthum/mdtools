@@ -68,7 +68,7 @@ To chose an appropriate lag time :math:`\Delta t`, you can first apply
 :mod:`state_probs_around_trans` on the output of :mod:`discrete_pos`.
 
 .. todo::
-    
+
     * Allow choice between center of mass and center of geometry.
     * Instead of calculating all contact matrices for all frames at once,
       only calculate the contact matrices in the window
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-"""
+            """
 Calculate how many selection atoms and compounds stay attached to a
 reference compound that changed its position.
 
@@ -352,7 +352,7 @@ their position at time t0.
         mdabackend = 'OpenMP'
     else:
         mdabackend = 'serial'
-    
+
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
     print("\n")
@@ -368,9 +368,9 @@ their position at time t0.
     print(mdt.rti.ag_info_str(ag=ref, indent=2))
     print("Selection group: '{}'".format(' '.join(args.SEL)))
     print(mdt.rti.ag_info_str(ag=sel, indent=2))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))
     print("\n")
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
         start=args.BEGIN,
@@ -385,14 +385,14 @@ their position at time t0.
         n_frames_tot=u.trajectory.n_frames,
         allow_zero=True
     )
-    if LAG_EFF > N_FRAMES//2:
-        LAG_EFF = N_FRAMES//2
+    if LAG_EFF > N_FRAMES // 2:
+        LAG_EFF = N_FRAMES // 2
         LAG = LAG_EFF * EVERY
         print("Set 'LAG' to {}".format(LAG))
     if args.DEBUG:
         print("\n")
         mdt.check.time_step(trj=u.trajectory[BEGIN:END])
-    
+
     print("\n")
     print("Creating/checking bins...")
     timer = datetime.now()
@@ -406,20 +406,20 @@ their position at time t0.
             STOP = lbox
         else:
             STOP = args.STOP
-        START, STOP, STEP, NUM = mdt.check.bins(start=args.START/lbox,
-                                                stop=STOP/lbox,
+        START, STOP, STEP, NUM = mdt.check.bins(start=args.START / lbox,
+                                                stop=STOP / lbox,
                                                 num=args.NUM,
                                                 amin=0,
                                                 amax=1)
-        bins = np.linspace(START, STOP, NUM+1)
+        bins = np.linspace(START, STOP, NUM + 1)
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
         bins = np.unique(bins) / lbox
     mdt.check.bin_edges(bins=bins, amin=0, amax=1, tol=1e-6)
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("Step 1/3:")
     # Creating contact matrices...
@@ -437,7 +437,7 @@ their position at time t0.
     # TODO
     print()
     print("cms[0].shape =", cms[0].shape)
-    
+
     print("\n")
     print("Step 2/3:")
     # Creating discrete position trajectory...
@@ -473,29 +473,29 @@ their position at time t0.
                                            every=EVERY,
                                            compound=args.REFCMP,
                                            direction=args.DIRECTION,
-                                           bins=bins*lbox,
+                                           bins=bins * lbox,
                                            return_bins=True,
                                            dtype=np.uint32,
                                            verbose=True,
                                            debug=args.DEBUG)
     dtrj = np.asarray(dtrj.T, order='C')
-    
+
     print("\n")
     print("Step 3/3:")
     print("Comparing coordination environments...")
     print("Total number of frames: {:>8d}".format(u.trajectory.n_frames))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
     print("First frame to read:    {:>8d}".format(BEGIN))
-    print("Last frame to read:     {:>8d}".format(END-1))
+    print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     print("Time first frame:       {:>12.3f} (ps)"
           .format(u.trajectory[BEGIN].time))
     print("Time last frame:        {:>12.3f} (ps)"
-          .format(u.trajectory[END-1].time))
+          .format(u.trajectory[END - 1].time))
     print("Time step first frame:  {:>12.3f} (ps)"
           .format(u.trajectory[BEGIN].dt))
     print("Time step last frame:   {:>12.3f} (ps)"
-          .format(u.trajectory[END-1].dt))
+          .format(u.trajectory[END - 1].dt))
     timer = datetime.now()
     # refcmps can
     #   0. stay in their bin and be at t0-dt in the same bin as at t0+dt
@@ -547,16 +547,16 @@ their position at time t0.
                                               compound=args.SELCMP,
                                               check_contiguos=True)
     # Read trajectory:
-    trj = u.trajectory[BEGIN+EVERY+LAG:END-LAG:EVERY]
+    trj = u.trajectory[BEGIN + EVERY + LAG:END - LAG:EVERY]
     trj = mdt.rti.ProgressBar(trj,
-                              initial=(BEGIN+EVERY+LAG)//EVERY,
-                              total=(END-LAG)//EVERY)
-    for i, ts in enumerate(trj, start=1+LAG_EFF):
+                              initial=(BEGIN + EVERY + LAG) // EVERY,
+                              total=(END - LAG) // EVERY)
+    for i, ts in enumerate(trj, start=1 + LAG_EFF):
         # Find refcmps that stayed in their position bin or left it and
         # that are at time t0-dt in the same bin as at time t0+dt or not:
-        np.equal(dtrj[i-1], dtrj[i], out=valid_refcmps[:2])
+        np.equal(dtrj[i - 1], dtrj[i], out=valid_refcmps[:2])
         np.invert(valid_refcmps[0], out=valid_refcmps[2:])
-        np.equal(dtrj[i-1-LAG_EFF], dtrj[i+LAG_EFF], out=valid_refcmps_tmp)
+        np.equal(dtrj[i - 1 - LAG_EFF], dtrj[i + LAG_EFF], out=valid_refcmps_tmp)
         valid_refcmps[[0, 2]] &= valid_refcmps_tmp
         np.invert(valid_refcmps_tmp, out=valid_refcmps_tmp)
         valid_refcmps[[1, 3]] &= valid_refcmps_tmp
@@ -566,8 +566,8 @@ their position at time t0.
                              .format(np.count_nonzero(valid_refcmps),
                                      N_REFCMPS))
         # Compare refcmp-selatm coordination environments:
-        cm_b = cms[i-1-LAG_EFF]  # Contact matrix at t0-dt (b = "before")
-        cm_a = cms[i+LAG_EFF]    # Contact matrix at t0+dt (a = "after")
+        cm_b = cms[i - 1 - LAG_EFF]  # Contact matrix at t0-dt (b = "before")
+        cm_a = cms[i + LAG_EFF]    # Contact matrix at t0+dt (a = "after")
         for s in range(2):  # s=0 -> selatm,  s=1 -> selcmp
             for v, valid in enumerate(valid_refcmps):
                 if not np.any(valid):
@@ -593,20 +593,20 @@ their position at time t0.
                 )
                 # Contact statistics before position change
                 selix_stats_b = mdt.strc.cm_selix_stats(cm_b_valid)
-                refcmps_bound_b = selix_stats_b[:,0].astype(bool)
+                refcmps_bound_b = selix_stats_b[:, 0].astype(bool)
                 if s == 0:
                     n_refcmps_bound_b[v] += np.count_nonzero(refcmps_bound_b)
                 selix_var_min_max_b[s][v] += np.sum(
-                    selix_stats_b[refcmps_bound_b][:,2:],  # var, min, max
+                    selix_stats_b[refcmps_bound_b][:, 2:],  # var, min, max
                     axis=0
                 )
                 # Contact statistics after position change
                 selix_stats_a = mdt.strc.cm_selix_stats(cm_a_valid)
-                refcmps_bound_a = selix_stats_a[:,0].astype(bool)
+                refcmps_bound_a = selix_stats_a[:, 0].astype(bool)
                 if s == 0:
                     n_refcmps_bound_a[v] += np.count_nonzero(refcmps_bound_a)
                 selix_var_min_max_a[s][v] += np.sum(
-                    selix_stats_a[refcmps_bound_a][:,2:],  # var, min, max
+                    selix_stats_a[refcmps_bound_a][:, 2:],  # var, min, max
                     axis=0
                 )
                 # Contact statistics difference
@@ -615,8 +615,8 @@ their position at time t0.
                     n_refcmps_bound_ba[v] += np.count_nonzero(refcmps_bound_ba)
                 selix_diff[s][v] += np.sum(
                     np.abs(
-                        selix_stats_b[refcmps_bound_ba][:,[1, 3, 4]] -  # 1=mean,
-                        selix_stats_a[refcmps_bound_ba][:,[1, 3, 4]]    # 3=min, 4=max
+                        selix_stats_b[refcmps_bound_ba][:, [1, 3, 4]] -  # 1=mean,
+                        selix_stats_a[refcmps_bound_ba][:, [1, 3, 4]]    # 3=min, 4=max
                     ),
                     axis=0
                 )
@@ -626,17 +626,17 @@ their position at time t0.
                             refresh=False)
     trj.close()
     del cms, dtrj, valid_refcmps, valid_refcmps_tmp
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     # Compute averages:
-    N_FRAMES_EFF = N_FRAMES-1 - 2*LAG_EFF
-    n_contacts = n_contacts / n_refcmps_tot[:,None]
-    selix_var_min_max_b /= n_refcmps_bound_b[:,None]
-    selix_var_min_max_a /= n_refcmps_bound_a[:,None]
-    selix_diff /= n_refcmps_bound_ba[:,None]
-    
+    N_FRAMES_EFF = N_FRAMES - 1 - 2 * LAG_EFF
+    n_contacts = n_contacts / n_refcmps_tot[:, None]
+    selix_var_min_max_b /= n_refcmps_bound_b[:, None]
+    selix_var_min_max_a /= n_refcmps_bound_a[:, None]
+    selix_diff /= n_refcmps_bound_ba[:, None]
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
@@ -667,7 +667,7 @@ their position at time t0.
         outfile.write("# Cutoff (Angstrom):     {}\n".format(args.CUTOFF))
         outfile.write("# Reference compound:   '{}'\n".format(args.REFCMP))
         outfile.write("# Selection compound:   '{}'\n".format(args.SELCMP))
-        outfile.write("# Lag time:              {:.3f} ps\n".format(LAG*u.trajectory[BEGIN].dt))
+        outfile.write("# Lag time:              {:.3f} ps\n".format(LAG * u.trajectory[BEGIN].dt))
         outfile.write("# Discretized dimension: {}\n".format(args.DIRECTION))
         outfile.write("# No. of frames available for computation: {:>12d}\n".format(N_FRAMES_EFF))
         outfile.write("# No. of reference compounds (refcmps):    {:>12d}\n".format(N_REFCMPS))
@@ -711,7 +711,7 @@ their position at time t0.
                 outfile.write("# refcmp-selatm contacts\n")
             # Column numbers:
             outfile.write("# {:>14d}".format(1))
-            for i in range(2, len(col_names)+1):
+            for i in range(2, len(col_names) + 1):
                 outfile.write(" {:>16d}".format(i))
             outfile.write("\n")
             # Column names:
@@ -723,7 +723,7 @@ their position at time t0.
             for v, n_refcmps in enumerate(n_refcmps_tot):
                 outfile.write("  {:>14d}".format(n_refcmps))
                 for contact in n_contacts[s][v][:2]:
-                    outfile.write(" {:>16.9e}".format(contact-n_contacts[s][v][2]))
+                    outfile.write(" {:>16.9e}".format(contact - n_contacts[s][v][2]))
                 outfile.write(" {:>16.9e}".format(n_contacts[s][v][2]))
                 for i, vmm in enumerate(selix_var_min_max_b[s][v]):
                     outfile.write(" {:>16.9e}".format(vmm))
@@ -742,15 +742,15 @@ their position at time t0.
               "Discretized spatial dimension:        {:<s}\n"
               "Average box length in this direction: {:<.9e} A\n"
               .format(len(bins),
-                      len(bins)-1,
+                      len(bins) - 1,
                       args.DIRECTION,
                       lbox_av))
     mdt.fh.savetxt(fname=fname, data=bins, header=header)
     print("Created {}".format(fname))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("Checking output for consistency...")
     timer = datetime.now()
@@ -758,16 +758,16 @@ their position at time t0.
         raise ValueError("'np.sum(n_contacts_tot)' ({}) !="
                          " 'N_REFCMPS' * N_FRAMES' ({})"
                          .format(np.sum(n_refcmps_tot),
-                                 N_REFCMPS*N_FRAMES))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+                                 N_REFCMPS * N_FRAMES))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

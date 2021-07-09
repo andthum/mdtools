@@ -19,11 +19,7 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 __author__ = "Andreas Thum"
-
-
 
 
 # Standard libraries
@@ -36,21 +32,17 @@ import argparse
 # Third party libraries
 import psutil
 import numpy as np
-import MDAnalysis.lib.distances as mdadist
 
 # Local application/library specific imports
 import mdtools as mdt
 from axial_hex_distribution_1nn import check_hex_lattice, hex_verts2faces
 
 
-
-
-
 def get_1st_hex_face_cols(verts, r0, box, tol):
     """
     Get the positions of the hexagon faces in the first two staggered
     columns of a hexagonal lattice.
-    
+
     Parameters
     ----------
     verts : numpy.ndarray
@@ -68,7 +60,7 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
     tol : scalar, optional
         Two floating point numbers are regarded as equal if they deviate
         by less than the tolerance given here.
-    
+
     Returns
     -------
     hex_face_cols : numpy.ndarray
@@ -77,7 +69,7 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
         faces in the first two staggered columns of the lattice.  All
         faces lie within the primary unit cell and their positions are
         sorted by their y coordinates.
-    
+
     Notes
     -----
     The lattice must lie flat in xy plane and continue properly across
@@ -91,16 +83,16 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
                                 box=box,
                                 flatside='x',
                                 tol=tol)
-    xmin = np.min(hex_faces[:,0])
-    ix = np.isclose(hex_faces[:,0], xmin, rtol=0, atol=args.TOL)
+    xmin = np.min(hex_faces[:, 0])
+    ix = np.isclose(hex_faces[:, 0], xmin, rtol=0, atol=args.TOL)
     hex_face_col1 = hex_faces[ix]
-    ix = np.isclose(hex_faces[:,0], xmin+r0*3/2, rtol=0, atol=tol)
+    ix = np.isclose(hex_faces[:, 0], xmin + r0 * 3 / 2, rtol=0, atol=tol)
     hex_face_col2 = hex_faces[ix]
     a0 = r0 * np.sqrt(3)  # Lattice constant
-    if not np.isclose(len(hex_face_col1), box[1]/a0, rtol=0, atol=tol):
+    if not np.isclose(len(hex_face_col1), box[1] / a0, rtol=0, atol=tol):
         raise ValueError("The number of hexagons per column is {} but"
                          " should be {}"
-                         .format(len(hex_face_col1), box[1]/a0))
+                         .format(len(hex_face_col1), box[1] / a0))
     if len(hex_face_col2) != len(hex_face_col1):
         raise ValueError("The number of hexagons in column 2 ({}) is not"
                          " the same as in column 1 ({})"
@@ -108,27 +100,20 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
     return np.asarray([hex_face_col1, hex_face_col2])
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Calculate the number density of a selection group"
-                     " along the second-nearest neighbour axes of a"
-                     " hexagonal lattice. This script works only for"
-                     " orthogonal simulation boxes with fixed size and"
-                     " when the edges of the hexagons of the lattice"
-                     " align with the x axis."
-                     )
+        description=(
+            "Calculate the number density of a selection group"
+            " along the second-nearest neighbour axes of a"
+            " hexagonal lattice. This script works only for"
+            " orthogonal simulation boxes with fixed size and"
+            " when the edges of the hexagons of the lattice"
+            " align with the x axis."
+        )
     )
     parser.add_argument(
         '-f',
@@ -153,7 +138,7 @@ if __name__ == '__main__':
         required=True,
         help="Output filename."
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -181,7 +166,7 @@ if __name__ == '__main__':
         default=1,
         help="Read every n-th frame. Default: 1"
     )
-    
+
     parser.add_argument(
         '--sel',
         dest='SEL',
@@ -285,7 +270,7 @@ if __name__ == '__main__':
              " sure that it does, you can try to increase the tolerance"
              " (but it should never be higher than 0.1). Default: 1e-3"
     )
-    
+
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -294,12 +279,10 @@ if __name__ == '__main__':
         action='store_true',
         help="Run in debug mode."
     )
-    
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
     if args.ZMIN < 0:
         raise ValueError("--zmin ({}) must not be negative"
                          .format(args.ZMIN))
@@ -308,17 +291,17 @@ if __name__ == '__main__':
                          .format(args.R0))
     A0 = args.R0 * np.sqrt(3)
     if args.AX_WIDTH is None:
-        args.AX_WIDTH = args.R0/2
+        args.AX_WIDTH = args.R0 / 2
     if args.AX_WIDTH <= 0:
         raise ValueError("--ax-width ({}) must be greater than zero"
                          .format(args.AX_WIDTH))
-    elif args.AX_WIDTH > A0/2:
+    elif args.AX_WIDTH > A0 / 2:
         warnings.warn("--ax-width ({}) should not exceed {}"
                       " (=R0*sqrt(3)/2)"
-                      .format(args.AX_WIDTH, A0/2),
+                      .format(args.AX_WIDTH, A0 / 2),
                       RuntimeWarning)
     if args.BIN_WIDTH is None:
-        args.BIN_WIDTH = (A0/2) / 25
+        args.BIN_WIDTH = (A0 / 2) / 25
     if args.BIN_WIDTH <= 0:
         raise ValueError("--bin-width ({}) must be greater than zero"
                          .format(args.BIN_WIDTH))
@@ -331,25 +314,19 @@ if __name__ == '__main__':
         warnings.warn("--tol ({}) should not exceed 0.1"
                       .format(args.TOL),
                       RuntimeWarning)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
     timer = datetime.now()
-    
+
     sel = u.select_atoms(' '.join(args.SEL))
     surf = u.select_atoms(' '.join(args.SURF))
-    
+
     print("  Selection group: '{}'"
           .format(' '.join(args.SEL)),
           flush=True)
@@ -359,7 +336,7 @@ if __name__ == '__main__':
           .format(' '.join(args.SURF)),
           flush=True)
     print(mdt.rti.ag_info_str(ag=surf, indent=4))
-    
+
     if sel.n_atoms <= 0:
         raise ValueError("The selection group contains no atoms")
     if surf.n_atoms <= 0:
@@ -367,7 +344,7 @@ if __name__ == '__main__':
     if args.COM is not None:
         print("\n\n\n", flush=True)
         mdt.check.masses(ag=sel, flash_test=False)
-    
+
     if args.ZMAX is None:
         args.ZMAX = surf.dimensions[2]
     if args.ZMAX > surf.dimensions[2]:
@@ -378,27 +355,21 @@ if __name__ == '__main__':
     if args.ZMIN >= args.ZMAX:
         raise ValueError("--zmin ({}) must be less than --zmax ({})"
                          .format(args.ZMIN, args.ZMAX))
-    
+
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
-    LAST_FRAME = u.trajectory[END-1].frame
-    
-    
-    
-    
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
+    LAST_FRAME = u.trajectory[END - 1].frame
+
     # Term definitions:
     # x/y axis:       Cartesian x or y axis (enclose 90° with each
     #                 other).  The x axis is per definition the referene
@@ -417,56 +388,53 @@ if __name__ == '__main__':
     #                three hexagonal axes.  A sampling axis is defined
     #                by the position of any hexagon face and the angle
     #                to the x axis.
-    
+
     # Positions of hexagon centers (faces)
     u.trajectory[BEGIN]
     hex_face_cols = get_1st_hex_face_cols(verts=surf.positions,
-                                         r0=args.R0,
-                                         box=surf.dimensions,
-                                         tol=args.TOL)
-    
+                                          r0=args.R0,
+                                          box=surf.dimensions,
+                                          tol=args.TOL)
+
     # Define hexgonal second-nearest neighbour axes
     hex_ax_angles = np.array([60, 120])  # 0° is treated separately
     hex_ax_radians = np.deg2rad(hex_ax_angles)
     hex_ax_slopes = np.tan(hex_ax_radians)
     # y = mx + c  =>  c = y0 - m*x0
-    hex_ax_intercepts = (hex_face_cols[0][:,1][:,None] -
-                         hex_ax_slopes * hex_face_cols[0][:,0][:,None])
-    
+    hex_ax_intercepts = (hex_face_cols[0][:, 1][:, None] -
+                         hex_ax_slopes * hex_face_cols[0][:, 0][:, None])
+
     # Number of sampling axes
     n_axes_tilted = hex_face_cols.shape[1]
     n_axes_horizontal = hex_face_cols.shape[0] * hex_face_cols.shape[1]
     n_axes_tot = len(hex_ax_slopes) * n_axes_tilted + n_axes_horizontal
-    
+
     # Used later for projection of compound position on hexagonal axes
     hex_ax_sin = np.sin(hex_ax_radians)
     hex_ax_cos = np.cos(hex_ax_radians)
-    #hex_ax_tan = hex_ax_slopes
-    #shift_x_max = abs(args.AX_WIDTH/2 * hex_ax_sin[0])
-    
+    # hex_ax_tan = hex_ax_slopes
+    # shift_x_max = abs(args.AX_WIDTH/2 * hex_ax_sin[0])
+
     # Maximal axis length when the hexagonal axis is allowed to leave
     # the box in y direction but not in x direction -> x-limited
     ax_lx = abs(surf.dimensions[0] / hex_ax_cos[0])
-    if not np.isclose(ax_lx%(args.R0*3), 0, rtol=0, atol=args.TOL):
+    if not np.isclose(ax_lx % (args.R0 * 3), 0, rtol=0, atol=args.TOL):
         raise ValueError("ax_lx ({}) is not a multiple of r0*3 ({})."
                          " This means the hexagonal lattice does not"
                          " continue properly across periodic boundaries"
-                         .format(ax_lx, args.R0*3))
-    if args.BIN_WIDTH > ax_lx/2:
+                         .format(ax_lx, args.R0 * 3))
+    if args.BIN_WIDTH > ax_lx / 2:
         raise ValueError("The bin width ({}) must be less than half of"
                          " the maximal axis length ({})"
-                         .format(args.BIN_WIDTH, ax_lx/2))
+                         .format(args.BIN_WIDTH, ax_lx / 2))
     bins = np.arange(0,
-                     ax_lx/2 + args.BIN_WIDTH/2,
+                     ax_lx / 2 + args.BIN_WIDTH / 2,
                      args.BIN_WIDTH,
                      dtype=np.float32)
     # Histograms for axes with 60°, 120° and 0° to x axis
-    hists = np.zeros((len(hex_ax_slopes)+1, len(bins)-1),
+    hists = np.zeros((len(hex_ax_slopes) + 1, len(bins) - 1),
                      dtype=np.uint32)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Reading trajectory", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -477,7 +445,7 @@ if __name__ == '__main__':
           flush=True)
     timer = datetime.now()
     timer_frame = datetime.now()
-    
+
     if args.COM is None:
         valid_z = np.zeros(sel.n_atoms, dtype=bool)
         valid_z_tmp = np.zeros(sel.n_atoms, dtype=bool)
@@ -493,34 +461,34 @@ if __name__ == '__main__':
     elif args.COM == 'fragments':
         valid_z = np.zeros(sel.n_fragments, dtype=bool)
         valid_z_tmp = np.zeros(sel.n_fragments, dtype=bool)
-    
+
     box_prev = surf.dimensions
     surf_pos_prev = surf.positions
     n_surf_moves = 0
     n_surf_moves_dangerous = 0
-    
+
     for ts in u.trajectory[BEGIN:END:EVERY]:
-        if (ts.frame % 10**(len(str(ts.frame))-1) == 0 or
-            ts.frame == END-1):
+        if (ts.frame % 10**(len(str(ts.frame)) - 1) == 0 or
+                ts.frame == END - 1):
             print("  Frame   {:12d}".format(ts.frame), flush=True)
             print("    Step: {:>12}    Time: {:>12} (ps)"
                   .format(ts.data['step'], ts.data['time']),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer_frame),
+                  .format(datetime.now() - timer_frame),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer_frame = datetime.now()
-        
+
         if not np.allclose(ts.dimensions,
                            box_prev,
                            rtol=0,
                            atol=args.TOL):
             raise ValueError("The simulation box has changed")
         box_prev = ts.dimensions
-        
+
         if not np.allclose(surf.positions,
                            surf_pos_prev,
                            rtol=0,
@@ -543,11 +511,11 @@ if __name__ == '__main__':
             print(flush=True)
             del ix_sort1, ix_sort2
             hex_face_cols = get_1st_hex_face_cols(verts=surf.positions,
-                                         r0=args.R0,
-                                         box=surf.dimensions,
-                                         tol=args.TOL)
+                                                  r0=args.R0,
+                                                  box=surf.dimensions,
+                                                  tol=args.TOL)
         surf_pos_prev = surf.positions
-        
+
         if args.COM is None:
             pos = mdt.box.wrap(ag=sel, debug=args.DEBUG)
         else:
@@ -558,18 +526,18 @@ if __name__ == '__main__':
                                pbc=True,
                                compound=args.COM,
                                debug=args.DEBUG)
-        
+
         if args.DEBUG:
             mdt.check.box(box=ts.dimensions,
                           with_angles=True,
                           orthorhombic=True,
                           dim=1)
             mdt.check.pos_array(pos_array=pos,
-                                  amin=0,
-                                  amax=ts.dimensions[:3])
-        
-        np.greater_equal(pos[:,2], args.ZMIN, out=valid_z)
-        np.less(pos[:,2], args.ZMAX, out=valid_z_tmp)
+                                amin=0,
+                                amax=ts.dimensions[:3])
+
+        np.greater_equal(pos[:, 2], args.ZMIN, out=valid_z)
+        np.less(pos[:, 2], args.ZMAX, out=valid_z_tmp)
         valid_z &= valid_z_tmp
         if not np.any(valid_z):
             continue
@@ -577,20 +545,20 @@ if __name__ == '__main__':
         on_axis = np.zeros(len(pos), dtype=bool)
         lx = ts.dimensions[0]
         ly = ts.dimensions[1]
-        
+
         # Axes with 60° and 120° to x axis
         for j, hex_face in enumerate(hex_face_cols[0]):
             for k, hex_ax_slope in enumerate(hex_ax_slopes):
-                hex_ax = mdt.func.g(x=pos[:,0],
+                hex_ax = mdt.func.g(x=pos[:, 0],
                                     m=hex_ax_slope,
                                     c=hex_ax_intercepts[j][k])
                 # Minimum y distance to sampling axis
-                dist_ax = pos[:,1] - hex_ax
-                dist_ax -= np.floor(dist_ax/ly + 0.5) * ly  # MIC
+                dist_ax = pos[:, 1] - hex_ax
+                dist_ax -= np.floor(dist_ax / ly + 0.5) * ly  # MIC
                 # Distance orthogonal to sampling axis
                 dist_ax *= hex_ax_cos[k]
                 # Compounds that lie on the current sampling axis
-                np.less(np.abs(dist_ax), args.AX_WIDTH/2, out=on_axis)
+                np.less(np.abs(dist_ax), args.AX_WIDTH / 2, out=on_axis)
                 if not np.any(on_axis):
                     continue
                 # x axis is reference axis!
@@ -599,7 +567,7 @@ if __name__ == '__main__':
                 shift_x = dist_ax[on_axis] * hex_ax_sin[k]
                 # Distance to reference hexagon face:
                 # x component of the distance is of primary interest
-                dists_x = pos[:,0][on_axis] + shift_x
+                dists_x = pos[:, 0][on_axis] + shift_x
                 dists_x -= hex_face[0]
                 # y component is determined by x component and axis angle
                 dists_y = dists_x * hex_ax_slope  # y = x * tan(phi)
@@ -609,29 +577,29 @@ if __name__ == '__main__':
                 dists = dists_x + dists_y
                 np.sqrt(dists, out=dists)
                 # Minimum image convention along hexagonal axis
-                dists -= np.floor(dists/ax_lx + 0.5) * ax_lx
+                dists -= np.floor(dists / ax_lx + 0.5) * ax_lx
                 np.abs(dists, out=dists)
                 hist, _ = np.histogram(dists, bins, density=False)
                 hists[k] += hist.astype(hists.dtype, copy=False)
-        
+
         # Axis with 0° to x axis
         for hex_face in np.concatenate(hex_face_cols, axis=0):
             # Minimum y distance to sampling axis
-            dist_ax = pos[:,1] - hex_face[1]
-            dist_ax -= np.floor(dist_ax/ly + 0.5) * ly  # MIC
+            dist_ax = pos[:, 1] - hex_face[1]
+            dist_ax -= np.floor(dist_ax / ly + 0.5) * ly  # MIC
             # Compounds that lie on the current sampling axis
-            np.less(np.abs(dist_ax), args.AX_WIDTH/2, out=on_axis)
+            np.less(np.abs(dist_ax), args.AX_WIDTH / 2, out=on_axis)
             if not np.any(on_axis):
                 continue
             # Distance to reference hexagon face:
             # Only the x component of the distance is of interest
-            dists_x = pos[:,0][on_axis] - hex_face[0]
+            dists_x = pos[:, 0][on_axis] - hex_face[0]
             # Minimum image convention along x axis
-            dists_x -= np.floor(dists_x/lx + 0.5) * lx
+            dists_x -= np.floor(dists_x / lx + 0.5) * lx
             np.abs(dists_x, out=dists_x)
             hist, _ = np.histogram(dists_x, bins, density=False)
             hists[-1] += hist.astype(hists.dtype, copy=False)
-    
+
     if n_surf_moves > 0:
         print(flush=True)
         print("  Note: The surface has moved {} times. {} of these\n"
@@ -639,7 +607,7 @@ if __name__ == '__main__':
               "  to wrapping around periodic boundaries)"
               .format(n_surf_moves, n_surf_moves_dangerous),
               flush=True)
-    
+
     print(flush=True)
     print("Frames read: {}".format(N_FRAMES), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -649,24 +617,21 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
-    bin_vol = args.BIN_WIDTH * args.AX_WIDTH * (args.ZMAX-args.ZMIN)
+
+    bin_vol = args.BIN_WIDTH * args.AX_WIDTH * (args.ZMAX - args.ZMIN)
     # Due to the minimum image convention, every bin is sampled "twice"
     # (positive and negative distance)
     hists = hists / (2 * N_FRAMES * bin_vol)
@@ -674,7 +639,7 @@ if __name__ == '__main__':
     hists[:len(hex_ax_slopes)] /= n_axes_tilted
     hists[-1] /= n_axes_horizontal
     hist_tot /= n_axes_tot
-    
+
     header = (
         "z_min:      {:>16.9e} A\n"
         "z_max:      {:>16.9e} A\n"
@@ -734,7 +699,7 @@ if __name__ == '__main__':
         "{:>31d} {:>16d} {:>16d} {:>16d}\n"
         .format(args.ZMIN, args.ZMAX,
                 args.AX_WIDTH, args.BIN_WIDTH, bin_vol,
-                
+
                 ' '.join(args.SEL),
                 sel.n_segments,
                 len(np.unique(sel.segids)),
@@ -748,7 +713,7 @@ if __name__ == '__main__':
                 len(np.unique(sel.types)),
                 '\' \''.join(i for i in np.unique(sel.types)),
                 len(sel.fragments),
-                
+
                 ' '.join(args.SURF),
                 surf.n_segments,
                 len(np.unique(surf.segids)),
@@ -762,34 +727,31 @@ if __name__ == '__main__':
                 len(np.unique(surf.types)),
                 '\' \''.join(i for i in np.unique(surf.types)),
                 len(surf.fragments),
-                
+
                 1, 2, 3, 4, 5,
                 n_axes_tilted, n_axes_tilted, n_axes_horizontal,
                 n_axes_tot
-        )
+                )
     )
-    
+
     mdt.fh.savetxt(fname=args.OUTFILE,
-                   data=np.column_stack([bins[1:]-np.diff(bins)/2,
+                   data=np.column_stack([bins[1:] - np.diff(bins) / 2,
                                          hists.T,
                                          hist_tot]),
                    header=header)
-    
+
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

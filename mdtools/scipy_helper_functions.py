@@ -31,19 +31,19 @@ def multiple_multiply(*args):
     """
     Multiply multiple objects that have a :meth:`.mutiply` method at
     once.
-    
+
     Parameters
     ----------
     args : object
         Arbitrary number of objects that should be multiplied.  The
         objects must have a :meth:`.mutiply` method.
-    
+
     Returns
     -------
     product : object
         The product of all input objects as returned by the objects'
         :meth:`.mutiply` method.
-    
+
     Raises
     ------
     ValueError
@@ -51,7 +51,7 @@ def multiple_multiply(*args):
         called without arguments.
     AttributeError or TypeError
         If the input ojects do ont have a :meth:`.mutiply` method.
-    
+
     Notes
     -----
     This function was originally designed to multiply multiple
@@ -59,7 +59,7 @@ def multiple_multiply(*args):
     With e.g. :meth:`scipy.sparse.csr_matrix.multiply` you can multiply
     only two matrices at once, but :func:`multiple_multiply` takes an
     arbitrary number of arguments.
-    
+
     Examples
     --------
     >>> from scipy import sparse

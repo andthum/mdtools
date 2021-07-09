@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 from datetime import datetime
@@ -32,21 +30,18 @@ from matplotlib.ticker import MaxNLocator
 import mdtools as mdt
 
 
-
-
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Plot a discretized single particle trajectory"
-                     " generated with discrete_hex.py"
-                     )
+        description=(
+            "Plot a discretized single particle trajectory"
+            " generated with discrete_hex.py"
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -90,7 +85,7 @@ if __name__ == '__main__':
              " The particle that has the fewest negative elements in its"
              " discretized trajectory"
     )
-    
+
     parser.add_argument(
         '--every',
         dest='EVERY',
@@ -143,7 +138,7 @@ if __name__ == '__main__':
         help="Maximum y-range of the plot. By default detected"
              " automatically."
     )
-    
+
     parser.add_argument(
         '--length-conv',
         dest='LCONV',
@@ -161,24 +156,20 @@ if __name__ == '__main__':
         default="A",
         help="Lengh unit. Default: A"
     )
-    
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Reading input", flush=True)
     timer = datetime.now()
-    
+
     dtraj = np.load(args.TRJFILE)
     latfaces = np.load(args.LATFACE)
     latverts = np.load(args.LATVERT)
     latfaces *= args.LCONV
     latverts *= args.LCONV
-    
+
     if args.IX is None:
         args.IX = np.argmax(np.count_nonzero(dtraj > 0, axis=1))
         print("  Chosen particle {}".format(args.IX), flush=True)
@@ -194,10 +185,10 @@ if __name__ == '__main__':
         raise ValueError("The selected particle is never in the"
                          " [ZMIN; ZMAX) interval used while generating"
                          " the discrete trajectory")
-    
+
     n_frames = len(dtraj)
     frames = np.arange(n_frames)
-    
+
     if args.MSIZE:
         u, ix, c = np.unique(dtraj,
                              return_inverse=True,
@@ -206,31 +197,28 @@ if __name__ == '__main__':
         del u, ix, c
     else:
         markersize = None
-    
+
     dtraj = dtraj[valid][::args.EVERY]
     frames = frames[valid][::args.EVERY]
     if markersize is not None:
         markersize = markersize[valid][::args.EVERY]
-    
+
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating plot", flush=True)
     timer = datetime.now()
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     tick_length = 10
     label_pad = 16
-    
+
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
@@ -241,7 +229,7 @@ if __name__ == '__main__':
         axis.yaxis.set_major_locator(MaxNLocator(integer=True))
         axis.ticklabel_format(axis='x',
                               style='scientific',
-                              scilimits=(0,0),
+                              scilimits=(0, 0),
                               useOffset=False)
         mdt.plot.scatter(ax=axis,
                          x=frames,
@@ -256,18 +244,15 @@ if __name__ == '__main__':
         plt.tight_layout()
         pdf.savefig()
         plt.close()
-        
-        
-        
-        
+
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
-        
+
         mdt.plot.scatter(ax=axis,
-                         x=latverts[:,0],
-                         y=latverts[:,1],
+                         x=latverts[:, 0],
+                         y=latverts[:, 1],
                          xmin=args.XMIN,
                          xmax=args.XMAX,
                          ymin=args.YMIN,
@@ -276,10 +261,10 @@ if __name__ == '__main__':
                          ylabel=r'$y$ / {}'.format(args.LUNIT),
                          marker='.',
                          color='black')
-        
+
         img = mdt.plot.scatter(ax=axis,
-                               x=latfaces[dtraj][:,0],
-                               y=latfaces[dtraj][:,1],
+                               x=latfaces[dtraj][:, 0],
+                               y=latfaces[dtraj][:, 1],
                                c=frames,
                                s=markersize,
                                xmin=args.XMIN,
@@ -302,38 +287,35 @@ if __name__ == '__main__':
                             labelsize=fontsize_ticks)
         cbar.ax.tick_params(which='minor',
                             direction='out',
-                            length=0.5*tick_length,
-                            labelsize=0.8*fontsize_ticks)
+                            length=0.5 * tick_length,
+                            labelsize=0.8 * fontsize_ticks)
         cbar.ax.yaxis.set_major_locator(MaxNLocator(integer=True))
         cbar.ax.ticklabel_format(axis='y',
                                  style='scientific',
-                                 scilimits=(0,0),
+                                 scilimits=(0, 0),
                                  useOffset=False)
-        
+
         xsize = abs(axis.get_xlim()[0] - axis.get_xlim()[1])
         ysize = abs(axis.get_ylim()[0] - axis.get_ylim()[1])
         axis.set_aspect(ysize / xsize)
-        
+
         yticks = np.array(axis.get_yticks())
         mask = ((yticks >= axis.get_xlim()[0]) &
                 (yticks <= axis.get_xlim()[1]))
         axis.set_xticks(yticks[mask])
-        
+
         plt.tight_layout()
         pdf.savefig(bbox_inches='tight')
         plt.close()
-        
-        
-        
-        
+
         fig, axis = plt.subplots(figsize=(11.69, 8.27),  # DIN A4 landscape in inches
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
-        
+
         mdt.plot.scatter(ax=axis,
-                         x=latverts[:,0],
-                         y=latverts[:,1],
+                         x=latverts[:, 0],
+                         y=latverts[:, 1],
                          xmin=args.XMIN,
                          xmax=args.XMAX,
                          ymin=args.YMIN,
@@ -342,42 +324,39 @@ if __name__ == '__main__':
                          ylabel=r'$y$ / {}'.format(args.LUNIT),
                          marker='.',
                          color='black')
-        
+
         latface_num = np.arange(len(latfaces))
         for i, txt in enumerate(latface_num):
             axis.annotate(txt,
-                          xy=(latfaces[:,0][i], latfaces[:,1][i]),
+                          xy=(latfaces[:, 0][i], latfaces[:, 1][i]),
                           horizontalalignment='center',
                           verticalalignment='center')
-        
+
         xsize = abs(axis.get_xlim()[0] - axis.get_xlim()[1])
         ysize = abs(axis.get_ylim()[0] - axis.get_ylim()[1])
         axis.set_aspect(ysize / xsize)
-        
+
         yticks = np.array(axis.get_yticks())
         mask = ((yticks >= axis.get_xlim()[0]) &
                 (yticks <= axis.get_xlim()[1]))
         axis.set_xticks(yticks[mask])
-        
+
         plt.tight_layout()
         pdf.savefig(bbox_inches='tight')
         plt.close()
-    
+
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

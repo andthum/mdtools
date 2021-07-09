@@ -25,8 +25,6 @@
 #   L.J. Gallego, L.M. Varela, PCCP, 2018, 20, 30412-30427
 
 
-
-
 import os
 import sys
 import warnings
@@ -44,9 +42,7 @@ plt.rc('ytick.major', width=2)
 plt.rc('ytick.minor', width=2)
 plt.rc('text', usetex=True)
 plt.rcParams['text.latex.preview'] = True
-plt.rc('font',**{'family' : 'serif', 'serif' : 'Times'})
-
-
+plt.rc('font', **{'family': 'serif', 'serif': 'Times'})
 
 
 def read_matrix(infile):
@@ -59,12 +55,12 @@ def read_matrix(infile):
     usually set to zero. The remaining elements of the matrix must
     contain the z values for each (x,y) pair. The file may contain
     comment lines starting with #, which will be ignored.
-    
+
     Parameters
     ----------
     infile : str
         Name of the data file.
-    
+
     Returns
     -------
     x : numpy.ndarray
@@ -74,30 +70,28 @@ def read_matrix(infile):
     z : numpy.ndarray
         2-dimensional array containing the z values for each (x,y) pair.
     """
-    
+
     data = np.genfromtxt(infile)
-    x = data[1:,0]
-    y = data[0,1:]
-    z = data[1:,1:]
-    
+    x = data[1:, 0]
+    y = data[0, 1:]
+    z = data[1:, 1:]
+
     # Make the upper left corner of the matrix the lower left corner,
     # i.e. invert the matrix vertically
     z = np.ascontiguousarray(z.T[::-1])
-    
+
     return x, y, z
 
 
-
-
 def plot_rgb_matrix(ax, z, xmin=None, xmax=None, ymin=None, ymax=None,
-        xlabel=r'$x$ / nm', ylabel=r'$y$ / nm', **kwargs):
+                    xlabel=r'$x$ / nm', ylabel=r'$y$ / nm', **kwargs):
     """
     Plot a RGB matrix, i.e. a two dimensional matrix with three channels,
     i.e. a matrix of shape ``(m, n, 3)`` with values between 0 and 255
     or between 0 and 1, with ``matplotlib.axes.Axes``. The matrix can
     have the spahe ``(m, n, 4)`` if a alpha channel, i.e. transperency,
     is included.
-    
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -121,19 +115,19 @@ def plot_rgb_matrix(ax, z, xmin=None, xmax=None, ymin=None, ymax=None,
         Label for the y-axis. Default is ``r'$y$ / nm'``.
     kwargs : dict
         Keyword arguments to pass to ``ax.imshow()``.
-    
+
     Returns
     -------
     img : list
         List of artists added to the axis `ax`.
     """
-    
+
     fontsize_labels = 36
     fontsize_ticks = 32
     tick_length = 10
     tick_pad = 12
     label_pad = 16
-    
+
     img = ax.imshow(z, **kwargs)
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
@@ -154,40 +148,34 @@ def plot_rgb_matrix(ax, z, xmin=None, xmax=None, ymin=None, ymax=None,
                    direction='out',
                    top=False,
                    right=False,
-                   length=0.5*tick_length,
-                   labelsize=0.8*fontsize_ticks,
+                   length=0.5 * tick_length,
+                   labelsize=0.8 * fontsize_ticks,
                    pad=tick_pad)
-    
+
     return img
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Combine up to three matrices to one RGB matrix and"
-                     " plot this new matrix as heatmap with"
-                     " matplotlib.pyplot.imshow(). The files containing"
-                     " the matrices must have the same format as the"
-                     " output produced by GROMACS' function gmx densmap"
-                     " with the -od flag. I.e., the input file must be"
-                     " an ASCII file containing a 2-dimensional matrix."
-                     " The first column must contain the x values and"
-                     " the first row the y values. The upper left corner"
-                     " can have any value, but is usually set to zero."
-                     " The remaining elements of the matrix must contain"
-                     " the z values for each (x,y) pair. The file may"
-                     " contain comment lines starting with #, which will"
-                     " be ignored."
-                 )
+        description=(
+            "Combine up to three matrices to one RGB matrix and"
+            " plot this new matrix as heatmap with"
+            " matplotlib.pyplot.imshow(). The files containing"
+            " the matrices must have the same format as the"
+            " output produced by GROMACS' function gmx densmap"
+            " with the -od flag. I.e., the input file must be"
+            " an ASCII file containing a 2-dimensional matrix."
+            " The first column must contain the x values and"
+            " the first row the y values. The upper left corner"
+            " can have any value, but is usually set to zero."
+            " The remaining elements of the matrix must contain"
+            " the z values for each (x,y) pair. The file may"
+            " contain comment lines starting with #, which will"
+            " be ignored."
+        )
     )
-    
+
     parser.add_argument(
         '-r',
         dest='RED',
@@ -226,7 +214,7 @@ if __name__ == "__main__":
         help="Output filename. Output is optimized for PDF format with"
              " TeX support."
     )
-    
+
     parser.add_argument(
         '-c',
         dest='CUTOFF',
@@ -247,7 +235,7 @@ if __name__ == "__main__":
              " cutoff. If --Otsu is set, -c will be ignored. This option"
              " requires the opencv-python package."
     )
-    
+
     parser.add_argument(
         '--xmin',
         dest='XMIN',
@@ -280,16 +268,13 @@ if __name__ == "__main__":
         default=None,
         help="Upper limit for plotting on y axis."
     )
-    
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
     rgb_args = np.array([args.RED, args.GREEN, args.BLUE])
-    rgb_code = {0 : 'red', 1 : 'green', 2 : 'blue'}
-    
-    
+    rgb_code = {0: 'red', 1: 'green', 2: 'blue'}
+
     if np.all(rgb_args == None):
         raise RuntimeError("Neither -r, nor -g, nor -b is set")
     if args.CUTOFF < 0 or args.CUTOFF > 1:
@@ -298,10 +283,7 @@ if __name__ == "__main__":
     if args.OTSU and args.CUTOFF > 0:
         warnings.warn("-c {} will be ignored, because --Otsu is set"
                       .format(args.CUTOFF), RuntimeWarning)
-    
-    
-    
-    
+
     x = []
     y = []
     z = []
@@ -312,25 +294,24 @@ if __name__ == "__main__":
             xtmp, ytmp, ztmp = read_matrix(rgb_args[i])
             x.append(xtmp)
             y.append(ytmp)
-            z.append(ztmp/ztmp.max())
+            z.append(ztmp / ztmp.max())
     x = np.array(x)
     y = np.array(y)
     z = np.array(z)
-    
+
     for i in range(1, len(x)):
-        if np.any(x[i-1] != x[i]):
+        if np.any(x[i - 1] != x[i]):
             raise ValueError("The x values of the provided data are not"
                              " exactly the same")
-        if np.any(y[i-1] != y[i]):
+        if np.any(y[i - 1] != y[i]):
             raise ValueError("The y values of the provided data are not"
                              " exactly the same")
-        if z[i-1].shape != z[i].shape:
+        if z[i - 1].shape != z[i].shape:
             raise ValueError("The provided matrices have not the same"
                              " shape")
     x = x[0]
     y = y[0]
-    
-    
+
     # Create RGB matrix from the input matrices. The three RGB channels
     # can each take a value from 0 to 255 because they are stored as
     # 8-bit unsigned integer. But matplotlib.pyplot.imshow() also
@@ -341,8 +322,7 @@ if __name__ == "__main__":
         if rgb_channel_used[i]:
             rgb[..., i] = z[j]
             j += 1
-    
-    
+
     # Eliminate values below a certain cutoff to suppress noise.
     if args.OTSU:
         try:
@@ -353,21 +333,20 @@ if __name__ == "__main__":
         print("\n\n\n", flush=True)
         for i in range(len(rgb_channel_used)):
             if rgb_channel_used[i]:
-                rgb_norm = np.round(rgb[..., i]*255).astype(np.uint8)
+                rgb_norm = np.round(rgb[..., i] * 255).astype(np.uint8)
                 thresh, rgb[..., i] = cv2.threshold(
-                                          src=rgb_norm,
-                                          thresh=0,
-                                          maxval=255,
-                                          type=cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                    src=rgb_norm,
+                    thresh=0,
+                    maxval=255,
+                    type=cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 rgb[..., i] /= rgb[..., i].max()
-                #print("Histogram:", flush=True)
-                #print(np.bincount(rgb_norm.flatten()), flush=True)
+                # print("Histogram:", flush=True)
+                # print(np.bincount(rgb_norm.flatten()), flush=True)
                 print("Otsu's threshold for {:>5} channel (0 - 255):"
                       " {:>3f}".format(rgb_code[i], thresh), flush=True)
     else:
-        rgb[rgb<args.CUTOFF] = 0
-    
-    
+        rgb[rgb < args.CUTOFF] = 0
+
     print("\n\n\n", flush=True)
     for i in range(len(rgb_channel_used)):
         if rgb_channel_used[i]:
@@ -375,8 +354,7 @@ if __name__ == "__main__":
             print("Amount of surface covered by {:>5} pixels: {:>6.4f}"
                   .format(rgb_code[i], surf_cov), flush=True)
     print("\n\n", flush=True)
-    
-    
+
     fig, axis = plt.subplots(figsize=(8.27, 8.27),  # Short side of DIN A4 in inches
                              frameon=False,
                              clear=True,
@@ -396,7 +374,6 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig(args.OUTFILE)
     plt.close(fig)
-    
-    
+
     print("\n\n\n", flush=True)
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)

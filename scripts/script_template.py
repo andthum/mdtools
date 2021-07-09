@@ -29,7 +29,7 @@ Script template for scripts that process MD trajectories.
     additional functionality xyz.
 
 .. todo::
-    
+
     * **Example todo list**.
     * Implement feature xyz.
 
@@ -70,7 +70,7 @@ be called and their meaning.
 --sel       Selection string to select a group of atoms for the analysis.
             See MDAnalysis' |selection_syntax| for possible choices.
 --cmp       {'group', 'segments', 'residues', 'fragments', 'atoms'}
-            
+
             The compounds of the selection group to use for the analysis.
             Compounds can be 'group' (the entire selection group),
             'segments', 'residues', 'fragments', or 'atoms'.  Refer to
@@ -81,7 +81,7 @@ be called and their meaning.
             compound might comprise additional atoms that are not
             contained in the selection group.  Default: ``'atoms'``
 --center    {'cog', 'com'}
-            
+
             The center of the compounds to use for the analysis.  Choose
             'cog' for center of geometry or 'com' for center of mass.
             Default: ``'cog'``
@@ -254,7 +254,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
     # TODO: Check parsed input arguments if necessary
-    
+
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
     print("\n")
@@ -266,22 +266,22 @@ if __name__ == '__main__':
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames
     )
-    
+
     print("\n")
     print("Reading trajectory...")
     print("Total number of frames: {:>8d}".format(u.trajectory.n_frames))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
     print("First frame to read:    {:>8d}".format(BEGIN))
-    print("Last frame to read:     {:>8d}".format(END-1))
+    print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     print("Time first frame:       {:>12.3f} ps"
           .format(u.trajectory[BEGIN].time))
     print("Time last frame:        {:>12.3f} ps"
-          .format(u.trajectory[END-1].time))
+          .format(u.trajectory[END - 1].time))
     print("Time step first frame:  {:>12.3f} ps"
           .format(u.trajectory[BEGIN].dt))
     print("Time step last frame:   {:>12.3f} ps"
-          .format(u.trajectory[END-1].dt))
+          .format(u.trajectory[END - 1].dt))
     timer = datetime.now()
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
     for ts in trj:
@@ -291,25 +291,25 @@ if __name__ == '__main__':
         trj.set_postfix_str("{:>7.2f}MiB".format(progress_bar_mem),
                             refresh=False)
     trj.close()
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
     # TODO: Create your output file(s).  When creating text files, use
     # mdtools.file_handler.savetxt or mdtools.file_handler.savetxt_matrix
     print("Created {}".format(args.OUTFILE))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

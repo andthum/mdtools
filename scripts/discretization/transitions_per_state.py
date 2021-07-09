@@ -22,7 +22,7 @@ r"""
 Count the number of transitions leading into or out of a given state.
 
 .. todo::
-    
+
     Finish docstring
 
 Options
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
+
     print("\n")
     print("Loading trajectory...")
     timer = datetime.now()
@@ -134,19 +134,19 @@ if __name__ == '__main__':
         step=args.EVERY,
         n_frames_tot=N_FRAMES_TOT
     )
-    dtrj = dtrj[:,BEGIN:END:EVERY]
+    dtrj = dtrj[:, BEGIN:END:EVERY]
     trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj)
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("Reading trajectory...")
     print("Number of compounds:    {:>8d}".format(N_CMPS))
     print("Total number of frames: {:>8d}".format(N_FRAMES_TOT))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
     print("First frame to read:    {:>8d}".format(BEGIN))
-    print("Last frame to read:     {:>8d}".format(END-1))
+    print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     timer = datetime.now()
     trans = (np.diff(dtrj) != 0)
@@ -155,29 +155,29 @@ if __name__ == '__main__':
     # States in which transitions end
     trans_end = np.hstack([np.zeros((N_CMPS, 1), dtype=bool), trans])
     del trans
-    bins = np.arange(np.min(dtrj), np.max(dtrj)+2)
+    bins = np.arange(np.min(dtrj), np.max(dtrj) + 2)
     hist_start = np.histogram(dtrj[trans_start], bins)
     hist_end = np.histogram(dtrj[trans_end], bins)
-    
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("Creating output...")
     timer = datetime.now()
     # TODO: Create your output file(s).  When creating text files, use
     # mdtools.file_handler.savetxt or mdtools.file_handler.savetxt_matrix
     print("Created {}".format(args.OUTFILE))
-    print("Elapsed time:         {}".format(datetime.now()-timer))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
-    
+          .format(proc.memory_info().rss / 2**20))
+
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
-    print("Totally elapsed time: {}".format(datetime.now()-timer_tot))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
     print("CPU time:             {}"
           .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20))
+          .format(proc.memory_info().rss / 2**20))

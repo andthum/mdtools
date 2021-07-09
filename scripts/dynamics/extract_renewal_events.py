@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import warnings
@@ -31,10 +29,8 @@ import mdtools as mdt
 from msd_at_coord_change import get_pos
 
 
-
-
 def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
-        begin=0, every=1, coord_traj=False, verbose=False, debug=False):
+                           begin=0, every=1, coord_traj=False, verbose=False, debug=False):
     """
     Extract renewal events from a
     :attr:`~MDAnalysis.core.universe.Universe.trajectory`. A renewal
@@ -46,7 +42,7 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
     discarded, since due to the limited trajectory length, :math:`t_0`
     of the first event and :math:`\tau_{renew}` of the last event are
     unknown.
-    
+
     Parameters
     ----------
     universe : MDAnalysis.core.universe.Universe
@@ -83,7 +79,7 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
         If ``True``, print progress information to standard output.
     debug : bool, optional
         If ``True``, check the input arguments.
-    
+
     Returns
     -------
     refix_t0 : numpy.ndarray
@@ -119,14 +115,14 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
         the given reference compound. Indexing starts at zero. An index
         of -1 indicates that in the given frame no selection compound
         was bound to the given reference compound.
-    
+
     Note
     ----
     The output is sorted by `refix_t0` as primary sort order, `t0`
     as secondary sort order, `trenew` as tertiary sort order and
     `selix_t0` as quaternary sort order.
     """
-    
+
     if debug:
         for i, cm in enumerate(cms):
             if cm.ndim != 2:
@@ -143,7 +139,7 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
         if (compound != 'atoms' and
             compound != 'segments' and
             compound != 'residues' and
-            compound != 'fragments'):
+                compound != 'fragments'):
             raise ValueError("compound must be either 'atoms',"
                              " 'segments', 'residues' or 'fragments',"
                              " but you gave '{}'"
@@ -151,14 +147,14 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
         if ((compound == 'atoms' and ref.n_atoms != cms[0].shape[0]) or
             (compound == 'segments' and ref.n_segments != cms[0].shape[0]) or
             (compound == 'residues' and ref.n_residues != cms[0].shape[0]) or
-            (compound == 'fragments' and ref.n_fragments != cms[0].shape[0])):
+                (compound == 'fragments' and ref.n_fragments != cms[0].shape[0])):
             raise ValueError("The number of reference compounds does not"
                              " fit to the number of rows of the contact"
                              " matrices")
         if ((compound == 'atoms' and sel.n_atoms != cms[0].shape[1]) or
             (compound == 'segments' and sel.n_segments != cms[0].shape[1]) or
             (compound == 'residues' and sel.n_residues != cms[0].shape[1]) or
-            (compound == 'fragments' and sel.n_fragments != cms[0].shape[1])):
+                (compound == 'fragments' and sel.n_fragments != cms[0].shape[1])):
             raise ValueError("The number of selection compounds does not"
                              " fit to the number of columns of the"
                              " contact matrices")
@@ -166,9 +162,8 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
             raise ValueError("begin must not be negative")
         if every <= 0:
             raise ValueError("every must be positive")
-        mdt.check.time_step(trj=universe.trajectory[begin:len(cms)*every])
-    
-    
+        mdt.check.time_step(trj=universe.trajectory[begin:len(cms) * every])
+
     refix2refix_t0 = -np.ones(cms[0].shape[0], dtype=np.int32)
     # If refix2refix_t0[rix] < 0, reference compound rix was not bound
     # to any selection compound
@@ -180,22 +175,21 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
     selpos_t0 = []
     refdispl = []
     seldispl = []
-    
-    
+
     if verbose:
         timer = datetime.now()
         proc = psutil.Process(os.getpid())
         print("  Frame   {:12d} of {:12d}"
-              .format(0, len(cms)-1),
+              .format(0, len(cms) - 1),
               flush=True)
         print("    Elapsed time:             {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("    Current memory usage: {:18.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
         timer = datetime.now()
-    
+
     refpos = get_pos(universe=universe,
                      atm_grp=ref,
                      frame=begin,
@@ -208,10 +202,10 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
                      debug=debug)
     refix, selix = cms[0].nonzero()
     refix_unique, selix = mdt.nph.group_by(
-                              keys=refix.astype(np.uint32),
-                              values=selix.astype(np.uint32),
-                              assume_sorted=True,
-                              return_keys=True)
+        keys=refix.astype(np.uint32),
+        values=selix.astype(np.uint32),
+        assume_sorted=True,
+        return_keys=True)
     refix_t0.extend(refix_unique)
     refix2refix_t0[refix_unique] = np.arange(len(refix_t0))
     selix_t0.extend(selix)
@@ -223,23 +217,22 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
                     for i in refix_t0)
     seldispl.extend(np.full(3, np.nan, dtype=np.float32)
                     for i in refix_t0)
-    
-    
+
     for i, cm in enumerate(cms[1:], 1):
         if (verbose and
-            (i % 10**(len(str(i))-1) == 0 or i == len(cms)-1)):
+                (i % 10**(len(str(i)) - 1) == 0 or i == len(cms) - 1)):
             print("  Frame   {:12d} of {:12d}"
-                  .format(i, len(cms)-1),
+                  .format(i, len(cms) - 1),
                   flush=True)
             print("    Elapsed time:             {}"
-                  .format(datetime.now()-timer),
+                  .format(datetime.now() - timer),
                   flush=True)
             print("    Current memory usage: {:18.2f} MiB"
-                  .format(proc.memory_info().rss/2**20),
+                  .format(proc.memory_info().rss / 2**20),
                   flush=True)
             timer = datetime.now()
-        
-        frame = np.uint32(begin + i*every)
+
+        frame = np.uint32(begin + i * every)
         refpos = get_pos(universe=universe,
                          atm_grp=ref,
                          frame=frame,
@@ -250,16 +243,16 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
                          frame=frame,
                          compound=compound,
                          debug=debug)
-        bound_now_and_before = cm.multiply(cms[i-1])
-        
+        bound_now_and_before = cm.multiply(cms[i - 1])
+
         attached = cm - bound_now_and_before
         refix, selix = attached.nonzero()
         if len(refix) > 0 and np.any(refix2refix_t0[refix] < 0):
             refix_unique, selix = mdt.nph.group_by(
-                                      keys=refix.astype(np.uint32),
-                                      values=selix.astype(np.uint32),
-                                      assume_sorted=True,
-                                      return_keys=True)
+                keys=refix.astype(np.uint32),
+                values=selix.astype(np.uint32),
+                assume_sorted=True,
+                return_keys=True)
             for j, rix in enumerate(refix_unique):
                 if refix2refix_t0[rix] >= 0:
                     # Reference compound rix is already bound to a
@@ -274,15 +267,15 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
                 selpos_t0.append(selpos[selix[j]])
                 refdispl.append(np.full(3, np.nan, dtype=np.float32))
                 seldispl.append(np.full(3, np.nan, dtype=np.float32))
-        
-        detached = cms[i-1] - bound_now_and_before
+
+        detached = cms[i - 1] - bound_now_and_before
         refix, selix = detached.nonzero()
         if len(refix) > 0:
             refix_unique, selix = mdt.nph.group_by(
-                                      keys=refix.astype(np.uint32),
-                                      values=selix.astype(np.uint32),
-                                      assume_sorted=True,
-                                      return_keys=True)
+                keys=refix.astype(np.uint32),
+                values=selix.astype(np.uint32),
+                assume_sorted=True,
+                return_keys=True)
             for j, rix in enumerate(refix_unique):
                 rix_t0 = refix2refix_t0[rix]
                 remain = np.isin(selix_t0[rix_t0],
@@ -321,11 +314,10 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
                 else:
                     selix_t0[rix_t0] = selix_t0[rix_t0][remain]
                     selpos_t0[rix_t0] = selpos_t0[rix_t0][remain]
-    
-    
+
     del refix, selix, refix_unique, refix2refix_t0, refpos, selpos
     del cm, bound_now_and_before, attached, detached
-    
+
     if len(selix_t0) != len(refix_t0):
         raise ValueError("The number of selection indices does not match"
                          " the number of reference indices. This should"
@@ -354,7 +346,7 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
         raise ValueError("The number of selection displacements does not"
                          " match the number of reference indices. This"
                          " should not have happened")
-    
+
     refix_t0 = np.asarray(refix_t0, dtype=np.uint32)
     selix_t0 = np.asarray(selix_t0, dtype=object)
     t0 = np.asarray(t0, dtype=np.uint32)
@@ -363,8 +355,7 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
     selpos_t0 = np.asarray(selpos_t0, dtype=object)
     refdispl = np.row_stack(refdispl)
     seldispl = np.row_stack(seldispl)
-    
-    
+
     # Remove the first renewal event for each reference compound since
     # you cannot say what is t0 for these events. Also remove the last
     # events where a start time t0 is already set, but a renewal event
@@ -405,18 +396,18 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
         raise ValueError("Test 4: The mask and test mask do not"
                          " match. This should not have happened")
     del test_mask
-    
+
     if coord_traj:
         # The following changes are only temporal. Outside this if
         # statement, the "valid" mask from above applies.
         # Set the renewal time for the last renewal event for each
         # compound, where a start time t0 is already set but a renewal
         # event was actually not seen, to "end of trajectory - t0"
-        trenew[unfinished] = begin + len(cms)*every - t0[unfinished]
+        trenew[unfinished] = begin + len(cms) * every - t0[unfinished]
         for i in np.flatnonzero(unfinished):
             selix_t0[i] = selix_t0[i][0]
         selix_t0 = selix_t0.astype(np.uint32)
-        
+
         ix_sort = np.lexsort((selix_t0, trenew, t0, refix_t0))
         valid = valid[ix_sort]
         refix_t0 = refix_t0[ix_sort]
@@ -428,13 +419,13 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
         refdispl = refdispl[ix_sort]
         seldispl = seldispl[ix_sort]
         del ix_sort
-        
+
         traj = -np.ones((cms[0].shape[0], len(cms)), dtype=np.int32)
         for i, rix in enumerate(refix_t0):
             start = (t0[i] - begin) // every
             stop = start + (trenew[i] - begin) // every
             traj[rix][start:stop] = selix_t0[i]
-    
+
     del unfinished
     if not np.any(valid):
         warnings.warn("Could not detect any renewal event",
@@ -443,7 +434,7 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
             return tuple([np.array([]) for i in range(8)] + [traj])
         else:
             return tuple([np.array([]) for i in range(8)])
-    
+
     refix_t0 = refix_t0[valid]
     selix_t0 = selix_t0[valid].astype(np.uint32)
     t0 = t0[valid]
@@ -453,7 +444,7 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
     refdispl = refdispl[valid]
     seldispl = seldispl[valid]
     del valid
-    
+
     ix_sort = np.lexsort((selix_t0, trenew, t0, refix_t0))
     refix_t0 = refix_t0[ix_sort]
     selix_t0 = selix_t0[ix_sort]
@@ -464,8 +455,7 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
     refdispl = refdispl[ix_sort]
     seldispl = seldispl[ix_sort]
     del ix_sort
-    
-    
+
     if coord_traj:
         return (refix_t0,
                 selix_t0,
@@ -487,42 +477,35 @@ def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
                 seldispl)
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
-    
+
     timer_tot = datetime.now()
     proc = psutil.Process(os.getpid())
-    
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Extract renewal events from a molecular dynamics"
-                     " trajectory. A renewal event occurs when the"
-                     " selection compound that was continuously bound"
-                     " the longest to a reference compound dissociates"
-                     " from it. A new trajectory is generated containing"
-                     " only these renewal events for all reference"
-                     " compounds undergoing such events. The new"
-                     " trajectory contains the indices of the reference"
-                     " and selection compound, the time t0 when the"
-                     " selection compound started coordinating to the"
-                     " reference compound, the renewal time tau needed"
-                     " till dissociation of the selection compound, the"
-                     " center of mass positions of the reference and"
-                     " selection compound at t0 and the displacements of"
-                     " the reference and selection compound during tau."
-                     " Also take a look at discrete_coord.py which is"
-                     " closely related to this script. The --dtraj flag"
-                     " of this script gives you the same output as"
-                     " discrete_coord.py"
-                     )
+        description=(
+            "Extract renewal events from a molecular dynamics"
+            " trajectory. A renewal event occurs when the"
+            " selection compound that was continuously bound"
+            " the longest to a reference compound dissociates"
+            " from it. A new trajectory is generated containing"
+            " only these renewal events for all reference"
+            " compounds undergoing such events. The new"
+            " trajectory contains the indices of the reference"
+            " and selection compound, the time t0 when the"
+            " selection compound started coordinating to the"
+            " reference compound, the renewal time tau needed"
+            " till dissociation of the selection compound, the"
+            " center of mass positions of the reference and"
+            " selection compound at t0 and the displacements of"
+            " the reference and selection compound during tau."
+            " Also take a look at discrete_coord.py which is"
+            " closely related to this script. The --dtraj flag"
+            " of this script gives you the same output as"
+            " discrete_coord.py"
+        )
     )
-    
+
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -565,7 +548,7 @@ if __name__ == '__main__':
              " will be the same as given by discrete_coord.py. See there"
              " for further details."
     )
-    
+
     parser.add_argument(
         '--ref',
         dest='REF',
@@ -635,7 +618,7 @@ if __name__ == '__main__':
              " reference atom, if it has been bound to it for at least"
              " this number of consecutive frames. Default: 0"
     )
-    
+
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -663,7 +646,7 @@ if __name__ == '__main__':
         default=1,
         help="Read every n-th frame. Default: 1"
     )
-    
+
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -672,19 +655,17 @@ if __name__ == '__main__':
         action='store_true',
         help="Run in debug mode."
     )
-    
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
     if args.CUTOFF <= 0:
         raise ValueError("-c must be greater than zero, but you gave {}"
                          .format(args.CUTOFF))
     if (args.COMPOUND != 'atoms' and
         args.COMPOUND != 'segments' and
         args.COMPOUND != 'residues' and
-        args.COMPOUND != 'fragments'):
+            args.COMPOUND != 'fragments'):
         raise ValueError("--compound must be either 'atoms', 'segments',"
                          " 'residues' or 'fragments', but you gave {}"
                          .format(args.COMPOUND))
@@ -701,20 +682,16 @@ if __name__ == '__main__':
         raise ValueError("--intermittency must be equal to or greater"
                          " than zero, but you gave {}"
                          .format(args.INTERMITTENCY))
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     u = mdt.select.universe(top=args.TOPFILE,
                             trj=args.TRJFILE,
                             verbose=True)
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating selections", flush=True)
     timer = datetime.now()
-    
+
     ref = u.select_atoms(' '.join(args.REF))
     sel = u.select_atoms(' '.join(args.SEL))
     print("  Reference group: '{}'"
@@ -726,37 +703,31 @@ if __name__ == '__main__':
           .format(' '.join(args.SEL)),
           flush=True)
     print(mdt.rti.ag_info_str(ag=sel, indent=4))
-    
+
     if ref.n_atoms <= 0:
         raise ValueError("The reference atom group contains no atoms")
     if sel.n_atoms <= 0:
         raise ValueError("The selection atom group contains no atoms")
-    
+
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     BEGIN, END, EVERY, n_frames = mdt.check.frame_slicing(
-                                      start=args.BEGIN,
-                                      stop=args.END,
-                                      step=args.EVERY,
-                                      n_frames_tot=u.trajectory.n_frames)
-    last_frame = u.trajectory[END-1].frame
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=u.trajectory.n_frames)
+    last_frame = u.trajectory[END - 1].frame
     if args.DEBUG:
         print("\n\n\n", flush=True)
         mdt.check.time_step(trj=u.trajectory[BEGIN:END], verbose=True)
     timestep = u.trajectory[BEGIN].dt
     start_time = u.trajectory[BEGIN].time
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Calculating contact matrices", flush=True)
     print("  Total number of frames in trajectory: {:>9d}"
@@ -766,7 +737,7 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-    
+
     cms = mdt.strc.contact_matrices(topfile=args.TOPFILE,
                                     trjfile=args.TRJFILE,
                                     ref=args.REF,
@@ -785,7 +756,7 @@ if __name__ == '__main__':
                          " have happened")
     n_ref_compounds = cms[0].shape[0]
     n_sel_compounds = cms[0].shape[1]
-    
+
     print(flush=True)
     print("Frames read: {}".format(n_frames), flush=True)
     print("First frame: {:>12d}    Last frame: {:>12d}    "
@@ -795,44 +766,38 @@ if __name__ == '__main__':
     print("Start time:  {:>12}    End time:   {:>12}    "
           "Every Nth time:  {:>12} (ps)"
           .format(u.trajectory[BEGIN].time,
-                  u.trajectory[END-1].time,
+                  u.trajectory[END - 1].time,
                   u.trajectory[0].dt * EVERY),
           flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     if args.INTERMITTENCY > 0:
         print("\n\n\n", flush=True)
         print("Correcting for intermittency", flush=True)
         timer = datetime.now()
-        
+
         cms = mdt.dyn.correct_intermittency(
-                  list_of_arrays=cms,
-                  intermittency=args.INTERMITTENCY,
-                  verbose=True,
-                  debug=args.DEBUG)
-        
+            list_of_arrays=cms,
+            intermittency=args.INTERMITTENCY,
+            verbose=True,
+            debug=args.DEBUG)
+
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer),
+              .format(datetime.now() - timer),
               flush=True)
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20),
+              .format(proc.memory_info().rss / 2**20),
               flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Extracting renewal events", flush=True)
     timer = datetime.now()
-    
+
     if args.DTRJFILE is None:
         coord_traj = False
     else:
@@ -853,34 +818,31 @@ if __name__ == '__main__':
     else:
         dtrajs = data[-1]
         data = np.column_stack(data[:-1])
-    
+
     if len(data) == 0:
         raise ValueError("Could not detect any renewal event")
-    
-    data[:,2] *= timestep
-    data[:,2] += start_time
-    data[:,3] *= timestep
-    
+
+    data[:, 2] *= timestep
+    data[:, 2] += start_time
+    data[:, 3] *= timestep
+
     print(flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-    
+
     if args.DTRJFILE is not None:
         mdt.fh.backup(args.DTRJFILE)
         np.save(args.DTRJFILE, dtrajs, allow_pickle=False)
         print("  Created {}".format(args.DTRJFILE), flush=True)
-    
+
     header = (
         "Trajectory of renewal events. A renewal event occurs when the\n"
         "selection compound that was continuously bound the longest to\n"
@@ -957,18 +919,18 @@ if __name__ == '__main__':
         "\n"
         "{:>14s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s} {:>16s}"
         .format(len(data),
-                n_ref_compounds - len(np.unique(data[:,0])),
-                n_sel_compounds - len(np.unique(data[:,1])),
-                np.mean(np.sum(data[:,10:13]**2, axis=1)),
-                np.std(np.sum(data[:,10:13]**2, axis=1)),
-                np.mean(np.sum(data[:,13:16]**2, axis=1)),
-                np.std(np.sum(data[:,13:16]**2, axis=1)),
-                
+                n_ref_compounds - len(np.unique(data[:, 0])),
+                n_sel_compounds - len(np.unique(data[:, 1])),
+                np.mean(np.sum(data[:, 10:13]**2, axis=1)),
+                np.std(np.sum(data[:, 10:13]**2, axis=1)),
+                np.mean(np.sum(data[:, 13:16]**2, axis=1)),
+                np.std(np.sum(data[:, 13:16]**2, axis=1)),
+
                 args.CUTOFF,
                 args.COMPOUND,
                 args.MINCONTACTS,
                 args.INTERMITTENCY,
-                
+
                 ' '.join(args.REF),
                 ref.n_segments,
                 len(np.unique(ref.segids)),
@@ -982,7 +944,7 @@ if __name__ == '__main__':
                 len(np.unique(ref.types)),
                 '\' \''.join(i for i in np.unique(ref.types)),
                 len(ref.fragments),
-                
+
                 ' '.join(args.SEL),
                 sel.n_segments,
                 len(np.unique(sel.segids)),
@@ -996,9 +958,9 @@ if __name__ == '__main__':
                 len(np.unique(sel.types)),
                 '\' \''.join(i for i in np.unique(sel.types)),
                 len(sel.fragments),
-                
+
                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-                
+
                 "Renewal time (ps)",
                 "MSD x^2 (A^2)",
                 "MSD y^2 (A^2)",
@@ -1006,48 +968,45 @@ if __name__ == '__main__':
                 "MSD x^2 (A^2)",
                 "MSD y^2 (A^2)",
                 "MSD z^2 (A^2)",
-                np.mean(data[:,3]),
-                np.mean(data[:,10]**2),
-                np.mean(data[:,11]**2),
-                np.mean(data[:,12]**2),
-                np.mean(data[:,13]**2),
-                np.mean(data[:,14]**2),
-                np.mean(data[:,15]**2),
-                np.std(data[:,3]),
-                np.std(data[:,10]**2),
-                np.std(data[:,11]**2),
-                np.std(data[:,12]**2),
-                np.std(data[:,13]**2),
-                np.std(data[:,14]**2),
-                np.std(data[:,15]**2),
-                
+                np.mean(data[:, 3]),
+                np.mean(data[:, 10]**2),
+                np.mean(data[:, 11]**2),
+                np.mean(data[:, 12]**2),
+                np.mean(data[:, 13]**2),
+                np.mean(data[:, 14]**2),
+                np.mean(data[:, 15]**2),
+                np.std(data[:, 3]),
+                np.std(data[:, 10]**2),
+                np.std(data[:, 11]**2),
+                np.std(data[:, 12]**2),
+                np.std(data[:, 13]**2),
+                np.std(data[:, 14]**2),
+                np.std(data[:, 15]**2),
+
                 "ref_ix", "sel_ix", "t0", "tau_renew",
                 "x_ref(t0)", "y_ref(t0)", "z_ref(t0)",
                 "x_sel(t0)", "y_sel(t0)", "z_sel(t0)",
                 "dx_ref", "dy_ref", "dz_ref",
                 "dx_sel", "dy_sel", "dz_sel"
-        )
+                )
     )
-    
+
     mdt.fh.savetxt(fname=args.OUTFILE,
                    data=data,
                    header=header)
-    
+
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer),
+          .format(datetime.now() - timer),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)
-    
-    
-    
-    
+
     print("\n\n\n{} done".format(os.path.basename(sys.argv[0])))
     print("Elapsed time:         {}"
-          .format(datetime.now()-timer_tot),
+          .format(datetime.now() - timer_tot),
           flush=True)
     print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss/2**20),
+          .format(proc.memory_info().rss / 2**20),
           flush=True)

@@ -38,7 +38,7 @@ def universe(top, trj, verbose=True, **kwargs):
     """
     Create a MDAnalysis :class:`~MDAnalysis.core.universe.Universe` from
     a topology and a trajectory file.
-    
+
     Parameters
     ----------
     top : str
@@ -57,19 +57,19 @@ def universe(top, trj, verbose=True, **kwargs):
     kwargs : dict, optional
         Additional keyword arguments to pass to the constructor of
         :class:`MDAnalysis.core.universe.Universe`.
-    
+
     Returns
     -------
     universe : MDAnalysis.core.universe.Universe
         The created MDAnalysis
         :class:`~MDAnalysis.core.universe.Universe`.
-    
+
     See Also
     --------
     :func:`mdtools.run_time_info.ag_info_str` :
         Create a string containing information about a MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Notes
     -----
     This function is just a convinient wrapper around the constructor of
@@ -93,9 +93,9 @@ def universe(top, trj, verbose=True, **kwargs):
         print("Total number of frames: {}"
               .format(universe.trajectory.n_frames))
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer))
+              .format(datetime.now() - timer))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
     return universe
 
 
@@ -104,7 +104,7 @@ def atoms(ag, sel, warn_empty=True, verbose=True, **kwargs):
     Select :class:`Atoms <MDAnalysis.core.groups.Atom>` from a
     MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` instance based
     on a selection string.
-    
+
     Parameters
     ----------
     ag : MDAnalysis.core.groups.AtomGroup
@@ -131,7 +131,7 @@ def atoms(ag, sel, warn_empty=True, verbose=True, **kwargs):
     kwargs : dict, optional
         Additional keyword arguments to pass to
         :meth:`MDAnalysis.core.groups.AtomGroup.select_atoms`.
-    
+
     Returns
     -------
     selection : MDAnalysis.core.groups.AtomGroup or MDAnalysis.core.groups.UpdatingAtomGroup
@@ -139,7 +139,7 @@ def atoms(ag, sel, warn_empty=True, verbose=True, **kwargs):
         :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` (if `updating`
         is ``True``) containing the selected
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.
-    
+
     See Also
     --------
     :meth:`MDAnalysis.core.groups.AtomGroup.select_atoms` :
@@ -147,7 +147,7 @@ def atoms(ag, sel, warn_empty=True, verbose=True, **kwargs):
     :func:`mdtools.run_time_info.ag_info_str` :
         Create a string containing information about a MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`.
-    
+
     Notes
     -----
     This function is just a convinient wrapper around
@@ -164,15 +164,15 @@ def atoms(ag, sel, warn_empty=True, verbose=True, **kwargs):
     selection = ag.select_atoms(sel, **kwargs)
     if (warn_empty and
         selection.n_atoms == 0 and
-        not isinstance(selection, mda.core.groups.UpdatingAtomGroup)):
+            not isinstance(selection, mda.core.groups.UpdatingAtomGroup)):
         warnings.warn("The created AtomGroup contains no atoms",
                       RuntimeWarning)
     if verbose:
         print(mdt.rti.ag_info_str(ag=selection))
         print("Elapsed time:         {}"
-              .format(datetime.now()-timer))
+              .format(datetime.now() - timer))
         print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss/2**20))
+              .format(proc.memory_info().rss / 2**20))
     return selection
 
 
@@ -182,7 +182,7 @@ def atoms_around_point(
     Select :class:`Atoms <MDAnalysis.core.groups.Atom>` from a
     MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` instance that
     are within a cutoff of a point in space.
-    
+
     Parameters
     ----------
     ag : MDAnalysis.core.groups.AtomGroup
@@ -210,14 +210,14 @@ def atoms_around_point(
     kwargs : dict, optional
         Additional keyword arguments to pass to
         :meth:`MDAnalysis.core.groups.AtomGroup.select_atoms`.
-    
+
     Returns
     -------
     selection : MDAnalysis.core.groups.AtomGroup
         A MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup`
         containing the selected
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.
-    
+
     See Also
     --------
     :func:`mdtools.select.atoms` :
@@ -225,7 +225,7 @@ def atoms_around_point(
         :class:`Atoms <MDAnalysis.core.groups.Atom>` from a
         MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
-    
+
     Notes
     -----
     This function uses the MDAnalysis selection syntax
@@ -233,9 +233,9 @@ def atoms_around_point(
     :func:`mdtools.select.atoms` that allows you to simply parse an
     array like `point` and a `cutoff` without the need to assemble them
     to a MDAnalysis selection string yourself.
-    
+
     .. _point x y z distance: https://userguide.mdanalysis.org/stable/selections.html#geometric
-    
+
     """
     point = np.asarray(point)
     if point.shape != (3,):

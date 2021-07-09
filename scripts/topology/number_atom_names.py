@@ -18,8 +18,6 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-
 import sys
 import os
 import argparse
@@ -28,25 +26,21 @@ import MDAnalysis as mda
 import mdtools as mdt
 
 
-
-
 def number_atom_names_ignore_residues_and_atom_types(atoms):
     """
     Number atom names in a MDAnalysis atom group consecutively from the
     first to the last atom with no individual numbering for different
     residues or differnt atom types.
-    
+
     Paramters
     ---------
     atoms : MDAnalysis.core.groups.AtomGroup
         The MDAnalysis atom group whose atom names shall be altered to
         carry a atom number.
     """
-    
+
     atoms.names = np.char.add(atoms.names.astype(str),
-                              np.arange(1, atoms.n_atoms+1).astype(str))
-
-
+                              np.arange(1, atoms.n_atoms + 1).astype(str))
 
 
 def number_atom_names_ignore_atom_type(atoms):
@@ -54,18 +48,16 @@ def number_atom_names_ignore_atom_type(atoms):
     Number atom names in a MDAnalysis atom group consecutively with no
     individual numbering for different atom types. Different residues
     are numbered individually.
-    
+
     Paramters
     ---------
     atoms : MDAnalysis.core.groups.AtomGroup
         The MDAnalysis atom group whose atom names shall be altered to
         carry a atom number.
     """
-    
+
     for res in atoms.residues:
         number_atom_names_ignore_residues_and_atom_types(res.atoms)
-
-
 
 
 def number_atom_names_ignore_residues(atoms):
@@ -73,76 +65,66 @@ def number_atom_names_ignore_residues(atoms):
     Number atom names in a MDAnalysis atom group consecutively with no
     individual numbering for different residues. Different atom types
     are numbered individually.
-    
+
     Paramters
     ---------
     atoms : MDAnalysis.core.groups.AtomGroup
         The MDAnalysis atom group whose atom names shall be altered to
         carry a atom number.
     """
-    
+
     atom_numbers = np.zeros(len(atoms.names), dtype=int)
     atom_names, atom_counts = np.unique(atoms.names, return_counts=True)
-    
+
     for i, atom_name in enumerate(atom_names):
-        atom_numbers[atoms.names==atom_name] = np.arange(
-                                                   1,
-                                                   atom_counts[i]+1)
-    
+        atom_numbers[atoms.names == atom_name] = np.arange(
+            1,
+            atom_counts[i] + 1)
+
     atoms.names = np.char.add(atoms.names.astype(str),
                               atom_numbers.astype(str))
-
-
 
 
 def number_atom_names(atoms):
     """
     Number atom names in a MDAnalysis atom group consecutively. Each
     residue and atom type is numbered individually.
-    
+
     Paramters
     ---------
     atoms : MDAnalysis.core.groups.AtomGroup
         The MDAnalysis atom group whose atom names shall be altered to
         carry a atom number.
     """
-    
+
     for res in atoms.residues:
         number_atom_names_ignore_residues(res.atoms)
-
-
 
 
 def unnumber_atom_names(atoms):
     """
     Remove all digits from all atom names of a MDAnalysis atom group.
-    
+
     Paramters
     ---------
     atoms : MDAnalysis.core.groups.AtomGroup
         The MDAnalysis atom group whose atom names shall be relieved
         from any digits.
     """
-    
+
     for atom in atoms:
         atom.name = ''.join(i for i in atom.name if not i.isdigit())
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
-    
+
     parser = argparse.ArgumentParser(
-                 description=(
-                     "Number the atom names in a structure file"
-                     " consecutively. Numbering starts at 1."
-                 )
+        description=(
+            "Number the atom names in a structure file"
+            " consecutively. Numbering starts at 1."
+        )
     )
-    
+
     parser.add_argument(
         "-f",
         dest="STRCFILE",
@@ -159,7 +141,7 @@ if __name__ == '__main__':
         required=True,
         help="Output filename."
     )
-    
+
     parser.add_argument(
         '--ignore-residues',
         dest='IGNORE_RES',
@@ -184,16 +166,15 @@ if __name__ == '__main__':
         action='store_true',
         help="Remove all digits from all atom names."
     )
-    
+
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    
-    
+
     u = mda.Universe(args.STRCFILE)
-    
+
     if (not args.IGNORE_RES and
         not args.IGNORE_ATOM_TYPE and
-        not args.UNNUMBER):
+            not args.UNNUMBER):
         number_atom_names(u.atoms)
     elif (args.IGNORE_RES and
           args.IGNORE_ATOM_TYPE and
@@ -214,11 +195,10 @@ if __name__ == '__main__':
     else:
         raise RuntimeError("Your parsed arguments did not match any"
                            " condition.")
-    
+
     mdt.fh.backup(args.OUTFILE)
     with mda.Writer(args.OUTFILE) as W:
         W.write(u)
-    
-    
+
     print()
     print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
