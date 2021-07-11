@@ -28,13 +28,14 @@ The version information in :mod:`mdtools.version` indicates the release
 of MDTools.  The version number of your installation can be read from
 ``mdtools.__version___``.
 
-MDTools uses `semantic versioning`_, which is compatible with :pep:`440`.
-Given a version number MAJOR.MINOR.PATCH, we increment the
+MDTools uses `semantic versioning`_, which is compatible with
+:pep:`440`.  Given a version number MAJOR.MINOR.PATCH, we increment the
 
     1. **MAJOR** version when we make **incompatible API changes**,
     2. **MINOR** version when we **add functionality** in a
        **backwards-compatible** manner, and
-    3. **PATCH** version when we make backwards-compatible **bug fixes**.
+    3. **PATCH** version when we make backwards-compatible
+       **bug fixes**.
 
 Additionally, pre-release, post-release and developmental release
 specifiers can be appended in accordance to :pep:`440`.  Note that in
