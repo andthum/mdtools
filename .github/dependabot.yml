@@ -1,0 +1,28 @@
+# Check for outdated packages
+# See:
+# https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/enabling-and-disabling-version-updates
+# And:
+# https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/configuration-options-for-dependency-updates
+
+version: 2
+
+updates:
+  - package-ecosystem: pip
+    # Where to search for requirements.txt, pipfile, pipfile.lock or
+    # setup.py* files. See here for supported requirement files:
+    # https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-the-dependency-graph#supported-package-ecosystems
+    directory: ./
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: matplotlib
+    insecure-external-code-execution: deny
+    reviewers: andthum
+
+  - package-ecosystem: github-actions
+    # Where to search for .github/workflows/
+    directory: ./
+    schedule:
+      interval: weekly
+    insecure-external-code-execution: deny
+    reviewers: andthum
