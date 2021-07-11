@@ -116,6 +116,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/build/
 _sphinx_autosummary*/
 
 # PyBuilder
@@ -157,6 +158,7 @@ celerybeat.pid
 env/
 venv/
 ENV/
+VENV/
 env.bak/
 venv.bak/
 
