@@ -1,46 +1,222 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+# 1.) Format code
+# 2.) Lint code
+# 3.) Test code
+# 4.) Scan code for security vulnerabilities
+#
+# See:
+# https://docs.github.com/en/actions/guides/building-and-testing-python
+# and
+# https://github.com/github/codeql-action
 
 name: Tests
 
 on:
   push:
     branches: [ main ]
+    tags: [ "v[0-9].[0-9].[0-9]*" ]
   pull_request:
-    # Check all PR
+    # Run this workflow on every PR, except for PRs that only changes
+    # files from the following ignore list
+    paths-ignore:
+      - ./.github/*TEMPLATE**
+      - ./.github/*template**
+      - ./.readthedocs.yaml
+      - ./LICENSE.txt
+      - ./*.rst
+      - "**/README"
+      - "**/README.*"
+      - "**/*.md"
+      - "**/*.jpg"
+      - "**/*.JPG"
+      - "**/*.jpeg"
+      - "**/*.JPEG"
+      - "**/*.png"
+      - "**/*.tiff"
+  release:
+    types: [published, created, edited, prereleased, released]
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
+  lint:
     strategy:
-      fail-fast: true
       matrix:
-        python-version: [3.6, 3.7, 3.8]
-
+        os: [ ubuntu-latest ]
+        python-version: [ 3.8 ]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Export ${HOME}/.local/bin to ${PATH}
+      # Executable Python binaries are ususally stored there
+      run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+    - name: Get pip cache dir
+      # pip's cache path depends on the operating system, see
+      # https://github.com/actions/cache/blob/main/examples.md#python---pip
+      # This requires pip >=20.1
+      id: pip-cache
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install flake8 flake8-docstrings pytest
-        python -m pip install numpy
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint code with flake8
+        python -m pip install --user --upgrade pip
+        echo "::set-output name=dir::$(pip cache dir)"
+    - name: Create/Restore Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ steps.pip-cache.outputs.dir }}/**
+          ~/.cache/black/**
+          ./.cache/black/**
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.python-version }}-
+          ${{ runner.os }}-
+    - name: Install/Upgrade setuptools and wheel
+      run: python -m pip install --user --upgrade setuptools wheel
+    - name: Install/Upgrade black
+      run: python -m pip install --user --upgrade black
+    - name: Check code formatting with black
+      # The --include flag should be removed once all files are
+      # formatted with black. But as long as this is not the case, only
+      # check those files that are already formatted.
       run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E1,E2,E3,E4,E9,F63,F4,F7,F82,W1,W2,W3 --show-source --statistics
-        # exit-zero treats all errors as warnings
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=79 --statistics
-    - name: Lint docstrings with flake8
+        python -m black ./ --check --line-length 79 --include \
+        setup.py \
+        mdtools/__init__.py \
+        mdtools/_metadata.py \
+        mdtools/version.py
+    - name: Install/Upgrade flake8 and flake8-docstrings extension
+      run: python -m pip install --user --upgrade flake8 flake8-docstrings
+    - name: Lint code and docstrings with flake8
+      # Use setup.cfg to configure flake8
+      # The --select flag should be removed once all files are revised
+      # to be compliant with flake8. But as long as this is not the
+      # case, select only those error codes that have been fixed in all
+      # files.
       run: |
-        # stop the build if there are missing or malformed docstrings
-        flake8 . --count --select=D102 --show-source --statistics --docstring-convention numpy
-    - name: Test with pytest
-      run: |
-        pytest
+        python -m flake8 ./ --select=\
+        E1,E2,E3,E4,E9,\
+        F4,F7,F63,F82,\
+        W1,W2,W3
 
+  test:
+    # Only test after formatting and linting, because there is a very
+    # small chance that code formatting introduces errors into the code.
+    needs: lint
+    strategy:
+      matrix:
+        # Tests must be run on all target platforms and Python versions
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.6, 3.7, 3.8]
+      # Do not cancel in-progress jobs if any matrix job fails
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Export ${HOME}/.local/bin to ${PATH}
+      # Executable Python binaries are ususally stored there
+      run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+    - name: Get pip cache dir
+      # pip's cache path depends on the operating system, see
+      # https://github.com/actions/cache/blob/main/examples.md#python---pip
+      # This requires pip >=20.1
+      id: pip-cache
+      run: |
+        python -m pip install --user --upgrade pip
+        echo "::set-output name=dir::$(pip cache dir)"
+    - name: Create/Restore Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ steps.pip-cache.outputs.dir }}/**
+          ./docs/build/**
+          ~/docs/build/**
+          ./.pytest_cache/**
+          ~/.pytest_cache/**
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.python-version }}-
+          ${{ runner.os }}-
+    - name: Install/Upgrade setuptools and wheel
+      run: python -m pip install --user --upgrade setuptools wheel
+    - name: Test installation of MDTools
+      run: |
+        python -m pip install --user --upgrade .
+        python -c "import mdtools"
+    - name: Install/Upgrade requirements to build the documentation
+      run: python -m pip install --user --upgrade -r docs/requirements.txt
+    - name: Test build of the documentation
+      run: make -C ./docs/ html
+    - name: doctest
+      # Because the default dtypes of NumPy arrays are different on
+      # Windows, doctest will detect false failures. See e.g.
+      # https://stackoverflow.com/questions/36278590/numpy-array-dtype-is-coming-as-int32-by-default-in-a-windows-10-64-bit-machine
+      if: ${{ runner.os != 'Windows' }}
+      run: make -C ./docs/ doctest
+    - name: Install/Upgrade PyTest
+      run: python -m pip install --user --upgrade pytest
+    - name: Test code with pytest
+      run: python -m pytest ./
+
+  # Scan the code for security vulnerabilities with CodeQL.
+  # See: https://github.com/github/codeql-action
+  codeql:
+    # Only test after formatting and linting, because there is a very
+    # small chance that code formatting introduces errors into the code.
+    needs: lint
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        python-version: [ 3.8 ]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      security-events: write
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Export ${HOME}/.local/bin to ${PATH}
+      # Executable Python binaries are ususally stored there
+      run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+    - name: Get pip cache dir
+      # pip's cache path depends on the operating system, see
+      # https://github.com/actions/cache/blob/main/examples.md#python---pip
+      # This requires pip >=20.1
+      id: pip-cache
+      run: |
+        python -m pip install --user --upgrade pip
+        echo "::set-output name=dir::$(pip cache dir)"
+    - name: Create/Restore Cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}/**
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.python-version }}-
+          ${{ runner.os }}-
+    - name: Install/Upgrade setuptools and wheel
+      run: python -m pip install --user --upgrade setuptools wheel
+    - name: Install/Upgrade requirements of MDTools
+      run: |
+        python -m pip install --user --upgrade -r requirements.txt
+        # Set the `CODEQL-PYTHON` environment variable to the Python
+        # executable that includes the dependencies
+        echo "CODEQL_PYTHON=$(which python)" >> ${GITHUB_ENV}
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: python
+        # Override the default behavior so that the action doesn't
+        # attempt to auto-install Python dependencies. See:
+        # https://docs.github.com/en/code-security/secure-coding/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#analyzing-python-dependencies
+        setup-python-dependencies: false
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
