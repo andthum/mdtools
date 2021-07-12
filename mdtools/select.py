@@ -23,7 +23,6 @@ Functions to select atoms from MDAnalysis
 
 
 # Standard libraries
-import os
 import warnings
 from datetime import datetime
 # Third party libraries
@@ -81,7 +80,7 @@ def universe(top, trj, verbose=True, **kwargs):
     if verbose:
         print("Creating universe...")
         timer = datetime.now()
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
     universe = mda.Universe(top, trj, **kwargs)
     if universe.atoms.n_atoms == 0:
         warnings.warn("The created Universe contains no atoms",
@@ -159,7 +158,7 @@ def atoms(ag, sel, warn_empty=True, verbose=True, **kwargs):
     if verbose:
         print("Creating selection...")
         timer = datetime.now()
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
         print("Selection string: '{}'".format(sel))
     selection = ag.select_atoms(sel, **kwargs)
     if (warn_empty and

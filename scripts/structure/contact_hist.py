@@ -203,7 +203,7 @@ def cmp_contact_count_matrices(
 
 if __name__ == '__main__':
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
     proc.cpu_percent()  # Initiate monitoring of CPU usage
     parser = argparse.ArgumentParser(
         description=(

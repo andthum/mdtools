@@ -363,7 +363,7 @@ def autocorr_bound(cms, restart=1, debug=False):
                 raise TypeError("All arrays in cms must be of the same"
                                 " type")
 
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
     n_frames = len(cms)
     autocorr = np.full(n_frames, np.nan, dtype=np.float32)
 
@@ -462,7 +462,7 @@ def autocorr_unbound(cms, axis, restart=1, debug=False):
                 raise TypeError("All arrays in cms must be of the same"
                                 " type")
 
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
     n_frames = len(cms)
     autocorr = np.full(n_frames, np.nan, dtype=np.float32)
 
@@ -584,7 +584,7 @@ def fit_kww(xdata, ydata, ysd=None):
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
 
     args = parse_user_input()
 

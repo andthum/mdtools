@@ -34,7 +34,7 @@ import mdtools as mdt
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
 
     parser = argparse.ArgumentParser(
         description=(

@@ -30,7 +30,7 @@ from msd_serial import parse_user_input, get_COMs, calc_msd
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
 
     additional_description = (
         " This script is parallelized. The number of CPUs to use is"

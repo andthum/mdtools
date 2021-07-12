@@ -28,7 +28,6 @@ This module can be called from :mod:`mdtools` via the shortcut ``dyn``::
 
 
 # Standard libraries
-import os
 import warnings
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -452,7 +451,7 @@ def correct_intermittency(
     """
     if verbose:
         timer = datetime.now()
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
         proc.cpu_percent()  # Initiate monitoring of CPU usage
         print("Running mdtools.dynamics.correct_intermittency()...")
     if intermittency > np.uint16(-1) - 1:
@@ -799,7 +798,7 @@ def replace_short_sequences(
     """
     if verbose:
         timer = datetime.now()
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
         proc.cpu_percent()  # Initiate monitoring of CPU usage
         print("Running mdtools.dynamics.replace_short_sequences()...")
     if min_len > np.uint16(-1):
@@ -1009,7 +1008,7 @@ def replace_short_sequences_global(
     """
     if verbose:
         timer = datetime.now()
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
         proc.cpu_percent()  # Initiate monitoring of CPU usage
         print("Running mdtools.dynamics.replace_short_sequences_global()...")
     if min_len > np.uint16(-1):

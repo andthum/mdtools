@@ -103,7 +103,7 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
 
     parser = argparse.ArgumentParser(
         description=(
