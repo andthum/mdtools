@@ -39,7 +39,7 @@ __title__ = "mdtools"
 #: name in the authors list in AUTHORS.rst
 __author__ = "Andreas Thum, Len Kimms"
 # Remove possible dublicates and ensure alphabetical order
-author_list = sorted(set(__author__.split(", ")), key=str.lower)
+author_list = sorted(set(map(str.strip, __author__.split(","))), key=str.lower)
 if __author__ != ", ".join(author_list):
     raise ValueError(
         "'__author__' contains dublicates or is not ordered alphabetically"
@@ -51,7 +51,9 @@ __author__ = ", ".join(author_list)
 #: full names.
 __maintainer__ = "Andreas Thum"
 # Remove possible dublicates and ensure alphabetical order
-maintainer_list = sorted(set(__maintainer__.split(", ")), key=str.lower)
+maintainer_list = sorted(
+    set(map(str.strip, __maintainer__.split(","))), key=str.lower
+)
 if __maintainer__ != ", ".join(maintainer_list):
     raise ValueError(
         "'__maintainer__' contains dublicates or is not ordered alphabetically"
@@ -68,7 +70,9 @@ __email__ = "andr.thum@gmail.com"
 #: which this project would not exist.  Sort entries alphabetically!
 __credits__ = "matplotlib, MDAnalysis, NumPy, Scipy"
 # Remove possible dublicates and ensure alphabetical order
-credits_list = sorted(set(__credits__.split(", ")), key=str.lower)
+credits_list = sorted(
+    set(map(str.strip, __credits__.split(","))), key=str.lower
+)
 if __credits__ != ", ".join(credits_list):
     raise ValueError(
         "'__credits__' contains dublicates or is not ordered alphabetically"
