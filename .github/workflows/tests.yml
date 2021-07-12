@@ -1,22 +1,17 @@
-# 1.) Format code
-# 2.) Lint code
-# 3.) Test code
-# 4.) Scan code for security vulnerabilities
-#
+# 1.) Format and Lint code
+# 2.) Test code
 # See:
 # https://docs.github.com/en/actions/guides/building-and-testing-python
-# and
-# https://github.com/github/codeql-action
 
 name: Tests
 
 on:
   push:
-    branches: [ main ]
-    tags: [ "v[0-9].[0-9].[0-9]*" ]
+    branches: [main, develop]
+    tags: ["v[0-9].[0-9].[0-9]*"]
   pull_request:
     # Run this workflow on every PR, except for PRs that only changes
-    # files from the following ignore list
+    # files from the following ignore list.
     paths-ignore:
       - ./.github/*TEMPLATE**
       - ./.github/*template**
@@ -39,8 +34,8 @@ jobs:
   lint:
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
-        python-version: [ 3.8 ]
+        os: [ubuntu-latest]
+        python-version: [3.8]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout repository
@@ -60,7 +55,7 @@ jobs:
       run: |
         python -m pip install --user --upgrade pip
         echo "::set-output name=dir::$(pip cache dir)"
-    - name: Create/Restore Cache
+    - name: Create/Restore cache
       uses: actions/cache@v2
       with:
         path: |
@@ -100,9 +95,6 @@ jobs:
         W1,W2,W3
 
   test:
-    # Only test after formatting and linting, because there is a very
-    # small chance that code formatting introduces errors into the code.
-    needs: lint
     strategy:
       matrix:
         # Tests must be run on all target platforms and Python versions
@@ -129,7 +121,7 @@ jobs:
       run: |
         python -m pip install --user --upgrade pip
         echo "::set-output name=dir::$(pip cache dir)"
-    - name: Create/Restore Cache
+    - name: Create/Restore cache
       uses: actions/cache@v2
       with:
         path: |
@@ -162,61 +154,3 @@ jobs:
       run: python -m pip install --user --upgrade pytest
     - name: Test code with pytest
       run: python -m pytest ./
-
-  # Scan the code for security vulnerabilities with CodeQL.
-  # See: https://github.com/github/codeql-action
-  codeql:
-    # Only test after formatting and linting, because there is a very
-    # small chance that code formatting introduces errors into the code.
-    needs: lint
-    strategy:
-      matrix:
-        os: [ ubuntu-latest ]
-        python-version: [ 3.8 ]
-    runs-on: ${{ matrix.os }}
-    permissions:
-      security-events: write
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Export ${HOME}/.local/bin to ${PATH}
-      # Executable Python binaries are ususally stored there
-      run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
-    - name: Get pip cache dir
-      # pip's cache path depends on the operating system, see
-      # https://github.com/actions/cache/blob/main/examples.md#python---pip
-      # This requires pip >=20.1
-      id: pip-cache
-      run: |
-        python -m pip install --user --upgrade pip
-        echo "::set-output name=dir::$(pip cache dir)"
-    - name: Create/Restore Cache
-      uses: actions/cache@v2
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}/**
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.python-version }}-
-          ${{ runner.os }}-
-    - name: Install/Upgrade setuptools and wheel
-      run: python -m pip install --user --upgrade setuptools wheel
-    - name: Install/Upgrade requirements of MDTools
-      run: |
-        python -m pip install --user --upgrade -r requirements.txt
-        # Set the `CODEQL-PYTHON` environment variable to the Python
-        # executable that includes the dependencies
-        echo "CODEQL_PYTHON=$(which python)" >> ${GITHUB_ENV}
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v1
-      with:
-        languages: python
-        # Override the default behavior so that the action doesn't
-        # attempt to auto-install Python dependencies. See:
-        # https://docs.github.com/en/code-security/secure-coding/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#analyzing-python-dependencies
-        setup-python-dependencies: false
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
