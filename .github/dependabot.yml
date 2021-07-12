@@ -17,12 +17,11 @@ updates:
     ignore:
       - dependency-name: matplotlib
     insecure-external-code-execution: deny
-    reviewers: andthum
+    reviewers: [ andthum ]
 
   - package-ecosystem: github-actions
     # Where to search for .github/workflows/
     directory: ./
     schedule:
       interval: weekly
-    insecure-external-code-execution: deny
-    reviewers: andthum
+    reviewers: [ andthum ]
