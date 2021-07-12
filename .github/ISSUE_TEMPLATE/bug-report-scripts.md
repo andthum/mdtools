@@ -30,7 +30,7 @@ If applicable, add screenshots to help explain your problem.
  - OS: [e.g. Ubuntu]
  - OS Version: [e.g. 20.04.2 LTS]
  - OS Type: [32-bit or 64-bit]
- - RAM: [e.g. 15.4 GiB]
+ - RAM: [e.g. 15.4 GiB]
  - CPU: [e.g. Intel Core i7-10750H CPU @ 2.60GHz x 12]
 
 **Additional context**

@@ -100,23 +100,21 @@ if __name__ == "__main__":
     setuptools.setup(
         name=get_varstring("mdtools/_metadata.py", "__title__"),
         version=get_varstring("mdtools/version.py", "__version__"),
-        author="Andreas Thum",
-        author_email="andr.thum@gmail.com",
-        maintainer=get_varstring(
-            "mdtools/_metadata.py", "__maintainer__"
-        ),
-        maintainer_email=get_varstring(
-            "mdtools/_metadata.py", "__email__"
-        ),
+        author=get_varstring("mdtools/_metadata.py", "__author__"),
+        maintainer=get_varstring("mdtools/_metadata.py", "__maintainer__"),
+        maintainer_email=get_varstring("mdtools/_metadata.py", "__email__"),
         url="https://github.com/andthum/mdtools",
         project_urls={
             "Source": "https://github.com/andthum/mdtools",
             "Documentation": "https://mdtools.readthedocs.io/en/latest/",
             "Issue Tracker": "https://github.com/andthum/mdtools/issues",
             "Feature Requests": "https://github.com/andthum/mdtools/issues",
-            "Q&A": "https://github.com/andthum/mdtools/discussions/categories/q-a",
+            "Q&A": "https://github.com/andthum/mdtools/discussions/categories/q-a",  # noqa: E501
         },
-        description="Python scripts to prepare and analyze molecular dynamics simulations",
+        description=(
+            "Python scripts to prepare and analyze molecular dynamics"
+            " simulations"
+        ),
         long_description=get_content("README.rst"),
         long_description_content_type="text/x-rst",
         license=get_varstring("mdtools/_metadata.py", "__license__"),
@@ -124,9 +122,11 @@ if __name__ == "__main__":
             "Development Status :: 3 - Alpha",
             "Environment :: Console",
             "Intended Audience :: Science/Research",
-            "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+            "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",  # noqa: E501
             "Natural Language :: English",
-            "Operating System :: Unix",
+            "Operating System :: MacOS",
+            "Operating System :: Microsoft :: Windows",
+            "Operating System :: POSIX :: Linux",
             "Programming Language :: Python :: 3 :: Only",
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
@@ -138,7 +138,10 @@ if __name__ == "__main__":
             "Topic :: Software Development :: Libraries :: Python Modules",
             "Topic :: Utilities",
         ],
-        keywords="molecular dynamics simulation analysis preparation chemistry physics materials science",
+        keywords=(
+            "molecular-dynamics computational-science computational-chemistry"
+            " materials-science"
+        ),
         packages=setuptools.find_packages(include=["mdtools"]),
         include_package_data=True,
         python_requires=">=3.6, <3.9",

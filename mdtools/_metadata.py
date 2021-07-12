@@ -39,7 +39,11 @@ __title__ = "mdtools"
 #: name in the authors list in AUTHORS.rst
 __author__ = "Andreas Thum, Len Kimms"
 # Remove possible dublicates and ensure alphabetical order
-author_list = sorted(set(__author__.split(", ")), key=str.lower)
+author_list = sorted(set(map(str.strip, __author__.split(","))), key=str.lower)
+if __author__ != ", ".join(author_list):
+    raise ValueError(
+        "'__author__' contains dublicates or is not ordered alphabetically"
+    )
 __author__ = ", ".join(author_list)
 
 #: String containig the name(s) of the maintainer(s) of this project,
@@ -47,7 +51,13 @@ __author__ = ", ".join(author_list)
 #: full names.
 __maintainer__ = "Andreas Thum"
 # Remove possible dublicates and ensure alphabetical order
-maintainer_list = sorted(set(__maintainer__.split(", ")), key=str.lower)
+maintainer_list = sorted(
+    set(map(str.strip, __maintainer__.split(","))), key=str.lower
+)
+if __maintainer__ != ", ".join(maintainer_list):
+    raise ValueError(
+        "'__maintainer__' contains dublicates or is not ordered alphabetically"
+    )
 __maintainer__ = ", ".join(maintainer_list)
 del maintainer_list
 
@@ -57,17 +67,24 @@ __email__ = "andr.thum@gmail.com"
 
 #: Acknowledgments to people that advanced the project without writing
 #: code or documentation and acknowledgments to other projects without
-#: which this project would not exist.
-__credits__ = "MDAnalysis, NumPy, Scipy, matplotlib"
+#: which this project would not exist.  Sort entries alphabetically!
+__credits__ = "matplotlib, MDAnalysis, NumPy, Scipy"
 # Remove possible dublicates and ensure alphabetical order
-credits_list = sorted(set(__credits__.split(", ")), key=str.lower)
+credits_list = sorted(
+    set(map(str.strip, __credits__.split(","))), key=str.lower
+)
+if __credits__ != ", ".join(credits_list):
+    raise ValueError(
+        "'__credits__' contains dublicates or is not ordered alphabetically"
+    )
+__credits__ = ", ".join(credits_list)
 # Make sure that no authors are mentioned in the credits:
 for a in author_list:
     if a in credits_list:
-        credits_list.remove(a)
-del author_list
-__credits__ = ", ".join(credits_list)
-del credits_list
+        raise ValueError(
+            "{} is mentioned in '__author__' and in '__credits__'".format(a)
+        )
+del author_list, credits_list
 
 # from datetime import datetime
 # now = datetime.now()
