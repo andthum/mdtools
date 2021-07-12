@@ -3,6 +3,6 @@
 # These requirements apply additional to the install requirements of in
 # the root level of MDTools.
 
-sphinx >=3.0, <4.0
+sphinx >=3.0, <5.0
 sphinx_rtd_theme >=0.5, <1.0
 readthedocs-sphinx-search >=0.1, <1.0
