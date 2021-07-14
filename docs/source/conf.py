@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+# Sort configuration options in the same order as in the documentation
+# of Spinx.
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
+
 """
 Configuration file for the Sphinx documentation builder.
 
@@ -40,12 +44,18 @@ for script_dir in os.walk(script_path):
 
 # -- Project information -----------------------------------------------
 
+# The documented project's name.
 project = mdt.__title__
-authors = mdt.__author__
+
+# The author name(s) of the document.
+author = mdt.__author__
+
+# A copyright statement in the style "2008, Author Name".
 copyright = mdt.__copyright__[14:]
 
 # The short X.Y version
 version = mdt.__version__
+
 # The full version, including alpha/beta/rc tags.  If you do not need
 # the separation provided between version and release, just set them
 # both to the same value.
@@ -54,61 +64,62 @@ release = mdt.__version__
 
 # -- General configuration ---------------------------------------------
 
-# If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = "3.0"
-
-# The master toctree document.
-master_doc = "index"
-
-# The suffix(es) of source filenames.
-source_suffix = {".rst": "restructuredtext"}
-
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.  This pattern
-# also affects html_static_path and html_extra_path.
-exclude_patterns = []
-
-# The name of the default domain.
-primary_domain = "py"
-
-# The name of a reStructuredText role (builtin or Sphinx extension) to
-# use as the default role, that is, for text marked up `like this`.
-# default_role = None
-
-# The default language to highlight source code in.
-highlight_language = "python3"
-
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = None
-
-# Add any Sphinx extension module names here, as strings.  They can be
-# extensions coming with Sphinx (named "sphinx.ext.*") or your custom
-# ones.
+# Sphinx extension module names as strings.
 extensions = [
-    "sphinx.ext.autodoc",  # Include documentation from docstrings
-    # "sphinx.ext.autosectionlabel",  # Allow reference sections using its title
-    "sphinx.ext.autosummary",  # Generate autodoc summaries
-    "sphinx.ext.coverage",  # Collect doc coverage stats
-    "sphinx.ext.doctest",  # Test snippets in the documentation
-    "sphinx.ext.duration",  # Measure durations of Sphinx processing
-    # "sphinx.ext.githubpages",  # Publish HTML docs in GitHub Pages
-    # "sphinx.ext.inheritance_diagram",  # Include inheritance diagrams
-    "sphinx.ext.intersphinx",  # Link to other projects' documentation
-    "sphinx.ext.mathjax",  # Render math via JavaScript for HTML output
-    "sphinx.ext.napoleon",  # Support for NumPy and Google style docstrings
-    "sphinx.ext.todo",  # Support for todo items
-    "sphinx.ext.viewcode",  # Add links to highlighted source code
-    "sphinx_rtd_theme",  # Read the Docs Sphinx Theme
-    "sphinx_search.extension",  # Enable "search-as-you-type" on Read the Docs
+    # Include documentation from docstrings
+    "sphinx.ext.autodoc",
+    # Allow reference sections using its title
+    #  "sphinx.ext.autosectionlabel",
+    # Generate autodoc summaries
+    "sphinx.ext.autosummary",
+    # Collect doc coverage stats
+    "sphinx.ext.coverage",
+    # Test snippets in the documentation
+    "sphinx.ext.doctest",
+    # Measure durations of Sphinx processing
+    "sphinx.ext.duration",
+    # Publish HTML docs in GitHub Pages
+    #  "sphinx.ext.githubpages",
+    # Include inheritance diagrams
+    #  "sphinx.ext.inheritance_diagram",
+    # Link to other projects' documentation
+    "sphinx.ext.intersphinx",
+    # Render math via JavaScript for HTML output
+    "sphinx.ext.mathjax",
+    # Support for NumPy and Google style docstrings
+    "sphinx.ext.napoleon",
+    # Support for todo items
+    "sphinx.ext.todo",
+    # Add links to highlighted source code
+    "sphinx.ext.viewcode",
+    # Read the Docs Sphinx Theme
+    "sphinx_rtd_theme",
+    # Enable "search-as-you-type" on Read the Docs
+    "sphinx_search.extension",
 ]
 
-# Add any paths that contain templates here, relative to this directory.
+# The file extensions of source files.
+source_suffix = {".rst": "restructuredtext"}
+
+# The document that contains the root toctree directive.
+root_doc = "index"
+
+# A list of glob-style patterns that should be excluded when looking for
+# source files.  They are matched against the source file names relative
+# to the source directory, using slashes as directory separators on all
+# platforms.  exclude_patterns is also consulted when looking for static
+# files in html_static_path and html_extra_path.
+exclude_patterns = []
+
+# A list of paths that contain extra templates (or templates that
+# overwrite builtin/theme-specific templates).  Relative paths are taken
+# as relative to the configuration directory.
 templates_path = ["_templates"]
 
-# A string of reStructuredText that will be included at the beginning of
-# every source file that is read.  This is a possible place to add
+# A string of reStructuredText that will be included at the end of every
+# source file that is read.  This is a possible place to add
 # substitutions that should be available in every file
-rst_prolog = """
+rst_epilog = """
 .. role:: bash(code)
     :language: bash
 .. role:: raw-html(raw)
@@ -177,7 +188,49 @@ rst_prolog = """
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/selections.html">selection syntax</a>`
 .. |explanation_of_these_terms| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/groups_of_atoms.html">explanation of these terms</a>`
-"""
+"""  # noqa: E501
+
+# The name of the default domain.
+primary_domain = "py"
+
+# The name of a reStructuredText role (builtin or Sphinx extension) to
+# use as the default role, that is, for text marked up `like this`.
+default_role = None
+
+# If your documentation needs a minimal Sphinx version, state it here.
+needs_sphinx = "4.0"
+
+# If true, Sphinx will warn about all references where the target cannot
+# be found.
+# Would be nice if we could activate this.  However, therefore we have
+# to revise a lot of docstrings first.
+nitpicky = False
+
+# The default language to highlight source code in.
+highlight_language = "python3"
+
+# The style name to use for Pygments highlighting of source code.
+pygments_style = None
+
+# Whether parentheses are appended to function and method role texts.
+add_function_parentheses = True
+
+# Whether module names are prepended to all object names.
+add_module_names = True
+
+# Whether codeauthor and sectionauthor directives produce any output in
+# the built files.
+show_authors = True
+
+# Trim spaces before footnote references that are necessary for the
+# reStructuredText parser to recognize the footnote, but do not look too
+# nice in the output.
+trim_footnote_reference_space = True
+
+# If true, doctest flags (comments looking like # doctest: FLAG, ...) at
+# the ends of lines and <BLANKLINE> markers are removed for all code
+# blocks showing interactive Python sessions (i.e. doctests).
+trim_doctest_flags = True
 
 
 # -- Options for internationalization ----------------------------------
@@ -192,7 +245,7 @@ language = "en"
 
 # -- Options for HTML output -------------------------------------------
 
-# The "theme" that the HTML output should use.
+# The theme that the HTML output should use.
 html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a
@@ -222,38 +275,42 @@ html_logo = "../logo/mdtools_logo_192x135.png"
 # large.
 html_favicon = "../logo/mdtools_favicon_32x32.png"
 
-# Add any paths that contain custom static files (such as style sheets)
-# here, relative to this directory.  They are copied after the builtin
-# static files, so a file named "default.css" will overwrite the builtin
-# "default.css".
+# A list of CSS files.  Filenams must be relative to html_static_path.
+html_css_files = ["custom.css"]
+
+# A list of paths that contain custom static files (such as style sheets
+# or script files).  Relative paths are taken as relative to the
+# configuration directory.
 html_static_path = ["_static"]
-
-
-def setup(app):
-    """
-    Limit the line length of tables to avoid horizontal scrollbars.
-
-    See
-    https://stackoverflow.com/questions/40641252/how-can-i-avoid-the-horizontal-scrollbar-in-a-rest-table
-    """
-    app.add_css_file("custom.css")
-
 
 # If this is not None, a "Last updated on:" timestamp is inserted at
 # every page bottom, using the given strftime() format.  The empty
-# string is equivalent to "%b %d, %Y" (or a locale-dependent equivalent).
+# string is equivalent to "%b %d, %Y" (or a locale-dependent equivalent)
 # html_last_updated_fmt = ""
+
+# Whether to add permalinks for each heading and description environment
+html_permalinks = True
 
 # If True, add an index to the HTML documents.
 html_use_index = True
 
+# If True, the index is generated twice: once as a single page with all
+# the entries, and once as one page per starting letter.
+html_split_index = False
+
 # If True, the reStructuredText sources are included in the HTML build
 # as _sources/name.
-html_copy_source = True
+html_copy_source = False
 
 # If True (and html_copy_source is True as well), links to the
 # reStructuredText sources will be added to the sidebar.
-html_show_sourcelink = True
+html_show_sourcelink = False
+
+# If nonempty, an OpenSearch description file will be output, and all
+# pages will contain a <link> tag referring to it.   the value of this
+# option must be the base URL from which these documents are served
+# (without trailing slash)
+html_use_opensearch = "https://mdtools.readthedocs.io"
 
 # If True, "(C) Copyright ..." is shown in the HTML footer.
 html_show_copyright = True
@@ -261,14 +318,19 @@ html_show_copyright = True
 # If True, "Created using Sphinx" is shown in the HTML footer.
 html_show_sphinx = True
 
+# Suffix for section numbers.
+html_secnumber_suffix = ") "
+
 
 # -- Options for HTML help output --------------------------------------
+# These options influence the epub output. As this builder derives from
+# the HTML builder, the HTML options also apply where appropriate.
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "mdtoolsdoc"
 
 
-# -- Options for Epub output -------------------------------------------
+# -- Options for epub output -------------------------------------------
 
 # The HTML theme for the epub output.
 epub_theme = "epub"
@@ -276,23 +338,74 @@ epub_theme = "epub"
 # The description of the document. The default value is 'unknown'.
 epub_description = "MDTools' Documentation"
 
+# An identifier for the document.
+epub_identifier = "https://github.com/andthum/mdtools"
+
+# The publication scheme for the epub_identifier.
+epub_scheme = "URL"
+
+# Control whether to display URL addresses.
+epub_show_urls = "footnote"
+
 
 # -- Options for LaTeX output ------------------------------------------
 
 # The LaTeX engine to build the docs.
-latex_engine = "pdflatex"
+latex_engine = "xelatex"
+
+# The theme that the LaTeX output should use.
+latex_theme = "manual"
+
+# latex_documents determines how to group the document tree into LaTeX
+# source files.
+_startdocname = root_doc
+_targetname = htmlhelp_basename + ".tex"
+_title = "MDTools Documentation"
+_author = r" \and ".join(author.split(", "))
+_theme = latex_theme
+_toctree_only = False
+latex_documents = [
+    _startdocname,
+    _targetname,
+    _title,
+    _author,
+    _theme,
+    _toctree_only,
+]
 
 # If given, this must be the name of an image file (relative to the
 # configuration directory) that is the logo of the docs.
-latex_logo = None
+latex_logo = "../logo/mdtools_label_3900x760.png"
 
-# If true, add page references after internal references.  This is very
-# useful for printed copies of the manual.
+# This value determines the topmost sectioning unit.
+# latex_toplevel_sectioning = None
+
+# Whether to add page references after internal references.
 latex_show_pagerefs = True
 
-# Control whether to display URL addresses.  This is very useful for
-# printed copies of the manual.
-latex_show_urls = "footnote"
+# Control whether to display URL addresses.
+latex_show_urls = epub_show_urls
+
+# If True, the PDF build from the LaTeX files created by Sphinx will use
+# xindy rather than makeindex for preparing the index of general terms.
+# latex_use_xindy = True
+
+# A dictionary that contains LaTeX snippets overriding those Sphinx
+# usually puts into the generated .tex files.
+latex_elements = {
+    "papersize": "a4paper",
+    "pointsize": "12pt",
+    "extrapackages": r"\usepackage{unicode-math}",
+}
+
+
+# -- Options for text output -------------------------------------------
+
+# Determines which end-of-line character(s) are used in text output.
+text_newlines = "native"
+
+# Suffix for section numbers in text output.
+text_secnumber_suffix = html_secnumber_suffix
 
 
 # -- Extension configuration -------------------------------------------
@@ -301,9 +414,7 @@ latex_show_urls = "footnote"
 # This value selects what content will be inserted into the main body of
 # an autoclass directive.
 # See also napoleon_include_init_with_doc
-autoclass_content = (
-    "both"  # class and __init__ docstring are concatenated
-)
+autoclass_content = "both"  # class and __init__ docstring are concatenated
 
 # This value selects how automatically documented members are sorted.
 # See also autodoc_default_options
@@ -351,9 +462,28 @@ autodoc_inherit_docstrings = True
 
 # -- Options for autosummary extension ---------------------------------
 
-# Boolean indicating whether to scan all found documents for autosummary
-# directives, and to generate stub pages for each.
+# Whether to scan all found documents for autosummary directives, and to
+# generate stub pages for each.
 autosummary_generate = True
+
+# Whether to overwrites existing files by generated stub pages.
+autosummary_generate_overwrite = True
+
+# Whether to document classes and functions imported in modules.
+autosummary_imported_members = False
+
+
+# -- Options for coverage extension ------------------------------------
+
+# Whether to write headlines.
+coverage_write_headline = True
+
+# Whether to skip objects that are not documented in the source with a
+# docstring.
+coverage_skip_undoc_in_source = False
+
+# Whether to print objects that are missing to standard output.
+coverage_show_missing_items = True
 
 
 # -- Options for doctest extension -------------------------------------
@@ -387,6 +517,9 @@ intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
 }
 
+# The maximum number of days to cache remote inventories (in days).
+intersphinx_cache_limit = 7
+
 
 # -- Options for napoleon extension ------------------------------------
 
@@ -416,9 +549,37 @@ napoleon_numpy_docstring = True
 # See also autodoc_default_options
 # napoleon_include_special_with_doc = False
 
+# True to use the .. admonition:: directive for the Example and Examples
+# sections.  False to use the .. rubric:: directive instead.
+napoleon_use_admonition_for_examples = False
+
+# True to use the .. admonition:: directive for Notes sections.  False
+# to use the .. rubric:: directive instead.
+napoleon_use_admonition_for_notes = napoleon_use_admonition_for_examples
+
+# True to use the .. admonition:: directive for References sections.
+# False to use the .. rubric:: directive instead.
+napoleon_use_admonition_for_references = napoleon_use_admonition_for_examples
+
+# True to use the :ivar: role for instance variables.  False to use the
+# .. attribute:: directive instead.
+napoleon_use_ivar = False
+
 # True to use a :param: role for each function parameter.  False to use
 # a single :parameters: role for all the parameters.
 napoleon_use_param = False
+
+# True to use a :keyword: role for each function keyword argument.
+# False to use a single :keyword arguments: role for all the keywords.
+napoleon_use_keyword = napoleon_use_param
+
+# True to use the :rtype: role for the return type. False to output the
+# return type inline with the description.
+napoleon_use_rtype = False
+
+# Whether to convert the type definitions in the docstrings as
+# references.
+napoleon_preprocess_types = True
 
 
 # -- Options for todo extension ----------------------------------------
@@ -426,3 +587,6 @@ napoleon_use_param = False
 # If this is True, todo and todolist directives produce output, else
 # they produce nothing.
 todo_include_todos = True
+
+# If True, todo emits a warning for each TODO entry.
+todo_emit_warnings = False
