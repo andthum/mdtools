@@ -79,6 +79,7 @@ jobs:
         docs/source/conf.py \
         mdtools/__init__.py \
         mdtools/_metadata.py \
+        mdtools/plot.py \
         mdtools/run_time_info.py \
         mdtools/version.py \
         scripts/script_template.py \

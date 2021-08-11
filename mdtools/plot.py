@@ -18,72 +18,125 @@
 
 """General plotting functions on the basis of :mod:`matplotlib.pyplot`"""
 
-import numpy as np
+# Standard libraries
+import os
+import warnings
+
+# Third party libraries
 import matplotlib
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-import warnings
+import numpy as np
 
 
-plt.rc('axes', linewidth=2)
-plt.rc('lines', linewidth=2)
-plt.rc('lines', markersize=8)
-plt.rc('xtick.major', width=2)
-plt.rc('xtick.minor', width=2)
-plt.rc('ytick.major', width=2)
-plt.rc('ytick.minor', width=2)
-plt.rc('text', usetex=True)
-plt.rcParams['text.latex.preview'] = True
-plt.rc('font', **{'family': 'serif', 'serif': 'Times'})
+# Load custom matplotlib style sheet.  See
+# https://matplotlib.org/stable/tutorials/introductory/customizing.html
+file_root = os.path.abspath(os.path.dirname(__file__))
+stylefile = os.path.join(file_root, "./../styles/mdtools.mplstyle")
+plt.style.use(["default", stylefile])
+
+# Alignment of offsetText of colorbars
+CBAR_YAX_HALIGN = "left"
+CBAR_YAX_VALIGN = "bottom"
+
+# Settings for legends with fontsize 'x-small' (one times smaller than
+# the default fontsize)
+LEGEND_KWARGS_XSMALL = {
+    "fontsize": "x-small",
+    "borderaxespad": 0.8,
+    "labelspacing": 0.25,
+    "handlelength": 1.6,
+    "handletextpad": 0.5,
+    "columnspacing": 1.4,
+}
 
 
-# Deprecated ###########################################################
 class MidpointNormalize(colors.Normalize):
     """
-    Deprecated!
+    Class to define your own colorbar normalization.
 
-    Class to define your own colorbar normalization. This is e.g. useful
-    when you want that a diverging colorbar is centerd at zero. Just
-    parse ``norm = mdt.plot.MidpointNormalize(midpoint=0.0)`` to the
-    plotting function.
+    .. deprecated:: 0.0.0.dev0
+        Use :class:`matplotlib.colors.CenteredNorm` or
+        :class:`matplotlib.colors.TwoSlopeNorm` instead.
 
-    Needs ``import matplotlib.colors as colors``. See
-    `Colormap Normalization`_ for more information.
+    Renormalizing a colorbar is for instance useful when you want that a
+    diverging colorbar is centerd at zero.  Just parse
+    ``norm = mdtplt.MidpointNormalize(midpoint=0.0)`` to the plotting
+    function.
+
+    See `Colormap Normalization`_ for more information.
 
     .. _Colormap Normalization: https://matplotlib.org/users/colormapnorms.html#custom-normalization-two-linear-ranges
-    """
-
-    warnings.warn("This class is deprecated. If your version of"
-                  " matplotlib is 3.2, consider using"
-                  " matplotlib.colors.TwoSlopeNorm instead. If your"
-                  " version is 3.1, consider using"
-                  " matplotlib.colors.DivergingNorm instead.",
-                  DeprecationWarning)
+    """  # noqa: W505, E501
 
     def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
+        """
+        Initialize the Normalization.
+
+        Parameters
+        ----------
+        vmin : float, optional
+            The data value that defines 0.0 in the normalization.
+            Defaults to the min value of the dataset.
+        vmax : float, optional
+            The data value that defines 1.0 in the normalization.
+            Defaults to the the max value of the dataset.
+        midpoint : float, optional
+            The data value that defines 0.5 in the normalization.
+        clip : bool, optional
+            This argument is without use!
+        """
+        warnings.warn(
+            "Use 'matplotlib.colors.CenteredNorm' or"
+            " 'matplotlib.colors.TwoSlopeNorm' instead",
+            DeprecationWarning,
+        )
         self.midpoint = midpoint
         colors.Normalize.__init__(self, vmin, vmax, clip)
 
     def __call__(self, value, clip=None):
         """
-        Map value to the interval [0, 1]. The clip argument is unused.
+        Map data to the interval [0, 1].
+
+        Parameters
+        ----------
+        value : array_like
+            The data to use for normalizing the colormap.
+        clip : bool, optional
+            This argument is without use!
         """
         # Including masked values, but ignoring clipping and other edge
-        # cases
+        # cases.  See https://stackoverflow.com/a/48598564
         result, is_scalar = self.process_value(value)
         x, y = [self.vmin, self.midpoint, self.vmax], [0, 0.5, 1]
-        return np.ma.array(np.interp(value, x, y),
-                           mask=result.mask,
-                           copy=False)
-# Deprecated ###########################################################
+        return np.ma.array(
+            np.interp(value, x, y), mask=result.mask, copy=False
+        )
 
 
-def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
-         logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
-         legend_loc='best', **kwargs):
+def plot(
+    ax,
+    x,
+    y,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    logx=False,
+    logy=False,
+    xlabel=r"$x$",
+    ylabel=r"$y$",
+    legend_loc="best",
+    **kwargs
+):
     """
     Plot data to a :class:`matplotlib.axes.Axes` object using
-    :func:`matplotlib.axes.Axes.plot`.
+    :meth:`matplotlib.axes.Axes.plot`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.plot`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
 
     Parameters
     ----------
@@ -94,28 +147,28 @@ def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
     y : array_like
         Array of the same shape as `x` containing the y data.
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        limit automatically.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the limit automatically.
     xmax : scalar, optional
-        Right limit for plotting on x-axis. Default is ``None``.
+        Right limit for plotting on x-axis.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     logx : bool, optional
-        Use logarithmic x scale. Default is ``False``.
+        Use logarithmic x scale.
     logy : bool, optional
         Same as `logx`, but for the y-axis.
     xlabel : str, optional
-        Label for the x-axis. Default is ``r'$x$'``.
+        Label for the x-axis.
     ylabel : str, optional
-        Label for the y-axis. Default is ``r'$y$'``.
+        Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
-        Keyword arguments to pass to :func:`matplotlib.axes.Axes.plot`.
-        Look there for possible keyword arguments.
+        Keyword arguments to pass to :meth:`matplotlib.axes.Axes.plot`.
+        See there for possible keyword arguments.
 
     Returns
     -------
@@ -123,6 +176,9 @@ def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
         A list of :class:`matplotlib.lines.Line2D` objects representing
         the plotted data.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.plot' instead", DeprecationWarning
+    )
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -133,9 +189,9 @@ def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
 
     img = ax.plot(x, y, **kwargs)
     if logx:
-        ax.set_xscale('log', basex=10, subsx=np.arange(2, 10))
+        ax.set_xscale("log", basex=10, subsx=np.arange(2, 10))
     if logy:
-        ax.set_yscale('log', basey=10, subsy=np.arange(2, 10))
+        ax.set_yscale("log", basey=10, subsy=np.arange(2, 10))
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
     ax.set_xlabel(xlabel=xlabel, fontsize=fontsize_labels)
@@ -144,35 +200,60 @@ def plot(ax, x, y, xmin=None, xmax=None, ymin=None, ymax=None,
     ax.yaxis.labelpad = label_pad
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
-    if kwargs.get('label') is not None:
-        ax.legend(loc=legend_loc,
-                  numpoints=1,
-                  frameon=False,
-                  fontsize=fontsize_legend)
+    ax.tick_params(
+        which="major",
+        direction="in",
+        top=True,
+        right=True,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="in",
+        top=True,
+        right=True,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
+    if kwargs.get("label") is not None:
+        ax.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img
 
 
-def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
-            ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
-            legend_loc='best', **kwargs):
+def scatter(
+    ax,
+    x,
+    y,
+    s=None,
+    c=None,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    logx=False,
+    logy=False,
+    xlabel=r"$x$",
+    ylabel=r"$y$",
+    legend_loc="best",
+    **kwargs
+):
     """
     Add a scatter plot to a :class:`matplotlib.axes.Axes` object using
-    :func:`matplotlib.axes.Axes.scatter`.
+    :meth:`matplotlib.axes.Axes.scatter`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.scatter`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
 
     Parameters
     ----------
@@ -185,38 +266,42 @@ def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
     s : scalar or array_like, optional
         The marker size of each individual point.
     c : str or array_like, optional
-        The marker color of each individual point. See the matplotlib
-        documentation of :func:`matplotlib.axes.Axes.scatter` for more
+        The marker color of each individual point.  See the matplotlib
+        documentation of :meth:`matplotlib.axes.Axes.scatter` for more
         information.
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        limit automatically.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the limit automatically.
     xmax : scalar, optional
-        Right limit for plotting on x-axis. Default is ``None``.
+        Right limit for plotting on x-axis.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     logx : bool, optional
-        Use logarithmic x scale. Default is ``False``.
+        Use logarithmic x scale.
     logy : bool, optional
         Same as `logx`, but for the y-axis.
     xlabel : str, optional
-        Label for the x-axis. Default is ``r'$x$'``.
+        Label for the x-axis.
     ylabel : str, optional
-        Label for the y-axis. Default is ``r'$y$'``.
+        Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
-        Keyword arguments to pass to :func:`matplotlib.axes.Axes.scatter`.
-        Look there for possible keyword arguments.
+        Keyword arguments to pass to
+        :meth:`matplotlib.axes.Axes.scatter`.  See there for possible
+        keyword arguments.
 
     Returns
     -------
     img : matplotlib.collections.PathCollection
         A :class:`matplotlib.collections.PathCollection`.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.scatter' instead", DeprecationWarning
+    )
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -225,18 +310,14 @@ def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
     tick_pad = 12
     label_pad = 16
 
-    if kwargs.get('cmap') is None:
-        kwargs['cmap'] = 'Greys'
-    if kwargs.get('vmin') is None:
-        kwargs['vmin'] = np.nanmin(c)
-    if kwargs.get('vmax') is None:
-        kwargs['vmax'] = np.nanmax(c)
-
+    kwargs["cmap"] = kwargs.pop("cmap", "Greys")
+    kwargs["vmin"] = kwargs.pop("vmin", np.nanmin(c))
+    kwargs["vmax"] = kwargs.pop("vmax", np.nanmax(c))
     img = ax.scatter(x=x, y=y, s=s, c=c, **kwargs)
     if logx:
-        ax.set_xscale('log', basex=10, subsx=np.arange(2, 10))
+        ax.set_xscale("log", basex=10, subsx=np.arange(2, 10))
     if logy:
-        ax.set_yscale('log', basey=10, subsy=np.arange(2, 10))
+        ax.set_yscale("log", basey=10, subsy=np.arange(2, 10))
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
     ax.set_xlabel(xlabel=xlabel, fontsize=fontsize_labels)
@@ -245,35 +326,60 @@ def scatter(ax, x, y, s=None, c=None, xmin=None, xmax=None, ymin=None,
     ax.yaxis.labelpad = label_pad
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
-    if kwargs.get('label') is not None:
-        ax.legend(loc=legend_loc,
-                  numpoints=1,
-                  frameon=False,
-                  fontsize=fontsize_legend)
+    ax.tick_params(
+        which="major",
+        direction="in",
+        top=True,
+        right=True,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="in",
+        top=True,
+        right=True,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
+    if kwargs.get("label") is not None:
+        ax.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img
 
 
-def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
-             ymin=None, ymax=None, logx=False, logy=False, xlabel=r'$x$',
-             ylabel=r'$y$', legend_loc='best', **kwargs):
+def errorbar(
+    ax,
+    x,
+    y,
+    xerr=None,
+    yerr=None,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    logx=False,
+    logy=False,
+    xlabel=r"$x$",
+    ylabel=r"$y$",
+    legend_loc="best",
+    **kwargs
+):
     """
     Plot data to a :class:`matplotlib.axes.Axes` object with errorbars
-    using :func:`matplotlib.axes.Axes.errorbar`.
+    using :meth:`matplotlib.axes.Axes.errorbar`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.errorbar`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
 
     Parameters
     ----------
@@ -286,28 +392,28 @@ def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
     xerr, yerr : array_like, optional
         The errorbar sizes.
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        limit automatically.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the limit automatically.
     xmax : scalar, optional
-        Right limit for plotting on x-axis. Default is ``None``.
+        Right limit for plotting on x-axis.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     logx : bool, optional
-        Use logarithmic x scale. Default is ``False``.
+        Use logarithmic x scale.
     logy : bool, optional
         Same as `logx`, but for the y-axis.
     xlabel : str, optional
-        Label for the x-axis. Default is ``r'$x$'``.
+        Label for the x-axis.
     ylabel : str, optional
-        Label for the y-axis. Default is ``r'$y$'``.
+        Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to
-        :func:`matplotlib.axes.Axes.errorbar`. Look there for possible
+        :meth:`matplotlib.axes.Axes.errorbar`.  See there for possible
         keyword arguments.
 
     Returns
@@ -315,6 +421,9 @@ def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
     img : ErrorbarContainer
         A :class:`matplotlib.container.ErrorbarContainer`.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.errorbar' instead", DeprecationWarning
+    )
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -323,17 +432,11 @@ def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
     tick_pad = 12
     label_pad = 16
 
-    img = ax.errorbar(x=x,
-                      y=y,
-                      xerr=xerr,
-                      yerr=yerr,
-                      capsize=6,
-                      capthick=2,
-                      **kwargs)
+    img = ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, **kwargs)
     if logx:
-        ax.set_xscale('log', basex=10, subsx=np.arange(2, 10))
+        ax.set_xscale("log", basex=10, subsx=np.arange(2, 10))
     if logy:
-        ax.set_yscale('log', basey=10, subsy=np.arange(2, 10))
+        ax.set_yscale("log", basey=10, subsy=np.arange(2, 10))
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
     ax.set_xlabel(xlabel=xlabel, fontsize=fontsize_labels)
@@ -342,34 +445,55 @@ def errorbar(ax, x, y, xerr=None, yerr=None, xmin=None, xmax=None,
     ax.yaxis.labelpad = label_pad
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
-    if kwargs.get('label') is not None:
-        ax.legend(loc=legend_loc,
-                  numpoints=1,
-                  frameon=False,
-                  fontsize=fontsize_legend)
+    ax.tick_params(
+        which="major",
+        direction="in",
+        top=True,
+        right=True,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="in",
+        top=True,
+        right=True,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
+    if kwargs.get("label") is not None:
+        ax.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img
 
 
-def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
-         xlabel=r'$x$', ylabel=r'$y$', legend_loc='best', **kwargs):
+def hist(
+    ax,
+    x,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    xlabel=r"$x$",
+    ylabel=r"$y$",
+    legend_loc="best",
+    **kwargs
+):
     """
     Plot a histogram to a :class:`matplotlib.axes.Axes` object using
-    :func:`matplotlib.axes.Axes.hist`.
+    :meth:`matplotlib.axes.Axes.hist`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.hist`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
 
     Parameters
     ----------
@@ -378,24 +502,24 @@ def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
     x : array_like
         The data.
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        limit automatically.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the limit automatically.
     xmax : scalar, optional
-        Right limit for plotting on x-axis. Default is ``None``.
+        Right limit for plotting on x-axis.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     xlabel : str, optional
-        Label for the x-axis. Default is ``r'$x$'``.
+        Label for the x-axis.
     ylabel : str, optional
-        Label for the y-axis. Default is ``r'$y$'``.
+        Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
-        Keyword arguments to pass to :func:`matplotlib.axes.Axes.hist`.
-        Look there for possible keyword arguments.
+        Keyword arguments to pass to :meth:`matplotlib.axes.Axes.hist`.
+        See there for possible keyword arguments.
 
     Returns
     -------
@@ -407,6 +531,9 @@ def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
         Silent list of individual patches used to create the histogram
         or list of such list if multiple input datasets.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.hist' instead", DeprecationWarning
+    )
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -424,35 +551,56 @@ def hist(ax, x, xmin=None, xmax=None, ymin=None, ymax=None,
     ax.yaxis.labelpad = label_pad
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
-    if kwargs.get('label') is not None:
-        ax.legend(loc=legend_loc,
-                  numpoints=1,
-                  frameon=False,
-                  fontsize=fontsize_legend)
+    ax.tick_params(
+        which="major",
+        direction="in",
+        top=True,
+        right=True,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="in",
+        top=True,
+        right=True,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
+    if kwargs.get("label") is not None:
+        ax.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img
 
 
-def hlines(ax, y, start, stop, xmin=None, xmax=None, ymin=None,
-           ymax=None, legend_loc='best', **kwargs):
+def hlines(
+    ax,
+    y,
+    start,
+    stop,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    legend_loc="best",
+    **kwargs
+):
     """
     Plot horizontal lines at each `y` from `start` to `stop` into a
     :class:`matplotlib.axes.Axes` object using
-    :func:`matplotlib.axes.Axes.hlines`.
+    :meth:`matplotlib.axes.Axes.hlines`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.hlines`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
 
     Parameters
     ----------
@@ -461,29 +609,33 @@ def hlines(ax, y, start, stop, xmin=None, xmax=None, ymin=None,
     y : scalar or array_like
         y-indices where to plot the lines.
     start, stop : scalar or array_like
-        Respective beginning and end of each line. If scalars are
+        Respective beginning and end of each line.  If scalars are
         provided, all lines will have same length.
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        limit automatically.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the limit automatically.
     xmax : scalar, optional
-        Right limit for plotting on x-axis. Default is ``None``.
+        Right limit for plotting on x-axis.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
-        Keyword arguments to pass to :func:`matplotlib.axes.Axes.hlines`.
-        Look there for possible keyword arguments.
+        Keyword arguments to pass to
+        :meth:`matplotlib.axes.Axes.hlines`.  See there for possible
+        keyword arguments.
 
     Returns
     -------
     img : matplotlib.collections.LineCollection
         A :class:`matplotlib.collections.LineCollection`.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.hlines' instead", DeprecationWarning
+    )
 
     fontsize_ticks = 32
     fontsize_legend = 28
@@ -495,35 +647,56 @@ def hlines(ax, y, start, stop, xmin=None, xmax=None, ymin=None,
     ax.set_ylim(bottom=ymin, top=ymax)
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
-    if kwargs.get('label') is not None:
-        ax.legend(loc=legend_loc,
-                  numpoints=1,
-                  frameon=False,
-                  fontsize=fontsize_legend)
+    ax.tick_params(
+        which="major",
+        direction="in",
+        top=True,
+        right=True,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="in",
+        top=True,
+        right=True,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
+    if kwargs.get("label") is not None:
+        ax.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img
 
 
-def vlines(ax, x, start, stop, xmin=None, xmax=None, ymin=None,
-           ymax=None, legend_loc='best', **kwargs):
+def vlines(
+    ax,
+    x,
+    start,
+    stop,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    legend_loc="best",
+    **kwargs
+):
     """
     Plot vertical lines at each `x` from `start` to `stop` into a
     :class:`matplotlib.axes.Axes` object using
-    :func:`matplotlib.axes.Axes.vlines`.
+    :meth:`matplotlib.axes.Axes.vlines`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.vlines`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
 
     Parameters
     ----------
@@ -532,29 +705,33 @@ def vlines(ax, x, start, stop, xmin=None, xmax=None, ymin=None,
     x : scalar or array_like
         x-indices where to plot the lines.
     start, stop : scalar or array_like
-        Respective beginning and end of each line. If scalars are
+        Respective beginning and end of each line.  If scalars are
         provided, all lines will have same length.
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        limit automatically.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the limit automatically.
     xmax : scalar, optional
-        Right limit for plotting on x-axis. Default is ``None``.
+        Right limit for plotting on x-axis.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
-        Keyword arguments to pass to :func:`matplotlib.axes.Axes.vlines`.
-        Look there for possible keyword arguments.
+        Keyword arguments to pass to
+        :meth:`matplotlib.axes.Axes.vlines`.  See there for possible
+        keyword arguments.
 
     Returns
     -------
     img : matplotlib.collections.LineCollection
         A :class:`matplotlib.collections.LineCollection`.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.vlines' instead", DeprecationWarning
+    )
 
     fontsize_ticks = 32
     fontsize_legend = 28
@@ -566,61 +743,78 @@ def vlines(ax, x, start, stop, xmin=None, xmax=None, ymin=None,
     ax.set_ylim(bottom=ymin, top=ymax)
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
-    if kwargs.get('label') is not None:
-        ax.legend(loc=legend_loc,
-                  numpoints=1,
-                  frameon=False,
-                  fontsize=fontsize_legend)
+    ax.tick_params(
+        which="major",
+        direction="in",
+        top=True,
+        right=True,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="in",
+        top=True,
+        right=True,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
+    if kwargs.get("label") is not None:
+        ax.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img
 
 
-def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
-                   legend_loc='best', **kwargs):
+def plot_2nd_xaxis(
+    ax, x, y, xmin=None, xmax=None, xlabel=r"$x2$", legend_loc="best", **kwargs
+):
     """
-    Create a twin :class:`~matplotlib.axes.Axes` of an existing
-    :class:`matplotlib.axes.Axes` object sharing the x-axis using
-    :func:`matplotlib.axes.Axes.twiny` and plot data to that second
-    x-axis using :func:`matplotlib.axes.Axes.plot`.
+    Plot data to a second x-axis.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.twiny`,
+        :meth:`matplotlib.axes.Axes.plot`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
+
+    Create a twin :class:`matplotlib.axes.Axes` of an existing
+    :class:`matplotlib.axes.Axes` sharing the same y-axis using
+    :meth:`matplotlib.axes.Axes.twiny` and plot data to the twin
+    :class:`~matplotlib.axes.Axes` using
+    :meth:`matplotlib.axes.Axes.plot`.
 
     Parameters
     ----------
     ax : matplotlib.axes.Axes
-        The axes to draw to.
+        The :class:`matplotlib.axes.Axes` from which to create a twin
+        that shares the same y-axis.  Data are plotted to the created
+        twin axes.
     x : array_like
         One dimensional array containing the x data.
     y : array_like
         Array of the same shape as `x` containing the y data.
     xmin : scalar, optional
-        Left limit for plotting on the secondary x-axis. The left limit
+        Left limit for plotting on the secondary x-axis.  The left limit
         may be greater than the right limit, in which case the tick
-        values will show up in decreasing order. Default is ``None``,
+        values will show up in decreasing order.  Default is ``None``,
         which means set the limit automatically.
     xmax : scalar, optional
-        Right limit for plotting on the secondary x-axis. Default is
-        ``None``.
+        Right limit for plotting on the secondary x-axis.
     xlabel : str, optional
-        Label for the secondary x-axis. Default is ``r'$x2$'``.
+        Label for the secondary x-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
-        Keyword arguments to pass to :func:`matplotlib.axes.Axes.plot`.
-        Look there for possible keyword arguments.
+        Keyword arguments to pass to :meth:`matplotlib.axes.Axes.plot`.
+        See there for possible keyword arguments.
 
     Returns
     -------
@@ -630,6 +824,11 @@ def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
     ax2 : matplotlib.axes.Axes
         The twin axis.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.twiny' and 'matplotlib.axes.Axes.plot'"
+        " instead",
+        DeprecationWarning,
+    )
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -637,70 +836,85 @@ def plot_2nd_xaxis(ax, x, y, xmin=None, xmax=None, xlabel=r'$x2$',
     tick_length = 10
     label_pad = 16
 
-    if kwargs.get('color') is None:
-        kwargs['color'] = 'black'
-
+    kwargs["color"] = kwargs.pop("color", "black")
     ax2 = ax.twiny()
     img = ax2.plot(x, y, **kwargs)
     ax2.set_xlim(xmin, xmax)
-    ax2.set_xlabel(xlabel=xlabel,
-                   color=kwargs.get('color'),
-                   fontsize=fontsize_labels)
+    ax2.set_xlabel(
+        xlabel=xlabel, color=kwargs.get("color"), fontsize=fontsize_labels
+    )
     ax2.xaxis.labelpad = label_pad
     ax2.xaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax2.tick_params(axis='x',
-                    which='major',
-                    direction='in',
-                    labelcolor=kwargs.get('color'),
-                    length=tick_length,
-                    labelsize=fontsize_ticks)
-    ax2.tick_params(axis='x',
-                    which='minor',
-                    direction='in',
-                    labelcolor=kwargs.get('color'),
-                    length=0.5 * tick_length,
-                    labelsize=0.8 * fontsize_ticks)
-    if kwargs.get('label') is not None:
-        ax2.legend(loc=legend_loc,
-                   numpoints=1,
-                   frameon=False,
-                   fontsize=fontsize_legend)
+    ax2.tick_params(
+        axis="x",
+        which="major",
+        direction="in",
+        labelcolor=kwargs.get("color"),
+        length=tick_length,
+        labelsize=fontsize_ticks,
+    )
+    ax2.tick_params(
+        axis="x",
+        which="minor",
+        direction="in",
+        labelcolor=kwargs.get("color"),
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+    )
+    if kwargs.get("label") is not None:
+        ax2.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img, ax2
 
 
-def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
-                   legend_loc='best', **kwargs):
+def plot_2nd_yaxis(
+    ax, x, y, ymin=None, ymax=None, ylabel=r"$y2$", legend_loc="best", **kwargs
+):
     """
-    Create a twin :class:`~matplotlib.axes.Axes` of an existing
-    :class:`matplotlib.axes.Axes` object sharing the x-axis using
-    :func:`matplotlib.axes.Axes.twinx` and plot data to that second
-    y-axis using :func:`matplotlib.axes.Axes.plot`.
+    Plot data to a second y-axis.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.twinx`,
+        :meth:`matplotlib.axes.Axes.plot`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
+
+    Create a twin :class:`matplotlib.axes.Axes` of an existing
+    :class:`matplotlib.axes.Axes` sharing the same x-axis using
+    :meth:`matplotlib.axes.Axes.twinx` and plot data to the twin
+    :class:`~matplotlib.axes.Axes` using
+    :meth:`matplotlib.axes.Axes.plot`.
 
     Parameters
     ----------
     ax : matplotlib.axes.Axes
-        The axes to draw to.
+        The :class:`matplotlib.axes.Axes` from which to create a twin
+        that shares the same x-axis.  Data are plotted to the created
+        twin axes.
     x : array_like
         One dimensional array containing the x data.
     y : array_like
         Array of the same shape as `x` containing the y data.
     ymin : scalar, optional
-        Left limit for plotting on the secondary y-axis. The left limit
+        Left limit for plotting on the secondary y-axis.  The left limit
         may be greater than the right limit, in which case the tick
-        values will show up in decreasing order. Default is ``None``,
+        values will show up in decreasing order.  Default is ``None``,
         which means set the limit automatically.
     ymax : scalar, optional
-        Right limit for plotting on the secondary y-axis. Default is
-        ``None``.
+        Right limit for plotting on the secondary y-axis.
     ylabel : str, optional
-        Label for the secondary y-axis. Default is ``r'$y2$'``.
+        Label for the secondary y-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
-        Keyword arguments to pass to :func:`matplotlib.axes.Axes.plot`.
-        Look there for possible keyword arguments.
+        Keyword arguments to pass to :meth:`matplotlib.axes.Axes.plot`.
+        See there for possible keyword arguments.
 
     Returns
     -------
@@ -710,6 +924,11 @@ def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
     ax2 : matplotlib.axes.Axes
         The twin axis.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.twinx' and 'matplotlib.axes.Axes.plot'"
+        " instead",
+        DeprecationWarning,
+    )
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -718,46 +937,68 @@ def plot_2nd_yaxis(ax, x, y, ymin=None, ymax=None, ylabel=r'$y2$',
     tick_pad = 12
     label_pad = 16
 
-    if kwargs.get('color') is None:
-        kwargs['color'] = 'black'
-
+    kwargs["color"] = kwargs.pop("color", "black")
     ax2 = ax.twinx()
     img = ax2.plot(x, y, **kwargs)
     ax2.set_ylim(ymin, ymax)
-    ax2.set_ylabel(ylabel=ylabel,
-                   color=kwargs.get('color'),
-                   fontsize=fontsize_labels)
+    ax2.set_ylabel(
+        ylabel=ylabel, color=kwargs.get("color"), fontsize=fontsize_labels
+    )
     ax2.yaxis.labelpad = label_pad
     ax2.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax2.tick_params(axis='y',
-                    which='major',
-                    direction='in',
-                    labelcolor=kwargs.get('color'),
-                    length=tick_length,
-                    labelsize=fontsize_ticks,
-                    pad=tick_pad)
-    ax2.tick_params(axis='y',
-                    which='minor',
-                    direction='in',
-                    labelcolor=kwargs.get('color'),
-                    length=0.5 * tick_length,
-                    labelsize=0.8 * fontsize_ticks,
-                    pad=tick_pad)
-    if kwargs.get('label') is not None:
-        ax2.legend(loc=legend_loc,
-                   numpoints=1,
-                   frameon=False,
-                   fontsize=fontsize_legend)
+    ax2.tick_params(
+        axis="y",
+        which="major",
+        direction="in",
+        labelcolor=kwargs.get("color"),
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax2.tick_params(
+        axis="y",
+        which="minor",
+        direction="in",
+        labelcolor=kwargs.get("color"),
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
+    if kwargs.get("label") is not None:
+        ax2.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img, ax2
 
 
-def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
-                 ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
-                 legend_loc='best', **kwargs):
+def fill_between(
+    ax,
+    x,
+    y1,
+    y2=0,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    logx=False,
+    logy=False,
+    xlabel=r"$x$",
+    ylabel=r"$y$",
+    legend_loc="best",
+    **kwargs
+):
     """
     Fill the area between two curves `y1` and `y2` using
-    :func:`matplotlib.axes.Axes.fill_between`
+    :meth:`matplotlib.axes.Axes.fill_between`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.fill_between`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
 
     Parameters
     ----------
@@ -771,28 +1012,28 @@ def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
         Array of the same shape as `x` containing the second y data.
         Default: 0
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        limit automatically.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the limit automatically.
     xmax : scalar, optional
-        Right limit for plotting on x-axis. Default is ``None``.
+        Right limit for plotting on x-axis.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     logx : bool, optional
-        Use logarithmic x scale. Default is ``False``.
+        Use logarithmic x scale.
     logy : bool, optional
         Same as `logx`, but for the y-axis.
     xlabel : str, optional
-        Label for the x-axis. Default is ``r'$x$'``.
+        Label for the x-axis.
     ylabel : str, optional
-        Label for the y-axis. Default is ``r'$y$'``.
+        Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to
-        :func:`matplotlib.axes.Axes.fill_between`. Look there for
+        :meth:`matplotlib.axes.Axes.fill_between`.  See there for
         possible keyword arguments.
 
     Returns
@@ -800,6 +1041,9 @@ def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
     img : matplotlib.collections.PolyCollection
         A :class:`matplotlib.collections.PolyCollection`.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.fill_between' instead", DeprecationWarning
+    )
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -810,9 +1054,9 @@ def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
 
     img = ax.fill_between(x=x, y1=y1, y2=y2, **kwargs)
     if logx:
-        ax.set_xscale('log', basex=10, subsx=np.arange(2, 10))
+        ax.set_xscale("log", basex=10, subsx=np.arange(2, 10))
     if logy:
-        ax.set_yscale('log', basey=10, subsx=np.arange(2, 10))
+        ax.set_yscale("log", basey=10, subsx=np.arange(2, 10))
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
     ax.set_xlabel(xlabel=xlabel, fontsize=fontsize_labels)
@@ -821,36 +1065,59 @@ def fill_between(ax, x, y1, y2=0, xmin=None, xmax=None, ymin=None,
     ax.yaxis.labelpad = label_pad
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
-    if kwargs.get('label') is not None:
-        ax.legend(loc=legend_loc,
-                  numpoints=1,
-                  frameon=False,
-                  fontsize=fontsize_legend)
+    ax.tick_params(
+        which="major",
+        direction="in",
+        top=True,
+        right=True,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="in",
+        top=True,
+        right=True,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
+    if kwargs.get("label") is not None:
+        ax.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img
 
 
-def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
-                  ymax=None, logx=False, logy=False, xlabel=r'$x$', ylabel=r'$y$',
-                  legend_loc='best', **kwargs):
+def fill_betweenx(
+    ax,
+    y,
+    x1,
+    x2=0,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    logx=False,
+    logy=False,
+    xlabel=r"$x$",
+    ylabel=r"$y$",
+    legend_loc="best",
+    **kwargs
+):
     """
     Fill the area between two vertical curves `x1` and `x2` using
-    :func:`matplotlib.axes.Axes.fill_betweenx`. The two curves `x1` and
-    `x2` are functions of `y`.
+    :meth:`matplotlib.axes.Axes.fill_betweenx`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :meth:`matplotlib.axes.Axes.fill_betweenx`,
+        :meth:`matplotlib.axes.Axes.set` and
+        :meth:`matplotlib.axes.Axes.legend` directly.
 
     Parameters
     ----------
@@ -864,28 +1131,28 @@ def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
         Array of the same shape as `y` containing the second x data.
         Default: 0
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        limit automatically.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the limit automatically.
     xmax : scalar, optional
-        Right limit for plotting on x-axis. Default is ``None``.
+        Right limit for plotting on x-axis.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     logx : bool, optional
-        Use logarithmic x scale. Default is ``False``.
+        Use logarithmic x scale.
     logy : bool, optional
         Same as `logx`, but for the y-axis.
     xlabel : str, optional
-        Label for the x-axis. Default is ``r'$x$'``.
+        Label for the x-axis.
     ylabel : str, optional
-        Label for the y-axis. Default is ``r'$y$'``.
+        Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend. See :func:`matplotlib.pyplot.legend` for
-        possible arguments. Default is ``'best'``.
+        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
+        possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to
-        :func:`matplotlib.axes.Axes.fill_betweenx`. Look there for
+        :meth:`matplotlib.axes.Axes.fill_betweenx`.  See there for
         possible keyword arguments.
 
     Returns
@@ -893,6 +1160,9 @@ def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
     img : matplotlib.collections.PolyCollection
         A :class:`matplotlib.collections.PolyCollection`.
     """
+    warnings.warn(
+        "Use 'matplotlib.axes.Axes.fill_betweenx' instead", DeprecationWarning
+    )
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -903,9 +1173,9 @@ def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
 
     img = ax.fill_betweenx(y=y, x1=x1, x2=x2, **kwargs)
     if logx:
-        ax.set_xscale('log', basex=10, subsx=np.arange(2, 10))
+        ax.set_xscale("log", basex=10, subsx=np.arange(2, 10))
     if logy:
-        ax.set_yscale('log', basey=10, subsx=np.arange(2, 10))
+        ax.set_yscale("log", basey=10, subsx=np.arange(2, 10))
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
     ax.set_xlabel(xlabel=xlabel, fontsize=fontsize_labels)
@@ -914,35 +1184,56 @@ def fill_betweenx(ax, y, x1, x2=0, xmin=None, xmax=None, ymin=None,
     ax.yaxis.labelpad = label_pad
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='in',
-                   top=True,
-                   right=True,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
-    if kwargs.get('label') is not None:
-        ax.legend(loc=legend_loc,
-                  numpoints=1,
-                  frameon=False,
-                  fontsize=fontsize_legend)
+    ax.tick_params(
+        which="major",
+        direction="in",
+        top=True,
+        right=True,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="in",
+        top=True,
+        right=True,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
+    if kwargs.get("label") is not None:
+        ax.legend(
+            loc=legend_loc,
+            numpoints=1,
+            frameon=False,
+            fontsize=fontsize_legend,
+        )
 
     return img
 
 
-def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
-               ymax=None, xlabel=r'$x$', ylabel=r'$y$', cbarlabel=r'$z$',
-               **kwargs):
+def pcolormesh(
+    ax,
+    x,
+    y,
+    z,
+    cax=None,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    xlabel=r"$x$",
+    ylabel=r"$y$",
+    cbarlabel=r"$z$",
+    **kwargs
+):
     """
     Plot two dimensional data as heatmap with
-    :func:`matplotlib.axes.Axes.pcolormesh`
+    :meth:`matplotlib.axes.Axes.pcolormesh`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :func:`mdtools.plot.pcolormesh_new` instead.
 
     Parameters
     ----------
@@ -961,24 +1252,24 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
     cax : matplotlib.axes.Axes, optional
         The axes to put the colorbar in.
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        left limit to ``np.nanmin(x)``.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the left limit to ``np.nanmin(x)``.
     xmax : float, optional
         Right limit for plotting on x-axis. Default is ``None``, which
         means set the left limit to ``np.nanmax(x)``.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     xlabel : str, optional
-        Label for the x-axis. Default is ``r'$x$'``.
+        Label for the x-axis.
     ylabel : str, optional
-        Label for the y-axis. Default is ``r'$y$'``.
+        Label for the y-axis.
     cbarlabel : str, optional
-        Label for the colorbar. Default is ``r'$z$'``.
+        Label for the colorbar.
     kwargs : dict, optional
         Keyword arguments to pass to
-        :func:`matplotlib.axes.Axes.pcolormesh`. See there for possible
+        :meth:`matplotlib.axes.Axes.pcolormesh`.  See there for possible
         keyword arguments.
 
     Returns
@@ -986,6 +1277,9 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
     heatmap : matplotlib.collections.QuadMesh
         A :class:`matplotlib.collections.QuadMesh`.
     """
+    warnings.warn(
+        "Use 'mdtools.plot.pcolormesh_new' instead", DeprecationWarning
+    )
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -1001,13 +1295,9 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
         ymin = np.nanmin(y)
     if ymax is None:
         ymax = np.nanmax(y)
-    if kwargs.get('cmap') is None:
-        kwargs['cmap'] = 'Greys'
-    if kwargs.get('vmin') is None:
-        kwargs['vmin'] = np.nanmin(z)
-    if kwargs.get('vmax') is None:
-        kwargs['vmax'] = np.nanmax(z)
-
+    kwargs["cmap"] = kwargs.pop("cmap", "Greys")
+    kwargs["vmin"] = kwargs.pop("vmin", np.nanmin(z))
+    kwargs["vmax"] = kwargs.pop("vmax", np.nanmax(z))
     heatmap = ax.pcolormesh(x, y, z, **kwargs)
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
@@ -1017,42 +1307,125 @@ def pcolormesh(ax, x, y, z, cax=None, xmin=None, xmax=None, ymin=None,
     ax.yaxis.labelpad = label_pad
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='out',
-                   top=False,
-                   right=False,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='out',
-                   top=False,
-                   right=False,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
+    ax.tick_params(
+        which="major",
+        direction="out",
+        top=False,
+        right=False,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="out",
+        top=False,
+        right=False,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
 
     cbar = plt.colorbar(heatmap, cax=cax, ax=ax)
     cbar.set_label(label=cbarlabel, fontsize=fontsize_labels)
     cbar.ax.yaxis.labelpad = label_pad
     cbar.ax.yaxis.offsetText.set(size=fontsize_ticks)
-    cbar.ax.tick_params(which='major',
-                        direction='out',
-                        length=tick_length,
-                        labelsize=fontsize_ticks)
-    cbar.ax.tick_params(which='minor',
-                        direction='out',
-                        length=0.5 * tick_length,
-                        labelsize=0.8 * fontsize_ticks)
+    cbar.ax.tick_params(
+        which="major",
+        direction="out",
+        length=tick_length,
+        labelsize=fontsize_ticks,
+    )
+    cbar.ax.tick_params(
+        which="minor",
+        direction="out",
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+    )
 
     return heatmap
 
 
-def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
-           xlabel=r'$x$', ylabel=r'$y$', cbarlabel=r'$z$', **kwargs):
+def pcolormesh_new(*args, ax, cbar=True, cax=None, **kwargs):
+    """
+    Plot two dimensional data as colormap with
+    :meth:`matplotlib.axes.Axes.pcolormesh`.
+
+    See :meth:`matplotlib.axes.Axes.pcolormesh` and
+    :func:`matplotlib.pyplot.colorbar` for more details.
+
+    Parameters
+    ----------
+    *args : iterable, optional
+        Positional arguments to parse to
+        :meth:`matplotlib.axes.Axes.pcolormesh`.
+    ax : matplotlib.axes.Axes
+        The :class:`matplotlib.axes.Axes` to which to draw the
+        pcolormesh.
+    cbar : bool, optional
+        If ``True``, create a colorbar and plot it either in the
+        :class:`matplotlib.axes.Axes` given by `ax` or `cax`.
+    cax : matplotlib.axes.Axes, optional
+        If given, the colorbar is placed in this
+        :class:`matplotlib.axes.Axes`.  Is ignored if `cbar` is
+        ``False``.
+    **kwargs : dict, optional
+        Keyword arguments to parse to
+        :meth:`matplotlib.axes.Axes.pcolormesh`.
+
+    Returns
+    -------
+    pcm : matplotlib.collections.QuadMesh
+       The pcolormesh.
+    cbar : matplotlib.colorbar.Colorbar
+       The colorbar.  Only created and returned if `cbar` is ``True``.
+
+    Notes
+    -----
+    The following defaults of :meth:`matplotlib.axes.Axes.pcolormesh`
+    are changed:
+
+       * `edgecolors` is set to ``'none'``.
+       * `rasterized` is set to ``True``.
+
+    In contrast to the default MDTools plotting style, the axis ticks
+    are drawn outside of the plot.
+    """
+    kwargs["edgecolors"] = kwargs.pop("edgecolors", "none")
+    kwargs["rasterized"] = kwargs.pop("rasterized", True)
+    pcm = ax.pcolormesh(*args, **kwargs)
+    ax.tick_params(
+        axis="both", which="both", direction="out", top=False, right=False
+    )
+    if cbar:
+        cbar = plt.colorbar(pcm, cax=cax, ax=ax)
+        cbar.ax.tick_params(which="both", direction="out")
+        cbar.ax.yaxis.offsetText.set_horizontalalignment(CBAR_YAX_HALIGN)
+        cbar.ax.yaxis.offsetText.set_verticalalignment(CBAR_YAX_VALIGN)
+        return pcm, cbar
+    else:
+        return pcm
+
+
+def imshow(
+    ax,
+    x,
+    cax=None,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    xlabel=r"$x$",
+    ylabel=r"$y$",
+    cbarlabel=r"$z$",
+    **kwargs
+):
     """
     Plot two dimensional data as heatmap with
-    :func:`matplotlib.axes.Axes.imshow`
+    :meth:`matplotlib.axes.Axes.imshow`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :func:`mdtools.plot.imshow_new` instead.
 
     Parameters
     ----------
@@ -1063,22 +1436,23 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
     cax : matplotlib.axes.Axes, optional
         The axes to put the colorbar in.
     xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order.
+        Left limit for plotting on x-axis.  The left limit may be
+        greater than the right limit, in which case the tick values will
+        show up in decreasing order.  Default is ``None``, which means
+        set the limit automatically.
     xmax : float, optional
         Right limit for plotting on x-axis.
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     xlabel : str, optional
-        Label for the x-axis. Default is ``r'$x$'``.
+        Label for the x-axis.
     ylabel : str, optional
-        Label for the y-axis. Default is ``r'$y$'``.
+        Label for the y-axis.
     cbarlabel : str, optional
-        Label for the colorbar. Default is ``r'$z$'``.
+        Label for the colorbar.
     kwargs : dict, optional
         Keyword arguments to pass to
-        :func:`matplotlib.axes.Axes.imshow`. See there for possible
+        :meth:`matplotlib.axes.Axes.imshow`.  See there for possible
         keyword arguments.
 
     Returns
@@ -1086,6 +1460,7 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
     heatmap : matplotlib.image.AxesImage
         A :class:`matplotlib.image.AxesImage`.
     """
+    warnings.warn("Use 'mdtools.plot.imshow_new' instead", DeprecationWarning)
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -1093,13 +1468,9 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
     tick_pad = 12
     label_pad = 16
 
-    if kwargs.get('cmap') is None:
-        kwargs['cmap'] = 'Greys'
-    if kwargs.get('vmin') is None:
-        kwargs['vmin'] = np.nanmin(x)
-    if kwargs.get('vmax') is None:
-        kwargs['vmax'] = np.nanmax(x)
-
+    kwargs["cmap"] = kwargs.pop("cmap", "Greys")
+    kwargs["vmin"] = kwargs.pop("vmin", np.nanmin(x))
+    kwargs["vmax"] = kwargs.pop("vmax", np.nanmax(x))
     heatmap = ax.imshow(x, **kwargs)
     ax.set_xlim(left=xmin, right=xmax)
     ax.set_ylim(bottom=ymin, top=ymax)
@@ -1109,63 +1480,133 @@ def imshow(ax, x, cax=None, xmin=None, xmax=None, ymin=None, ymax=None,
     ax.yaxis.labelpad = label_pad
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='out',
-                   top=False,
-                   right=False,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='out',
-                   top=False,
-                   right=False,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
+    ax.tick_params(
+        which="major",
+        direction="out",
+        top=False,
+        right=False,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="out",
+        top=False,
+        right=False,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
 
     cbar = plt.colorbar(heatmap, cax=cax, ax=ax)
     cbar.set_label(label=cbarlabel, fontsize=fontsize_labels)
     cbar.ax.yaxis.labelpad = label_pad
     cbar.ax.yaxis.offsetText.set(size=fontsize_ticks)
-    cbar.ax.tick_params(which='major',
-                        direction='out',
-                        length=tick_length,
-                        labelsize=fontsize_ticks)
-    cbar.ax.tick_params(which='minor',
-                        direction='out',
-                        length=0.5 * tick_length,
-                        labelsize=0.8 * fontsize_ticks)
+    cbar.ax.tick_params(
+        which="major",
+        direction="out",
+        length=tick_length,
+        labelsize=fontsize_ticks,
+    )
+    cbar.ax.tick_params(
+        which="minor",
+        direction="out",
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+    )
 
     return heatmap
 
 
-def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
-            cbarlabel=r'$z$', **kwargs):
+def imshow_new(*args, ax, cbar=True, cax=None, **kwargs):
+    """
+    Plot two dimensional data as colormap with
+    :meth:`matplotlib.axes.Axes.imshow`.
+
+    See :meth:`matplotlib.axes.Axes.imshow` and
+    :func:`matplotlib.pyplot.colorbar` for more details.
+
+    Parameters
+    ----------
+    *args : iterable, optional
+        Positional arguments to parse to
+        :meth:`matplotlib.axes.Axes.imshow`.
+    ax : matplotlib.axes.Axes
+        The :class:`matplotlib.axes.Axes` to which to draw the image.
+    cbar : bool, optional
+        If ``True``, create a colorbar and plot it either in the
+        :class:`matplotlib.axes.Axes` given by `ax` or `cax`.
+    cax : matplotlib.axes.Axes, optional
+        If given, the colorbar is placed in this
+        :class:`matplotlib.axes.Axes`.  Is ignored if `cbar` is
+        ``False``.
+    **kwargs : dict, optional
+        Keyword arguments to parse to
+        :meth:`matplotlib.axes.Axes.imshow`.
+
+    Returns
+    -------
+    img : matplotlib.image.AxesImage
+       The image.
+    cbar : matplotlib.colorbar.Colorbar
+       The colorbar.  Only created and returned if `cbar` is ``True``.
+
+    Notes
+    -----
+    The following defaults of :meth:`matplotlib.axes.Axes.imshow`
+    are changed:
+
+       * `rasterized` is set to ``True``.
+
+    In contrast to the default MDTools plotting style, the axis ticks
+    are drawn outside of the plot.
+    """
+    kwargs["rasterized"] = kwargs.pop("rasterized", True)
+    img = ax.imshow(*args, **kwargs)
+    ax.tick_params(
+        axis="both", which="both", direction="out", top=False, right=False
+    )
+    if cbar:
+        cbar = plt.colorbar(img, cax=cax, ax=ax)
+        cbar.ax.tick_params(which="both", direction="out")
+        cbar.ax.yaxis.offsetText.set_horizontalalignment(CBAR_YAX_HALIGN)
+        cbar.ax.yaxis.offsetText.set_verticalalignment(CBAR_YAX_VALIGN)
+        return img, cbar
+    else:
+        return img
+
+
+def matshow(
+    ax, z, cax=None, xlabel=r"$x$", ylabel=r"$y$", cbarlabel=r"$z$", **kwargs
+):
     """
     Plot a two dimensional matrix as heatmap with
-    :func:`matplotlib.axes.Axes.matshow`
+    :meth:`matplotlib.axes.Axes.matshow`.
+
+    .. deprecated:: 0.0.0.dev2
+        Use :func:`mdtools.plot.matshow_new` instead.
 
     Parameters
     ----------
     ax : matplotlib.axes.Axes
         The axes to draw to.
     z : array_like
-        2-dimensional array. Note: The grid orientation follows the
+        2-dimensional array.  Note: The grid orientation follows the
         standard matrix convention, i.e. an array `z` with shape
         ``(nrows, ncolumns)`` is plotted with the column number as `x`
         and the row number as `y`.
     cax : matplotlib.axes.Axes, optional
         The axes to put the colorbar in.
     xlabel : str, optional
-        Label for the x-axis. Default is ``r'$x$'``.
+        Label for the x-axis.
     ylabel : str, optional
-        Label for the y-axis. Default is ``r'$y$'``.
+        Label for the y-axis.
     cbarlabel : str, optional
-        Label for the colorbar. Default is ``r'$z$'``.
+        Label for the colorbar.
     kwargs : dict, optional
         Keyword arguments to pass to
-        :func:`matplotlib.axes.Axes.matshow`. See there for possible
+        :meth:`matplotlib.axes.Axes.matshow`.  See there for possible
         keyword arguments.
 
     Returns
@@ -1173,6 +1614,7 @@ def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
     heatmap : matplotlib.image.AxesImage
         A :class:`matplotlib.image.AxesImage`.
     """
+    warnings.warn("Use 'mdtools.plot.matshow_new' instead", DeprecationWarning)
 
     fontsize_labels = 36
     fontsize_ticks = 32
@@ -1180,57 +1622,127 @@ def matshow(ax, z, cax=None, xlabel=r'$x$', ylabel=r'$y$',
     tick_pad = 12
     label_pad = 16
 
-    if (kwargs.get('cmap') is None):
-        kwargs['cmap'] = 'Greys'
-    if (kwargs.get('vmin') is None):
-        kwargs['vmin'] = np.nanmin(z)
-    if (kwargs.get('vmax') is None):
-        kwargs['vmax'] = np.nanmax(z)
-
+    kwargs["cmap"] = kwargs.pop("cmap", "Greys")
+    kwargs["vmin"] = kwargs.pop("vmin", np.nanmin(z))
+    kwargs["vmax"] = kwargs.pop("vmax", np.nanmax(z))
     heatmap = ax.matshow(z, **kwargs)
     ax.set_xlabel(xlabel=xlabel, fontsize=fontsize_labels)
     ax.set_ylabel(ylabel=ylabel, fontsize=fontsize_labels)
-    ax.xaxis.set_label_position('top')
+    ax.xaxis.set_label_position("top")
     ax.xaxis.labelpad = label_pad
     ax.yaxis.labelpad = label_pad
     ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
     ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='out',
-                   bottom=False,
-                   right=False,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='out',
-                   top=False,
-                   right=False,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
+    ax.tick_params(
+        which="major",
+        direction="out",
+        bottom=False,
+        right=False,
+        length=tick_length,
+        labelsize=fontsize_ticks,
+        pad=tick_pad,
+    )
+    ax.tick_params(
+        which="minor",
+        direction="out",
+        top=False,
+        right=False,
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+        pad=tick_pad,
+    )
 
     cbar = plt.colorbar(heatmap, cax=cax, ax=ax)
     cbar.set_label(label=cbarlabel, fontsize=fontsize_labels)
     cbar.ax.yaxis.labelpad = label_pad
     cbar.ax.yaxis.offsetText.set(size=fontsize_ticks)
-    cbar.ax.tick_params(which='major',
-                        direction='out',
-                        length=tick_length,
-                        labelsize=fontsize_ticks)
-    cbar.ax.tick_params(which='minor',
-                        direction='out',
-                        length=0.5 * tick_length,
-                        labelsize=0.8 * fontsize_ticks)
+    cbar.ax.tick_params(
+        which="major",
+        direction="out",
+        length=tick_length,
+        labelsize=fontsize_ticks,
+    )
+    cbar.ax.tick_params(
+        which="minor",
+        direction="out",
+        length=0.5 * tick_length,
+        labelsize=0.8 * fontsize_ticks,
+    )
 
     return heatmap
 
 
-def annotate_heatmap(im, data, xpos, ypos, fmt='{x:.1f}',
-                     textcolors=["black", "white"], threshold=None, **kwargs):
+def matshow_new(*args, ax, cbar=True, cax=None, **kwargs):
     """
-    A function to annotate a heatmap. See `Creating annotated heatmaps`_
-    and `how to annotate heatmap with text in matplotlib?`_
+    Plot two dimensional data as colormap with
+    :meth:`matplotlib.axes.Axes.matshow`.
+
+    See :meth:`matplotlib.axes.Axes.matshow` and
+    :func:`matplotlib.pyplot.colorbar` for more details.
+
+    Parameters
+    ----------
+    *args : iterable, optional
+        Positional arguments to parse to
+        :meth:`matplotlib.axes.Axes.matshow`.
+    ax : matplotlib.axes.Axes
+        The :class:`matplotlib.axes.Axes` to which to draw the image.
+    cbar : bool, optional
+        If ``True``, create a colorbar and plot it either in the
+        :class:`matplotlib.axes.Axes` given by `ax` or `cax`.
+    cax : matplotlib.axes.Axes, optional
+        If given, the colorbar is placed in this
+        :class:`matplotlib.axes.Axes`.  Is ignored if `cbar` is
+        ``False``.
+    **kwargs : dict, optional
+        Keyword arguments to parse to
+        :meth:`matplotlib.axes.Axes.matshow`.
+
+    Returns
+    -------
+    img : matplotlib.image.AxesImage
+       The image.
+    cbar : matplotlib.colorbar.Colorbar
+       The colorbar.  Only created and returned if `cbar` is ``True``.
+
+    Notes
+    -----
+    The following defaults of :meth:`matplotlib.axes.Axes.matshow`
+    are changed:
+
+       * `rasterized` is set to ``True``.
+
+    In contrast to the default MDTools plotting style, the axis ticks
+    are drawn outside of the plot.
+    """
+    kwargs["rasterized"] = kwargs.pop("rasterized", True)
+    img = ax.matshow(*args, **kwargs)
+    ax.tick_params(axis="both", which="both", direction="out")
+    if cbar:
+        cbar = plt.colorbar(img, cax=cax, ax=ax)
+        cbar.ax.tick_params(which="both", direction="out")
+        cbar.ax.yaxis.offsetText.set_horizontalalignment(CBAR_YAX_HALIGN)
+        cbar.ax.yaxis.offsetText.set_verticalalignment(CBAR_YAX_VALIGN)
+        return img, cbar
+    else:
+        return img
+
+
+def annotate_heatmap(
+    im,
+    data=None,
+    xpos=None,
+    ypos=None,
+    fmt="{x:.1f}",
+    textcolors=["black", "white"],
+    threshold=None,
+    **kwargs
+):
+    """
+    Annotate a heatmap.
+
+    See `Creating annotated heatmaps`_ and
+    `how to annotate heatmap with text in matplotlib?`_
 
     .. _Creating annotated heatmaps: https://matplotlib.org/gallery/images_contours_and_fields/image_annotated_heatmap.html#sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
     .. _how to annotate heatmap with text in matplotlib?: https://stackoverflow.com/questions/11917547/how-to-annotate-heatmap-with-text-in-matplotlib
@@ -1238,34 +1750,41 @@ def annotate_heatmap(im, data, xpos, ypos, fmt='{x:.1f}',
     Parameters
     ----------
     im : matplotlib.image.AxesImage or matplotlib.collections.QuadMesh
-        The AxesImage to be labeled.
-    data : array_like
-        Data to annotate.
-    xpos : array_like
-        Array containing the x positions of the annotations.
-    ypos : array_like
-        Array containing the y positions of the annotations.
+        The heatmap to be labeled.
+    data : array_like, optional
+        Data to annotate.  If None, the heatmap's data is used.
+    xpos, ypos : array_like, optional
+        Arrays containing the x and y positions of the annotations.  If
+        ``None``, the text positions are tried to be inferred from
+        `data`.  This will only work for heatmaps whose quadrilaterals
+        are located at integer positions.
     fmt : str, optional
-        The format of the annotations inside the heatmap. This should
+        The format of the annotations inside the heatmap.  This should
         either use the string format method, e.g. "$ {x:.2f}", or be a
         :class:`matplotlib.ticker.Formatter`.
     textcolors : array_like, optional
-        A list or array of two color specifications. The first is used
-        for values below a threshold, the second for those above.
+        A list or array of two color specifications.  The first is used
+        for data below `threshold`, the second for those above.
     threshold : scalar, optional
         Value in data units according to which the colors from
-        textcolors are applied. If ``None`` (the default) uses the
+        `textcolors` are applied.  If ``None`` (the default) uses the
         middle of the colormap as separation.
-    kwargs : dict, optional
+    **kwargs : dict, optional
         Keyword arguments to pass to
-        :func:`matplotlib.image.AxesImage.axes.text()`. See there for
+        :func:`matplotlib.image.AxesImage.axes.text()`.  See there for
         possible keyword arguments.
 
     Returns
     -------
     texts : list
         List of :class:`matplotlib.text.Text` objects.
-    """
+    """  # noqa: W505, E501
+    if data is None:
+        data = im.get_array()
+    if xpos is None:
+        xpos = range(data.shape[1])  # Cols = x
+    if ypos is None:
+        ypos = range(data.shape[0])  # Rows = y
 
     # Normalize the threshold to the images color range.
     if threshold is not None:
@@ -1275,22 +1794,19 @@ def annotate_heatmap(im, data, xpos, ypos, fmt='{x:.1f}',
 
     # Set default alignment to center, but allow it to be overwritten by
     # kwargs.
-    kw = dict(horizontalalignment="center",
-              verticalalignment="center",
-              size=14)
+    kw = dict(horizontalalignment="center", verticalalignment="center")
     kw.update(kwargs)
 
     # Get the formatter in case a string is supplied
     if isinstance(fmt, str):
         fmt = matplotlib.ticker.StrMethodFormatter(fmt)
 
-    # Loop over the data and create a `Text` for each "pixel".
-    # Change the text's color depending on the data.
+    # Loop over the data and create a text for each quadrilateral of the
+    # heatmap.
     texts = []
     for i, x in enumerate(xpos):
         for j, y in enumerate(ypos):
             kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
             text = im.axes.text(x, y, fmt(data[i, j], None), **kw)
             texts.append(text)
-
     return texts
