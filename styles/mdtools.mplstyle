@@ -1,0 +1,384 @@
+# ==================================
+# MATPLOTLIB STYLE SHEET FOR MDTOOLS
+# ==================================
+#
+# Information about custom style sheets and Matplotlib rcParams:
+# https://matplotlib.org/stable/tutorials/introductory/customizing.html
+#
+# Possible rcParam keywords:
+# https://matplotlib.org/stable/api/matplotlib_configuration_api.html#matplotlib.RcParams
+#
+# The parts of a figure (nomenclature):
+# https://matplotlib.org/stable/tutorials/introductory/usage.html#parts-of-a-figure
+
+
+# ====
+# FONT
+# ====
+# https://matplotlib.org/stable/api/font_manager_api.html#matplotlib.font_manager.FontProperties
+font.family: serif  # {serif, sans-serif, cursive, fantasy, monospace}
+font.style: normal  # {normal, italic, oblique}
+font.variant: normal  # {normal, small-caps}
+font.weight: normal  # {0-1000, ultralight, light, normal, bold,
+                     #  extra bold, semibold, demibold, demi, heavy,
+                     #  regular, medium, book, roman, black}
+font.stretch: normal  # {0-1000, ultra-condensed, extra-condensed,
+                      #  condensed, semi-condensed, normal,
+                      #  semi-expanded, expanded, extra-expanded,
+                      #  ultra-expanded}
+font.size: 24  # Font size in points.
+# Note that font.size controls default text sizes.  To configure
+# special text sizes tick labels, axes, labels, title, etc., see the rc
+# settings for axes and ticks.  Special text sizes can be defined
+# relative to font.size, using the following values: xx-small, x-small,
+# small, medium, large, x-large, xx-large, larger, or smaller
+
+# Each font family has a corresponding default list of font names.  The
+# first available font in the list is used.  Note that DejaVu is shipped
+# with Matplotlib and is thus guaranteed to be available (i.e. fonts
+# following DejaVu will never be used).
+font.serif: Computer Modern Roman, DejaVu Serif, Times New Roman, Times, serif
+font.sans-serif: Computer Modern Sans Serif, DejaVu Sans, Verdana, Arial, Helvetica, sans-serif
+font.monospace: Computer Modern Typewriter, DejaVu Sans Mono, Courier New, Courier, Terminal, monospace
+
+# Fonts for math mode.
+# https://matplotlib.org/stable/tutorials/text/mathtext.html#fonts
+mathtext.fontset: cm  # {dejavusans, dejavuserif, cm (Computer Modern),
+                      #  stix, stixsans}
+mathtext.default: it  # italic
+
+
+# ====
+# TEXT
+# ====
+# https://matplotlib.org/stable/tutorials/text/text_intro.html
+# https://matplotlib.org/stable/tutorials/text/usetex.html
+# https://matplotlib.org/stable/api/text_api.html#matplotlib.text.Text
+text.usetex: False  # Whether to use LaTeX for all text handling.
+text.antialiased: True  # If True, the text will be antialiased.  This
+                        # only affects raster outputs.
+
+
+# ======
+# IMAGES
+# ======
+# https://matplotlib.org/stable/tutorials/introductory/images.html
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html
+# https://matplotlib.org/stable/api/image_api.html
+image.aspect: equal  # {equal, auto} or a number.  equal ensures that
+                     # pixels are squares.
+image.interpolation: antialiased  # {none, antialiased, nearest,
+                                  #  bilinear, bicubic, spline16,
+                                  #  spline36, hanning, hamming,
+                                  #  hermite, kaiser, quadric, catrom,
+                                  #  gaussian, bessel, mitchell, sinc,
+                                  #  lanczos, blackman}
+image.cmap: viridis  # Default colormap.  See
+                     # https://matplotlib.org/stable/tutorials/colors/colormaps.html
+image.lut: 256  # Size of the colormap lookup table
+image.origin: upper  # {lower, upper}
+image.resample:  False  # If False, only resample when the output image
+                        # is larger than the input image.
+image.composite_image: True  # If True, all the images on a set of axes
+                             # are combined into a single composite
+                             # image before saving a figure as a vector
+                             # graphics file, such as a PDF.
+
+
+# ======
+# FIGURE
+# ======
+# https://matplotlib.org/api/figure_api.html#matplotlib.figure.Figure
+figure.titlesize: large  # Size of the figure title.
+figure.titleweight: bold  # Font weight of the figure title
+figure.figsize: 8.26772, 5.82677  # DIN A5 landscape in inches.
+figure.dpi: 300  # Figure dots per inch.
+figure.frameon: False  # Enable figure frame.
+
+# The figure subplot parameters.  All dimensions are a fraction of the
+# figure width and height.
+# https://matplotlib.org/stable/faq/howto_faq.html#howto-subplots-adjust
+#figure.subplot.left:   0.125  # Left side of the subplots of the figure.
+#figure.subplot.right:  0.9  # Right side of the subplots of the figure.
+#figure.subplot.bottom: 0.11  # Bottom of the subplots of the figure.
+#figure.subplot.top:    0.88  # Top of the subplots of the figure.
+#figure.subplot.wspace: 0.2  # Space between subplots as fraction of the
+#figure.subplot.hspace: 0.2  # average axis width or height.
+
+# Figure layout.
+figure.autolayout: False  # If True, automatically adjust subplot
+                          # parameters to make the plot fit the figure
+                          # using tight_layout.
+figure.constrained_layout.use: True  # If True, automatically make plot
+                                     # elements fit on the figure using
+                                     # constrained_layout.  Not
+                                     # compatible with figure.autolayout.
+figure.constrained_layout.h_pad:  0.1  # Padding around axes objects in
+figure.constrained_layout.w_pad:  0.1  # inches.
+#figure.constrained_layout.hspace: 0.05  # Space between subplots as
+#figure.constrained_layout.wspace: 0.05  # fraction of the subplot
+                                         # width or height.
+
+
+# ==============
+# SAVING FIGURES
+# ==============
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html
+savefig.dpi: figure  # Resolution in dots per inch.  figure = figure.dpi
+savefig.format: pdf
+savefig.transparent: True  # Transparent background.
+savefig.orientation: landscape  # Orientation of saved figure.
+savefig.bbox: standard  # {tight, standard}.  tight is incompatible with
+                        # pipe-based animation backends (e.g. ffmpeg)
+                        # but will work with those based on temporary
+                        # files (e.g. ffmpeg_file).
+
+# ps backend params.
+ps.papersize: A5  # {auto, letter, legal, ledger, A0-A10, B0-B10}
+
+
+# =====
+# LINES
+# =====
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.lines.Line2D.html
+# https://matplotlib.org/stable/gallery/lines_bars_and_markers/marker_reference.html
+lines.linewidth: 2.5  # Line width in points.
+lines.linestyle: -  # {-, --, -., :, none, (offset, on-off-seq)}
+lines.scale_dashes: True
+lines.marker: None
+lines.markersize: 10  # Marker size in points.
+lines.markeredgewidth: 2.5  # Line width around the marker symbol
+markers.fillstyle: none  # {full, left, right, bottom, top, none}
+lines.antialiased: True  # Render lines in antialiased (no jaggies).
+
+pcolor.shading : flat  # {flat, nearest, gouraud, auto}
+                       # https://matplotlib.org/stable/gallery/images_contours_and_fields/pcolormesh_grids.html
+
+
+# =======
+# PATCHES
+# =======
+# https://matplotlib.org/stable/api/patches_api.html
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Patch.html
+patch.linewidth: 2  # Edge width in points.
+patch.antialiased: True  # Render patches in antialiased (no jaggies).
+
+
+# =======
+# HATCHES
+# =======
+hatch.linewidth: 2
+
+
+# =====
+# GRIDS
+# =====
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.grid.html
+grid.linewidth: 2  # Line width in points.
+
+
+# ====
+# AXES
+# ====
+# https://matplotlib.org/stable/api/axes_api.html
+axes.linewidth: 2.5  # Edge line width.
+
+# Axes title.
+axes.titlesize: large  # Font size of the axes title.
+axes.titleweight: normal  # Font weight of title.
+axes.titlelocation: center  # Alignment of the title:
+                            # {left, right, center}
+axes.titlepad: 24  # Pad between axes and title in points.
+
+# Axes lables.
+axes.labelsize: medium  # Font size of the x and y labels.
+axes.labelweight: normal  # Font weight of the x and y labels.
+axes.labelpad: 16  # Space between label and axis.
+
+# Tick label formatter.
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.ticklabel_format.html
+axes.formatter.use_locale: False  # Whether to format numbers using the
+                                  # current locale or using the C
+                                  # (English) locale.  This affects e.g.
+                                  # the decimal separator.
+axes.formatter.limits: -3, 4  # Use scientific notation if log10 of the
+                              # axis range is smaller than the first or
+                              # larger than the second value.
+axes.formatter.min_exponent: 0  # Minimum exponent to format in
+                                # scientific notation.
+axes.formatter.useoffset: False  # If True, the tick label formatter
+                                 # will default to labeling ticks
+                                 # relative to an offset when the data
+                                 # range is small compared to the
+                                 # minimum absolute value of the data.
+axes.formatter.offset_threshold: 4  # When useoffset is True, the offset
+                                    # will be used when it can remove
+                                    # at least this number of
+                                    # significant digits from tick
+                                    # labels.
+axes.formatter.use_mathtext: True  # Whether to use mathtext for offsets
+                                   # and scientific notation.
+
+# Display axis spines.
+axes.spines.left: True
+axes.spines.bottom: True
+axes.spines.top: True
+axes.spines.right: True
+
+# Display grid.
+axes.grid: False  # If True, display grid.
+axes.grid.axis: both  # Which axis the grid should apply to.
+axes.grid.which: major  # Grid lines at {major, minor, both} ticks.
+polaraxes.grid: True  # If True, display grid on polar axes.
+axes3d.grid: True  # If True, display grid on 3D axes.
+
+axes.axisbelow: line  # Draw axis gridlines and ticks:
+                      #   * Below patches (True)
+                      #   * Above patches but below lines (line)
+                      #   * Above all (False)
+                      # https://matplotlib.org/stable/gallery/misc/zorder_demo.html
+axes.unicode_minus: True  # Use Unicode for the minus symbol or a hyphen
+
+
+# ====
+# AXIS
+# ====
+# https://matplotlib.org/stable/api/axis_api.html
+xaxis.labellocation: center  # Alignment of the xaxis label:
+                             # {left, right, center}
+yaxis.labellocation: center  # Alignment of the yaxis label:
+                             # {bottom, top, center}
+
+
+# =====
+# TICKS
+# =====
+# https://matplotlib.org/stable/api/axis_api.html#ticks-tick-labels-and-offset-text
+xtick.top: True  # Draw ticks on the top side.
+xtick.bottom: True  # Draw ticks on the bottom side.
+xtick.labeltop: False  # Draw label on the top.
+xtick.labelbottom: True  # Draw label on the bottom.
+xtick.labelsize: medium  # Font size of the tick labels.
+xtick.direction: in  # direction: {in, out, inout}.
+xtick.alignment: center  # Alignment of xticks.
+xtick.major.size: 8.75  # Major tick size in points.
+xtick.minor.size: 5  # Minor tick size in points.
+xtick.major.width: 2.5  # Major tick width in points.
+xtick.minor.width: 2  # Minor tick width in points.
+xtick.major.pad: 8.75  # Distance to major tick label in points.
+xtick.minor.pad: 8.5  # Distance to the minor tick label in points.
+xtick.major.top: True  # Draw x axis top major ticks.
+xtick.major.bottom: True  # Draw x axis bottom major ticks.
+xtick.minor.top: True  # Draw x axis top minor ticks.
+xtick.minor.bottom: True  # Draw x axis bottom minor ticks.
+xtick.minor.visible: True  # Visibility of minor ticks on x-axis.
+
+ytick.left: True  # Draw ticks on the left side.
+ytick.right: True  # Draw ticks on the right side.
+ytick.labelleft: True  # Draw tick labels on the left side.
+ytick.labelright: False  # Draw tick labels on the right side.
+ytick.labelsize: medium  # Font size of the tick labels.
+ytick.direction: in  # Direction: {in, out, inout}.
+ytick.alignment: center_baseline  # Alignment of yticks.
+ytick.major.size: 8.75  # Major tick size in points.
+ytick.minor.size: 5  # Minor tick size in points.
+ytick.major.width: 2.5  # Major tick width in points.
+ytick.minor.width: 2  # Minor tick width in points.
+ytick.major.pad: 8.75  # Distance to major tick label in points.
+ytick.minor.pad: 8.5  # Distance to the minor tick label in points.
+ytick.major.left: True  # Draw y axis left major ticks.
+ytick.major.right: True    # Draw y axis right major ticks.
+ytick.minor.left: True    # Draw y axis left minor ticks.
+ytick.minor.right: True    # Draw y axis right minor ticks.
+ytick.minor.visible: True  # Visibility of minor ticks on y-axis.
+
+
+# ======
+# LEGEND
+# ======
+# https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html
+legend.loc: best
+legend.frameon: True  # If True, draw the legend on a background patch.
+legend.framealpha: 0.75  # Legend patch transparency.
+legend.fancybox: False  # If True, use a rounded box for the legend
+                        # background, else a rectangle.
+legend.shadow: False  # If True, give background a shadow effect.
+legend.numpoints: 1  # The number of marker points in the legend line.
+legend.scatterpoints: 1  # Number of scatter points
+legend.markerscale: 1  # The relative size of legend markers vs.
+                       # original.
+legend.fontsize: small
+legend.title_fontsize: small
+
+legend.borderaxespad: 0.6  # Space between the axes and legend edge as
+                           # fraction of font size.
+
+
+# =============
+# SCATTER PLOTS
+# =============
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.scatter.html
+scatter.marker: o         # The default marker type for scatter plots.
+scatter.edgecolors: face  # The default edge colors for scatter plots.
+
+
+# ==============
+# ERRORBAR PLOTS
+# ==============
+errorbar.capsize: 5  # Length of end caps on error bars in pixels.
+
+
+# =============
+# CONTOUR PLOTS
+# =============
+# https://matplotlib.org/stable/gallery/images_contours_and_fields/contour_demo.html
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contour.html
+contour.linewidth: None  # {float, None}.  Width of the contour lines.
+                         # If set to None, it falls back to
+                         # line.linewidth.
+
+
+# ========
+# BOXPLOTS
+# ========
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.boxplot.html
+boxplot.notch: False  # Draw notched or rectangular boxes.
+boxplot.vertical: True  # Draw vertical or horizontal boxes.
+boxplot.whiskers: 1.5  # Data range spanned by the whiskers.
+boxplot.bootstrap: None
+boxplot.patchartist: False
+boxplot.showmeans: True
+boxplot.showcaps: True
+boxplot.showbox: True
+boxplot.showfliers: True  # Show the outliers beyond the caps.
+boxplot.meanline: False
+
+# The style of the fliers.
+boxplot.flierprops.marker: o
+boxplot.flierprops.markeredgewidth: 2.5
+boxplot.flierprops.markersize: 10
+boxplot.flierprops.linestyle: none
+boxplot.flierprops.linewidth: 2.5
+
+# The style of the box.
+boxplot.boxprops.linewidth: 2.5
+boxplot.boxprops.linestyle: -
+
+# The style of the whiskers.
+boxplot.whiskerprops.linewidth: 2.5
+boxplot.whiskerprops.linestyle: -
+
+# The style of the whisker caps.
+boxplot.capprops.linewidth: 2.5
+boxplot.capprops.linestyle: -
+
+# The style of the median.
+boxplot.medianprops.linewidth: 2.5
+boxplot.medianprops.linestyle: -
+
+# The style of the mean.
+boxplot.meanprops.marker: ^
+boxplot.meanprops.markersize: 10
+boxplot.meanprops.linestyle: --
+boxplot.meanprops.linewidth: 2.5
