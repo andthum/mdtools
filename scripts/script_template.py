@@ -47,8 +47,9 @@ The first part of the docstring should contain the following paragraphs
        details or background theory (this goes in the Notes section).
 
 Note that you will have to repeat parts of the docstring (especially
-the summary and a potentially abbreviated version of the Options section)
-when implementing the command-line interface with :mod:`argparse`.
+the summary and a potentially abbreviated version of the Options
+section) when implementing the command-line interface with
+:mod:`argparse`.
 
 Options
 -------
@@ -67,14 +68,15 @@ be called and their meaning.
             of ``-1`` means to read the very last frame.  Default:
             ``-1``.
 --every     Read every n-th frame from the trajectory.  Default: ``1``.
---sel       Selection string to select a group of atoms for the analysis.
-            See MDAnalysis' |selection_syntax| for possible choices.
+--sel       Selection string to select a group of atoms for the
+            analysis.  See MDAnalysis' |selection_syntax| for possible
+            choices.
 --cmp       {'group', 'segments', 'residues', 'fragments', 'atoms'}
 
-            The compounds of the selection group to use for the analysis.
-            Compounds can be 'group' (the entire selection group),
-            'segments', 'residues', 'fragments', or 'atoms'.  Refer to
-            the MDAnalysis' user guide for an
+            The compounds of the selection group to use for the
+            analysis.  Compounds can be 'group' (the entire selection
+            group), 'segments', 'residues', 'fragments', or 'atoms'.
+            Refer to the MDAnalysis' user guide for an
             |explanation_of_these_terms|.  Note that in any case, even
             if ``CMP`` is e.g. 'residues', only the atoms belonging to
             the selection group are taken into account, even if the
@@ -84,7 +86,9 @@ be called and their meaning.
 
             The center of the compounds to use for the analysis.  Choose
             'cog' for center of geometry or 'com' for center of mass.
-            Default: ``'cog'``
+            Note that |mda_always_guesses_atom_masses| from the atom
+            types, even if the input file contains the masses.  Default:
+            ``'cog'``
 --debug     Run in :ref:`debug mode <debug-mode-label>`.
 
 Output
@@ -95,7 +99,7 @@ created by the script.
 Outfile1 (-o) : .txt
     A text file containing abc.
 Outfile2 (\--dtrj-out): .npy
-    A binary NumPy :file:`.npy` containing the discrete trajectory as
+    A binary NumPy :file:`.npy` containing a discrete trajectory as
     :class:`numpy.ndarray` of dtype :attr:`numpy.uint32` and shape
     ``(n, f)``, where ``n`` is the number of reference compounds
     and ``f`` is the number of frames.  The elements of the discrete
@@ -139,10 +143,10 @@ import sys
 import os
 import argparse
 from datetime import datetime, timedelta
+
 # Third party libraries
 import psutil
-# import numpy as np
-# import MDAnalysis as mda
+
 # Local application/library specific imports
 import mdtools as mdt
 
@@ -153,7 +157,7 @@ import mdtools as mdt
 # putting it here in this specific script.
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     timer_tot = datetime.now()
     proc = psutil.Process()
     proc.cpu_percent()  # Initiate monitoring of CPU usage
@@ -162,94 +166,90 @@ if __name__ == '__main__':
         # The description should only contain the short summary from the
         # docstring and a reference to the documetation.
         description=(
-            "Script template for scripts that process MD trajectories."
-            "  For more information, refer to the documetation of this"
-            " script."
+            "Script template for scripts that process MD trajectories.  For"
+            " more information, refer to the documetation of this script."
         )
     )
     parser.add_argument(
-        '-f',
-        dest='TRJFILE',
-        type=str,
-        required=True,
-        help="Trajectory file."
+        "-f", dest="TRJFILE", type=str, required=True, help="Trajectory file."
     )
     parser.add_argument(
-        '-s',
-        dest='TOPFILE',
-        type=str,
-        required=True,
-        help="Topology file."
+        "-s", dest="TOPFILE", type=str, required=True, help="Topology file."
     )
     parser.add_argument(
-        '-o',
-        dest='OUTFILE',
-        type=str,
-        required=True,
-        help="Output filename."
+        "-o", dest="OUTFILE", type=str, required=True, help="Output filename."
     )
     parser.add_argument(
-        '-b',
-        dest='BEGIN',
+        "-b",
+        dest="BEGIN",
         type=int,
         required=False,
         default=0,
-        help="First frame to read from the trajectory.  Frame numbering"
-             " starts at zero.  Default: %(default)s."
+        help=(
+            "First frame to read from the trajectory.  Frame numbering starts"
+            " at zero.  Default: %(default)s."
+        ),
     )
     parser.add_argument(
-        '-e',
-        dest='END',
+        "-e",
+        dest="END",
         type=int,
         required=False,
         default=-1,
-        help="Last frame to read from the trajectory (exclusive)."
-             "  Default: %(default)s."
+        help=(
+            "Last frame to read from the trajectory (exclusive).  Default:"
+            " %(default)s."
+        ),
     )
     parser.add_argument(
-        '--every',
-        dest='EVERY',
+        "--every",
+        dest="EVERY",
         type=int,
         required=False,
         default=1,
-        help="Read every n-th frame from the trajectory.  Default:"
-             " %(default)s."
+        help=(
+            "Read every n-th frame from the trajectory.  Default: %(default)s."
+        ),
     )
     parser.add_argument(
-        '--sel',
-        dest='SEL',
+        "--sel",
+        dest="SEL",
         type=str,
-        nargs='+',
+        nargs="+",
         required=True,
-        help="Selection string."
+        help="Selection string.",
     )
     parser.add_argument(
-        '--cmp',
-        dest='CMP',
+        "--cmp",
+        dest="CMP",
         type=str,
         required=False,
-        choices=('group', 'segments', 'residues', 'fragments', 'atoms'),
-        default='atoms',
-        help="The compounds of the selection group to use for the"
-             " analysis.  Default: %(default)s"
+        choices=("group", "segments", "residues", "fragments", "atoms"),
+        default="atoms",
+        help=(
+            "The compounds of the selection group to use for the analysis."
+            "  Default: %(default)s"
+        ),
     )
     parser.add_argument(
-        '--center',
-        dest='CENTER',
+        "--center",
+        dest="CENTER",
         type=str,
         required=False,
-        choices=('cog', 'com'),
-        default='cog',
-        help="The center of the compounds to use for the analysis."
-             "  Default: %(default)s"
+        choices=("cog", "com"),
+        default="cog",
+        help=(
+            "The center of the compounds to use for the analysis.  Default:"
+            " %(default)s"
+        ),
     )
     parser.add_argument(
-        '--debug',
-        dest='DEBUG',
+        "--debug",
+        dest="DEBUG",
         required=False,
         default=False,
-        action='store_true',
-        help="Run in debug mode."
+        action="store_true",
+        help="Run in debug mode.",
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
@@ -258,14 +258,16 @@ if __name__ == '__main__':
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
     print("\n")
-    sel = mdt.select.atoms(ag=u, sel=' '.join(args.SEL))
+    sel = mdt.select.atoms(ag=u, sel=" ".join(args.SEL))
     print("\n")
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
         step=args.EVERY,
-        n_frames_tot=u.trajectory.n_frames
+        n_frames_tot=u.trajectory.n_frames,
     )
+    first_frame_read = u.trajectory[BEGIN]
+    last_frame_read = u.trajectory[END - 1]
 
     print("\n")
     print("Reading trajectory...")
@@ -274,42 +276,36 @@ if __name__ == '__main__':
     print("First frame to read:    {:>8d}".format(BEGIN))
     print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
-    print("Time first frame:       {:>12.3f} ps"
-          .format(u.trajectory[BEGIN].time))
-    print("Time last frame:        {:>12.3f} ps"
-          .format(u.trajectory[END - 1].time))
-    print("Time step first frame:  {:>12.3f} ps"
-          .format(u.trajectory[BEGIN].dt))
-    print("Time step last frame:   {:>12.3f} ps"
-          .format(u.trajectory[END - 1].dt))
+    print("Time first frame:       {:>12.3f} ps".format(first_frame_read.time))
+    print("Time last frame:        {:>12.3f} ps".format(last_frame_read.time))
+    print("Time step first frame:  {:>12.3f} ps".format(first_frame_read.dt))
+    print("Time step last frame:   {:>12.3f} ps".format(last_frame_read.dt))
     timer = datetime.now()
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
     for ts in trj:
         # TODO: Put your computations here (preferably as function)
         # ProgressBar update:
-        progress_bar_mem = proc.memory_info().rss / 2**20
-        trj.set_postfix_str("{:>7.2f}MiB".format(progress_bar_mem),
-                            refresh=False)
+        trj.set_postfix_str(
+            "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
+        )
     trj.close()
     print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss / 2**20))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
     print("Creating output...")
     timer = datetime.now()
     # TODO: Create your output file(s).  When creating text files, use
-    # mdtools.file_handler.savetxt or mdtools.file_handler.savetxt_matrix
+    # mdtools.file_handler.savetxt or
+    # mdtools.file_handler.savetxt_matrix
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss / 2**20))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
     print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
-    print("CPU time:             {}"
-          .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
+    _cpu_time = timedelta(seconds=sum(proc.cpu_times()[:4]))
+    print("CPU time:             {}".format(_cpu_time))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
-    print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss / 2**20))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))

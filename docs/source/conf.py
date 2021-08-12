@@ -188,6 +188,8 @@ rst_epilog = """
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/selections.html">selection syntax</a>`
 .. |explanation_of_these_terms| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/groups_of_atoms.html">explanation of these terms</a>`
+.. |mda_always_guesses_atom_masses| replace::
+    :raw-html:`<a href="https://userguide.mdanalysis.org/formats/guessing.html">MDAnalysis always guesses atom masses</a>`
 """  # noqa: E501
 
 # The name of the default domain.
