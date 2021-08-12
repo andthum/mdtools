@@ -20,7 +20,6 @@
 
 
 # Standard libraries
-import os
 from datetime import datetime
 # Third party libraries
 import psutil
@@ -717,7 +716,7 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
     ts = universe.trajectory[0]
     if verbose:
         timer = datetime.now()
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
         last_frame = universe.trajectory[end - 1].frame
         ts = universe.trajectory[0]
         print("  Frame   {:12d}".format(ts.frame), flush=True)

@@ -41,7 +41,7 @@ def as_si(x, ndp):
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
 
     parser = argparse.ArgumentParser(
         description=(

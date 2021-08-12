@@ -286,7 +286,7 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
                           " total number of frames in pos ({})"
                           .format(restart, len(pos)), RuntimeWarning)
 
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
     pos = np.asarray(pos)
     bins = np.unique(bins)
 
@@ -366,7 +366,7 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
 
     args = parse_user_input()
     dim = {'x': 0, 'y': 1, 'z': 2}

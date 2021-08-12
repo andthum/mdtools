@@ -84,7 +84,7 @@ def discrete_coord(cms, verbose=False, debug=False):
 
     if verbose:
         timer = datetime.now()
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
         print("  Frame   {:12d} of {:12d}"
               .format(0, len(cms) - 1),
               flush=True)
@@ -223,7 +223,7 @@ def discrete_coord(cms, verbose=False, debug=False):
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
 
     parser = argparse.ArgumentParser(
         description=(

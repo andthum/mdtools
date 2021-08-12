@@ -188,7 +188,7 @@ def remain_prob(dtraj, restart=1, continuous=False,
     else:
         remain = np.zeros(n_compounds, dtype=bool)
 
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
     timer = datetime.now()
     for t0 in range(0, n_frames - 1, restart):
         if t0 % 10**(len(str(t0)) - 1) == 0 or t0 == n_frames - 2:
@@ -298,7 +298,7 @@ def remain_prob(dtraj, restart=1, continuous=False,
 if __name__ == '__main__':
 
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
 
     parser = argparse.ArgumentParser(
         description=(

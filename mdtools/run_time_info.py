@@ -17,7 +17,7 @@
 
 
 """
-Classes and functions for getting run time information
+Classes and functions for getting run time information.
 
 This module can be called from :mod:`mdtools` via the shortcut ``rti``::
 
@@ -32,11 +32,13 @@ import sys
 import os
 import warnings
 from datetime import datetime
+
 # Third party libraries
 import psutil
 import numpy as np
 import MDAnalysis as mda
 from MDAnalysis.lib.log import ProgressBar
+
 # Local application/library specific imports
 import mdtools as mdt
 
@@ -64,13 +66,14 @@ class ProgressBar(ProgressBar):
         * `ascii` is set to ``True``.
         * `unit` is set to ``'frames'``.
         * `unit_scale` is set to ``True``.
-        * The `bar_format` is changed to switch of a possible inversion
+        * The `bar_format` is changed to switch off a possible inversion
           of 'unit/s' to 's/unit' (see also
           https://github.com/tqdm/tqdm/issues/72).
         * `mininterval` is set to ``300`` seconds.
         * `maxinterval` is set to ``3600`` seconds.
 
-    See the MDAnalysis_ and tqdm_ documentations for further information.
+    See the MDAnalysis_ and tqdm_ documentations for further
+    information.
 
     .. _MDAnalysis: https://docs.mdanalysis.org/stable/documentation_pages/lib/log.html#MDAnalysis.lib.log.ProgressBar
     .. _tqdm: https://tqdm.github.io/docs/tqdm/#__init__
@@ -86,7 +89,7 @@ class ProgressBar(ProgressBar):
 
         25%|#####1           | 25/100 [00:15<00:45,  1.67frames/s]
 
-    """
+    """  # noqa: E501,W505
 
     def __init__(self, *args, **kwargs):
         """
@@ -96,22 +99,26 @@ class ProgressBar(ProgressBar):
         ----------
         args : list, optional
             Non-keyword arguments.  See
-            :class:`MDAnalysis.lib.log.ProgressBar` for possible choices.
+            :class:`MDAnalysis.lib.log.ProgressBar` for possible
+            choices.
         kwargs : dict, optional
             Keynword arguments.  See
-            :class:`MDAnalysis.lib.log.ProgressBar` for possible choices.
+            :class:`MDAnalysis.lib.log.ProgressBar` for possible
+            choices.
         """
-        kwargs['ascii'] = kwargs.pop('ascii', True)
-        kwargs['unit'] = kwargs.pop('unit', "frames")
-        kwargs['mininterval'] = kwargs.pop('mininterval', 300)
-        kwargs['maxinterval'] = kwargs.pop('maxinterval', 3600)
-        kwargs['unit_scale'] = kwargs.pop('unit_scale', True)
-        bar_format = ("{l_bar}{bar}|" +
-                      " {n_fmt}/{total_fmt}" +
-                      " [{elapsed}<{remaining}," +
-                      " {rate_noinv_fmt}" +
-                      "{postfix}]")
-        kwargs['bar_format'] = kwargs.pop('bar_format', bar_format)
+        kwargs["ascii"] = kwargs.pop("ascii", True)
+        kwargs["unit"] = kwargs.pop("unit", "frames")
+        kwargs["mininterval"] = kwargs.pop("mininterval", 300)
+        kwargs["maxinterval"] = kwargs.pop("maxinterval", 3600)
+        kwargs["unit_scale"] = kwargs.pop("unit_scale", True)
+        bar_format = (
+            "{l_bar}{bar}|"
+            " {n_fmt}/{total_fmt}"
+            " [{elapsed}<{remaining},"
+            " {rate_noinv_fmt}"
+            "{postfix}]"
+        )
+        kwargs["bar_format"] = kwargs.pop("bar_format", bar_format)
         super().__init__(*args, **kwargs)
 
 
@@ -129,64 +136,72 @@ def get_num_CPUs():
         5. or from the Python function :func:`os.cpu_count()`
 
     """
-    if os.environ.get('OMP_NUM_THREADS') is not None:
-        return int(os.environ['OMP_NUM_THREADS'])
-    elif os.environ.get('SLURM_CPUS_PER_TASK') is not None:
-        return int(os.environ['SLURM_CPUS_PER_TASK'])
-    elif os.environ.get('SLURM_JOB_CPUS_PER_NODE') is not None:
-        return int(os.environ['SLURM_JOB_CPUS_PER_NODE'])
-    elif os.environ.get('SLURM_CPUS_ON_NODE') is not None:
-        return int(os.environ['SLURM_CPUS_ON_NODE'])
+    if os.environ.get("OMP_NUM_THREADS") is not None:
+        return int(os.environ["OMP_NUM_THREADS"])
+    elif os.environ.get("SLURM_CPUS_PER_TASK") is not None:
+        return int(os.environ["SLURM_CPUS_PER_TASK"])
+    elif os.environ.get("SLURM_JOB_CPUS_PER_NODE") is not None:
+        return int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+    elif os.environ.get("SLURM_CPUS_ON_NODE") is not None:
+        return int(os.environ["SLURM_CPUS_ON_NODE"])
     else:
         return os.cpu_count()
 
 
-def mem_usage(unit='MiB'):
+def mem_usage(proc=None, pid=None, unit="MiB"):
     """
     Get current memory usage.
 
-    Returns the current memory usage of the process that calls this
-    function.
+    Returns the current memory usage of a given process.  If `proc` and
+    `pid` are ``None``, the current memory usage of the process that
+    calls this function is returned.
 
     Parameters
     ----------
-    unit : {'B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'KB', 'MB', 'GB', 'TB', 'PB'}
+    proc : psutil.Process
+        The :class:`psutil.Process` for which to get the current memory
+        usage.  If ``None``, a new :class:`psutil.Process` instance is
+        created for the given `pid`.
+    pid : int
+        The ID of the OS process for which to get the current memory
+        usage.  Is only used to create a new :class:`psutil.Process`
+        when `proc` is ``None``.  If `proc` and `pid` are both ``None``,
+        the ID of the current process is used to create the new
+        :class:`psutil.Process`.  If `proc` is not ``None``, `pid` is
+        meaningless.
+    unit : {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "KB", "MB", "GB",\
+            "TB", "PB"}
         String determining the unit in which the memory usage should be
-        returned.  Default is mebibytes (``'MiB'``).
+        returned.  Default is mebibytes (``"MiB"``).
 
     Returns
     -------
     mem : float
-        Memory currently used by the calling process.  Returns ``None``
-        if the memory usage cannot be determined.
+        Current memory usage of `proc`.
     """
-    try:
-        proc = psutil.Process(os.getpid())
-    except (psutil.NoSuchProcess, psutil.AccessDenied) as err:
-        warnings.warn("Cannot get memory usage of process {} because of"
-                      " {}".format(os.getpid(), err), RuntimeWarning)
-        return None
-    if unit == 'B':
+    if proc is None:
+        proc = psutil.Process(pid)
+    if unit == "B":
         scaling = 1
-    elif unit == 'KiB':
-        scaling = 2**10
-    elif unit == 'MiB':
-        scaling = 2**20
-    elif unit == 'GiB':
-        scaling = 2**30
-    elif unit == 'TiB':
-        scaling = 2**40
-    elif unit == 'PiB':
-        scaling = 2**50
-    elif unit == 'KB':
+    elif unit == "KiB":
+        scaling = 2 ** 10
+    elif unit == "MiB":
+        scaling = 2 ** 20
+    elif unit == "GiB":
+        scaling = 2 ** 30
+    elif unit == "TiB":
+        scaling = 2 ** 40
+    elif unit == "PiB":
+        scaling = 2 ** 50
+    elif unit == "KB":
         scaling = 1e3
-    elif unit == 'MB':
+    elif unit == "MB":
         scaling = 1e6
-    elif unit == 'GB':
+    elif unit == "GB":
         scaling = 1e9
-    elif unit == 'TB':
+    elif unit == "TB":
         scaling = 1e12
-    elif unit == 'PB':
+    elif unit == "PB":
         scaling = 1e15
     return proc.memory_info().rss / scaling
 
@@ -197,17 +212,17 @@ def run_time_info():
 
     Returns
     -------
-    script_name : string
+    script_name : str
         The name of the running script.
-    command_line : string
+    command_line : str
         The command line input used to start the script.
-    cwd : string
+    cwd : str
         The working directory the script was started from.
-    exe : string
+    exe : str
         The exact call of the executable script.
-    mdt_version : string
+    mdt_version : str
         The version number of MDTools.
-    python_version : string
+    python_version : str
         The version number of Python.
 
     See Also
@@ -217,15 +232,21 @@ def run_time_info():
     """
     script_name = str(os.path.basename(sys.argv[0]))
     command_line = script_name + " " + " ".join(sys.argv[1:])
-    python_version = (str(sys.version_info[0]) + "." +
-                      str(sys.version_info[1]) + "." +
-                      str(sys.version_info[2]))
-    return (script_name,
-            command_line,
-            os.getcwd(),
-            sys.argv[0],
-            mdt.__version__,
-            python_version)
+    python_version = (
+        str(sys.version_info[0])
+        + "."
+        + str(sys.version_info[1])
+        + "."
+        + str(sys.version_info[2])
+    )
+    return (
+        script_name,
+        command_line,
+        os.getcwd(),
+        sys.argv[0],
+        mdt.__version__,
+        python_version,
+    )
 
 
 def run_time_info_str(indent=0):
@@ -266,7 +287,7 @@ def run_time_info_str(indent=0):
     timestamp = datetime.now()
     script, command_line, cwd, exe, version, pversion = run_time_info()
     rti = "{}\n".format(script)
-    rti += "{}\n".format(timestamp.strftime('%Y/%m/%d %H:%M'))
+    rti += "{}\n".format(timestamp.strftime("%Y/%m/%d %H:%M"))
     rti += "\n"
     rti += mdt.__copyright_notice__ + "\n"
     rti += "\n"
@@ -286,7 +307,7 @@ def run_time_info_str(indent=0):
     return rti
 
 
-def ag_info_str(ag, indent=0):
+def ag_info_str(ag, indent=0, max_names=10):
     """
     Create a string containing information about a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup`.
@@ -300,7 +321,8 @@ def ag_info_str(ag, indent=0):
 
             - :class:`Segments <MDAnalysis.core.groups.Segment>`
             - :class:`Residues <MDAnalysis.core.groups.Residue>`
-            - :attr:`Fragments <MDAnalysis.core.groups.AtomGroup.fragments>`
+            - :attr:`Fragments
+              <MDAnalysis.core.groups.AtomGroup.fragments>`
             - :class:`Atoms <MDAnalysis.core.groups.Atom>`
 
         * The number of different
@@ -308,10 +330,11 @@ def ag_info_str(ag, indent=0):
             - :class:`Segments <MDAnalysis.core.groups.Segment>`
             - :class:`Residues <MDAnalysis.core.groups.Residue>`
             - :class:`Atoms <MDAnalysis.core.groups.Atom>`
-            - And their respective names.
+            - And their respective names or types.
 
-        * Whether the input :class:`~MDAnalysis.core.groups.AtomGroup` is
-          an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` or not.
+        * Whether the input :class:`~MDAnalysis.core.groups.AtomGroup`
+          is an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` or
+          not.
 
     Refer to the MDAnalysis' user guide for an
     |explanation_of_these_terms|.
@@ -324,6 +347,13 @@ def ag_info_str(ag, indent=0):
     indent : int, optional
         Number of spaces to indent the information string.  Negative
         indentation is treated as zero indentation.
+    max_names : int, optional
+        The maximum number of :class:`~MDAnalysis.core.groups.Segment`,
+        :class:`~MDAnalysis.core.groups.Residue` or
+        :class:`~MDAnalysis.core.groups.Atom` names/types to print to
+        screen.  If the number of different names/types exceeds
+        `max_names`, the names/types are not separatedly printed to
+        stdout to avoid overloading the screen.
 
     Returns
     -------
@@ -343,31 +373,32 @@ def ag_info_str(ag, indent=0):
     except mda.exceptions.NoDataError:
         n_fragments = "N/A"
     ag_info = "Segments:               {}\n".format(ag.n_segments)
-    ag_info += ("  Different segments:   {}\n"
-                .format(len(unique_segids)))
-    ag_info += ("  Segment name(s):      '{}'\n"
-                .format('\' \''.join(i for i in unique_segids)))
+    ag_info += "  Different segments:   {}\n".format(len(unique_segids))
+    if len(unique_segids) <= max_names:
+        ag_info += "  Segment name(s):      '{}'\n".format(
+            "' '".join(i for i in unique_segids)
+        )
     ag_info += "Residues:               {}\n".format(ag.n_residues)
-    ag_info += ("  Different residues:   {}\n"
-                .format(len(unique_resnames)))
-    ag_info += ("  Residue name(s):      '{}'\n"
-                .format('\' \''.join(i for i in unique_resnames)))
+    ag_info += "  Different residues:   {}\n".format(len(unique_resnames))
+    if len(unique_resnames) <= max_names:
+        ag_info += "  Residue name(s):      '{}'\n".format(
+            "' '".join(i for i in unique_resnames)
+        )
     ag_info += "Atoms:                  {}\n".format(ag.n_atoms)
-    ag_info += ("  Different atom names: {}\n"
-                .format(len(unique_atmnames)))
-    # If each atom in a molecule has a different name (frequently the
-    # atoms are numbered sequentially), the list of different atom names
-    # is too long to be usefully printed on screen.
-    # ag_info += ("  Atom name(s):         '{}'\n"
-    #             .format('\' \''.join(i for i in unique_atmnames)))
-    ag_info += ("  Different atom types: {}\n"
-                .format(len(unique_atmtypes)))
-    ag_info += ("  Atom type(s):         '{}'\n"
-                .format('\' \''.join(i for i in unique_atmtypes)))
+    ag_info += "  Different atom names: {}\n".format(len(unique_atmnames))
+    if len(unique_atmnames) <= max_names:
+        ag_info += "  Atom name(s):         '{}'\n".format(
+            "' '".join(i for i in unique_atmnames)
+        )
+    ag_info += "  Different atom types: {}\n".format(len(unique_atmtypes))
+    if len(unique_atmtypes) <= max_names:
+        ag_info += "  Atom type(s):         '{}'\n".format(
+            "' '".join(i for i in unique_atmtypes)
+        )
     ag_info += "Fragments:              {}\n".format(n_fragments)
-    ag_info += ("Updating atom group:    {}"
-                .format(isinstance(ag,
-                                   mda.core.groups.UpdatingAtomGroup)))
+    ag_info += "Updating atom group:    {}".format(
+        isinstance(ag, mda.core.groups.UpdatingAtomGroup)
+    )
     if indent > 0:
         ag_info = mdt.fh.indent(ag_info, amount=indent, char=" ")
     return ag_info
@@ -377,11 +408,6 @@ def dtrj_trans_info(dtrj):
     """
     Generate basic information about the state transitions in a discrete
     trajectory.
-
-    .. deprecated:: 0.0.0.dev0
-        :func:`mdtools.run_time_info.dtrj_trans_info` will be replaced
-        by :func:`mdtools.run_time_info.dtrj_trans_info_new` in a future
-        release.
 
     Parameters
     ----------
@@ -429,54 +455,72 @@ def dtrj_trans_info(dtrj):
     zero.
     """
     dtrj = np.asarray(dtrj)
-    dtrj = np.asarray(dtrj.T, order='C')
+    dtrj = np.asarray(dtrj.T, order="C")
     if dtrj.ndim == 1:
         dtrj = np.expand_dims(dtrj, axis=0)
     elif dtrj.ndim > 2:
-        raise ValueError("The discrete trajectory must have one or two"
-                         " dimensions")
+        raise ValueError(
+            "The discrete trajectory must have one or two dimensions"
+        )
     if np.any(np.modf(dtrj)[0] != 0):
-        warnings.warn("At least one element of the discrete trajectory"
-                      " is not an integer", RuntimeWarning)
+        warnings.warn(
+            "At least one element of the discrete trajectory is not an"
+            " integer",
+            RuntimeWarning,
+        )
 
     n_stay = np.count_nonzero(np.all(dtrj == dtrj[0], axis=0))
-    dtrj_neg = (dtrj < 0)
+    dtrj_neg = dtrj < 0
     always_neg = np.count_nonzero(np.all(dtrj_neg, axis=0))
     never_neg = np.count_nonzero(~np.any(dtrj_neg, axis=0))
     n_frames_neg = np.count_nonzero(dtrj_neg)
     del dtrj_neg
 
     N_CMPS = dtrj.shape[1]
-    transitions = (np.diff(dtrj, axis=0) != 0)
+    transitions = np.diff(dtrj, axis=0) != 0
     trans_init = np.vstack([transitions, np.zeros(N_CMPS, dtype=bool)])
     trans_final = np.insert(transitions, 0, np.zeros(N_CMPS), axis=0)
     n_trans = np.count_nonzero(transitions)
     if np.count_nonzero(trans_init) != n_trans:
-        raise ValueError("The number of transitions in trans_init is not"
-                         " the same as in transitions. This should not"
-                         " have happened")
+        raise ValueError(
+            "The number of transitions in trans_init is not the same as in"
+            " transitions. This should not have happened"
+        )
     if np.count_nonzero(trans_final) != n_trans:
-        raise ValueError("The number of transitions in trans_final is"
-                         " not the same as in transitions. This should"
-                         " not have happened")
-    pos2pos = np.count_nonzero((dtrj[trans_init] >= 0) &
-                               (dtrj[trans_final] >= 0))
-    pos2neg = np.count_nonzero((dtrj[trans_init] >= 0) &
-                               (dtrj[trans_final] < 0))
-    neg2pos = np.count_nonzero((dtrj[trans_init] < 0) &
-                               (dtrj[trans_final] >= 0))
-    neg2neg = np.count_nonzero((dtrj[trans_init] < 0) &
-                               (dtrj[trans_final] < 0))
+        raise ValueError(
+            "The number of transitions in trans_final is not the same as in"
+            " transitions. This should not have happened"
+        )
+    pos2pos = np.count_nonzero(
+        (dtrj[trans_init] >= 0) & (dtrj[trans_final] >= 0)
+    )
+    pos2neg = np.count_nonzero(
+        (dtrj[trans_init] >= 0) & (dtrj[trans_final] < 0)
+    )
+    neg2pos = np.count_nonzero(
+        (dtrj[trans_init] < 0) & (dtrj[trans_final] >= 0)
+    )
+    neg2neg = np.count_nonzero(
+        (dtrj[trans_init] < 0) & (dtrj[trans_final] < 0)
+    )
     if pos2pos + pos2neg + neg2pos + neg2neg != n_trans:
-        raise ValueError("The sum of Positive <-> Negative transitions"
-                         " ({}) is not equal to the total number of"
-                         " transitions ({}). This should not have"
-                         " happened"
-                         .format(pos2pos + pos2neg + neg2pos + neg2neg,
-                                 n_trans))
+        raise ValueError(
+            "The sum of Positive <-> Negative transitions ({}) is not equal to"
+            " the total number of transitions ({}). This should not have"
+            " happened".format(pos2pos + pos2neg + neg2pos + neg2neg, n_trans)
+        )
 
-    return (n_stay, always_neg, never_neg, n_frames_neg,
-            n_trans, pos2pos, pos2neg, neg2pos, neg2neg)
+    return (
+        n_stay,
+        always_neg,
+        never_neg,
+        n_frames_neg,
+        n_trans,
+        pos2pos,
+        pos2neg,
+        neg2pos,
+        neg2neg,
+    )
 
 
 def dtrj_trans_info_str(dtrj):
@@ -484,17 +528,13 @@ def dtrj_trans_info_str(dtrj):
     Create a string containing basic information about the state
     transitions in a discrete trajectory.
 
-    .. deprecated:: 0.0.0.dev0
-        :func:`mdtools.run_time_info.dtrj_trans_info_str` will be
-        replaced by :func:`mdtools.run_time_info.dtrj_trans_info_str_new`
-        in a future release.
-
     The string can be printed directly to standard output using
     :func:`print`.
 
     The information contained in the string is:
 
-        * The number of frames of the discrete trajectory (per compound).
+        * The number of frames of the discrete trajectory (per
+          compound).
         * The number of compounds (or in other words, the number of
           single-compound trajectories contained in `dtrj`).
         * The information generated by
@@ -522,29 +562,58 @@ def dtrj_trans_info_str(dtrj):
     """
     N_CMPS, N_FRAMES = dtrj.shape
     trans_info = dtrj_trans_info(dtrj)
-    dti = ("No. of frames (per compound):                         {:>12d}\n"
-           .format(N_FRAMES))
-    dti += ("No. of compounds:                                     {:>12d}\n"
-            .format(N_CMPS))
-    dti += ("No. of compounds that never leave their state:        {:>12d}\n"
-            .format(trans_info[0]))
-    dti += ("No. of compounds that are always in a negative state: {:>12d}\n"
-            .format(trans_info[1]))
-    dti += ("No. of compounds that are never  in a negative state: {:>12d}\n"
-            .format(trans_info[2]))
-    dti += ("Total No. of frames with negative states:             {:>12d}\n"
-            .format(trans_info[3]))
+    dti = (
+        "No. of frames (per compound):                         "
+        "{:>12d}\n".format(N_FRAMES)
+    )
+    dti += (
+        "No. of compounds:                                     "
+        "{:>12d}\n".format(N_CMPS)
+    )
+    dti += (
+        "No. of compounds that never leave their state:        "
+        "{:>12d}\n".format(trans_info[0])
+    )
+    dti += (
+        "No. of compounds that are always in a negative state: "
+        "{:>12d}\n".format(trans_info[1])
+    )
+    dti += (
+        "No. of compounds that are never  in a negative state: "
+        "{:>12d}\n".format(trans_info[2])
+    )
+    dti += (
+        "Total No. of frames with negative states:             "
+        "{:>12d}\n".format(trans_info[3])
+    )
     dti += "\n"
-    dti += ("Total No. of state transitions:          {:>12d}\n"
-            .format(trans_info[4]))
-    dti += ("No. of Positive -> Positive transitions: {:>12d}  ({:>8.4f} %)\n"
-            .format(trans_info[5], 100 * trans_info[5] / trans_info[4]))
-    dti += ("No. of Positive -> Negative transitions: {:>12d}  ({:>8.4f} %)\n"
-            .format(trans_info[6], 100 * trans_info[6] / trans_info[4]))
-    dti += ("No. of Negative -> Positive transitions: {:>12d}  ({:>8.4f} %)\n"
-            .format(trans_info[7], 100 * trans_info[7] / trans_info[4]))
-    dti += ("No. of Negative -> Negative transitions: {:>12d}  ({:>8.4f} %)\n"
-            .format(trans_info[8], 100 * trans_info[8] / trans_info[4]))
+    dti += "Total No. of state transitions:          {:>12d}\n".format(
+        trans_info[4]
+    )
+    dti += (
+        "No. of Positive -> Positive transitions: "
+        "{:>12d}  ({:>8.4f} %)\n".format(
+            trans_info[5], 100 * trans_info[5] / trans_info[4]
+        )
+    )
+    dti += (
+        "No. of Positive -> Negative transitions: "
+        "{:>12d}  ({:>8.4f} %)\n".format(
+            trans_info[6], 100 * trans_info[6] / trans_info[4]
+        )
+    )
+    dti += (
+        "No. of Negative -> Positive transitions: "
+        "{:>12d}  ({:>8.4f} %)\n".format(
+            trans_info[7], 100 * trans_info[7] / trans_info[4]
+        )
+    )
+    dti += (
+        "No. of Negative -> Negative transitions: "
+        "{:>12d}  ({:>8.4f} %)\n".format(
+            trans_info[8], 100 * trans_info[8] / trans_info[4]
+        )
+    )
     dti += "Positive states are states with a state index >= 0\n"
     dti += "Negative states are states with a state index <  0\n"
     return dti

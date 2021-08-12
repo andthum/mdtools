@@ -20,19 +20,22 @@
 
 # TODO: Write docstring.
 r"""
-Script template for scripts that process discrete trajectories stored as
-:class:`numpy.ndarray`.
+Script template for scripts that process discrete trajectories.
 
 .. deprecated:: 1.6.0
-    **Example deprication warning**.  :mod:`scripts.script_template_dtrj`
-    will be removed in MDTools 2.0.0.  It is replaced by
-    :mod:`scripts.cript_template_dtrj_new`, because the latter has
-    additional functionality xyz.
+    **Example deprication warning**.
+    :mod:`scripts.script_template_dtrj` will be removed in MDTools
+    2.0.0.  It is replaced by :mod:`scripts.cript_template_dtrj_new`,
+    because the latter has additional functionality xyz.
 
 .. todo::
 
     * **Example todo list**.
     * Implement feature xyz.
+
+Discrete trajectories must be stored in arrays.  Arrays that serve as
+discrete trajectory must meet the requirements listed in
+:func:`mdtools.check.dtrj`.
 
 The following is a guide/template on how to write a docstring for a
 MDTools script.  For more information see the
@@ -48,8 +51,9 @@ The first part of the docstring should contain the following paragraphs
        details or background theory (this goes in the Notes section).
 
 Note that you will have to repeat parts of the docstring (especially
-the summary and a potentially abbreviated version of the Options section)
-when implementing the command-line interface with :mod:`argparse`.
+the summary and a potentially abbreviated version of the Options
+section) when implementing the command-line interface with
+:mod:`argparse`.
 
 Options
 -------
@@ -83,7 +87,7 @@ created by the script.
 Outfile1 (-o) : .txt
     A text file containing abc.
 Outfile2 (\--dtrj-out): .npy
-    A binary NumPy :file:`.npy` containing the discrete trajectory as
+    A binary NumPy :file:`.npy` containing a discrete trajectory as
     :class:`numpy.ndarray` of dtype :attr:`numpy.uint32` and shape
     ``(n, f)``, where ``n`` is the number of reference compounds
     and ``f`` is the number of frames.  The elements of the discrete
@@ -127,9 +131,10 @@ import sys
 import os
 import argparse
 from datetime import datetime, timedelta
+
 # Third party libraries
 import psutil
-# import numpy as np
+
 # Local application/library specific imports
 import mdtools as mdt
 
@@ -140,68 +145,71 @@ import mdtools as mdt
 # putting it here in this specific script.
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     timer_tot = datetime.now()
-    proc = psutil.Process(os.getpid())
+    proc = psutil.Process()
     proc.cpu_percent()  # Initiate monitoring of CPU usage
     # TODO: Implement command line interface.
     parser = argparse.ArgumentParser(
         # The description should only contain the short summary from the
         # docstring and a reference to the documetation.
         description=(
-            "Script template for scripts that process discrete"
-            " trajectories.  For more information, refer to the"
-            " documetation of this script.")
+            "Script template for scripts that process discrete trajectories."
+            "  For more information, refer to the documetation of this script."
+        )
     )
     parser.add_argument(
-        '-f',
-        dest='TRJFILE',
+        "-f",
+        dest="TRJFILE",
         type=str,
         required=True,
-        help="File containing the discrete trajectory stored as"
-             " numpy.ndarray in the binary .npy format."
+        help=(
+            "File containing the discrete trajectory stored as numpy.ndarray"
+            " in the binary .npy format."
+        ),
     )
     parser.add_argument(
-        '-o',
-        dest='OUTFILE',
-        type=str,
-        required=True,
-        help="Output filename."
+        "-o", dest="OUTFILE", type=str, required=True, help="Output filename."
     )
     parser.add_argument(
-        '-b',
-        dest='BEGIN',
+        "-b",
+        dest="BEGIN",
         type=int,
         required=False,
         default=0,
-        help="First frame to read from the trajectory.  Frame numbering"
-             " starts at zero.  Default: %(default)s."
+        help=(
+            "First frame to read from the trajectory.  Frame numbering starts"
+            " at zero.  Default: %(default)s."
+        ),
     )
     parser.add_argument(
-        '-e',
-        dest='END',
+        "-e",
+        dest="END",
         type=int,
         required=False,
         default=-1,
-        help="Last frame to read from the trajectory (exclusive)."
-             "  Default: %(default)s."
+        help=(
+            "Last frame to read from the trajectory (exclusive).  Default:"
+            " %(default)s."
+        ),
     )
     parser.add_argument(
-        '--every',
-        dest='EVERY',
+        "--every",
+        dest="EVERY",
         type=int,
         required=False,
         default=1,
-        help="Read every n-th frame from the trajectory.  Default:"
-             " %(default)s."
+        help=(
+            "Read every n-th frame from the trajectory.  Default: %(default)s."
+        ),
     )
     parser.add_argument(
-        '--debug',
-        dest='DEBUG',
+        "--debug",
+        dest="DEBUG",
         required=False,
         default=False,
-        action='store_true',
-        help="Run in debug mode."
+        action="store_true",
+        help="Run in debug mode.",
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
@@ -216,13 +224,12 @@ if __name__ == '__main__':
         start=args.BEGIN,
         stop=args.END,
         step=args.EVERY,
-        n_frames_tot=N_FRAMES_TOT
+        n_frames_tot=N_FRAMES_TOT,
     )
     dtrj = dtrj[:, BEGIN:END:EVERY]
     trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj)
     print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss / 2**20))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
     print("Reading trajectory...")
@@ -237,29 +244,27 @@ if __name__ == '__main__':
     for cmp_trj in dtrj:
         # TODO: Put your computations here (preferably as function)
         # ProgressBar update:
-        progress_bar_mem = proc.memory_info().rss / 2**20
-        dtrj.set_postfix_str("{:>7.2f}MiB".format(progress_bar_mem),
-                             refresh=False)
+        dtrj.set_postfix_str(
+            "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
+        )
     dtrj.close()
     print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss / 2**20))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
     print("Creating output...")
     timer = datetime.now()
     # TODO: Create your output file(s).  When creating text files, use
-    # mdtools.file_handler.savetxt or mdtools.file_handler.savetxt_matrix
+    # mdtools.file_handler.savetxt or
+    # mdtools.file_handler.savetxt_matrix
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss / 2**20))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
     print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
-    print("CPU time:             {}"
-          .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
+    _cpu_time = timedelta(seconds=sum(proc.cpu_times()[:4]))
+    print("CPU time:             {}".format(_cpu_time))
     print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
-    print("Current memory usage: {:.2f} MiB"
-          .format(proc.memory_info().rss / 2**20))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))

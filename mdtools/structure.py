@@ -28,7 +28,6 @@ This module can be called from :mod:`mdtools` via the shortcut ``strc``::
 
 
 # Standard libraries
-import os
 import warnings
 from datetime import datetime, timedelta
 # Third party libraries
@@ -341,7 +340,7 @@ def discrete_pos_trj(
     """
     if verbose:
         timer_tot = datetime.now()
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
         proc.cpu_percent()  # Initiate monitoring of CPU usage
         print("Running mdtools.structure.discrete_pos_trj()...")
     if trj is None and (topfile is None or trjfile is None):
@@ -1401,7 +1400,7 @@ def contact_matrices(
     """
     if verbose:
         timer_tot = datetime.now()
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
         proc.cpu_percent()  # Initiate monitoring of CPU usage
         print("Running mdtools.structure.contact_matrices()...")
     if trj is None and (topfile is None or trjfile is None):
