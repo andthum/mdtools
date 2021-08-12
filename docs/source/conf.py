@@ -302,11 +302,11 @@ html_split_index = False
 
 # If True, the reStructuredText sources are included in the HTML build
 # as _sources/name.
-html_copy_source = False
+html_copy_source = True
 
 # If True (and html_copy_source is True as well), links to the
 # reStructuredText sources will be added to the sidebar.
-html_show_sourcelink = False
+html_show_sourcelink = True
 
 # If nonempty, an OpenSearch description file will be output, and all
 # pages will contain a <link> tag referring to it.   the value of this

@@ -7,15 +7,16 @@
    and
    https://sphinx-autosummary-recursion.readthedocs.io/en/latest/index.html
 
+:github_url: hide
 
 {{ name | escape | underline}}
 
 .. automodule:: {{ fullname }}
-    
+
     {% block attributes %}
     {% if attributes %}
     .. rubric:: {{ _('Module Attributes') }}
-    
+
     .. autosummary::
         :toctree:
         :template: custom-attribute-template.rst
@@ -25,11 +26,11 @@
     {%- endfor %}
     {% endif %}
     {% endblock %}
-    
+
     {% block functions %}
     {% if functions %}
     .. rubric:: {{ _('Functions') }}
-    
+
     .. autosummary::
         :toctree:
         :template: custom-function-template.rst
@@ -39,11 +40,11 @@
     {%- endfor %}
     {% endif %}
     {% endblock %}
-    
+
     {% block classes %}
     {% if classes %}
     .. rubric:: {{ _('Classes') }}
-    
+
     .. autosummary::
         :toctree:
         :template: custom-class-template.rst
@@ -53,11 +54,11 @@
     {%- endfor %}
     {% endif %}
     {% endblock %}
-    
+
     {% block exceptions %}
     {% if exceptions %}
     .. rubric:: {{ _('Exceptions') }}
-    
+
     .. autosummary::
         :toctree:
         :nosignatures:

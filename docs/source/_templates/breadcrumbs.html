@@ -1,0 +1,15 @@
+<!--
+Custom template to remove the "Edit on ..." button in the header of doc
+pages hosted by Read the Docs.  See
+https://docs.readthedocs.io/en/stable/guides/remove-edit-buttons.html
+and
+https://github.com/sphinx-doc/sphinx/issues/2386#issuecomment-478403897
+-->
+
+{%- extends "sphinx_rtd_theme/breadcrumbs.html" %}
+
+{% block breadcrumbs_aside %}
+{% if not meta or meta.get('github_url') != 'hide' %}
+{{ super() }}
+{% endif %}
+{% endblock %}
