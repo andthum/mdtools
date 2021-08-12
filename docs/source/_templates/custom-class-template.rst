@@ -7,6 +7,7 @@
    and
    https://sphinx-autosummary-recursion.readthedocs.io/en/latest/index.html
 
+:github_url: hide
 
 {{ name | escape | underline}}
 
@@ -14,11 +15,11 @@
 
 .. autoclass:: {{ objname }}
     :members:
-    
+
     {% block methods %}
     {% if methods %}
     .. rubric:: {{ _('Methods') }}
-    
+
     .. autosummary::
         :template: custom-method-template.rst
         :nosignatures:
@@ -29,11 +30,11 @@
     {%- endfor %}
     {% endif %}
     {% endblock %}
-    
+
     {% block attributes %}
     {% if attributes %}
     .. rubric:: {{ _('Attributes') }}
-    
+
     .. autosummary::
         :template: custom-attribute-template.rst
         :nosignatures:

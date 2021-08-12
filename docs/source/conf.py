@@ -102,7 +102,7 @@ extensions = [
 source_suffix = {".rst": "restructuredtext"}
 
 # The document that contains the root toctree directive.
-root_doc = "index"
+master_doc = "index"
 
 # A list of glob-style patterns that should be excluded when looking for
 # source files.  They are matched against the source file names relative
@@ -200,7 +200,7 @@ primary_domain = "py"
 default_role = None
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = "4.0"
+needs_sphinx = "3.0"
 
 # If true, Sphinx will warn about all references where the target cannot
 # be found.
@@ -290,7 +290,8 @@ html_static_path = ["_static"]
 # string is equivalent to "%b %d, %Y" (or a locale-dependent equivalent)
 # html_last_updated_fmt = ""
 
-# Whether to add permalinks for each heading and description environment
+# Whether to add permalinks for each heading and description
+# environment.
 html_permalinks = True
 
 # If True, add an index to the HTML documents.
@@ -302,11 +303,11 @@ html_split_index = False
 
 # If True, the reStructuredText sources are included in the HTML build
 # as _sources/name.
-html_copy_source = False
+html_copy_source = True
 
 # If True (and html_copy_source is True as well), links to the
 # reStructuredText sources will be added to the sidebar.
-html_show_sourcelink = False
+html_show_sourcelink = True
 
 # If nonempty, an OpenSearch description file will be output, and all
 # pages will contain a <link> tag referring to it.   the value of this
@@ -338,7 +339,7 @@ htmlhelp_basename = "mdtoolsdoc"
 epub_theme = "epub"
 
 # The description of the document. The default value is 'unknown'.
-epub_description = "MDTools' Documentation"
+epub_description = "MDTools Documentation"
 
 # An identifier for the document.
 epub_identifier = "https://github.com/andthum/mdtools"
@@ -360,8 +361,8 @@ latex_theme = "manual"
 
 # latex_documents determines how to group the document tree into LaTeX
 # source files.
-_startdocname = root_doc
-_targetname = htmlhelp_basename + ".tex"
+_targetname = "mdtoolsdoc.tex"
+_startdocname = master_doc
 _title = "MDTools Documentation"
 _author = r" \and ".join(author.split(", "))
 _theme = latex_theme
@@ -396,7 +397,6 @@ latex_show_urls = epub_show_urls
 # usually puts into the generated .tex files.
 latex_elements = {
     "papersize": "a4paper",
-    "pointsize": "12pt",
     "extrapackages": r"\usepackage{unicode-math}",
 }
 
@@ -509,17 +509,19 @@ doctest_test_doctest_blocks = "default"
 # -- Options for intersphinx extension ---------------------------------
 
 # Locations and names of other projects that should be linked to in this
-# documentation.
+# documentation.  Here is a list of commonly used mappings:
+# https://gist.github.com/bskinn/0e164963428d4b51017cebdb6cda5209
 intersphinx_mapping = {
-    "matplotlib": ("https://matplotlib.org", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
     "MDAnalysis": ("https://docs.mdanalysis.org/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "psutil": ("https://psutil.readthedocs.io/en/latest/", None),
-    "python": ("https://docs.python.org/3", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
+    "psutil": ("https://psutil.readthedocs.io/en/stable/", None),
+    "python": ("https://docs.python.org/3/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "Sphinx": ("https://www.sphinx-doc.org/en/stable/", None),
 }
 
-# The maximum number of days to cache remote inventories (in days).
+# The maximum number of days to cache remote inventories.
 intersphinx_cache_limit = 7
 
 
@@ -575,7 +577,7 @@ napoleon_use_param = False
 # False to use a single :keyword arguments: role for all the keywords.
 napoleon_use_keyword = napoleon_use_param
 
-# True to use the :rtype: role for the return type. False to output the
+# True to use the :rtype: role for the return type.  False to output the
 # return type inline with the description.
 napoleon_use_rtype = False
 
