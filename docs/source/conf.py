@@ -102,7 +102,7 @@ extensions = [
 source_suffix = {".rst": "restructuredtext"}
 
 # The document that contains the root toctree directive.
-root_doc = "index"
+master_doc = "index"
 
 # A list of glob-style patterns that should be excluded when looking for
 # source files.  They are matched against the source file names relative
@@ -200,7 +200,7 @@ primary_domain = "py"
 default_role = None
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = "4.0"
+needs_sphinx = "3.0"
 
 # If true, Sphinx will warn about all references where the target cannot
 # be found.
@@ -360,8 +360,8 @@ latex_theme = "manual"
 
 # latex_documents determines how to group the document tree into LaTeX
 # source files.
-_startdocname = root_doc
 _targetname = htmlhelp_basename + ".tex"
+_startdocname = master_doc
 _title = "MDTools Documentation"
 _author = r" \and ".join(author.split(", "))
 _theme = latex_theme

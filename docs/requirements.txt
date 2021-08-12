@@ -1,8 +1,9 @@
-# Date: 2021/06/26
 # Requirements to build MDTools' documentation.
-# These requirements apply additional to the install requirements of in
-# the root level of MDTools.
+#
+# These requirements apply additionally to the install requirements of
+# MDTools as listed in the requirements file in the root directory of
+# the project.
 
-sphinx >=4.0, <5.0
+sphinx >=3.0, <5.0
 sphinx-rtd-theme >=0.5, <1.0
 readthedocs-sphinx-search >=0.1, <1.0
