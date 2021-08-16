@@ -169,7 +169,11 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "-o", dest="OUTFILE", type=str, required=True, help="Output filename."
+        "-o",
+        dest="OUTFILE",
+        type=str,
+        required=True,
+        help=("Output filename."),
     )
     parser.add_argument(
         "-b",
@@ -209,7 +213,7 @@ if __name__ == "__main__":
         required=False,
         default=False,
         action="store_true",
-        help="Run in debug mode.",
+        help=("Run in debug mode."),
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())

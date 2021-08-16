@@ -81,14 +81,14 @@ be called and their meaning.
             if ``CMP`` is e.g. 'residues', only the atoms belonging to
             the selection group are taken into account, even if the
             compound might comprise additional atoms that are not
-            contained in the selection group.  Default: ``'atoms'``
+            contained in the selection group.  Default: ``'atoms'``.
 --center    {'cog', 'com'}
 
             The center of the compounds to use for the analysis.  Choose
             'cog' for center of geometry or 'com' for center of mass.
             Note that |mda_always_guesses_atom_masses| from the atom
             types, even if the input file contains the masses.  Default:
-            ``'cog'``
+            ``'cog'``.
 --debug     Run in :ref:`debug mode <debug-mode-label>`.
 
 Output
@@ -171,13 +171,25 @@ if __name__ == "__main__":
         )
     )
     parser.add_argument(
-        "-f", dest="TRJFILE", type=str, required=True, help="Trajectory file."
+        "-f",
+        dest="TRJFILE",
+        type=str,
+        required=True,
+        help=("Trajectory file."),
     )
     parser.add_argument(
-        "-s", dest="TOPFILE", type=str, required=True, help="Topology file."
+        "-s",
+        dest="TOPFILE",
+        type=str,
+        required=True,
+        help=("Topology file."),
     )
     parser.add_argument(
-        "-o", dest="OUTFILE", type=str, required=True, help="Output filename."
+        "-o",
+        dest="OUTFILE",
+        type=str,
+        required=True,
+        help=("Output filename."),
     )
     parser.add_argument(
         "-b",
@@ -217,7 +229,7 @@ if __name__ == "__main__":
         type=str,
         nargs="+",
         required=True,
-        help="Selection string.",
+        help=("Selection string."),
     )
     parser.add_argument(
         "--cmp",
@@ -249,7 +261,7 @@ if __name__ == "__main__":
         required=False,
         default=False,
         action="store_true",
-        help="Run in debug mode.",
+        help=("Run in debug mode."),
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
