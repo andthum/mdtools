@@ -16,7 +16,50 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""General plotting functions on the basis of :mod:`matplotlib.pyplot`"""
+"""
+Functions for plotting data.
+
+The functions in this module are simple wrappers around plotting
+functions of |matplotlib|.
+
+This module is not directly accessible from mdtools, but must be loaded
+explicitly e.g. via::
+
+    import mdtools.plot as mdtplt
+
+This module loads the custom matplotlib style sheet
+:file:`styles/mdtools.mplstyle`.  If you want to keep the default
+plotting style, you have to re-load the default style after importing
+:mod:`mdtools.plot`::
+
+    import matplotlib.pyplot as plt
+    plt.style.use("default")
+
+See `Customizing Matplotlib with style sheets and rcParams`_ for more
+information about style sheets.  Among other settings,
+:file:`mdtools.mplstyle` sets the default figure size to 8.26772 x
+5.82677 inches, which is the size of a DIN A5 paper in landscape format.
+The default font size is set to 24 points and also the linewidths and
+markersizes are scaled appropiately.  In this way the produced figures
+can be used for presentations and posters or they can be scaled down to
+the width of a single text column in a scientific journal without
+loosing readability.
+
+With the introduction of the :file:`mdtools.mplstyle` style sheet in
+MDTools version 0.0.0.dev2, a lot of functions in this module became
+deprecated, because the functions were just wrappers around
+corresponding matplotlib functions with hardcoded style settings.  With
+the style sheet, the matplotlib functions can be called directly and
+create plots with the desired style.
+
+.. todo::
+
+    * Update deprecated plot functions in the plot scripts.
+    * Remove the deprecated plot functions in this module.
+
+.. _Customizing Matplotlib with style sheets and rcParams: https://matplotlib.org/stable/tutorials/introductory/customizing.html
+"""  # noqa: W505, E501
+
 
 # Standard libraries
 import os

@@ -145,13 +145,15 @@ jobs:
       run: |
         python -m pip install --user --upgrade .
         python -c "import mdtools"
+        # Test import of all modules that must be loeaded explicitly.
+        python -c "import mdtools.plot"
     - name: Install/Upgrade requirements to build the documentation
       run: python -m pip install --user --upgrade -r docs/requirements.txt
     - name: Test build of the documentation
       run: make -C ./docs/ html
     - name: doctest
       # Because the default dtypes of NumPy arrays are different on
-      # Windows, doctest will detect false failures. See e.g.
+      # Windows, doctest will detect false failures.  See e.g.
       # https://stackoverflow.com/questions/36278590/numpy-array-dtype-is-coming-as-int32-by-default-in-a-windows-10-64-bit-machine
       if: ${{ runner.os != 'Windows' }}
       run: make -C ./docs/ doctest

@@ -10,7 +10,7 @@ referred to as "core package").  If you are only interested in
 :ref:`scripts-label` instead.
 
 .. todo::
-    
+
     Revise and document all modules that are not already contained in
     this documentation.
 
@@ -25,13 +25,14 @@ Modules
     :template: custom-module-template.rst
     :recursive:
     :nosignatures:
-    
+
     check
     dtrj
     dynamics
     file_handler
     numpy_helper_functions
     parallel
+    plot
     run_time_info
     scipy_helper_functions
     select
