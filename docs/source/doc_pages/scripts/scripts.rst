@@ -46,6 +46,7 @@ Scripts for Developers
 
     script_template
     script_template_dtrj
+    script_template_plot
 
 
 .. _debug-mode-label:
