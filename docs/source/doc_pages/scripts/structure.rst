@@ -16,7 +16,8 @@ Scripts
     :template: custom-module-template.rst
     :recursive:
     :nosignatures:
-    
+
     contact_hist
     lig_change_at_pos_change_blocks
     lig_change_at_pos_change_blocks_hist
+    plot_gmx_densmap

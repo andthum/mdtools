@@ -80,6 +80,7 @@ jobs:
       # check those files that are already formatted.
       run: |
         python -m black ./ --check --line-length 79 --include \
+        **/*template*.py \
         docs/source/conf.py \
         mdtools/__init__.py \
         mdtools/_metadata.py \
@@ -87,9 +88,7 @@ jobs:
         mdtools/plot.py \
         mdtools/run_time_info.py \
         mdtools/version.py \
-        scripts/script_template.py \
-        scripts/script_template_dtrj.py \
-        scripts/script_template_plot.py \
+        scripts/structure/plot_gmx_densmap.py \
         setup.py
     - name: Install/Upgrade flake8 and flake8-docstrings extension
       run: python -m pip install --user --upgrade flake8 flake8-docstrings
