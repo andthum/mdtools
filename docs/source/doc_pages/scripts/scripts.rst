@@ -30,6 +30,7 @@ Scripts by Application
     :glob:
 
     discretization
+    dynamics
     structure
 
 
