@@ -88,6 +88,7 @@ jobs:
         mdtools/plot.py \
         mdtools/run_time_info.py \
         mdtools/version.py \
+        scripts/discretization/plot_state_lifetime.py \
         scripts/dynamics/plot_msd_layer.py \
         scripts/dynamics/plot_msd_layer_cross_section_xyz_at_constant_time.py \
         scripts/structure/plot_gmx_densmap.py \

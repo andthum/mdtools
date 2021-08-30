@@ -17,7 +17,7 @@ Scripts that create discretized trajectories
     :template: custom-module-template.rst
     :recursive:
     :nosignatures:
-    
+
     discrete_pos
 
 
@@ -31,5 +31,17 @@ Scripts that process discretized trajectories
     :template: custom-module-template.rst
     :recursive:
     :nosignatures:
-    
-    
+
+
+Plot scripts
+------------
+
+.. currentmodule:: scripts/discretization
+
+.. autosummary::
+    :toctree: _sphinx_autosummary_discretization
+    :template: custom-module-template.rst
+    :recursive:
+    :nosignatures:
+
+    plot_state_lifetime
