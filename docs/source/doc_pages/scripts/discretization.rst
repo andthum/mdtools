@@ -45,3 +45,4 @@ Plot scripts
     :nosignatures:
 
     plot_state_lifetime
+    plot_state_lifetime_discrete

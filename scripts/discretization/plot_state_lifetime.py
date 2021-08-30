@@ -47,7 +47,9 @@ Options
 
 See Also
 --------
-:mod:`plot_state_lifetime_discrete` : TODO
+:mod:`plot_state_lifetime_discrete` :
+    Plot the lifetime autocorrelation function of discrete states as
+    function of another set of discrete states
 
 Examples
 --------
