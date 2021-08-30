@@ -30,4 +30,5 @@ Plot scripts
     :nosignatures:
 
     plot_msd_layer
+    plot_msd_layer_heatmap
     plot_msd_layer_cross_section_xyz_at_constant_time

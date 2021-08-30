@@ -84,8 +84,9 @@ See Also
 :mod:`plot_msd_layer` :
     Plot the MSD as function of diffusion time for different initial
     particle positions
-:mod:`scripts.dynamics.plot_msd_layer_heatmap` :
-    TODO
+:mod:`plot_msd_layer_heatmap` :
+    Plot the MSD as function of the initial particle position and the
+    diffusion time in a heatmap
 :mod:`scripts.dynamics.plot_msd_layer_cross_section_at_constant_time` :
     TODO
 :mod:`scripts.dynamics.plot_msd_layer_cross_section_xyz_at_constant_msd` :
