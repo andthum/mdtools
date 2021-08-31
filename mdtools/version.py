@@ -54,5 +54,5 @@ whereas `semantic versioning`_ requires a hyphen.
 """
 
 
-#: Release of MDTools as a string, using `semantic versioning`_.
+# Release of MDTools as a string, using `semantic versioning`_.
 __version__ = "0.0.0.dev1"
