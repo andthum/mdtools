@@ -1853,3 +1853,44 @@ def annotate_heatmap(
             text = im.axes.text(x, y, fmt(data[i, j], None), **kw)
             texts.append(text)
     return texts
+
+
+def sci_notation_tex(x, dec_places=1):
+    r"""
+    Convert a number to scientific notation in TeX format.
+
+    Parameters
+    ----------
+    x : scalar
+        The number which to converto to scientific notation in TeX
+        format.
+    dec_places : int
+        Number of decimal places.  Must not be negative.
+
+    Returns
+    -------
+    x_sci : str
+        Scientific notation of `x` as raw string in TeX format.
+
+    Notes
+    -----
+    This code is based on the following two stackoverflow answers:
+
+        * https://stackoverflow.com/a/31453961
+        * https://stackoverflow.com/a/29261252
+
+    Examples
+    --------
+    >>> import mdtools.plot as mdtplt
+    >>> mdtplt.sci_notation_tex(5)
+    '5.0 \\times 10^{0}'
+    >>> mdtplt.sci_notation_tex(5e-2, dec_places=3)
+    '5.000 \\times 10^{-2}'
+    """
+    if dec_places < 0:
+        raise ValueError(
+            "'dec_places' ({}) must not be negative".format(dec_places)
+        )
+    x_sci_string = "{num:.{dp:d}e}".format(num=x, dp=dec_places)
+    base, exponent = x_sci_string.split("e")
+    return r"{b:s} \times 10^{{{e:d}}}".format(b=base, e=int(exponent))

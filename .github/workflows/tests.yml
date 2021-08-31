@@ -90,10 +90,7 @@ jobs:
         mdtools/version.py \
         scripts/discretization/plot_state_lifetime_discrete.py \
         scripts/discretization/plot_state_lifetime.py \
-        scripts/dynamics/plot_msd_layer_cross_section_at_constant_time.py \
-        scripts/dynamics/plot_msd_layer_cross_section_xyz_at_constant_time.py \
-        scripts/dynamics/plot_msd_layer_heatmap.py \
-        scripts/dynamics/plot_msd_layer.py \
+        scripts/dynamics/plot_msd_layer*.py \
         scripts/structure/plot_gmx_densmap.py \
         setup.py
     - name: Install/Upgrade flake8 and flake8-docstrings extension

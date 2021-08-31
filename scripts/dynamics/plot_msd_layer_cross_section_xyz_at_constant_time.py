@@ -90,14 +90,15 @@ See Also
 :mod:`plot_msd_layer_cross_section_at_constant_time` :
     Plot (one component of) the MSD as function of the initial particle
     position at a constant diffusion time(s)
-:mod:`scripts.dynamics.plot_msd_layer_cross_section_xyz_at_constant_msd` :
-    TODO
-
+:mod:`plot_msd_layer_cross_section_xyz_at_constant_msd` :
+    Plot the diffusion time at which the x-, y- and z-component of the
+    MSD reach a certain value as function of the initial particle
+    position
 
 Examples
 --------
 TODO
-"""  # noqa: W505
+"""
 
 
 __author__ = "Andreas Thum"
