@@ -19,14 +19,15 @@
 
 
 """
-Plot the lifetime autocorrelation function of discrete states.
-
-This script is designed to plot the output of
-:mod:`scripts.discretization.state_lifetime`.
+Plot the lifetime autocorrelation function of discrete states as
+function of lag time.
 
 .. todo::
 
     Finish docstring
+
+This script is designed to plot the output of
+:mod:`scripts.discretization.state_lifetime`.
 
 Options
 -------
@@ -147,7 +148,7 @@ if __name__ == "__main__":
     print("\n")
     print("Reading input file...")
     timer = datetime.now()
-    times, autocorr, fit = np.loadtxt(fname=args.INFILE, unpack=True)
+    times, autocorr, fit = np.loadtxt(args.INFILE, unpack=True)
     times *= args.TCONV
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
@@ -155,59 +156,67 @@ if __name__ == "__main__":
     print("\n")
     print("Creating plot...")
     timer = datetime.now()
-    if args.XLIM[0] is None:
-        args.XLIM[0] = np.nanmax(times)
+    if args.XLIM[1] is None:
+        args.XLIM[1] = np.nanmax(times)
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         # Autocorrelation function vs lag time
         fig, ax = plt.subplots(clear=True)
-        ax.plot(times, autocorr, linestyle="", marker="x")
-        mdt.plot.plot(times, fit, label="Fit")
+        ax.plot(times, autocorr, linestyle="", marker="o")
+        ax.plot(times, fit, label="Fit")
         ax.set(
-            xlim=args.XLIM,
-            ylim=args.YLIM,
             xlabel=r"$\Delta t$ / " + args.TUNIT,
             ylabel=r"$C(\Delta t)$",
+            xlim=args.XLIM,
+            ylim=args.YLIM,
         )
+        ax.legend()
         pdf.savefig()
         plt.close()
         # ln(Autocorrelation function) vs lag time
         fig, ax = plt.subplots(clear=True)
         mask = autocorr > 0
         mask_fit = fit > 0
-        if args.YLIM[0] < 0:
-            ymin = args.YLIM[0]
-        else:
-            ymin = min(
-                np.nanmin(np.log(autocorr[mask])),
-                np.nanmin(np.log(fit[mask_fit])),
-            )
-        ymax = args.YLIM[1] if args.YLIM[1] <= 0 else 0
-        ax.plot(times[mask], np.log(autocorr[mask]), linestyle="", marker="x")
+        ax.plot(times[mask], np.log(autocorr[mask]), linestyle="", marker="o")
         ax.plot(times[mask_fit], np.log(fit[mask_fit]), label="Fit")
+        if args.YLIM[0] is not None and args.YLIM[0] > 0:
+            ymin = np.log(args.YLIM[0])
+        else:
+            ymin = None
+        if args.YLIM[1] is not None and args.YLIM[1] > 0:
+            ymax = np.log(args.YLIM[1])
+        else:
+            ymax = None
         ax.set(
-            xlim=args.XLIM,
-            ylim=(ymin, ymax),
             xlabel=r"$\Delta t$ / " + args.TUNIT,
             ylabel=r"$\ln{C(\Delta t)}$",
+            xlim=args.XLIM,
+            ylim=(ymin, ymax),
         )
+        ax.legend()
         pdf.savefig()
         plt.close()
         # Autocorrelation function vs log(lag time)
         fig, ax = plt.subplots(clear=True)
-        mask = times > 0
-        xmin = args.XLIM[0] if args.XLIM[0] > 0 else np.nanmin(times[mask])
-        xmax = args.XLIM[1] if args.XLIM[1] > 0 else np.nanmax(times[mask])
-        ax.plot(times, autocorr, linestyle="", marker="x")
+        ax.plot(times, autocorr, linestyle="", marker="o")
         ax.plot(times, fit, label="Fit")
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        mask = times > 0
+        if args.XLIM[0] is not None and args.XLIM[0] > 0:
+            xmin = args.XLIM[0]
+        else:
+            xmin = np.nanmin(times[mask])
+        if args.XLIM[1] is not None and args.XLIM[1] > 0:
+            xmax = args.XLIM[1]
+        else:
+            xmax = np.nanmax(times[mask])
         ax.set(
-            xlim=(xmin, xmax),
-            ylim=args.YLIM,
-            ymax=args.YMAX,
             xlabel=r"$\Delta t$ / " + args.TUNIT,
             ylabel=r"$C(\Delta t)$",
+            xlim=(xmin, xmax),
+            ylim=args.YLIM,
         )
+        ax.legend()
         pdf.savefig()
         plt.close()
     print("Created {}".format(args.OUTFILE))
