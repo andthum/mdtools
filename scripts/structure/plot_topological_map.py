@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -16,6 +16,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
+
+
+__author__ = "Andreas Thum"
 
 
 # This python script is inspired by the work of Florian Müller-Plathe
@@ -39,6 +42,8 @@ import matplotlib.cm as cm
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 # Matplotlib: Nested Gridspecs
@@ -556,7 +561,7 @@ if __name__ == "__main__":
                                 linestyles='--')
 
                     for a_ix in ab_ix.T:
-                        mdt.plot.scatter(
+                        mdtplt.scatter(
                             ax=axis,
                             x=times[::effective_plotevery],
                             y=a_ix[::effective_plotevery],
@@ -573,7 +578,8 @@ if __name__ == "__main__":
                             cmap=cmap,
                             vmin=vmin,
                             vmax=vmax,
-                            norm=norm)
+                            norm=norm,
+                        )
                     if rb < len(res_blocks) - 2:
                         axis.tick_params(labelbottom=False)
                         axis.set_xlabel('')
@@ -607,14 +613,16 @@ if __name__ == "__main__":
                     if vmin_ix == vmax_ix:
                         vmin_ix = 0
                         vmax_ix = len(data[:, 1])
-                    mdt.plot.plot(ax=axis,
-                                  x=data[:, 0],
-                                  y=data[:, 1],
-                                  xmin=vmin,
-                                  xmax=vmax,
-                                  ymin=np.min(data[vmin_ix:vmax_ix, 1]),
-                                  ymax=np.max(data[vmin_ix:vmax_ix, 1]),
-                                  color='black')
+                    mdtplt.plot(
+                        ax=axis,
+                        x=data[:, 0],
+                        y=data[:, 1],
+                        xmin=vmin,
+                        xmax=vmax,
+                        ymin=np.min(data[vmin_ix:vmax_ix, 1]),
+                        ymax=np.max(data[vmin_ix:vmax_ix, 1]),
+                        color='black',
+                    )
                     axis.xaxis.set_visible(False)
                     axis.yaxis.set_visible(False)
                     axis.spines['bottom'].set_visible(False)

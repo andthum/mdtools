@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,6 +18,9 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__author__ = "Andreas Thum"
+
+
 import sys
 import os
 from datetime import datetime
@@ -28,6 +31,8 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 if __name__ == '__main__':
@@ -198,17 +203,19 @@ if __name__ == '__main__':
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
-        mdt.plot.hist(ax=axis,
-                      x=trenew,
-                      xmin=args.XMIN,
-                      xmax=args.XMAX,
-                      ymin=args.YMIN,
-                      ymax=args.YMAX,
-                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
-                      ylabel="Counts",
-                      bins=bins,
-                      range=(args.START, args.STOP),
-                      density=False)
+        mdtplt.hist(
+            ax=axis,
+            x=trenew,
+            xmin=args.XMIN,
+            xmax=args.XMAX,
+            ymin=args.YMIN,
+            ymax=args.YMAX,
+            xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+            ylabel="Counts",
+            bins=bins,
+            range=(args.START, args.STOP),
+            density=False,
+        )
         plt.tight_layout()
         pdf.savefig()
         plt.close()
@@ -218,28 +225,32 @@ if __name__ == '__main__':
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
-        mdt.plot.hist(ax=axis,
-                      x=trenew,
-                      xmin=args.XMIN,
-                      xmax=args.XMAX,
-                      ymin=args.YMIN,
-                      ymax=args.YMAX,
-                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
-                      ylabel=r'$p(\tau_{renew})$',
-                      bins=bins,
-                      range=(args.START, args.STOP),
-                      density=True)
-        mdt.plot.plot(ax=axis,
-                      x=x,
-                      y=mdt.stats.exp_dist(x=x, rate=popt),
-                      xmin=args.XMIN,
-                      xmax=args.XMAX,
-                      ymin=args.YMIN,
-                      ymax=args.YMAX,
-                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
-                      ylabel=r'$p(\tau_{renew})$',
-                      label="Fit",
-                      color='black')
+        mdtplt.hist(
+            ax=axis,
+            x=trenew,
+            xmin=args.XMIN,
+            xmax=args.XMAX,
+            ymin=args.YMIN,
+            ymax=args.YMAX,
+            xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+            ylabel=r'$p(\tau_{renew})$',
+            bins=bins,
+            range=(args.START, args.STOP),
+            density=True,
+        )
+        mdtplt.plot(
+            ax=axis,
+            x=x,
+            y=mdt.stats.exp_dist(x=x, rate=popt),
+            xmin=args.XMIN,
+            xmax=args.XMAX,
+            ymin=args.YMIN,
+            ymax=args.YMAX,
+            xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+            ylabel=r'$p(\tau_{renew})$',
+            label="Fit",
+            color='black',
+        )
         plt.tight_layout()
         pdf.savefig()
         plt.close()

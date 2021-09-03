@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,6 +18,9 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__author__ = "Andreas Thum"
+
+
 import sys
 import os
 from datetime import datetime
@@ -28,6 +31,8 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 if __name__ == '__main__':
@@ -239,7 +244,7 @@ if __name__ == '__main__':
         displ0[-1] = np.count_nonzero(msd_tot == 0)
         mask = (msd_tot > 0)
         if args.DCOLOR is None:
-            mdt.plot.scatter(
+            mdtplt.scatter(
                 ax=axis,
                 x=trenew[mask],
                 y=msd_tot[mask],
@@ -251,9 +256,10 @@ if __name__ == '__main__':
                 logy=True,
                 xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                 ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
-                marker='x')
+                marker='x',
+            )
         else:
-            img = mdt.plot.scatter(
+            img = mdtplt.scatter(
                 ax=axis,
                 x=trenew[mask],
                 y=msd_tot[mask],
@@ -267,7 +273,8 @@ if __name__ == '__main__':
                 xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                 ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 marker='x',
-                cmap='plasma')
+                cmap='plasma',
+            )
             cbar = plt.colorbar(img, ax=axis)
             cbar.set_label(label=r'${}(t_0)$ / {}'.format(args.DCOLOR, args.LUNIT),
                            fontsize=fontsize_labels)
@@ -282,7 +289,7 @@ if __name__ == '__main__':
                                 length=0.5 * tick_length,
                                 labelsize=0.8 * fontsize_ticks)
         mask = (running_average_tot > 0)
-        mdt.plot.plot(
+        mdtplt.plot(
             ax=axis,
             x=trenew[mask][sort_ix[mask]],
             y=running_average_tot[mask],
@@ -295,10 +302,11 @@ if __name__ == '__main__':
             xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
             ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             label="Running average",
-            color='red')
+            color='red',
+        )
         fit = mdt.dyn.msd(t=trenew, D=popt[-1], d=3)
         mask = (fit > 0)
-        mdt.plot.plot(
+        mdtplt.plot(
             ax=axis,
             x=trenew[mask],
             y=fit[mask],
@@ -311,7 +319,8 @@ if __name__ == '__main__':
             xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
             ylabel=r'$\Delta r^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             label="Fit",
-            color='black')
+            color='black',
+        )
         plt.tight_layout()
         pdf.savefig()
         plt.close()
@@ -325,7 +334,7 @@ if __name__ == '__main__':
             displ0[i] = np.count_nonzero(data == 0)
             mask = (data > 0)
             if args.DCOLOR is None:
-                mdt.plot.scatter(
+                mdtplt.scatter(
                     ax=axis,
                     x=trenew[mask],
                     y=data[mask],
@@ -337,9 +346,10 @@ if __name__ == '__main__':
                     logy=True,
                     xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                     ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
-                    marker='x')
+                    marker='x',
+                )
             else:
-                img = mdt.plot.scatter(
+                img = mdtplt.scatter(
                     ax=axis,
                     x=trenew[mask],
                     y=data[mask],
@@ -353,7 +363,8 @@ if __name__ == '__main__':
                     xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                     ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                     marker='x',
-                    cmap='plasma')
+                    cmap='plasma',
+                )
                 cbar = plt.colorbar(img, ax=axis)
                 cbar.set_label(label=r'${}(t_0)$ / {}'.format(args.DCOLOR, args.LUNIT),
                                fontsize=fontsize_labels)
@@ -368,7 +379,7 @@ if __name__ == '__main__':
                                     length=0.5 * tick_length,
                                     labelsize=0.8 * fontsize_ticks)
             mask = (running_average.T[i] > 0)
-            mdt.plot.plot(
+            mdtplt.plot(
                 ax=axis,
                 x=trenew[mask][sort_ix[mask]],
                 y=running_average.T[i][mask],
@@ -381,10 +392,11 @@ if __name__ == '__main__':
                 xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                 ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 label="Running average",
-                color='red')
+                color='red',
+            )
             fit = mdt.dyn.msd(t=trenew, D=popt[i], d=1)
             mask = (fit > 0)
-            mdt.plot.plot(
+            mdtplt.plot(
                 ax=axis,
                 x=trenew[mask],
                 y=fit[mask],
@@ -397,7 +409,8 @@ if __name__ == '__main__':
                 xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                 ylabel=r'$\Delta ' + ylabel[i] + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
                 label="Fit",
-                color='black')
+                color='black',
+            )
             plt.tight_layout()
             pdf.savefig()
             plt.close()

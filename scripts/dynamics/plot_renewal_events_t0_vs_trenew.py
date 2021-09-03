@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,6 +18,9 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__author__ = "Andreas Thum"
+
+
 import sys
 import os
 from datetime import datetime
@@ -26,6 +29,8 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 if __name__ == '__main__':
@@ -170,7 +175,7 @@ if __name__ == '__main__':
                              clear=True,
                              tight_layout=True)
 
-    img = mdt.plot.scatter(
+    img = mdtplt.scatter(
         ax=axis,
         x=t0_new_event,
         y=tend_preceding_event,
@@ -180,10 +185,11 @@ if __name__ == '__main__':
         ymax=args.YMAX,
         xlabel=r'$t_0 + \tau_{renew}$ / ' + args.TUNIT,
         ylabel=r'$t_0^\prime$ / ' + args.TUNIT,
-        marker='x')
+        marker='x',
+    )
 
     diagonal = np.linspace(*axis.get_xlim())
-    mdt.plot.plot(
+    mdtplt.plot(
         ax=axis,
         x=diagonal,
         y=diagonal,
@@ -193,7 +199,8 @@ if __name__ == '__main__':
         ymax=args.YMAX,
         xlabel=r'$t_0 + \tau_{renew}$ / ' + args.TUNIT,
         ylabel=r'$t_0^\prime$ / ' + args.TUNIT,
-        color='black')
+        color='black',
+    )
 
     mdt.fh.backup(args.OUTFILE)
     plt.tight_layout()

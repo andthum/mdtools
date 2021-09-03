@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,6 +18,9 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__author__ = "Andreas Thum"
+
+
 import sys
 import os
 from datetime import datetime
@@ -28,6 +31,8 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 if __name__ == '__main__':
@@ -227,18 +232,20 @@ if __name__ == '__main__':
                                      frameon=False,
                                      clear=True,
                                      tight_layout=True)
-            mdt.plot.hist(ax=axis,
-                          x=data,
-                          xmin=args.XMIN,
-                          xmax=args.XMAX,
-                          ymin=args.YMIN,
-                          ymax=args.YMAX,
-                          xlabel=r'$' + xlabel[i] + r'$ / ' + args.LUNIT,
-                          ylabel=r'$p(' + xlabel[i] + r')$',
-                          bins=bins[i],
-                          range=(args.START, args.STOP),
-                          density=True)
-            mdt.plot.plot(
+            mdtplt.hist(
+                ax=axis,
+                x=data,
+                xmin=args.XMIN,
+                xmax=args.XMAX,
+                ymin=args.YMIN,
+                ymax=args.YMAX,
+                xlabel=r'$' + xlabel[i] + r'$ / ' + args.LUNIT,
+                ylabel=r'$p(' + xlabel[i] + r')$',
+                bins=bins[i],
+                range=(args.START, args.STOP),
+                density=True,
+            )
+            mdtplt.plot(
                 ax=axis,
                 x=x[i],
                 y=mdt.stats.gaussian(x=x[i],
@@ -251,7 +258,8 @@ if __name__ == '__main__':
                 xlabel=r'$' + xlabel[i] + r'$ / ' + args.LUNIT,
                 ylabel=r'$p(' + xlabel[i] + r')$',
                 label="Fit",
-                color='black')
+                color='black',
+            )
             plt.tight_layout()
             pdf.savefig()
             plt.close()

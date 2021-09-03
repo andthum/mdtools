@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,6 +18,9 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__author__ = "Andreas Thum"
+
+
 import sys
 import os
 from datetime import datetime
@@ -26,6 +29,8 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 if __name__ == '__main__':
@@ -268,7 +273,7 @@ if __name__ == '__main__':
                                  gridspec_kw={'height_ratios': [1 / 5, 1]})
         axis = axes[1]
 
-    mdt.plot.plot(
+    mdtplt.plot(
         ax=axis,
         x=bins[1:] - np.diff(bins) / 2,
         y=distribution[1:],
@@ -279,28 +284,33 @@ if __name__ == '__main__':
         xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
         ylabel=r'$p$',
         color='black',
-        marker='o')
+        marker='o',
+    )
 
-    mdt.plot.vlines(ax=axis,
-                    x=bins,
-                    start=axis.get_ylim()[0],
-                    stop=axis.get_ylim()[1],
-                    xmin=args.XMIN,
-                    xmax=args.XMAX,
-                    ymin=args.YMIN,
-                    ymax=args.YMAX,
-                    color='black',
-                    linestyle='dotted')
+    mdtplt.vlines(
+        ax=axis,
+        x=bins,
+        start=axis.get_ylim()[0],
+        stop=axis.get_ylim()[1],
+        xmin=args.XMIN,
+        xmax=args.XMAX,
+        ymin=args.YMIN,
+        ymax=args.YMAX,
+        color='black',
+        linestyle='dotted',
+    )
 
     if args.INFILE2 is not None:
-        mdt.plot.plot(ax=axes[0],
-                      x=xdata,
-                      y=ydata,
-                      xmin=args.XMIN,
-                      xmax=args.XMAX,
-                      ymin=np.min(ydata),
-                      ymax=np.max(ydata),
-                      color='black')
+        mdtplt.plot(
+            ax=axes[0],
+            x=xdata,
+            y=ydata,
+            xmin=args.XMIN,
+            xmax=args.XMAX,
+            ymin=np.min(ydata),
+            ymax=np.max(ydata),
+            color='black',
+        )
         axes[0].xaxis.set_visible(False)
         axes[0].yaxis.set_visible(False)
         axes[0].spines['bottom'].set_visible(False)

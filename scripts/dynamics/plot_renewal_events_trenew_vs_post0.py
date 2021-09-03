@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,6 +18,9 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__author__ = "Andreas Thum"
+
+
 import sys
 import os
 from datetime import datetime
@@ -27,6 +30,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 if __name__ == '__main__':
@@ -306,7 +311,7 @@ if __name__ == '__main__':
                                  gridspec_kw={'height_ratios': [1 / 5, 1]})
         axis = axes[1]
 
-    img = mdt.plot.scatter(
+    img = mdtplt.scatter(
         ax=axis,
         x=pos_t0,
         y=trenew,
@@ -319,9 +324,12 @@ if __name__ == '__main__':
         ylabel=r'$\tau_{renew}$ / ' + args.TUNIT,
         marker='x',
         cmap='coolwarm',
-        norm=colors.TwoSlopeNorm(vmin=np.min(displ),
-                                 vcenter=0,
-                                 vmax=np.max(displ)))
+        norm=colors.TwoSlopeNorm(
+            vmin=np.min(displ),
+            vcenter=0,
+            vmax=np.max(displ),
+        ),
+    )
     cbar = fig.colorbar(img, ax=axis)
     cbar.set_label(label=r'$\Delta ' + args.DIRECTION + r'$ / ' + args.LUNIT,
                    fontsize=fontsize_labels)
@@ -336,18 +344,20 @@ if __name__ == '__main__':
                         length=0.5 * tick_length,
                         labelsize=0.8 * fontsize_ticks)
 
-    mdt.plot.vlines(ax=axis,
-                    x=bins,
-                    start=axis.get_ylim()[0],
-                    stop=axis.get_ylim()[1],
-                    xmin=args.XMIN,
-                    xmax=args.XMAX,
-                    ymin=args.YMIN,
-                    ymax=args.YMAX,
-                    color='black',
-                    linestyle='dotted')
+    mdtplt.vlines(
+        ax=axis,
+        x=bins,
+        start=axis.get_ylim()[0],
+        stop=axis.get_ylim()[1],
+        xmin=args.XMIN,
+        xmax=args.XMAX,
+        ymin=args.YMIN,
+        ymax=args.YMAX,
+        color='black',
+        linestyle='dotted',
+    )
 
-    mdt.plot.errorbar(
+    mdtplt.errorbar(
         ax=axis,
         x=bins[1:] - np.diff(bins) / 2,
         y=trenew_mean[1:],
@@ -359,17 +369,20 @@ if __name__ == '__main__':
         xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
         ylabel=r'$\tau_{renew}$ / ' + args.TUNIT,
         color='black',
-        marker='o')
+        marker='o',
+    )
 
     if args.INFILE2 is not None:
-        mdt.plot.plot(ax=axes[0],
-                      x=data[:, 0],
-                      y=data[:, 1],
-                      xmin=args.XMIN,
-                      xmax=args.XMAX,
-                      ymin=np.min(data[:, 1]),
-                      ymax=np.max(data[:, 1]),
-                      color='black')
+        mdtplt.plot(
+            ax=axes[0],
+            x=data[:, 0],
+            y=data[:, 1],
+            xmin=args.XMIN,
+            xmax=args.XMAX,
+            ymin=np.min(data[:, 1]),
+            ymax=np.max(data[:, 1]),
+            color='black',
+        )
         axes[0].xaxis.set_visible(False)
         axes[0].yaxis.set_visible(False)
         axes[0].spines['bottom'].set_visible(False)
