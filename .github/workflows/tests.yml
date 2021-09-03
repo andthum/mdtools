@@ -88,9 +88,7 @@ jobs:
         mdtools/plot.py \
         mdtools/run_time_info.py \
         mdtools/version.py \
-        scripts/discretization/plot_discrete_hex_trj \
-        scripts/discretization/plot_state_lifetime_discrete.py \
-        scripts/discretization/plot_state_lifetime.py \
+        scripts/discretization/plot_*.py \
         scripts/dynamics/plot_msd_layer*.py \
         scripts/structure/plot_gmx_densmap.py \
         setup.py

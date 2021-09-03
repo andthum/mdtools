@@ -45,5 +45,6 @@ Plot scripts
     :nosignatures:
 
     plot_discrete_hex_trj
+    plot_discrete_pos_trj
     plot_state_lifetime
     plot_state_lifetime_discrete

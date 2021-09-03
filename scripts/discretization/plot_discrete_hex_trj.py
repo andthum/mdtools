@@ -60,10 +60,6 @@ Options
 --length-unit
             Lengh unit.  Default: ``A``.
 
-See Also
---------
-:mod:`plot_discrete_pos_trj.py` : TODO
-
 Examples
 --------
 TODO
