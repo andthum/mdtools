@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,6 +18,9 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__author__ = "Andreas Thum"
+
+
 import sys
 import os
 from datetime import datetime
@@ -29,6 +32,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 if __name__ == '__main__':
@@ -409,7 +414,7 @@ if __name__ == '__main__':
             axis.yaxis.set_major_locator(MaxNLocator(integer=True))
 
             xy = np.append(active_set, active_set[-1] + 1) - 0.5
-            mdt.plot.pcolormesh(
+            mdtplt.pcolormesh(
                 ax=axis,
                 x=xy,
                 y=xy,
@@ -421,7 +426,8 @@ if __name__ == '__main__':
                 xlabel=r'Bin $j$',
                 ylabel=r'Bin $i$',
                 cbarlabel=cbarlabel[i],
-                cmap=cmap[i])
+                cmap=cmap[i],
+            )
 
             axis.invert_yaxis()
             axis.xaxis.set_label_position('top')
@@ -440,16 +446,18 @@ if __name__ == '__main__':
                                  tight_layout=True)
         axis.xaxis.set_major_locator(MaxNLocator(integer=True))
         axis.yaxis.set_major_locator(MaxNLocator(integer=True))
-        mdt.plot.plot(ax=axis,
-                      x=active_set,
-                      y=eigvecs,
-                      xmin=0.5,
-                      xmax=len(bins) - 0.5,
-                      ymin=0,
-                      xlabel=r'Bin $i$',
-                      ylabel="Stationary distribution",
-                      color='black',
-                      marker='o')
+        mdtplt.plot(
+            ax=axis,
+            x=active_set,
+            y=eigvecs,
+            xmin=0.5,
+            xmax=len(bins) - 0.5,
+            ymin=0,
+            xlabel=r'Bin $i$',
+            ylabel="Stationary distribution",
+            color='black',
+            marker='o',
+        )
         plt.tight_layout()
         pdf.savefig()
         plt.close()
@@ -470,7 +478,7 @@ if __name__ == '__main__':
                                   inactive,
                                   np.nan,
                                   axis=1)
-            mdt.plot.pcolormesh(
+            mdtplt.pcolormesh(
                 ax=axis,
                 x=bins,
                 y=bins,
@@ -482,7 +490,8 @@ if __name__ == '__main__':
                 xlabel=r'$' + args.DIRECTION + r'(t_0 + \tau_{renew})$ / ' + args.LUNIT,
                 ylabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
                 cbarlabel=cbarlabel[i],
-                cmap=cmap[i])
+                cmap=cmap[i],
+            )
 
             yticks = np.array(axis.get_yticks())
             mask = ((yticks >= axis.get_xlim()[0]) &
@@ -517,7 +526,7 @@ if __name__ == '__main__':
             axis = axes[1]
 
         eigvecs = np.insert(eigvecs, inactive, np.nan, axis=0)
-        mdt.plot.plot(
+        mdtplt.plot(
             ax=axis,
             x=bins[1:] - np.diff(bins) / 2,
             y=eigvecs,
@@ -527,26 +536,31 @@ if __name__ == '__main__':
             xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
             ylabel="Stationary distribution",
             color='black',
-            marker='o')
-        mdt.plot.vlines(ax=axis,
-                        x=bins,
-                        start=axis.get_ylim()[0],
-                        stop=axis.get_ylim()[1],
-                        xmin=args.MIN,
-                        xmax=args.MAX,
-                        ymin=0,
-                        color='black',
-                        linestyle='dotted')
+            marker='o',
+        )
+        mdtplt.vlines(
+            ax=axis,
+            x=bins,
+            start=axis.get_ylim()[0],
+            stop=axis.get_ylim()[1],
+            xmin=args.MIN,
+            xmax=args.MAX,
+            ymin=0,
+            color='black',
+            linestyle='dotted',
+        )
 
         if args.INFILE2 is not None:
-            mdt.plot.plot(ax=axes[0],
-                          x=xdata,
-                          y=ydata,
-                          xmin=args.MIN,
-                          xmax=args.MAX,
-                          ymin=np.min(ydata),
-                          ymax=np.max(ydata),
-                          color='black')
+            mdtplt.plot(
+                ax=axes[0],
+                x=xdata,
+                y=ydata,
+                xmin=args.MIN,
+                xmax=args.MAX,
+                ymin=np.min(ydata),
+                ymax=np.max(ydata),
+                color='black',
+            )
             axes[0].xaxis.set_visible(False)
             axes[0].yaxis.set_visible(False)
             axes[0].spines['bottom'].set_visible(False)
@@ -580,7 +594,7 @@ if __name__ == '__main__':
                     gridspec_kw={'height_ratios': [1 / 5, 1]})
                 axis = axes[1]
 
-            mdt.plot.errorbar(
+            mdtplt.errorbar(
                 ax=axis,
                 x=bins[1:] - np.diff(bins) / 2,
                 y=nevents,
@@ -592,17 +606,20 @@ if __name__ == '__main__':
                 xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
                 ylabel=r'$N_{renew}$',
                 label="Simulation",
-                marker='o')
-            mdt.plot.vlines(ax=axis,
-                            x=bins,
-                            start=axis.get_ylim()[0],
-                            stop=axis.get_ylim()[1],
-                            xmin=args.MIN,
-                            xmax=args.MAX,
-                            ymin=ymin[i],
-                            color='black',
-                            linestyle='dotted')
-            mdt.plot.plot(
+                marker='o',
+            )
+            mdtplt.vlines(
+                ax=axis,
+                x=bins,
+                start=axis.get_ylim()[0],
+                stop=axis.get_ylim()[1],
+                xmin=args.MIN,
+                xmax=args.MAX,
+                ymin=ymin[i],
+                color='black',
+                linestyle='dotted',
+            )
+            mdtplt.plot(
                 ax=axis,
                 x=bins[1:] - np.diff(bins) / 2,
                 y=eigvecs * np.sum(nevents),
@@ -613,17 +630,20 @@ if __name__ == '__main__':
                 xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
                 ylabel=r'$N_{renew}$',
                 label="Model",
-                marker='s')
+                marker='s',
+            )
 
             if args.INFILE2 is not None:
-                mdt.plot.plot(ax=axes[0],
-                              x=xdata,
-                              y=ydata,
-                              xmin=args.MIN,
-                              xmax=args.MAX,
-                              ymin=np.min(ydata),
-                              ymax=np.max(ydata),
-                              color='black')
+                mdtplt.plot(
+                    ax=axes[0],
+                    x=xdata,
+                    y=ydata,
+                    xmin=args.MIN,
+                    xmax=args.MAX,
+                    ymin=np.min(ydata),
+                    ymax=np.max(ydata),
+                    color='black',
+                )
                 axes[0].xaxis.set_visible(False)
                 axes[0].yaxis.set_visible(False)
                 axes[0].spines['bottom'].set_visible(False)
@@ -647,7 +667,7 @@ if __name__ == '__main__':
                 clear=True,
                 constrained_layout=True,
                 gridspec_kw={'height_ratios': [1 / 5, 1]})
-            mdt.plot.errorbar(
+            mdtplt.errorbar(
                 ax=axes[1],
                 x=bins[1:] - np.diff(bins) / 2,
                 y=nevents / n_compounds_per_bin[1:],
@@ -659,17 +679,20 @@ if __name__ == '__main__':
                 xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
                 ylabel=r'$N_{renew}$ / $\langle N_{' + args.NAME + r'} \rangle$',
                 label="Simulation",
-                marker='o')
-            mdt.plot.vlines(ax=axes[1],
-                            x=bins,
-                            start=axes[1].get_ylim()[0],
-                            stop=axes[1].get_ylim()[1],
-                            xmin=args.MIN,
-                            xmax=args.MAX,
-                            ymin=ymin[i],
-                            color='black',
-                            linestyle='dotted')
-            mdt.plot.plot(
+                marker='o',
+            )
+            mdtplt.vlines(
+                ax=axes[1],
+                x=bins,
+                start=axes[1].get_ylim()[0],
+                stop=axes[1].get_ylim()[1],
+                xmin=args.MIN,
+                xmax=args.MAX,
+                ymin=ymin[i],
+                color='black',
+                linestyle='dotted',
+            )
+            mdtplt.plot(
                 ax=axes[1],
                 x=bins[1:] - np.diff(bins) / 2,
                 y=eigvecs * np.sum(nevents) / n_compounds_per_bin[1:][:, None],
@@ -680,15 +703,18 @@ if __name__ == '__main__':
                 xlabel=r'${}(t_0)$ / {}'.format(args.DIRECTION, args.LUNIT),
                 ylabel=r'$N_{renew}$ / $\langle N_{' + args.NAME + r'} \rangle$',
                 label="Model",
-                marker='s')
-            mdt.plot.plot(ax=axes[0],
-                          x=xdata,
-                          y=ydata,
-                          xmin=args.MIN,
-                          xmax=args.MAX,
-                          ymin=np.min(ydata),
-                          ymax=np.max(ydata),
-                          color='black')
+                marker='s',
+            )
+            mdtplt.plot(
+                ax=axes[0],
+                x=xdata,
+                y=ydata,
+                xmin=args.MIN,
+                xmax=args.MAX,
+                ymin=np.min(ydata),
+                ymax=np.max(ydata),
+                color='black',
+            )
             axes[0].xaxis.set_visible(False)
             axes[0].yaxis.set_visible(False)
             axes[0].spines['bottom'].set_visible(False)

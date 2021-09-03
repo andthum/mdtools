@@ -104,6 +104,7 @@ if __name__ == "__main__":
         maintainer=get_varstring("mdtools/_metadata.py", "__maintainer__"),
         maintainer_email=get_varstring("mdtools/_metadata.py", "__email__"),
         url="https://github.com/andthum/mdtools",
+        download_url="https://github.com/andthum/mdtools",
         project_urls={
             "Source": "https://github.com/andthum/mdtools",
             "Documentation": "https://mdtools.readthedocs.io/en/latest/",
@@ -118,6 +119,7 @@ if __name__ == "__main__":
         long_description=get_content("README.rst"),
         long_description_content_type="text/x-rst",
         license=get_varstring("mdtools/_metadata.py", "__license__"),
+        license_files=("LICENSE.txt", "AUTHORS.rst"),
         classifiers=[
             "Development Status :: 3 - Alpha",
             "Environment :: Console",

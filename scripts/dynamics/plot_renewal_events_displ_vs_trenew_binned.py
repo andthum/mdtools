@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,6 +18,9 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__author__ = "Andreas Thum"
+
+
 import sys
 import os
 from datetime import datetime
@@ -28,6 +31,8 @@ import scipy.optimize as opt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 if __name__ == '__main__':
@@ -380,23 +385,27 @@ if __name__ == '__main__':
                                  frameon=False,
                                  clear=True,
                                  tight_layout=True)
-        mdt.plot.plot(ax=axis,
-                      x=t,
-                      y=nevents[1:],
-                      xmin=args.XMIN,
-                      xmax=args.XMAX,
-                      xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
-                      ylabel=r'$N_{renew}$',
-                      color='black',
-                      marker='o')
-        mdt.plot.vlines(ax=axis,
-                        x=tbins,
-                        start=axis.get_ylim()[0],
-                        stop=axis.get_ylim()[1],
-                        xmin=args.XMIN,
-                        xmax=args.XMAX,
-                        color='black',
-                        linestyle='dotted')
+        mdtplt.plot(
+            ax=axis,
+            x=t,
+            y=nevents[1:],
+            xmin=args.XMIN,
+            xmax=args.XMAX,
+            xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
+            ylabel=r'$N_{renew}$',
+            color='black',
+            marker='o',
+        )
+        mdtplt.vlines(
+            ax=axis,
+            x=tbins,
+            start=axis.get_ylim()[0],
+            stop=axis.get_ylim()[1],
+            xmin=args.XMIN,
+            xmax=args.XMAX,
+            color='black',
+            linestyle='dotted',
+        )
         plt.tight_layout()
         pdf.savefig()
         plt.close()
@@ -410,7 +419,7 @@ if __name__ == '__main__':
                                      tight_layout=True)
             axis.axhline(y=0, color='black')
             if args.DCOLOR is None:
-                mdt.plot.scatter(
+                mdtplt.scatter(
                     ax=axis,
                     x=trenew,
                     y=displ.T[i],
@@ -420,9 +429,10 @@ if __name__ == '__main__':
                     ymax=args.YMAX,
                     xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                     ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
-                    marker='x')
+                    marker='x',
+                )
             else:
-                img = mdt.plot.scatter(
+                img = mdtplt.scatter(
                     ax=axis,
                     x=trenew,
                     y=displ.T[i],
@@ -434,7 +444,8 @@ if __name__ == '__main__':
                     xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                     ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                     marker='x',
-                    cmap='plasma')
+                    cmap='plasma',
+                )
                 cbar = plt.colorbar(img, ax=axis)
                 cbar.set_label(label=r'${}(t_0)$ / {}'.format(args.DCOLOR, args.LUNIT),
                                fontsize=fontsize_labels)
@@ -448,17 +459,19 @@ if __name__ == '__main__':
                                     direction='out',
                                     length=0.5 * tick_length,
                                     labelsize=0.8 * fontsize_ticks)
-            mdt.plot.vlines(ax=axis,
-                            x=tbins,
-                            start=axis.get_ylim()[0],
-                            stop=axis.get_ylim()[1],
-                            xmin=args.XMIN,
-                            xmax=args.XMAX,
-                            ymin=args.YMIN,
-                            ymax=args.YMAX,
-                            color='black',
-                            linestyle='dotted')
-            mdt.plot.plot(
+            mdtplt.vlines(
+                ax=axis,
+                x=tbins,
+                start=axis.get_ylim()[0],
+                stop=axis.get_ylim()[1],
+                xmin=args.XMIN,
+                xmax=args.XMAX,
+                ymin=args.YMIN,
+                ymax=args.YMAX,
+                color='black',
+                linestyle='dotted',
+            )
+            mdtplt.plot(
                 ax=axis,
                 x=t,
                 y=displ_mean.T[i][1:],
@@ -470,8 +483,9 @@ if __name__ == '__main__':
                 ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                 label=r'$\langle \Delta ' + ylabel[i] + r' \rangle$',
                 color='red',
-                marker='o')
-            mdt.plot.plot(
+                marker='o',
+            )
+            mdtplt.plot(
                 ax=axis,
                 x=t,
                 y=np.sqrt(msd_mean.T[i][1:]),
@@ -483,8 +497,9 @@ if __name__ == '__main__':
                 ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                 label=r'$\sqrt{\langle \Delta ' + ylabel[i] + r'^2 \rangle}$',
                 color='blue',
-                marker='^')
-            mdt.plot.plot(
+                marker='^',
+            )
+            mdtplt.plot(
                 ax=axis,
                 x=t,
                 y=displ_std.T[i][1:],
@@ -496,7 +511,8 @@ if __name__ == '__main__':
                 ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                 label=r'$\sqrt{\langle \Delta ' + ylabel[i] + r'^2 \rangle - \langle \Delta ' + ylabel[i] + r' \rangle ^2}$',
                 color='green',
-                marker='s')
+                marker='s',
+            )
             axis.legend(loc='upper center',
                         bbox_to_anchor=(0.5, 1.32),
                         ncol=2,
@@ -626,7 +642,7 @@ if __name__ == '__main__':
                                      tight_layout=True)
             axis.axhline(y=0, color='black')
             if args.DCOLOR is None:
-                img = mdt.plot.scatter(
+                img = mdtplt.scatter(
                     ax=axis,
                     x=trenew,
                     y=displ.T[i],
@@ -636,9 +652,10 @@ if __name__ == '__main__':
                     ymax=args.YMAX,
                     xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                     ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
-                    marker='x')
+                    marker='x',
+                )
             else:
-                img = mdt.plot.scatter(
+                img = mdtplt.scatter(
                     ax=axis,
                     x=trenew,
                     y=displ.T[i],
@@ -650,7 +667,8 @@ if __name__ == '__main__':
                     xlabel=r'$\tau_{renew}$ / ' + args.TUNIT,
                     ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                     marker='x',
-                    cmap='plasma')
+                    cmap='plasma',
+                )
                 cbar = plt.colorbar(img, ax=axis)
                 cbar.set_label(label=r'${}(t_0)$ / {}'.format(args.DCOLOR, args.LUNIT),
                                fontsize=fontsize_labels)
@@ -664,17 +682,19 @@ if __name__ == '__main__':
                                     direction='out',
                                     length=0.5 * tick_length,
                                     labelsize=0.8 * fontsize_ticks)
-            mdt.plot.vlines(ax=axis,
-                            x=tbins,
-                            start=axis.get_ylim()[0],
-                            stop=axis.get_ylim()[1],
-                            xmin=args.XMIN,
-                            xmax=args.XMAX,
-                            ymin=args.YMIN,
-                            ymax=args.YMAX,
-                            color='black',
-                            linestyle='dotted')
-            mdt.plot.plot(
+            mdtplt.vlines(
+                ax=axis,
+                x=tbins,
+                start=axis.get_ylim()[0],
+                stop=axis.get_ylim()[1],
+                xmin=args.XMIN,
+                xmax=args.XMAX,
+                ymin=args.YMIN,
+                ymax=args.YMAX,
+                color='black',
+                linestyle='dotted',
+            )
+            mdtplt.plot(
                 ax=axis,
                 x=t,
                 y=popt_displ.T[0][i][1:],
@@ -686,8 +706,9 @@ if __name__ == '__main__':
                 ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                 label=r'$\mu$',
                 color='red',
-                marker='o')
-            mdt.plot.plot(
+                marker='o',
+            )
+            mdtplt.plot(
                 ax=axis,
                 x=t,
                 y=popt_displ.T[1][i][1:],
@@ -699,8 +720,9 @@ if __name__ == '__main__':
                 ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                 label=r'$\sigma$',
                 color='blue',
-                marker='^')
-            mdt.plot.plot(
+                marker='^',
+            )
+            mdtplt.plot(
                 ax=axis,
                 x=t,
                 y=non_gaus.T[i][1:],
@@ -712,7 +734,8 @@ if __name__ == '__main__':
                 ylabel=r'$\Delta ' + ylabel[i] + r'(\tau_{renew})$ / ' + args.LUNIT,
                 label=r'$A$',
                 color='green',
-                marker='s')
+                marker='s',
+            )
             plt.tight_layout()
             pdf.savefig()
             plt.close()

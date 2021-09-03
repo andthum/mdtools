@@ -31,8 +31,10 @@ This module can be called from :mod:`mdtools` via the shortcut ``fh``::
 import os
 import warnings
 from datetime import datetime
+
 # Third party libraries
 import numpy as np
+
 # Local application/library specific imports
 import mdtools as mdt
 
@@ -60,6 +62,203 @@ def cd_up(n, path=__file__):
     return p
 
 
+def str2none_or_type(val, dtype, empty_as_None=False, case_sensitive=True):
+    """
+    Convert a string to the NoneType ``None`` or to a given type.
+
+    If the input string is ``'None'``, convert it to the NoneType
+    ``None``, else convert it to the type given by `dtype`.
+
+    Parameters
+    ----------
+    val : str_like
+        The input value.  Can be anything that can be converted to a
+        string.
+    dtype : type
+        The type to which `val` should be converted if ``str(val)`` is
+        not ``'None'``.  An error will be raised if the conversion
+        ``dtype(str(val))`` is not possible.
+    empty_as_None : bool, optional
+        If ``True``, also convert `val` to ``None`` if ``str(val)`` is
+        the empty string ``''``.
+    case_sensitive : bool, optional
+        If ``False``, also convert the lower case string ``'none'`` to
+        the NoneType ``None``.
+
+    Returns
+    -------
+    val : None or dtype
+        The input string, either converted to ``None`` or to `dtype`.
+
+    See Also
+    --------
+    :func:`mdtools.file_handler.str2bool` :
+        Convert a string to a boolean value
+
+    Notes
+    -----
+    This function was written to enable passing ``None`` to scripts via
+    the command line.  By default, :mod:`argparse` reads command-line
+    arguments as simple strings.  This makes it impossible to pass
+    ``None`` to a script via the command line, because it will always
+    render as the string ``'None'``.  Pass
+    ``lambda val: mdt.fh.str2none_or_type(val, dtype=<dtype>)`` (where
+    ``<dtype>`` if e.g. ``float`` or ``str``) to the `type` keyword of
+    :meth:`argparse.ArgumentParser.add_argument` to convert the string
+    ``'None'`` (and optionally the empty string ``''``) to the NoneType
+    ``None``.
+
+    This code was adapted from https://stackoverflow.com/a/55063765.
+
+    Examples
+    --------
+    >>> mdt.fh.str2none_or_type('None', dtype=str)  # Returns None
+    >>> mdt.fh.str2none_or_type(None, dtype=str)  # Returns None
+    >>> mdt.fh.str2none_or_type('none', dtype=str)
+    'none'
+    >>> mdt.fh.str2none_or_type(2, dtype=str)
+    '2'
+
+    >>> mdt.fh.str2none_or_type('None', dtype=int)  # Returns None
+    >>> mdt.fh.str2none_or_type('2', dtype=int)
+    2
+    >>> mdt.fh.str2none_or_type(2, dtype=int)
+    2
+
+    >>> import argparse
+    >>> parser = argparse.ArgumentParser()
+    >>> parser.add_argument(
+    ...     '--spam',
+    ...     type=lambda val: mdt.fh.str2none_or_type(val, dtype=str)
+    ... )
+    _StoreAction(option_strings=['--spam'], ...)
+    >>> parser.add_argument('--eggs', type=str)
+    _StoreAction(option_strings=['--eggs'], ...)
+    >>> parser.parse_args(['--spam', 'None', '--eggs', 'None'])
+    Namespace(eggs='None', spam=None)
+    """
+    val = str(val)
+    if val == "None" or (empty_as_None and val == ""):
+        return None
+    else:
+        return dtype(val)
+
+
+def str2bool(val, accept_yes_no=True, accept_abbrev=True, accept_01=True):
+    """
+    Convert a string to a boolean value.
+
+    Convert the strings ``'true'`` and ``'false'`` to their
+    corresponding booleans ``True`` and ``False``.  This function is
+    case-insensitive!
+
+    Parameters
+    ----------
+    val : str_like
+        The input value.  Can be anything that can be converted to a
+        string.
+    accept_yes_no : bool, optional
+        If ``True``, also convert ``'yes'`` to ``True`` and ``'no'`` to
+        ``False``.
+    accept_abbrev : bool, optional
+        If ``True``, also convert the following abbreviations:
+
+            * ``'t'`` to ``True``.
+            * ``'y'`` to ``True``.
+            * ``'f'`` to ``False``.
+            * ``'n'`` to ``False``.
+
+    accept_01 : bool, optional
+        If ``True``, also convert ``'1'`` to ``True`` and ``'0'`` to
+        ``False``.
+
+    Returns
+    -------
+    val : bool
+        The input string converted to ``True`` or ``False``.
+
+    Raises
+    ------
+    ValueError :
+        If `val` is an unknown string that cannot be converted to a
+        boolean value.
+
+    See Also
+    --------
+    :func:`mdtools.file_handler.str2none_or_type` :
+        Convert a string to the NoneType ``None`` or to a given type
+
+    Notes
+    -----
+    This function was written to enable passing booleans to scripts via
+    the command line.  By default, :mod:`argparse` reads command-line
+    arguments as simple strings.  This makes it impossible to pass
+    booleans to a script via the command line in an intuitive way,
+    because the type conversion to bool will convert all non-empty
+    strings to ``True`` (including the string ``'false'``) .  Pass
+    ``str2bool(val)`` to the `type` keyword of
+    :meth:`argparse.ArgumentParser.add_argument` to convert the strings
+    ``'true'`` and ``'false'`` to their corresponding boolean values
+    ``True`` or ``False``.
+
+    This code was adapted from https://stackoverflow.com/a/43357954.
+
+    Examples
+    --------
+    >>> mdt.fh.str2bool('True')
+    True
+    >>> mdt.fh.str2bool('true')
+    True
+    >>> mdt.fh.str2bool('false')
+    False
+
+    >>> mdt.fh.str2bool('yes', accept_yes_no=True)
+    True
+
+    >>> mdt.fh.str2bool('n', accept_yes_no=True, accept_abbrev=True)
+    False
+    >>> mdt.fh.str2bool('n', accept_yes_no=True, accept_abbrev=False)
+    Traceback (most recent call last):
+    ...
+    ValueError: ...
+
+    >>> mdt.fh.str2bool(1, accept_01=True)
+    True
+    >>> mdt.fh.str2bool('1', accept_01=True)
+    True
+
+    >>> import argparse
+    >>> parser = argparse.ArgumentParser()
+    >>> parser.add_argument('--spam', type=mdt.fh.str2bool)
+    _StoreAction(option_strings=['--spam'], ...)
+    >>> parser.add_argument('--eggs', type=str)
+    _StoreAction(option_strings=['--eggs'], ...)
+    >>> parser.parse_args(['--spam', 'yes', '--eggs', 'no'])
+    Namespace(eggs='no', spam=True)
+    """
+    val = str(val).lower()
+    eval_true = ["true"]
+    eval_false = ["false"]
+    if accept_yes_no:
+        eval_true.append("yes")
+        eval_false.append("no")
+    if accept_abbrev:
+        eval_true += [s[0] for s in eval_true]
+        eval_false += [s[0] for s in eval_false]
+    if accept_01:
+        eval_true.append("1")
+        eval_false.append("0")
+    if val in eval_true:
+        return True
+    elif val in eval_false:
+        return False
+    else:
+        raise ValueError(
+            "Could not convert 'val' ({}) to bool. 'val' is neither in {} nor"
+            " in {}".format(val, eval_true, eval_false)
+        )
+
+
 def backup(fname):
     """
     Backup a file by renaming it.
@@ -82,8 +281,9 @@ def backup(fname):
     """
     if os.path.isfile(fname):
         timestamp = datetime.now()
-        backup_name = (fname + ".bak_" +
-                       str(timestamp.strftime('%Y-%m-%d_%H-%M-%S')))
+        backup_name = (
+            fname + ".bak_" + str(timestamp.strftime("%Y-%m-%d_%H-%M-%S"))
+        )
         os.rename(fname, backup_name)
         print("Backuped {} to {}".format(fname, backup_name))
         return True
@@ -129,8 +329,7 @@ def indent(text, amount, char=" "):
     #   It's me, Mario!
     """
     padding = amount * char
-    return ''.join(padding + line
-                   for line in text.splitlines(keepends=True))
+    return "".join(padding + line for line in text.splitlines(keepends=True))
 
 
 def header_str():
@@ -162,8 +361,9 @@ def header_str():
     """
     timestamp = datetime.now()
     script, command_line, cwd, exe, version, pversion = mdt.rti.run_time_info()
-    header = ("Created by {} on {}\n"
-              .format(script, timestamp.strftime('%Y/%m/%d %H:%M')))
+    header = "Created by {} on {}\n".format(
+        script, timestamp.strftime("%Y/%m/%d %H:%M")
+    )
     header += "\n"
     header += mdt.__copyright_notice__ + "\n"
     header += "\n"
@@ -205,13 +405,22 @@ def write_header(fname, rename=True):
     """
     if rename:
         backup(fname)
-    with open(fname, 'w') as outfile:
+    with open(fname, "w") as outfile:
         outfile.write(indent(text=header_str(), amount=1, char="# "))
 
 
 def savetxt(  # TODO: Replace arguments by *args, **kwargs
-        fname, data, fmt='%16.9e', delimiter=' ', newline='\n',
-        header='', footer='', comments='# ', encoding=None, rename=True):
+    fname,
+    data,
+    fmt="%16.9e",
+    delimiter=" ",
+    newline="\n",
+    header="",
+    footer="",
+    comments="# ",
+    encoding=None,
+    rename=True,
+):
     """
     Save an array to a text file.
 
@@ -261,25 +470,40 @@ def savetxt(  # TODO: Replace arguments by *args, **kwargs
     about what is included in the header.
     """
     head = header_str()
-    if header is not None and header != '':
+    if header is not None and header != "":
         head += "\n\n" + header
     if rename:
         backup(fname)
-    np.savetxt(fname=fname,
-               X=data,
-               fmt=fmt,
-               delimiter=delimiter,
-               newline=newline,
-               header=head,
-               footer=footer,
-               comments=comments,
-               encoding=encoding)
+    np.savetxt(
+        fname=fname,
+        X=data,
+        fmt=fmt,
+        delimiter=delimiter,
+        newline=newline,
+        header=head,
+        footer=footer,
+        comments=comments,
+        encoding=encoding,
+    )
 
 
 def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
-        fname, data, var1, var2, init_values1=None, init_values2=None,
-        upper_left=0, fmt='%16.9e', delimiter=' ', newline='\n',
-        header='', footer='', comments='# ', encoding=None, rename=True):
+    fname,
+    data,
+    var1,
+    var2,
+    init_values1=None,
+    init_values2=None,
+    upper_left=0,
+    fmt="%16.9e",
+    delimiter=" ",
+    newline="\n",
+    header="",
+    footer="",
+    comments="# ",
+    encoding=None,
+    rename=True,
+):
     """
     Save a data matrix to a text file.
 
@@ -352,7 +576,8 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
 
     Notes
     -----
-    Internally, this function calls :func:`mdtools.file_handler.savetxt`.
+    Internally, this function calls
+    :func:`mdtools.file_handler.savetxt`.
     """
     var1 = np.asarray(var1)
     var2 = np.asarray(var2)
@@ -373,42 +598,57 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
         mdt.check.array(init_values2, shape=var1.shape)
         mdt.check.array(data, shape=(len(var1) - 1, len(var2) - 1))
         if init_values2[0] != init_values1[0]:
-            warnings.warn("init_values2[0] ({}) is not the same as"
-                          " init_values1[0] ({}). Using init_values1[0]"
-                          " as value for the upper left corner."
-                          .format(init_values2[0], init_values1[0]),
-                          RuntimeWarning)
+            warnings.warn(
+                "init_values2[0] ({}) is not the same as init_values1[0] ({})."
+                " Using init_values1[0] as value for the upper left"
+                " corner.".format(init_values2[0], init_values1[0]),
+                RuntimeWarning,
+            )
         data = np.column_stack((init_values2[1:], data))
         data = np.vstack((init_values1, data))
     data = np.column_stack((var1, data))
     var2 = np.insert(var2, 0, upper_left)
     data = np.vstack((var2, data))
-    savetxt(fname=fname,
-            data=data,
-            fmt=fmt,
-            delimiter=delimiter,
-            newline=newline,
-            header=header,
-            footer=footer,
-            comments=comments,
-            encoding=encoding,
-            rename=rename)
+    savetxt(
+        fname=fname,
+        data=data,
+        fmt=fmt,
+        delimiter=delimiter,
+        newline=newline,
+        header=header,
+        footer=footer,
+        comments=comments,
+        encoding=encoding,
+        rename=rename,
+    )
 
 
 def write_matrix_block(
-        fname, data, var1, var2, init_values1=None, init_values2=None,
-        upper_left=None, data_name=None, data_unit=None, var1_name=None,
-        var1_unit=None, var2_name=None, var2_unit=None,
-        block_number=None):
+    fname,
+    data,
+    var1,
+    var2,
+    init_values1=None,
+    init_values2=None,
+    upper_left=None,
+    data_name=None,
+    data_unit=None,
+    var1_name=None,
+    var1_unit=None,
+    var2_name=None,
+    var2_unit=None,
+    block_number=None,
+):
     """
     Save a data matrix to a text file.
 
     Write data that are a function of two independent variables, `var1`
     and `var2`, as a matrix to a text file.  The dependency of the data
-    from `var1` is represented by the rows and the dependency from `var2`
-    is represented by the columns.
+    from `var1` is represented by the rows and the dependency from
+    `var2` is represented by the columns.
 
-    If the file already exists, it is appended.  Otherwise is is created.
+    If the file already exists, it is appended.  Otherwise is is
+    created.
 
     Parameters
     ----------
@@ -482,13 +722,14 @@ def write_matrix_block(
         mdt.check.array(init_values2, shape=var1.shape)
         mdt.check.array(data, shape=(len(var1) - 1, len(var2) - 1))
         if init_values2[0] != init_values1[0]:
-            warnings.warn("init_values2[0] ({}) is not the same as"
-                          " init_values1[0] ({}). Using init_values1[0]"
-                          " as value for the upper left corner."
-                          .format(init_values2[0], init_values1[0]),
-                          RuntimeWarning)
+            warnings.warn(
+                "init_values2[0] ({}) is not the same as init_values1[0] ({})."
+                " Using init_values1[0] as value for the upper left"
+                " corner.".format(init_values2[0], init_values1[0]),
+                RuntimeWarning,
+            )
 
-    with open(fname, 'a') as outfile:
+    with open(fname, "a") as outfile:
         # Block header
         outfile.write("\n\n\n\n")
         if block_number is not None:
@@ -521,8 +762,7 @@ def write_matrix_block(
         # The row after the row with the column numbers contains the
         # values of `var2`.
         if upper_left is None:
-            outfile.write("{:>9}\\{:>8}"
-                          .format(var1_name[:10], var2_name[:9]))
+            outfile.write("{:>9}\\{:>8}".format(var1_name[:10], var2_name[:9]))
         else:
             outfile.write("{:>18}".format(upper_left))
         for col_num in range(num_cols):
@@ -553,8 +793,9 @@ def write_matrix_block(
                 start_col = 0
             for col_num in range(start_col, num_cols):
                 outfile.write(
-                    " {:16.9e}"
-                    .format(data[row_num - start_row][col_num - start_col])
+                    " {:16.9e}".format(
+                        data[row_num - start_row][col_num - start_col]
+                    )
                 )
             outfile.write("\n")
         outfile.flush()

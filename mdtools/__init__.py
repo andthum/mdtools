@@ -21,22 +21,22 @@ MDTools is a collection of Python_ scripts to prepare and analyze
 molecular dynamics (MD) simulations.
 
 The actual :mod:`mdtools` package (in the following also called "core
-package") is a collection of functions, classes and other Python objects,
-which are needed to make the Python scripts shipped along with this
-package work.  Of course, you can also import :mod:`mdtools` and use its
-functions and objects in your own applications just like you do with any
-other Python package.
+package") is a collection of functions, classes and other Python
+objects, which are needed to make the Python scripts shipped along with
+this package work.  Of course, you can also import :mod:`mdtools` and
+use its functions and objects in your own applications just like you do
+with any other Python package.
 
 The original idea behind this package was to gather functions that I
-frequently used in my scripts for preparing and analyzing MD simulations.
-When writing scripts, I often found myself copying and pasting functions
-from one script to the other to have these functions also available in
-my new script.  Then, when I have spotted a bug in one of these
-functions, I had to change the function in every single script, which
-becomes a boring and tedious task even if you have only a few scripts.
-So, I outsourced all the functions I used in more than one script in a
-separate python file and eventually this ended up in the :mod:`mdtools`
-core package.
+frequently used in my scripts for preparing and analyzing MD
+simulations.  When writing scripts, I often found myself copying and
+pasting functions from one script to the other to have these functions
+also available in my new script.  Then, when I have spotted a bug in one
+of these functions, I had to change the function in every single script,
+which becomes a boring and tedious task even if you have only a few
+scripts.  So, I outsourced all the functions I used in more than one
+script in a separate python file and eventually this ended up in the
+:mod:`mdtools` core package.
 
 .. _Python: https://www.python.org/
 """
@@ -57,7 +57,6 @@ from mdtools import file_handler as fh
 from mdtools import functions as func
 from mdtools import numpy_helper_functions as nph
 from mdtools import parallel
-from mdtools import plot
 from mdtools import run_time_info as rti
 from mdtools import scipy_helper_functions as sph
 from mdtools import select
@@ -78,7 +77,6 @@ __all__ = [
     "func",
     "nph",
     "parallel",
-    "plot",
     "rti",
     "sph",
     "select",

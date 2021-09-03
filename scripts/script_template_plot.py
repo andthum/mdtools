@@ -20,12 +20,12 @@
 
 # TODO: Write docstring.
 r"""
-Script template for scripts that process discrete trajectories.
+Script template for plotting scripts.
 
 .. deprecated:: 1.6.0
     **Example deprication warning**.
-    :mod:`scripts.script_template_dtrj` will be removed in MDTools
-    2.0.0.  It is replaced by :mod:`scripts.cript_template_dtrj_new`,
+    :mod:`scripts.script_template_plot` will be removed in MDTools
+    2.0.0.  It is replaced by :mod:`scripts.script_template_plot_new`,
     because the latter has additional functionality xyz.
 
 .. todo::
@@ -33,13 +33,16 @@ Script template for scripts that process discrete trajectories.
     * **Example todo list**.
     * Implement feature xyz.
 
-Discrete trajectories must be stored in arrays.  Arrays that serve as
-discrete trajectory must meet the requirements listed in
-:func:`mdtools.check.dtrj`.
-
 The following is a guide/template on how to write a docstring for a
 MDTools script.  For more information see the
 :ref:`developers-guide-label` and the |NumPy_docstring_convention|.
+
+Scripts that create plots from the output of other scripts should have
+the same name as the script whose output is plotted, prefixed with
+:file:`plot_`.  For instance, a script that plots the output of a script
+with the name :file:`msd.py` should have the name :file:`plot_msd.py`.
+Suffixes that give further hints on what the script does are allowed,
+e.g. :file:`plot_msd_logscale.py`.
 
 The first part of the docstring should contain the following paragraphs
 (all separated by a blank line):
@@ -60,39 +63,37 @@ Options
 A |rst_option_list| listing all options with which the script can/must
 be called and their meaning.
 
--f          Trajectory file.  File containing the discrete trajectory
-            stored as :class:`numpy.ndarray` in the binary :file:`.npy`
-            format.  The array must be of shape ``(n, f)``, where ``n``
-            is the number of compounds and ``f`` is the number of
-            frames.  The shape can also be ``(f,)``, in which case the
-            array is expanded to shape ``(1, f)``.  All elements of the
-            array must be integers or floats whose fractional part is
-            zero, because they are interpreted as the indices of the
-            states in which a given compound is at a given frame.
+-f          Input filename.  The input file must be a text file with at
+            least two columns of data.
 -o          Output filename.
--b          First frame to read from the trajectory.  Frame numbering
-            starts at zero.  Default: ``0``.
--e          Last frame to read from the trajectory.  This is exclusive,
-            i.e. the last frame read is actually ``END - 1``.  A value
-            of ``-1`` means to read the very last frame.  Default:
-            ``-1``.
---every     Read every n-th frame from the trajectory.  Default: ``1``.
---debug     Run in :ref:`debug mode <debug-mode-label>`.
+--cols      The columns of the input file that should be plotted.  The
+            first given column is treated as x data, all other given
+            columns are treated as y data.  Column numbering starts at
+            zero.  Default: ``None`` (this means read all columns).
+--labels    A label for each set of y data.  The labels will be shown in
+            the legend of the plot.  If provided, you must give one
+            label for each set of y data.  Labels are assigned to the
+            sets of y data by their input order.  If you do not want to
+            label a specific set of y data, pass ``None`` for this set.
+            Default: ``None``.
+--xylabel   x- and y-axis label.  Default: ``[r'$x$', r'$y$']``.
+--xlim      Left and right limit of the x-axis in data coordinates.
+            Pass 'None' to adjust the limit(s) automatically.  Default:
+            ``[None, None]``.
+--ylim      Lower and upper limit of the y-axis in data coordinates.
+            Pass 'None' to adjust the limit(s) automatically.  Default:
+            ``[None, None]``.
+--log       Whether to use a logarithmic scale for the x- and/or y-axis.
+            Default:  ``[False, False]``.
 
 Output
 ------
 Optional section containing for example a list of files which are
 created by the script.
 
-Outfile1 (-o) : .txt
-    A text file containing abc.
-Outfile2 (\--dtrj-out): .npy
-    A binary NumPy :file:`.npy` containing a discrete trajectory as
-    :class:`numpy.ndarray` of dtype :attr:`numpy.uint32` and shape
-    ``(n, f)``, where ``n`` is the number of reference compounds
-    and ``f`` is the number of frames.  The elements of the discrete
-    trajectory are the states in which a given compound resides at a
-    given frame.
+Outfile (-o) : .pdf
+    A plot of y versus x as vector graphic in the portable document
+    format (PDF).
 
 See Also
 --------
@@ -104,9 +105,7 @@ See Also
 
 Notes
 -----
-Implementation details and background theory, i.e. a detailed
-description of the scientific problem which is solved by the script and
-particularly how it is solved.
+Implementation details and background theory.
 
 References
 ----------
@@ -115,7 +114,7 @@ Cited references.
 Examples
 --------
 At least one particular use case of the script, optimally with a graph
-demonstrating how the generated data can be visualized.
+demonstrating how the plots that are produced by this script look like.
 """
 
 
@@ -134,9 +133,12 @@ from datetime import datetime, timedelta
 
 # Third party libraries
 import psutil
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Local application/library specific imports
 import mdtools as mdt
+import mdtools.plot as mdtplt  # noqa: F401; Import MDTools plot style
 
 
 # TODO: Put your function, class or other object definitions here.
@@ -154,19 +156,16 @@ if __name__ == "__main__":
         # The description should only contain the short summary from the
         # docstring and a reference to the documetation.
         description=(
-            "Script template for scripts that process discrete trajectories."
-            "  For more information, refer to the documetation of this script."
+            "Script template for plotting scripts.  For more information,"
+            " refer to the documetation of this script."
         )
     )
     parser.add_argument(
         "-f",
-        dest="TRJFILE",
+        dest="INFILE",
         type=str,
         required=True,
-        help=(
-            "File containing the discrete trajectory stored as numpy.ndarray"
-            " in the binary .npy format."
-        ),
+        help=("Input filename."),
     )
     parser.add_argument(
         "-o",
@@ -176,91 +175,110 @@ if __name__ == "__main__":
         help=("Output filename."),
     )
     parser.add_argument(
-        "-b",
-        dest="BEGIN",
+        "--cols",
+        dest="COLS",
         type=int,
+        nargs="+",
         required=False,
-        default=0,
+        default=None,
         help=(
-            "First frame to read from the trajectory.  Frame numbering starts"
-            " at zero.  Default: %(default)s."
+            "The columns of the input file that should be plotted.  Column"
+            " numbering starts at zero.  Default: %(default)s"
         ),
     )
     parser.add_argument(
-        "-e",
-        dest="END",
-        type=int,
+        "--labels",
+        dest="LABELS",
+        type=str,
+        nargs="+",
         required=False,
-        default=-1,
+        default=None,
+        help=("A label for each set of y data.  Default: %(default)s"),
+    )
+    parser.add_argument(
+        "--xylabel",
+        dest="XYLABEL",
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=str),
+        nargs=2,
+        required=False,
+        default=[r"$x$", r"$y$"],
+        help=("x- and y-axis label.  Default: %(default)s"),
+    )
+    parser.add_argument(
+        "--xlim",
+        dest="XLIM",
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=float),
+        nargs=2,
+        required=False,
+        default=[None, None],
         help=(
-            "Last frame to read from the trajectory (exclusive).  Default:"
-            " %(default)s."
+            "Left and right limit of the x-axis in data coordinates.  Default:"
+            " %(default)s"
         ),
     )
     parser.add_argument(
-        "--every",
-        dest="EVERY",
-        type=int,
+        "--ylim",
+        dest="YLIM",
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=float),
+        nargs=2,
         required=False,
-        default=1,
+        default=[None, None],
         help=(
-            "Read every n-th frame from the trajectory.  Default: %(default)s."
+            "Lower and upper limit of the y-axis in data coordinates."
+            "  Default: %(default)s"
         ),
     )
     parser.add_argument(
-        "--debug",
-        dest="DEBUG",
+        "--log",
+        dest="LOG",
+        type=mdt.fh.str2bool,
+        nargs=2,
         required=False,
-        default=False,
-        action="store_true",
-        help=("Run in debug mode."),
+        default=[False, False],
+        help=(
+            "Whether to use a logarithmic scale for the x- and/or y-axis."
+            "  Default: %(default)s"
+        ),
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
     # TODO: Check parsed input arguments if necessary
 
     print("\n")
-    print("Loading trajectory...")
+    print("Reading input file...")
     timer = datetime.now()
-    dtrj = mdt.fh.load_dtrj(args.TRJFILE)
-    N_CMPS, N_FRAMES_TOT = dtrj.shape
-    BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
-        start=args.BEGIN,
-        stop=args.END,
-        step=args.EVERY,
-        n_frames_tot=N_FRAMES_TOT,
+    data = np.loadtxt(args.INFILE, usecols=args.COLS)
+    if data.ndim <= 1:
+        raise ValueError("The input file must contain at least two columns")
+    xdata = np.ascontiguousarray(data[:, 0])
+    ydata = np.ascontiguousarray(data[:, 1:])
+    n_ydata_sets = data.shape[1] - 1
+    del data
+    if args.LABELS is not None and len(args.LABELS) != n_ydata_sets:
+        raise ValueError("You must give as many labels as y data sets")
+    print("Elapsed time:         {}".format(datetime.now() - timer))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
+
+    print("\n")
+    print("Creating plot...")
+    timer = datetime.now()
+    fig, ax = plt.subplots(clear=True)
+    ax.plot(xdata, ydata, label=args.LABELS)
+    if args.LOG[0]:
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+    if args.LOG[1]:
+        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+    ax.set(
+        xlabel=args.XYLABEL[0],
+        ylabel=args.XYLABEL[1],
+        xlim=args.XLIM,
+        ylim=args.YLIM,
     )
-    dtrj = dtrj[:, BEGIN:END:EVERY]
-    trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj)
-    print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
-
-    print("\n")
-    print("Reading trajectory...")
-    print("Number of compounds:    {:>8d}".format(N_CMPS))
-    print("Total number of frames: {:>8d}".format(N_FRAMES_TOT))
-    print("Frames to read:         {:>8d}".format(N_FRAMES))
-    print("First frame to read:    {:>8d}".format(BEGIN))
-    print("Last frame to read:     {:>8d}".format(END - 1))
-    print("Read every n-th frame:  {:>8d}".format(EVERY))
-    timer = datetime.now()
-    dtrj = mdt.rti.ProgressBar(dtrj, unit="compounds")
-    for cmp_trj in dtrj:
-        # TODO: Put your computations here (preferably as function)
-        # ProgressBar update:
-        dtrj.set_postfix_str(
-            "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
-        )
-    dtrj.close()
-    print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
-
-    print("\n")
-    print("Creating output...")
-    timer = datetime.now()
-    # TODO: Create your output file(s).  When creating text files, use
-    # mdtools.file_handler.savetxt or
-    # mdtools.file_handler.savetxt_matrix
+    if args.LABELS is not None:
+        ax.legend()
+    mdt.fh.backup(args.OUTFILE)
+    plt.savefig(args.OUTFILE)
+    plt.close()
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))

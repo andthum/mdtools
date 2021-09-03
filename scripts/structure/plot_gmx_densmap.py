@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,47 +18,117 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# This python script is inspired by the work of Hadrián Montes-Campos
-# * H. Montes-Campos, J.M. Otero-Mato, T. Mendez-Morales, O. Cabeza,
-#   L.J. Gallego, A. Ciach, L.M. Varela, PCCP, 2017,19, 24505-24512
-# * J.M. Otero-Mato, H. Montes-Campos, O. Cabeza, D. Diddens, A. Ciach,
-#   L.J. Gallego, L.M. Varela, PCCP, 2018, 20, 30412-30427
+r"""
+Read up to three matrices from text files and plot them as one RGB
+matrix with :meth:`matplotlib.axes.Axes.imshow`.
+
+.. todo::
+
+    Finish docstring.
+
+Each matrix must be stored in a separate text file.  The first column of
+the text files must contain the x values and the first row the y values
+(note that this is opposed to the standard matrix convention).  The
+value in the upper left corner will be ignored.  The remaining elements
+of the matrix must contain the z values for each (x,y) pair.  The file
+may contain comment lines starting with '#', which will be ignored.
+
+Options
+-------
+-r          File containing the matrix that shall be represented as red
+            levels in the final RGB matrix.
+-g          File containing the matrix that shall be represented as
+            green levels in the final RGB matrix.
+-b          File containing the matrix that shall be represented as blue
+            levels in the final RGB matrix.  Note that at leas one of
+            the -r, -g and -b flag must be provided.  If multiple
+            matrices are given, all matrices must have the same shape
+            and the same x and y values.  The input matrices must not
+            contain negative values.
+-o          Output filename.
+-c          Eliminate values below a certain cutoff in the final RGB
+            matrix to suppress noise.  The values of each RGB channel
+            are normalized to the interval [0, 1] (not [0,255] as
+            usual).  Default: ``0``.
+--Otsu      Use Otsu's binarization [#]_ to automatically calculate a
+            cutoff.  If \--Otsu is set, -c will be ignored.  This option
+            requires the `opencv-python`_ package to be installed on
+            your computer.
+--xylabel   x- and y-axis label.  Default:
+            ``[r'$x$ / nm', r'$y$ / nm']``.
+--xlim      Left and right limit of the x-axis in data coordinates.
+            Pass 'None' to adjust the limit(s) automatically.  Default:
+            ``[None, None]``.
+--ylim      Lower and upper limit of the y-axis in data coordinates.
+            Pass 'None' to adjust the limit(s) automatically.  Default:
+            ``[None, None]``.
+--xticks-at-yticks
+            Set x-ticks at the same positions as y-ticks.
+
+.. _opencv-python: https://pypi.org/project/opencv-python/
+
+Notes
+-----
+This python script is inspired by the work of Hadrian Montes-Campos
+[#]_:sup:`,` [#]_.  It was originally designed to read the output file
+that is produced by the GROMACS tool 'gmx densmap' with the '-od' flag.
+
+References
+----------
+.. [#] N. Otsu, `"A threshold selection method from gray-level
+    histograms" <https://doi.org/10.1109/TSMC.1979.4310076>`_, IEEE
+    transactions on systems, man, and cybernetics, 1979, 9, 62-66.
+.. [#] H. Montes-Campos, J. M. Otero-Mato, T. Mendez-Morales, O. Cabeza,
+    L. J. Gallego, A. Ciach, L. M. Varela, `"Two-dimensional pattern
+    formation in ionic liquids confined between graphene walls"
+    <https://doi.org/10.1039/C7CP04649A>`_, Physical Chemistry Chemical
+    Physics, 2017, 19, 24505-24512.
+.. [#] J. M. Otero-Mato, H. Montes-Campos, O. Cabeza, D. Diddens, A.
+    Ciach, L. J. Gallego, L. M. Varela, `"3D structure of the electric
+    double layer of ionic liquid-alcohol mixtures at the electrochemical
+    interface" <https://doi.org/10.1039/C8CP05632C>`_, Physical
+    Chemistry Chemical Physics, 2018, 20, 30412-30427.
+
+Examples
+--------
+TODO
+"""
 
 
+__author__ = "Andreas Thum"
+
+
+# Standard libraries
 import os
 import sys
 import warnings
 import argparse
+from datetime import datetime, timedelta
+
+# Third party libraries
+import psutil
 import numpy as np
 import matplotlib.pyplot as plt
+
+# Local application/library specific imports
 import mdtools as mdt
+import mdtools.plot as mdtplt
 
 
-plt.rc('lines', linewidth=2)
-plt.rc('axes', linewidth=2)
-plt.rc('xtick.major', width=2)
-plt.rc('xtick.minor', width=2)
-plt.rc('ytick.major', width=2)
-plt.rc('ytick.minor', width=2)
-plt.rc('text', usetex=True)
-plt.rcParams['text.latex.preview'] = True
-plt.rc('font', **{'family': 'serif', 'serif': 'Times'})
-
-
-def read_matrix(infile):
+def read_matrix(fname):
     """
-    Read data file. The file must have the same format as the output
-    produced by GROMACS' function gmx densmap with the -od flag. I.e.,
-    the input file must be an ASCII file containing a 2-dimensional
-    matrix. The first column must contain the x values and the first row
-    the y values. The upper left corner can have any value, but is
-    usually set to zero. The remaining elements of the matrix must
-    contain the z values for each (x,y) pair. The file may contain
-    comment lines starting with #, which will be ignored.
+    Read a 2-dimensional matrix from a text file.
+
+    The first column of the text file must contain the x values and the
+    first row the y values (note that this is opposed to the standard
+    matrix convention).  The value in the upper left corner will be
+    ignored.  The remaining elements of the matrix must contain the z
+    values for each (x,y) pair.  The file may contain comment lines
+    starting with '#', which will be ignored.
 
     Parameters
     ----------
-    infile : str
+    fname : str
         Name of the data file.
 
     Returns
@@ -69,311 +139,288 @@ def read_matrix(infile):
         1-dimensional array containing the y values.
     z : numpy.ndarray
         2-dimensional array containing the z values for each (x,y) pair.
-    """
+        The input matrix is transposed and reversed vertically before it
+        is returned as `z`.  Vividly speaking, the paper on which the
+        matrix is written is turned by 90 degrees anti-clockwise.  This
+        is done to get back to the usual matrix representation, where an
+        array `z` with shape ``(nrows, ncolumns)`` is plotted with the
+        column number as x and the row number as y.  The remaining
+        difference to the usual matrix representation is that the
+        original origin of the matrix (the value with index [0,0]) is
+        now at the lower left corner (i.e. it is now at
+        ``[nrows-1,0]``).
 
-    data = np.genfromtxt(infile)
+    Notes
+    -----
+    This function was originally designed to read the output file that
+    is produced by the GROMACS tool 'gmx densmap' with the '-od' flag
+    and to prepare the matrix for plotting with
+    :meth:`matplotlib.axes.Axes.imshow`.
+    """
+    data = np.loadtxt(fname)
     x = data[1:, 0]
     y = data[0, 1:]
     z = data[1:, 1:]
-
-    # Make the upper left corner of the matrix the lower left corner,
-    # i.e. invert the matrix vertically
     z = np.ascontiguousarray(z.T[::-1])
-
     return x, y, z
 
 
-def plot_rgb_matrix(ax, z, xmin=None, xmax=None, ymin=None, ymax=None,
-                    xlabel=r'$x$ / nm', ylabel=r'$y$ / nm', **kwargs):
-    """
-    Plot a RGB matrix, i.e. a two dimensional matrix with three channels,
-    i.e. a matrix of shape ``(m, n, 3)`` with values between 0 and 255
-    or between 0 and 1, with ``matplotlib.axes.Axes``. The matrix can
-    have the spahe ``(m, n, 4)`` if a alpha channel, i.e. transperency,
-    is included.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        The axes to draw to.
-    z : array_like
-        Array of shape ``(m, n, 3)`` or ``(m, n, 4)`` containing the
-        rgb (and alpha) values at each (x,y) point.
-    xmin : scalar, optional
-        Left limit for plotting on x-axis. The left limit may be greater
-        than the right limit, in which case the tick values will show up
-        in decreasing order. Default is ``None``, which means set the
-        left limit to ``np.min(x)``.
-    xmax : float, optional
-        Right limit for plotting on x-axis. Default is ``None``, which
-        means set the left limit to ``np.max(x)``.
-    ymin, ymax : scalar, optional
-        Same as `xmin` and `xmax`, but for the y-axis.
-    xlabel : str
-        Label for the x-axis. Default is ``r'$x$ / nm'``.
-    ylabel : str
-        Label for the y-axis. Default is ``r'$y$ / nm'``.
-    kwargs : dict
-        Keyword arguments to pass to ``ax.imshow()``.
-
-    Returns
-    -------
-    img : list
-        List of artists added to the axis `ax`.
-    """
-
-    fontsize_labels = 36
-    fontsize_ticks = 32
-    tick_length = 10
-    tick_pad = 12
-    label_pad = 16
-
-    img = ax.imshow(z, **kwargs)
-    ax.set_xlim(left=xmin, right=xmax)
-    ax.set_ylim(bottom=ymin, top=ymax)
-    ax.set_xlabel(xlabel=xlabel, fontsize=fontsize_labels)
-    ax.set_ylabel(ylabel=ylabel, fontsize=fontsize_labels)
-    ax.xaxis.labelpad = label_pad
-    ax.yaxis.labelpad = 20
-    ax.xaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.yaxis.offsetText.set_fontsize(fontsize_ticks)
-    ax.tick_params(which='major',
-                   direction='out',
-                   top=False,
-                   right=False,
-                   length=tick_length,
-                   labelsize=fontsize_ticks,
-                   pad=tick_pad)
-    ax.tick_params(which='minor',
-                   direction='out',
-                   top=False,
-                   right=False,
-                   length=0.5 * tick_length,
-                   labelsize=0.8 * fontsize_ticks,
-                   pad=tick_pad)
-
-    return img
-
-
 if __name__ == "__main__":
-
+    timer_tot = datetime.now()
+    proc = psutil.Process()
+    proc.cpu_percent()  # Initiate monitoring of CPU usage
     parser = argparse.ArgumentParser(
         description=(
-            "Combine up to three matrices to one RGB matrix and"
-            " plot this new matrix as heatmap with"
-            " matplotlib.pyplot.imshow(). The files containing"
-            " the matrices must have the same format as the"
-            " output produced by GROMACS' function gmx densmap"
-            " with the -od flag. I.e., the input file must be"
-            " an ASCII file containing a 2-dimensional matrix."
-            " The first column must contain the x values and"
-            " the first row the y values. The upper left corner"
-            " can have any value, but is usually set to zero."
-            " The remaining elements of the matrix must contain"
-            " the z values for each (x,y) pair. The file may"
-            " contain comment lines starting with #, which will"
-            " be ignored."
+            "Read up to three matrices from text files and plot them as one"
+            " RGB matrix with matplotlib.axes.Axes.imshow.  For more"
+            " information, refer to the documetation of this script."
         )
     )
-
     parser.add_argument(
-        '-r',
-        dest='RED',
+        "-r",
+        dest="RED",
         type=str,
         required=False,
         default=None,
-        help="File containing the matrix that shall be represented as"
-             " red levels in the final RGB matrix."
+        help=(
+            "File containing the matrix that shall be represented as red"
+            " levels in the final RGB matrix."
+        ),
     )
     parser.add_argument(
-        '-g',
-        dest='GREEN',
+        "-g",
+        dest="GREEN",
         type=str,
         required=False,
         default=None,
-        help="File containing the matrix that shall be represented as"
-             " green levels in the final RGB matrix."
+        help=(
+            "File containing the matrix that shall be represented as green"
+            " levels in the final RGB matrix."
+        ),
     )
     parser.add_argument(
-        '-b',
-        dest='BLUE',
+        "-b",
+        dest="BLUE",
         type=str,
         required=False,
         default=None,
-        help="File containing the matrix that shall be represented as"
-             " blue levels in the final RGB matrix. Note: At leas one of"
-             " the -r, -g and -b flag must be provided. If multiple"
-             " matrices are given, all matrices must have the same shape"
-             " and the same x and y values."
+        help=(
+            "File containing the matrix that shall be represented as blue"
+            " levels in the final RGB matrix."
+        ),
     )
     parser.add_argument(
-        '-o',
-        dest='OUTFILE',
+        "-o",
+        dest="OUTFILE",
         type=str,
         required=True,
-        help="Output filename. Output is optimized for PDF format with"
-             " TeX support."
+        help=("Output filename."),
     )
-
     parser.add_argument(
-        '-c',
-        dest='CUTOFF',
+        "-c",
+        dest="CUTOFF",
         type=float,
         required=False,
         default=0,
-        help="Eliminate values below a certain cutoff in the final RGB"
-             " matrix to suppress noise. The RGB matrix ranges from 0 to"
-             " 1. Default: 0"
+        help=(
+            "Eliminate values below a certain cutoff in the final RGB matrix"
+            " to suppress noise.  The values of each RGB channel are"
+            " normalized to the interval [0, 1].  Default: %(default)s"
+        ),
     )
     parser.add_argument(
-        '--Otsu',
-        dest='OTSU',
+        "--Otsu",
+        dest="OTSU",
         required=False,
         default=False,
-        action='store_true',
-        help="Use Otsu's binarization to automatically calculate a"
-             " cutoff. If --Otsu is set, -c will be ignored. This option"
-             " requires the opencv-python package."
-    )
-
-    parser.add_argument(
-        '--xmin',
-        dest='XMIN',
-        type=float,
-        required=False,
-        default=None,
-        help="Lower limit for plotting on x axis."
+        action="store_true",
+        help=(
+            "Use Otsu's binarization to automatically calculate a cutoff.  If"
+            " --Otsu is set, -c will be ignored."
+        ),
     )
     parser.add_argument(
-        '--xmax',
-        dest='XMAX',
-        type=float,
+        "--xylabel",
+        dest="XYLABEL",
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=str),
+        nargs=2,
         required=False,
-        default=None,
-        help="Upper limit for plotting on x axis."
+        default=[r"$x$ / nm", r"$y$ / nm"],
+        help=("x- and y-axis label.  Default: %(default)s"),
     )
     parser.add_argument(
-        '--ymin',
-        dest='YMIN',
-        type=float,
+        "--xlim",
+        dest="XLIM",
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=float),
+        nargs=2,
         required=False,
-        default=None,
-        help="Lower limit for plotting on y axis."
+        default=[None, None],
+        help=(
+            "Left and right limit of the x-axis in data coordinates.  Default:"
+            " %(default)s"
+        ),
     )
     parser.add_argument(
-        '--ymax',
-        dest='YMAX',
-        type=float,
+        "--ylim",
+        dest="YLIM",
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=float),
+        nargs=2,
         required=False,
-        default=None,
-        help="Upper limit for plotting on y axis."
+        default=[None, None],
+        help=(
+            "Lower and upper limit of the y-axis in data coordinates."
+            "  Default: %(default)s"
+        ),
     )
-
+    parser.add_argument(
+        "--xticks-at-yticks",
+        dest="XTICKS_AT_YTICKS",
+        required=False,
+        default=False,
+        action="store_true",
+        help=("Set x-ticks at the same positions as y-ticks."),
+    )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
-    rgb_args = np.array([args.RED, args.GREEN, args.BLUE])
-    rgb_code = {0: 'red', 1: 'green', 2: 'blue'}
-
-    if np.all(rgb_args == None):
+    RGB_ARGS = (args.RED, args.GREEN, args.BLUE)
+    RGB_CODE = {0: "red", 1: "green", 2: "blue"}
+    if all(rgb_arg is None for rgb_arg in RGB_ARGS):
         raise RuntimeError("Neither -r, nor -g, nor -b is set")
     if args.CUTOFF < 0 or args.CUTOFF > 1:
-        raise RuntimeError("The cutoff must be between 0 and 1, but you"
-                           " gave -c {}".format(args.CUTOFF))
+        raise RuntimeError(
+            "-c ({}) must be between 0 and 1".format(args.CUTOFF)
+        )
     if args.OTSU and args.CUTOFF > 0:
-        warnings.warn("-c {} will be ignored, because --Otsu is set"
-                      .format(args.CUTOFF), RuntimeWarning)
+        warnings.warn(
+            "-c ({}) will be ignored, because --Otsu is"
+            " set".format(args.CUTOFF),
+            RuntimeWarning,
+        )
 
-    x = []
-    y = []
-    z = []
+    print("\n")
+    print("Reading input file...")
+    timer = datetime.now()
+    x, y, z = [], [], []
     rgb_channel_used = np.zeros(3, dtype=bool)
-    for i in range(len(rgb_args)):
-        if rgb_args[i] is not None:
+    for i, rgb_arg in enumerate(RGB_ARGS):
+        if rgb_arg is not None:
             rgb_channel_used[i] = True
-            xtmp, ytmp, ztmp = read_matrix(rgb_args[i])
+            xtmp, ytmp, ztmp = read_matrix(RGB_ARGS[i])
             x.append(xtmp)
             y.append(ytmp)
-            z.append(ztmp / ztmp.max())
-    x = np.array(x)
-    y = np.array(y)
-    z = np.array(z)
-
+            z.append(ztmp)
     for i in range(1, len(x)):
-        if np.any(x[i - 1] != x[i]):
-            raise ValueError("The x values of the provided data are not"
-                             " exactly the same")
-        if np.any(y[i - 1] != y[i]):
-            raise ValueError("The y values of the provided data are not"
-                             " exactly the same")
-        if z[i - 1].shape != z[i].shape:
-            raise ValueError("The provided matrices have not the same"
-                             " shape")
-    x = x[0]
-    y = y[0]
+        if x[i].shape != x[0].shape:
+            raise ValueError(
+                "All input files must contain the same number of x values"
+            )
+        if not np.allclose(x[i], x[0], rtol=0, equal_nan=True):
+            raise ValueError("All input files must contain the same x values")
+        if y[i].shape != y[0].shape:
+            raise ValueError(
+                "All input files must contain the same number of y values"
+            )
+        if not np.allclose(y[i], y[0], rtol=0, equal_nan=True):
+            raise ValueError("All input files must contain the same y values")
+        if z[i].shape != z[0].shape:
+            raise ValueError("All input matrices must have the same shape")
+        if np.any(z[i] < 0):
+            raise ValueError(
+                "The input matrices must not contain negative values."
+            )
+    x = np.array(x[0])
+    y = np.array(y[0])
+    z = np.array(z)
+    print("Elapsed time:         {}".format(datetime.now() - timer))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
-    # Create RGB matrix from the input matrices. The three RGB channels
-    # can each take a value from 0 to 255 because they are stored as
-    # 8-bit unsigned integer. But matplotlib.pyplot.imshow() also
-    # accepts a float from 0 to 1.
+    print("\n")
+    print("Combining input matrices to a single RGB matrix...")
+    timer = datetime.now()
     rgb = np.zeros(z[0].shape + (3,), dtype=np.float64)
     j = 0
-    for i in range(len(rgb_channel_used)):
-        if rgb_channel_used[i]:
-            rgb[..., i] = z[j]
+    for i, channel_used in enumerate(rgb_channel_used):
+        if channel_used:
+            # The three RGB channels can each take a value from 0 to
+            # 255, because they are stored as 8-bit unsigned integer.
+            # matplotlib.axes.Axes.imshow also accepts a float from 0 to
+            # 1, which is easier to accomplish.
+            rgb[..., i] = z[j] / np.max(z[j])
             j += 1
+    del z
+    print("Elapsed time:         {}".format(datetime.now() - timer))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
-    # Eliminate values below a certain cutoff to suppress noise.
+    print("\n")
+    print("Applying cutoff or Otsu's binarization...")
+    timer = datetime.now()
     if args.OTSU:
         try:
             import cv2
         except ImportError:
-            raise ImportError("To use Otsu's binarization, the package"
-                              " cv2 needs to be installed")
-        print("\n\n\n", flush=True)
-        for i in range(len(rgb_channel_used)):
-            if rgb_channel_used[i]:
+            raise ImportError(
+                "To use Otsu's binarization, the package cv2 must be installed"
+            )
+        for i, channel_used in enumerate(rgb_channel_used):
+            if channel_used:
                 rgb_norm = np.round(rgb[..., i] * 255).astype(np.uint8)
                 thresh, rgb[..., i] = cv2.threshold(
                     src=rgb_norm,
                     thresh=0,
                     maxval=255,
-                    type=cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                rgb[..., i] /= rgb[..., i].max()
-                # print("Histogram:", flush=True)
-                # print(np.bincount(rgb_norm.flatten()), flush=True)
-                print("Otsu's threshold for {:>5} channel (0 - 255):"
-                      " {:>3f}".format(rgb_code[i], thresh), flush=True)
+                    type=cv2.THRESH_BINARY + cv2.THRESH_OTSU,
+                )
+                rgb[..., i] /= np.max(rgb[..., i])
+                # print("Histogram:")
+                # print(np.bincount(rgb_norm.flatten()))
+                print(
+                    "Otsu's threshold for {:>5} channel (0 - 255):"
+                    " {:>3f}".format(RGB_CODE[i], thresh)
+                )
     else:
         rgb[rgb < args.CUTOFF] = 0
-
-    print("\n\n\n", flush=True)
-    for i in range(len(rgb_channel_used)):
-        if rgb_channel_used[i]:
+    for i, channel_used in enumerate(rgb_channel_used):
+        if channel_used:
             surf_cov = np.count_nonzero(rgb[..., i]) / rgb[..., i].size
-            print("Amount of surface covered by {:>5} pixels: {:>6.4f}"
-                  .format(rgb_code[i], surf_cov), flush=True)
-    print("\n\n", flush=True)
+            print(
+                "Amount of surface covered by {:>5} pixels: {:>6.4f}".format(
+                    RGB_CODE[i], surf_cov
+                )
+            )
+    print("Elapsed time:         {}".format(datetime.now() - timer))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
-    fig, axis = plt.subplots(figsize=(8.27, 8.27),  # Short side of DIN A4 in inches
-                             frameon=False,
-                             clear=True,
-                             tight_layout=True)
-    plot_rgb_matrix(ax=axis,
-                    z=rgb,
-                    xmin=args.XMIN,
-                    xmax=args.XMAX,
-                    ymin=args.YMIN,
-                    ymax=args.YMAX,
-                    extent=(x.min(), x.max(), y.min(), y.max()))
-    yticks = np.asarray(axis.get_yticks())
-    mask = ((yticks >= axis.get_xlim()[0]) &
-            (yticks <= axis.get_xlim()[1]))
-    axis.set_xticks(yticks[mask])
+    print("\n")
+    print("Creating plot...")
+    timer = datetime.now()
+    fig, ax = plt.subplots(figsize=(5.82677, 5.82677), clear=True)
+    mdtplt.imshow_new(
+        X=rgb,
+        extent=(x.min(), x.max(), y.min(), y.max()),
+        ax=ax,
+        cbar=False,
+    )
+    ax.set(
+        xlabel=args.XYLABEL[0],
+        ylabel=args.XYLABEL[1],
+        xlim=args.XLIM,
+        ylim=args.YLIM,
+    )
+    if args.XTICKS_AT_YTICKS:
+        yticks = np.asarray(ax.get_yticks())
+        mask = (yticks >= ax.get_xlim()[0]) & (yticks <= ax.get_xlim()[1])
+        ax.set_xticks(yticks[mask])
     mdt.fh.backup(args.OUTFILE)
-    plt.tight_layout()
     plt.savefig(args.OUTFILE)
-    plt.close(fig)
+    plt.close()
+    print("Created {}".format(args.OUTFILE))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
-    print("\n\n\n", flush=True)
-    print("{} done".format(os.path.basename(sys.argv[0])), flush=True)
+    print("\n")
+    print("{} done".format(os.path.basename(sys.argv[0])))
+    print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
+    _cpu_time = timedelta(seconds=sum(proc.cpu_times()[:4]))
+    print("CPU time:             {}".format(_cpu_time))
+    print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage()))

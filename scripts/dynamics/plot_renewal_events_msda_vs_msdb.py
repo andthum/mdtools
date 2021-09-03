@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021  The MDTools Development Team and all contributors
+# listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,6 +18,9 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+__author__ = "Andreas Thum"
+
+
 import sys
 import os
 from datetime import datetime
@@ -28,6 +31,8 @@ from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import mdtools as mdt
+import mdtools.plot as mdtplt  # TODO: Replace deprecated functions
+plt.style.use("default")  # TODO: Use MDTools plotting style
 
 
 if __name__ == '__main__':
@@ -281,7 +286,7 @@ if __name__ == '__main__':
                                  tight_layout=True)
 
         mask = (msd1 > 0) & (msd2 > 0)
-        img = mdt.plot.scatter(
+        img = mdtplt.scatter(
             ax=axis,
             x=msd1[mask],
             y=msd2[mask],
@@ -295,7 +300,8 @@ if __name__ == '__main__':
             xlabel=r'$\Delta ' + args.DIRECTION1 + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             ylabel=r'$\Delta ' + args.DIRECTION2 + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             marker='x',
-            cmap='plasma')
+            cmap='plasma',
+        )
         cbar = plt.colorbar(img, ax=axis)
         cbar.set_label(label=r'$\tau_{renew}$ / ' + args.TUNIT,
                        fontsize=fontsize_labels)
@@ -311,7 +317,7 @@ if __name__ == '__main__':
                             labelsize=0.8 * fontsize_ticks)
 
         diagonal = np.linspace(*axis.get_xlim())
-        mdt.plot.plot(
+        mdtplt.plot(
             ax=axis,
             x=diagonal,
             y=diagonal,
@@ -324,7 +330,8 @@ if __name__ == '__main__':
             xlabel=r'$\Delta ' + args.DIRECTION1 + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             ylabel=r'$\Delta ' + args.DIRECTION2 + r'^2(\tau_{renew})$ / ' + args.LUNIT + r'$^2$',
             color='black',
-            linestyle='--')
+            linestyle='--',
+        )
 
         axis.axvline(x=np.mean(msd1),
                      color='blue',
