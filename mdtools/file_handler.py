@@ -131,11 +131,16 @@ def str2none_or_type(val, dtype, empty_as_None=False, case_sensitive=True):
     ...     '--spam',
     ...     type=lambda val: mdt.fh.str2none_or_type(val, dtype=str)
     ... )
-    _StoreAction(option_strings=['--spam'], ...)
+    _StoreAction(option_strings=['--spam'], dest='spam', ...)
     >>> parser.add_argument('--eggs', type=str)
-    _StoreAction(option_strings=['--eggs'], ...)
-    >>> parser.parse_args(['--spam', 'None', '--eggs', 'None'])
-    Namespace(eggs='None', spam=None)
+    _StoreAction(option_strings=['--eggs'], dest='eggs', ...)
+    >>> args = parser.parse_args(['--spam', 'None', '--eggs', 'None'])
+    >>> args.spam is None
+    True
+    >>> args.eggs is None
+    False
+    >>> args.eggs == 'None'
+    True
     """
     val = str(val)
     if val == "None" or (empty_as_None and val == ""):
@@ -233,8 +238,11 @@ def str2bool(val, accept_yes_no=True, accept_abbrev=True, accept_01=True):
     _StoreAction(option_strings=['--spam'], ...)
     >>> parser.add_argument('--eggs', type=str)
     _StoreAction(option_strings=['--eggs'], ...)
-    >>> parser.parse_args(['--spam', 'yes', '--eggs', 'no'])
-    Namespace(eggs='no', spam=True)
+    >>> args = parser.parse_args(['--spam', 'yes', '--eggs', 'no'])
+    >>> args.spam
+    True
+    >>> args.eggs
+    'no'
     """
     val = str(val).lower()
     eval_true = ["true"]
