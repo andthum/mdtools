@@ -133,7 +133,6 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
             "Topic :: Scientific/Engineering",
             "Topic :: Scientific/Engineering :: Chemistry",
             "Topic :: Scientific/Engineering :: Physics",
@@ -147,6 +146,6 @@ if __name__ == "__main__":
         ),
         packages=setuptools.find_packages(include=["mdtools"]),
         include_package_data=True,
-        python_requires=">=3.6, <3.10",
+        python_requires=">=3.6, <3.9",
         install_requires=get_content("requirements.txt").splitlines(),
     )
