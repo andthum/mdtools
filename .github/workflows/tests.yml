@@ -90,6 +90,7 @@ jobs:
         mdtools/version.py \
         scripts/discretization/plot_*.py \
         scripts/dynamics/plot_msd_layer*.py \
+        scripts/structure/lig_change_at_pos_change_blocks.py \
         scripts/structure/plot_gmx_densmap.py \
         setup.py
     - name: Install/Upgrade flake8 and flake8-docstrings extension
