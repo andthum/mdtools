@@ -172,9 +172,10 @@ Options
 See Also
 --------
 :mod:`lig_change_at_pos_change_blocks` :
-    Like
-    :mod:`lig_change_at_pos_change_blocks_hist`, but without tracking
-    the position history of the reference compounds
+    Similar to
+    :mod:`lig_change_at_pos_change_blocks_hist`, but does not track the
+    position history of the reference compounds but therefore resolves
+    the direction of unsuccessful postion changes.
 :mod:`contact_hist` :
     Calculate the number of contacts between two MDAnalysis
     :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>`
