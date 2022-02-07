@@ -79,7 +79,8 @@ jobs:
       # formatted with black.  But as long as this is not the case, only
       # check those files that are already formatted.
       run: |
-        python -m black ./ --check --line-length 79 --include \
+        python -m black ./ --line-length 79 --check --diff --color \
+        --include \
         **/*template*.py \
         docs/source/conf.py \
         mdtools/__init__.py \
