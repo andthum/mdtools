@@ -245,7 +245,7 @@ def ix_along_axis_to_global_ix(ix, axis):
     Functions like :func:`numpy.argmin` or :func:`numpy.argmax` return
     an "array of indices into the array [`a`].  It has the same shape as
     ``a.shape`` with the dimension along `axis` removed".  This index
-    array can generally *not* be used to get the minimum or maximum
+    array can generally **not** be used to get the minimum or maximum
     values of `a` by simply doing ``a[ix]``.  Rather, you have to do
     ``np.squeeze(numpy.take_along_axis(a, numpy.expand_dims(ix, axis=axis), axis=axis))``
     (in this expample, you can of course also use :func:`numpy.amin` and
@@ -285,9 +285,9 @@ def ix_along_axis_to_global_ix(ix, axis):
     >>> a[ix_global]
     0
 
-    >>> np.squeeze(np.take_along_axis(a,
-    ...                               np.expand_dims(ix, axis=ax),
-    ...                               axis=ax))
+    >>> np.squeeze(
+    ...     np.take_along_axis(a, np.expand_dims(ix, axis=ax), axis=ax)
+    ... )
     array(0)
 
     >>> np.min(a, axis=ax)
@@ -319,9 +319,9 @@ def ix_along_axis_to_global_ix(ix, axis):
     >>> b[ix_global]
     array([0, 1, 0])
 
-    >>> np.squeeze(np.take_along_axis(b,
-    ...                               np.expand_dims(ix, axis=ax),
-    ...                               axis=ax))
+    >>> np.squeeze(
+    ...     np.take_along_axis(b, np.expand_dims(ix, axis=ax), axis=ax)
+    ... )
     array([0, 1, 0])
 
     >>> np.min(b, axis=0)
@@ -348,9 +348,9 @@ def ix_along_axis_to_global_ix(ix, axis):
     >>> b[ix_global]
     array([0, 0])
 
-    >>> np.squeeze(np.take_along_axis(b,
-    ...                               np.expand_dims(ix, axis=ax),
-    ...                               axis=ax))
+    >>> np.squeeze(
+    ...     np.take_along_axis(b, np.expand_dims(ix, axis=ax), axis=ax)
+    ... )
     array([0, 0])
 
     >>> np.min(b, axis=ax)
@@ -400,9 +400,9 @@ def ix_along_axis_to_global_ix(ix, axis):
     array([[0, 0, 1],
            [0, 2, 0]])
 
-    >>> np.squeeze(np.take_along_axis(c,
-    ...                               np.expand_dims(ix, axis=ax),
-    ...                               axis=ax))
+    >>> np.squeeze(
+    ...     np.take_along_axis(c, np.expand_dims(ix, axis=ax), axis=ax)
+    ... )
     array([[0, 0, 1],
            [0, 2, 0]])
 
@@ -454,9 +454,9 @@ def ix_along_axis_to_global_ix(ix, axis):
     array([[0, 1, 0],
            [0, 0, 1]])
 
-    >>> np.squeeze(np.take_along_axis(c,
-    ...                               np.expand_dims(ix, axis=ax),
-    ...                               axis=ax))
+    >>> np.squeeze(
+    ...     np.take_along_axis(c, np.expand_dims(ix, axis=ax), axis=ax)
+    ... )
     array([[0, 1, 0],
            [0, 0, 1]])
     >>>
@@ -493,9 +493,9 @@ def ix_along_axis_to_global_ix(ix, axis):
     array([[0, 0],
            [0, 0]])
 
-    >>> np.squeeze(np.take_along_axis(c,
-    ...                               np.expand_dims(ix, axis=ax),
-    ...                               axis=ax))
+    >>> np.squeeze(
+    ...     np.take_along_axis(c, np.expand_dims(ix, axis=ax), axis=ax)
+    ... )
     array([[0, 0],
            [0, 0]])
 
@@ -518,7 +518,7 @@ def ix_along_axis_to_global_ix(ix, axis):
     array(0)
     array(0)
     array(0)
-    """
+    """  # noqa: W505,E501
     ix = np.asarray(ix)
     if ix.ndim == 0:
         return ix
@@ -537,13 +537,14 @@ def find_nearest(a, val, axis=None, return_index=False):
     a : array_like
         The input array.
     val : scalar or array_like
-        The value to search for.  If the value itself is not contained
-        in `a` along the search axis, the value closest to `val` is
-        returned.  If `val` is an array, `a` and `val` must be
+        The value(s) to search for.  If a search value itself is not
+        contained in `a` along the search axis, the value closest to
+        `val` is returned.  If `val` is an array, `a` and `val` must be
         broadcastable.
     axis : None or int, optional
-        The axis along which to search.  If `axis` is ``None`` (default),
-        a global search over the flattened array will be performed.
+        The axis along which to search.  If `axis` is ``None``
+        (default), a global search over the flattened array will be
+        performed.
     return_index : bool, optional
         If ``True``, also return the indices of the first values in `a`
         that are closest to `val` along the search axis.
@@ -687,7 +688,7 @@ def find_nearest(a, val, axis=None, return_index=False):
     """
     a = np.asarray(a)
     if a.ndim == 0:
-        raise ValueError("The dimension of a must be greater than zero")
+        raise ValueError("The dimension of 'a' must be greater than zero")
     if (axis is not None and a.shape[axis] == 0) or a.size == 0:
         return (np.array([], dtype=a.dtype), np.array([], dtype=int))
     diff = np.subtract(a, val)
@@ -793,10 +794,11 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
         The axis along which to track changing elements.
     wrap : bool, optional
         If ``True``, the array `a` is assumed to be continued after the
-        last array element by `a` itself, like when using periodic
-        boundary conditions.  Consequently, if the first and the last
-        element of `a` do not match, this is interpreted as item change
-        and the position (index) of this item change is regared as zero.
+        last element along `axis` by `a` itself, like when using
+        periodic boundary conditions.  Consequently, if the first and
+        the last element of `a` do not match, this is interpreted as
+        item change and the position (index) of this item change is
+        regared as zero.
     prepend_zero : bool, optional
         If ``True``, regard the first element of `a` along the given
         axis as item change and prepend a ``0`` to the returned array of
@@ -930,7 +932,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     Traceback (most recent call last):
     ...
     ValueError: The dimension of a must be greater than zero
-    """
+    """  # noqa: W505,E501
     if wrap and prepend_zero:
         raise ValueError("wrap and prepend_zero must not be used together")
     a = np.asarray(a)
@@ -1197,7 +1199,12 @@ def ceil_divide(x1, x2, **kwargs):
 
     >>> result = np.zeros(3, dtype=int)
     >>> mask = np.array([True, True, False])
-    >>> mdt.nph.ceil_divide([5, 5, 5], [2, 3, 3], out=result, where=mask)
+    >>> mdt.nph.ceil_divide(
+    ...     [5, 5, 5],
+    ...     [2, 3, 3],
+    ...     out=result,
+    ...     where=mask
+    ... )
     array([3, 2, 0])
     """
     if kwargs:
@@ -1233,7 +1240,6 @@ def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
         List of subarrays, one for each contiguous sequence of numbers
         with stepsize `step` in `a`.
     """
-
     a = np.asarray(a)
     if debug:
         mdt.check.array(a, dim=1)
@@ -1246,7 +1252,7 @@ def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
 
 def sequenize(a, step=1, start=0):
     """
-    'Sequenize' the values of an array.
+    "Sequenize" the values of an array.
 
     Assign to each different value in an array `a` a constant offset in
     such a way that subtracting the resulting offset array from `a`
@@ -1295,7 +1301,8 @@ def group_by(
     Parameters
     ----------
     keys : array_like
-        1-dimensional array of keys used to group the element of `values`.
+        1-dimensional array of keys used to group the element of
+        `values`.
     values : array_like
         The values (elements) to be grouped by `keys`.
     assume_sorted : bool, optional
@@ -1316,7 +1323,6 @@ def group_by(
         belonging to the same key. The arrays in the list are sorted
         according to the unique, sorted keys.
     """
-
     keys = np.asarray(keys)
     values = np.asarray(values)
     if debug:
@@ -1356,7 +1362,6 @@ def get_middle(a, n=1, debug=False):
     b : array_like
         Array of the `n` innermost elements of `a`.
     """
-
     if debug:
         mdt.check.array(a, dim=1)
 
@@ -1395,7 +1400,6 @@ def symmetrize(a, lower=True, debug=False):
     a_sym : numpy.ndarray
         A symmetrized copy of `a`.
     """
-
     if debug:
         mdt.check.array(a, dim=2)
 
@@ -1434,7 +1438,6 @@ def tilt_diagonals(a, clockwise=True, diagpos=None, debug=False):
         2-dimensional array of shape ``(m, n)`` (if tilted clockwise) or
         ``(n, m)`` (if tilted counterclockwise).
     """
-
     a = np.asarray(a)
     if debug:
         mdt.check.array(a, dim=2)
@@ -1495,7 +1498,6 @@ def extend(a, length, axis=-1, fill_value=0):
         the given axis already had the desired length or is even longer,
         just the input array is returned.
     """
-
     a = np.asarray(a)
     if a.shape[axis] >= length:
         return a
@@ -1532,7 +1534,6 @@ def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
         way that they have the same shape. If `a` and `b` already had
         the same shape, just the input arrays are returned.
     """
-
     a = np.asarray(a)
     b = np.asarray(b)
     if a.shape == b.shape:
@@ -1591,7 +1592,8 @@ def cross_section(z, x, y, line, num=None, order=1):
         cross section. `line` must be given in the following format:
         ``[(x0, y0), (x1, y1)]`` with ``(x0, y0)`` being the start point
         and ``(x1, y1)`` being the end point. Note that the start point
-        and end point must lie within the data range given by `x` and `y`.
+        and end point must lie within the data range given by `x` and
+        `y`.
     num : int, optional
         Number of points to use for sampling the cross section along the
         given line. If ``None`` (default), approximatly as many sample
@@ -1606,7 +1608,6 @@ def cross_section(z, x, y, line, num=None, order=1):
     r : numpy.ndarray
         The sample points along the given line.
     """
-
     z = np.asarray(z)
     x = np.asarray(x)
     y = np.asarray(y)
@@ -1711,7 +1712,6 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean="arithmetic"):
         Cross section as function of `x` and shape ``(n,)`` if `y` is
         given or as function of `y` and shape ``(m,)`` if `y` is given.
     """
-
     z = np.asarray(z)
     if z.ndim != 2:
         raise ValueError("z must be a 2d array")
@@ -1769,9 +1769,9 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
         The spacing between sample points when `x` or `y` is ``None``.
     xlim : array_like, optional
         Array of length `2` containing an upper and a lower integration
-        boundary for integration in `x` direction. If ``None`` (default),
-        no limits are applied. If you only want to apply an upper
-        (lower) limit, set the lower (upper) limit to ``-np.inf``
+        boundary for integration in `x` direction. If ``None``
+        (default), no limits are applied. If you only want to apply an
+        upper (lower) limit, set the lower (upper) limit to ``-np.inf``
         (``np.inf``).
     ylim : array_like, optional
         Array of length `2` containing upper and lower integration
@@ -1787,7 +1787,6 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
     trapz : float
         Definite integral as approximated by trapezoidal rule.
     """
-
     z = np.asarray(z)
     if x is None:
         x = np.arange(0, z.shape[0] * dx, dx)
@@ -1946,7 +1945,6 @@ def find_linear_region(
         respective position. Therefore, the data can be considered
         linear at this position.
     """
-
     if polyorder < 2:
         raise ValueError("polyorder must be at least 2")
 
