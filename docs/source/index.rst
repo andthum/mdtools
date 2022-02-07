@@ -15,7 +15,7 @@ Welcome to the documentation of :raw-html:`<br />` |MDTools_writing|
 :Release: |release|
 :Date: |today|
 
-|Test_status| |Documentation_Status| |License_GPLv3|
+|Test_Status| |Documentation_Status| |License_GPLv3|
 |Made_with_Python| |Made_with_Sphinx| |Code_style_black|
 |Powered_by_MDAnalysis|
 
@@ -151,15 +151,15 @@ Indices and tables
     :align: middle
     :alt: MDTools
 
-.. |Test_status| image:: https://github.com/andthum/mdtools/actions/workflows/tests.yml/badge.svg
+.. |Test_Status| image:: https://github.com/andthum/mdtools/actions/workflows/tests.yml/badge.svg
+    :alt: Test Status
     :target: https://github.com/andthum/mdtools/actions/workflows/tests.yml
-    :alt: Test status
-.. |Documentation_status| image:: https://readthedocs.org/projects/mdtools/badge/?version=latest
+.. |Documentation_Status| image:: https://readthedocs.org/projects/mdtools/badge/?version=latest
     :alt: Documentation Status
     :target: https://mdtools.readthedocs.io/en/latest/?badge=latest
 .. |License_GPLv3| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
     :alt: License GPLv3
-    :target: http://perso.crans.org/besson/LICENSE.html
+    :target: https://www.gnu.org/licenses/gpl-3.0.html
 .. |Made_with_Python| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
     :alt: Made with Python
     :target: https://www.python.org/
