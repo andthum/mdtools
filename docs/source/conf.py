@@ -517,7 +517,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "psutil": ("https://psutil.readthedocs.io/en/stable/", None),
     "python": ("https://docs.python.org/3/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "scipy": ("https://scipy.github.io/devdocs/", None),
     "Sphinx": ("https://www.sphinx-doc.org/en/stable/", None),
 }
 
