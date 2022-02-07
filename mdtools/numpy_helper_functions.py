@@ -65,7 +65,8 @@ def excel_colname(n, upper=True):
 
     See Also
     --------
-    :func:`excel_colnum` : Inverse function
+    :func:`mdtools.numpy_helper_functions.excel_colnum` :
+        Inverse function
 
     Examples
     --------
@@ -122,7 +123,8 @@ def excel_colnum(name):
 
     See Also
     --------
-    :func:`excel_colname` : Inverse function
+    :func:`mdtools.numpy_helper_functions.excel_colname` :
+        Inverse function
 
     Examples
     --------
@@ -251,16 +253,19 @@ def ix_along_axis_to_global_ix(ix, axis):
     :func:`numpy.take_along_axis` and :func:`numpy.expand_dims` do not
     help in this case.
 
-    This is where :func:`ix_along_axis_to_global_ix` is useful.  It
-    constructs a tuple of index arrays, `ix_global`, from `ix` such that
-    ``a[ix_global]`` and
+    This is where
+    :func:`mdtools.numpy_helper_functions.ix_along_axis_to_global_ix` is
+    useful.  It constructs a tuple of index arrays, `ix_global`, from
+    `ix` such that ``a[ix_global]`` and
     ``np.squeeze(numpy.take_along_axis(a, numpy.expand_dims(ix, axis=axis), axis=axis))``
     give the same result.
 
     Examples
     --------
     If `a` is an 1-dimensional array, it can be directly indexed with
-    `ix`.  In this case, :func:`ix_along_axis_to_global_ix` is overkill.
+    `ix`.  In this case,
+    :func:`mdtools.numpy_helper_functions.ix_along_axis_to_global_ix` is
+    overkill.
 
     1-dimensional example:
 
@@ -288,8 +293,9 @@ def ix_along_axis_to_global_ix(ix, axis):
     0
 
     Only for for multidimensional arrays,
-    :func:`ix_along_axis_to_global_ix` is really useful, since in this
-    case ``a[ix]`` yields a wrong result or an error.
+    :func:`mdtools.numpy_helper_functions.ix_along_axis_to_global_ix` is
+    really useful, since in this case ``a[ix]`` yields a wrong result or
+    an error.
 
     2-dimensional example:
     First axis:
@@ -557,7 +563,7 @@ def find_nearest(a, val, axis=None, return_index=False):
         Convert the returned index `ix` to a tuple of index arrays
         suitable to index a multidimensional input array `a` if `axis`
         was ``None``
-    :func:`ix_along_axis_to_global_ix` :
+    :func:`mdtools.numpy_helper_functions.ix_along_axis_to_global_ix` :
         Same as :func:`numpy.unravel_index`, but to be used when `axis`
         was not ``None``
 
@@ -576,8 +582,8 @@ def find_nearest(a, val, axis=None, return_index=False):
     >>> mdt.nph.find_nearest(a, 0, return_index=True)
     (0.0, 2)
 
-    :func:`find_nearest` returns the *first* value that is closest to
-    the given value.
+    :func:`mdtools.numpy_helper_functions.find_nearest` returns the
+    *first* value that is closest to the given value.
 
     >>> mdt.nph.find_nearest(a, -0.75, return_index=True)
     (-1.0, 0)
@@ -588,10 +594,11 @@ def find_nearest(a, val, axis=None, return_index=False):
     >>> mdt.nph.find_nearest(b, 2, return_index=True)
     (2, 1)
 
-    If `axis` is ``None``, :func:`find_nearest` searches globally in the
-    flattened array for the value closest to the given value and returns
-    its first occurrence.  To get an object suitable to index the input
-    array, use :func:`numpy.unravel_index`.
+    If `axis` is ``None``,
+    :func:`mdtools.numpy_helper_functions.find_nearest` searches
+    globally in the flattened array for the value closest to the given
+    value and returns its first occurrence.  To get an object suitable
+    to index the input array, use :func:`numpy.unravel_index`.
 
     >>> c = np.array([[0, 1, 2],
     ...               [1, 2, 0]])
@@ -606,9 +613,11 @@ def find_nearest(a, val, axis=None, return_index=False):
     >>> c[ix_global]
     2
 
-    If `axis` is not ``None``, :func:`find_nearest` returns the first
-    occurrences along the given axis.  To get an object suitable to
-    index the input array, use :func:`ix_along_axis_to_global_ix`.
+    If `axis` is not ``None``,
+    :func:`mdtools.numpy_helper_functions.find_nearest` returns the
+    first occurrences along the given axis.  To get an object suitable
+    to index the input array, use
+    :func:`mdtools.numpy_helper_functions.ix_along_axis_to_global_ix`.
 
     >>> mdt.nph.find_nearest(c, 1.8, axis=0, return_index=True)
     (array([1, 2, 2]), array([1, 1, 0]))
@@ -687,7 +696,7 @@ def find_nearest(a, val, axis=None, return_index=False):
         if axis is None:
             ix_global = np.unravel_index(ix, a.shape)
         else:
-            ix_global = ix_along_axis_to_global_ix(ix=ix, axis=axis)
+            ix_global = mdt.nph.ix_along_axis_to_global_ix(ix=ix, axis=axis)
     else:
         ix_global = ix
     if return_index:
@@ -701,10 +710,11 @@ def ix_of_item_change_1d(a):
     Get the indices of a 1-dimensional array where its elements change.
 
     .. deprecated:: 0.0.0.dev0
-       :func:`ix_of_item_change_1d` might be removed in future versions.
-       It is replaced by :func:`ix_of_item_change`, since this function
-       works for arrays with arbitrary dimensions and provides
-       additional functionality.
+       :func:`mdtools.numpy_helper_functions.ix_of_item_change_1d` might
+       be removed in a future release.  It is replaced by
+       :func:`mdtools.numpy_helper_functions.ix_of_item_change`, because
+       this function works for arrays with arbitrary dimensions and
+       provides additional functionality.
 
     .. todo::
        Check for scripts using this function before removing it.
@@ -723,7 +733,7 @@ def ix_of_item_change_1d(a):
 
     See Also
     --------
-    :func:`ix_of_item_change` :
+    :func:`mdtools.numpy_helper_functions.ix_of_item_change` :
         Same function for arrays of arbitrary dimension
 
     Examples
@@ -974,7 +984,7 @@ def argmin_last(a, axis=None, out=None):
         Convert the returned index `ix` to a tuple of index arrays
         suitable to index a multidimensional input array `a` if `axis`
         was ``None``
-    :func:`ix_along_axis_to_global_ix` :
+    :func:`mdtools.numpy_helper_functions.ix_along_axis_to_global_ix` :
         Same as :func:`numpy.unravel_index`, but to be used when `axis`
         was not ``None``.
 
@@ -1072,7 +1082,7 @@ def argmax_last(a, axis=None, out=None):
         Convert the returned index `ix` to a tuple of index arrays
         suitable to index a multidimensional input array `a` if `axis`
         was ``None``
-    :func:`ix_along_axis_to_global_ix` :
+    :func:`mdtools.numpy_helper_functions.ix_along_axis_to_global_ix` :
         Same as :func:`numpy.unravel_index`, but to be used when `axis`
         was not ``None``.
 
