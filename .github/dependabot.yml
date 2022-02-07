@@ -9,7 +9,7 @@ version: 2
 updates:
   - package-ecosystem: pip
     # Where to search for requirements.txt, pipfile, pipfile.lock or
-    # setup.py* files. See here for supported requirement files:
+    # setup.py* files.  See here for supported requirement files:
     # https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-the-dependency-graph#supported-package-ecosystems
     directory: ./
     schedule:
