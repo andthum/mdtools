@@ -41,6 +41,7 @@ import numpy as np
 from scipy.ndimage import map_coordinates
 from scipy.signal import savgol_filter
 import matplotlib.pyplot as plt
+
 # Local application/library specific imports
 import mdtools as mdt
 
@@ -93,11 +94,12 @@ def excel_colname(n, upper=True):
     """
     n = abs(n)
     if n == 0:
+        return "0"
     if upper:
-        first_letter = 'A'
+        first_letter = "A"
     else:
-        first_letter = 'a'
-    col_name = ''
+        first_letter = "a"
+    col_name = ""
     while n > 0:
         n, remainder = divmod(n - 1, 26)
         col_name = chr(ord(first_letter) + remainder) + col_name
@@ -152,14 +154,14 @@ def excel_colnum(name):
     >>> mdt.nph.excel_colnum('aA')
     27
     """
-    if name == '0':
+    if name == "0":
         return 0
     col_num = 0
     for char in name:
         if char.isupper():
-            col_num = col_num * 26 + 1 + ord(char) - ord('A')
+            col_num = col_num * 26 + 1 + ord(char) - ord("A")
         else:
-            col_num = col_num * 26 + 1 + ord(char) - ord('a')
+            col_num = col_num * 26 + 1 + ord(char) - ord("a")
     return col_num
 
 
@@ -205,8 +207,7 @@ def trailing_digits(n, digit=0):
     if not isinstance(n, (int, np.integer)):
         raise TypeError("n ({}) must be an integer".format(n))
     if not isinstance(digit, (int, np.integer)) or digit < 0:
-        raise TypeError("digit ({}) must be a positive integer"
-                        .format(digit))
+        raise TypeError("digit ({}) must be a positive integer".format(digit))
     s = str(n)
     return len(s) - len(s.rstrip(str(digit)))
 
@@ -769,8 +770,9 @@ def ix_of_item_change_1d(a):
     """
     a = np.asarray(a)
     if a.ndim != 1:
-        raise ValueError("The dimension of a must be 1 but is {}"
-                         .format(a.ndim))
+        raise ValueError(
+            "The dimension of a must be 1 but is {}".format(a.ndim)
+        )
     ix = np.flatnonzero(a[:-1] != a[1:])
     ix += 1
     ix = np.insert(ix, 0, 0)
@@ -930,8 +932,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     ValueError: The dimension of a must be greater than zero
     """
     if wrap and prepend_zero:
-        raise ValueError("wrap and prepend_zero must not be used"
-                         " together")
+        raise ValueError("wrap and prepend_zero must not be used together")
     a = np.asarray(a)
     if a.ndim == 0:
         raise ValueError("The dimension of a must be greater than zero")
@@ -1282,11 +1283,12 @@ def sequenize(a, step=1, start=0):
     d[1:] -= step
     np.cumsum(d, out=d)
     u -= d
-    return u[ix].reshape(a.shape, order='A')
+    return u[ix].reshape(a.shape, order="A")
 
 
-def group_by(keys, values, assume_sorted=False, return_keys=False,
-             debug=False):
+def group_by(
+    keys, values, assume_sorted=False, return_keys=False, debug=False
+):
     """
     Group the elements of `values` by their `keys`.
 
@@ -1361,12 +1363,14 @@ def get_middle(a, n=1, debug=False):
     if n > len(a):
         raise ValueError("n exceeds the length of a")
 
-    b = a[(len(a) - n) // 2: len(a) - (len(a) - n) // 2]
+    b = a[(len(a) - n) // 2 : len(a) - (len(a) - n) // 2]
     if len(b) > n:
         b = b[:n]
     else:
-        raise ValueError("The length of b ({}) is less than n ({}). This"
-                         " should not have happened".format(len(b), n))
+        raise ValueError(
+            "The length of b ({}) is less than n ({}). This should not have"
+            " happened".format(len(b), n)
+        )
 
     return b
 
@@ -1438,13 +1442,21 @@ def tilt_diagonals(a, clockwise=True, diagpos=None, debug=False):
     if a.shape[0] > a.shape[1]:
         reps = int(np.ceil((a.shape[1] + a.shape[0]) / a.shape[1]))
         diags = np.tile(a, reps)
-        diags = np.array([np.diagonal(diags, offset=i)
-                          for i in range(a.shape[1])])
+        diags = np.array(
+            [np.diagonal(diags, offset=i) for i in range(a.shape[1])]
+        )
     else:
-        diags = np.array([np.concatenate((
-            np.diagonal(a, offset=i),
-            np.diagonal(a, offset=-a.shape[1] + i)))
-            for i in range(a.shape[1])])
+        diags = np.array(
+            [
+                np.concatenate(
+                    (
+                        np.diagonal(a, offset=i),
+                        np.diagonal(a, offset=-a.shape[1] + i),
+                    )
+                )
+                for i in range(a.shape[1])
+            ]
+        )
 
     if diagpos is None:
         diagpos = int(a.shape[1] / 2)
@@ -1491,10 +1503,7 @@ def extend(a, length, axis=-1, fill_value=0):
     pad_width = [[0, 0] for i in range(a.ndim)]
     pad_width[axis][1] = length - a.shape[axis]
 
-    return np.pad(a,
-                  pad_width,
-                  mode='constant',
-                  constant_values=fill_value)
+    return np.pad(a, pad_width, mode="constant", constant_values=fill_value)
 
 
 def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
@@ -1532,11 +1541,11 @@ def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
     if a.ndim == b.ndim:
         shape = np.maximum(a.shape, b.shape)
     elif a.ndim < b.ndim:
-        shape = np.maximum(a.shape, b.shape[-a.ndim:])
-        shape = np.insert(shape, 0, b.shape[:a.ndim])
+        shape = np.maximum(a.shape, b.shape[-a.ndim :])
+        shape = np.insert(shape, 0, b.shape[: a.ndim])
     else:
-        shape = np.maximum(a.shape[-b.ndim:], b.shape)
-        shape = np.insert(shape, 0, a.shape[:b.ndim])
+        shape = np.maximum(a.shape[-b.ndim :], b.shape)
+        shape = np.insert(shape, 0, a.shape[: b.ndim])
 
     if transfer_to_new_dim:
         slice_a = [slice(0, None, None)] * len(shape)
@@ -1544,14 +1553,16 @@ def match_shape(a, b, fill_value=0, transfer_to_new_dim=True):
         slice_a = [0] * len(shape)
     slice_b = slice_a.copy()
 
-    slice_a[len(slice_a) - a.ndim:] = [slice(None, a.shape[i], None)
-                                       for i in range(a.ndim)]
+    slice_a[len(slice_a) - a.ndim :] = [
+        slice(None, a.shape[i], None) for i in range(a.ndim)
+    ]
     slice_a = tuple(slice_a)
     a_new = np.full(shape, fill_value, dtype=a.dtype)
     a_new[slice_a] = a
 
-    slice_b[len(slice_b) - b.ndim:] = [slice(None, b.shape[i], None)
-                                       for i in range(b.ndim)]
+    slice_b[len(slice_b) - b.ndim :] = [
+        slice(None, b.shape[i], None) for i in range(b.ndim)
+    ]
     slice_b = tuple(slice_b)
     b_new = np.full(shape, fill_value, dtype=b.dtype)
     b_new[slice_b] = b
@@ -1604,11 +1615,13 @@ def cross_section(z, x, y, line, num=None, order=1):
     if z.ndim != 2:
         raise ValueError("z must be a 2d array")
     if len(x) != z.shape[1]:
-        raise ValueError("The length of x does not match the number of"
-                         " columns of z")
+        raise ValueError(
+            "The length of x does not match the number of columns of z"
+        )
     if len(y) != z.shape[0]:
-        raise ValueError("The length of y does not match the number of"
-                         " rows of z")
+        raise ValueError(
+            "The length of y does not match the number of rows of z"
+        )
     if line.shape != (2, 2):
         raise ValueError("line must be given as [(x0, y0), (x1, y1)]")
 
@@ -1641,7 +1654,7 @@ def cross_section(z, x, y, line, num=None, order=1):
     return cs, r
 
 
-def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
+def cross_section2d(z, ax, x=None, y=None, width=1, mean="arithmetic"):
     """
     Extract a cross section from a 2-dimensional array along a given
     axis.
@@ -1718,23 +1731,22 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean='arithmetic'):
         raise ValueError("The length of ax does not match the size of z")
     if width < 0:
         raise ValueError("width must not be negative")
-    if width == 0 and mean != 'arithmetic':
-        print("Setting mean to 'arithmetic', because width is zero",
-              flush=True)
-    if mean != 'arithmetic' and mean != 'integral':
+    if width == 0 and mean != "arithmetic":
+        print("Setting mean to 'arithmetic', because width is zero")
+    if mean != "arithmetic" and mean != "integral":
         raise ValueError("mean must be eithe 'arithmetic' or 'integral'")
 
     width2 = width / 2
     cross_sec = np.full(z.shape[zax], np.nan, dtype=np.float64)
     for i, zz in enumerate(z if zax == 0 else z.T):
         if width == 0:
-            mask = (var == ax[i])
+            mask = var == ax[i]
         else:
             mask = (var >= ax[i] - width2) & (var <= ax[i] + width2)
         # print(mask)
-        if mean == 'arithmetic':
+        if mean == "arithmetic":
             cross_sec[i] = np.mean(zz[mask])
-        elif mean == 'integral':
+        elif mean == "integral":
             cross_sec[i] = np.trapz(zz[mask], var[mask]) / (width)
 
     return cross_sec
@@ -1789,18 +1801,22 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
     if z.ndim != 2:
         raise ValueError("z must be a 2d array")
     if len(x) != z.shape[0]:
-        raise ValueError("The length of x does not match the first"
-                         " dimension of z")
+        raise ValueError(
+            "The length of x does not match the first dimension of z"
+        )
     if len(y) != z.shape[1]:
-        raise ValueError("The length of y does not match the second"
-                         " dimension of z")
+        raise ValueError(
+            "The length of y does not match the second dimension of z"
+        )
     if xlim is not None:
         if np.ndim(xlim) == 0:
-            raise ValueError("xlim must be either None or an array-like"
-                             " object of length 2")
+            raise ValueError(
+                "xlim must be either None or an array-like object of length 2"
+            )
         if len(xlim) != 2:
-            raise ValueError("xlim must be either None or an array-like"
-                             " object of length 2")
+            raise ValueError(
+                "xlim must be either None or an array-like object of length 2"
+            )
         if np.ndim(xlim[0]) != 0:
             raise ValueError("xlim[0] must be a scalar")
         if np.ndim(xlim[1]) != 0:
@@ -1809,17 +1825,25 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
             raise ValueError("xlim[1] must be greater than xlim[0]")
     if ylim is not None:
         if np.ndim(ylim) == 0:
-            raise ValueError("ylim must be either None or an array-like"
-                             " object of length 2 in the first dimension")
+            raise ValueError(
+                "ylim must be either None or an array-like object of length 2"
+                " in the first dimension"
+            )
         if len(ylim) != 2:
-            raise ValueError("ylim must be either None or an array-like"
-                             " object of length 2 in the first dimension")
+            raise ValueError(
+                "ylim must be either None or an array-like object of length 2"
+                " in the first dimension"
+            )
         if np.ndim(ylim[0]) != 0 and ylim[0].shape != x.shape:
-            raise ValueError("ylim[0] must be either a scalar or an"
-                             " array of the same shape as x")
+            raise ValueError(
+                "ylim[0] must be either a scalar or an array of the same shape"
+                " as x"
+            )
         if np.ndim(ylim[1]) != 0 and ylim[1].shape != x.shape:
-            raise ValueError("ylim[1] must be either a scalar or an"
-                             " array of the same shape as x")
+            raise ValueError(
+                "ylim[1] must be either a scalar or an array of the same shape"
+                " as x"
+            )
         if np.any(ylim[1] <= ylim[0]):
             raise ValueError("ylim[1] must be greater than ylim[0]")
 
@@ -1850,8 +1874,16 @@ def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
     return trapz
 
 
-def find_linear_region(data, window_length, polyorder=2, delta=1,
-                       tol=0.1, axis=-1, correct_intermittency=None, visualize=False):
+def find_linear_region(
+    data,
+    window_length,
+    polyorder=2,
+    delta=1,
+    tol=0.1,
+    axis=-1,
+    correct_intermittency=None,
+    visualize=False,
+):
     """
     Find linear regions in a data array. This is done by applying a
     Savitzky-Golay differentiation filter to the array using
@@ -1918,40 +1950,46 @@ def find_linear_region(data, window_length, polyorder=2, delta=1,
     if polyorder < 2:
         raise ValueError("polyorder must be at least 2")
 
-    grad2 = savgol_filter(x=data,
-                          window_length=window_length,
-                          polyorder=polyorder,
-                          deriv=2,
-                          delta=delta,
-                          axis=axis)
-    linear = (np.abs(grad2) <= tol)
+    grad2 = savgol_filter(
+        x=data,
+        window_length=window_length,
+        polyorder=polyorder,
+        deriv=2,
+        delta=delta,
+        axis=axis,
+    )
+    linear = np.abs(grad2) <= tol
     if correct_intermittency is None:
         correct_intermittency = window_length // 5
     mdt.dynamics.correct_intermittency_1d(
-        a=linear,
-        intermittency=correct_intermittency)
+        a=linear, intermittency=correct_intermittency
+    )
 
     if visualize:
-        grad0 = savgol_filter(x=data,
-                              window_length=window_length,
-                              polyorder=polyorder,
-                              deriv=0,
-                              delta=delta,
-                              axis=axis)
-        grad1 = savgol_filter(x=data,
-                              window_length=window_length,
-                              polyorder=polyorder,
-                              deriv=1,
-                              delta=delta,
-                              axis=axis)
+        grad0 = savgol_filter(
+            x=data,
+            window_length=window_length,
+            polyorder=polyorder,
+            deriv=0,
+            delta=delta,
+            axis=axis,
+        )
+        grad1 = savgol_filter(
+            x=data,
+            window_length=window_length,
+            polyorder=polyorder,
+            deriv=1,
+            delta=delta,
+            axis=axis,
+        )
         plt.figure(clear=True)
-        plt.axhline(y=0, color='black')
-        plt.plot(data, linestyle='', marker='o', label="Data")
+        plt.axhline(y=0, color="black")
+        plt.plot(data, linestyle="", marker="o", label="Data")
         plt.plot(grad0, label="Gradient 0")
         plt.plot(grad1, label="Gradient 1")
         plt.plot(grad2, label="Gradient 2")
         plt.plot(linear, linewidth=4, label="Linear (1=True)")
-        plt.legend(loc='best')
+        plt.legend(loc="best")
         plt.tight_layout()
         plt.show()
 
