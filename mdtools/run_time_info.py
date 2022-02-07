@@ -232,13 +232,7 @@ def run_time_info():
     """
     script_name = str(os.path.basename(sys.argv[0]))
     command_line = script_name + " " + " ".join(sys.argv[1:])
-    python_version = (
-        str(sys.version_info[0])
-        + "."
-        + str(sys.version_info[1])
-        + "."
-        + str(sys.version_info[2])
-    )
+    python_version = ".".join(str(i) for i in sys.version_info[:3])
     return (
         script_name,
         command_line,
@@ -285,7 +279,7 @@ def run_time_info_str(indent=0):
     :func:`mdtools.file_handler.indent` : Indent a text
     """
     timestamp = datetime.now()
-    script, command_line, cwd, exe, version, pversion = run_time_info()
+    script, command_line, cwd, exe, version, version_py = run_time_info()
     rti = "{}\n".format(script)
     rti += "{}\n".format(timestamp.strftime("%Y/%m/%d %H:%M"))
     rti += "\n"
@@ -298,10 +292,10 @@ def run_time_info_str(indent=0):
     rti += "  {}\n".format(cwd)
     rti += "Executable:\n"
     rti += "  {}\n".format(exe)
-    rti += "mdtools version:\n"
+    rti += "MDTools version:\n"
     rti += "  {}\n".format(version)
     rti += "Python version:\n"
-    rti += "  {}".format(pversion)
+    rti += "  {}".format(version_py)
     if indent > 0:
         rti = mdt.fh.indent(rti, amount=indent, char=" ")
     return rti
