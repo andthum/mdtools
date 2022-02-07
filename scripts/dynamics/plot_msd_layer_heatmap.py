@@ -299,7 +299,7 @@ if __name__ == "__main__":
     msd = np.loadtxt(args.INFILE)
     times = msd[1:, 0] * args.TCONV
     bins = msd[0] * args.LCONV
-    msd = msd[1:, 1:] * args.LCONV ** 2
+    msd = msd[1:, 1:] * args.LCONV**2
     if args.MDFILES is not None:
         md = [None] * len(args.MDFILES)
         for i, mdfile in enumerate(args.MDFILES):
@@ -330,7 +330,7 @@ if __name__ == "__main__":
                 )
         del times_md, bins_md
         md = np.asarray(md)
-        msd -= np.sum(md ** 2, axis=0)
+        msd -= np.sum(md**2, axis=0)
         md = np.sum(md, axis=0)
         if np.any(msd < 0):
             raise ValueError(

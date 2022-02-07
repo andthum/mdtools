@@ -315,7 +315,7 @@ if __name__ == "__main__":
     times = msd[1:, 0] * args.TCONV
     bins = msd[0] * args.LCONV  # Bin edges
     bin_centers = bins[1:] - np.diff(bins) / 2
-    msd = msd[1:, 1:] * args.LCONV ** 2
+    msd = msd[1:, 1:] * args.LCONV**2
     tix = [None] * len(args.TIMES)
     for i, t in enumerate(args.TIMES):
         _, tix[i] = mdt.nph.find_nearest(times, t, return_index=True)
@@ -347,7 +347,7 @@ if __name__ == "__main__":
         del times_md, bins_md
         md = np.asarray(md)
         md = md[:, tix]
-        msd -= np.sum(md ** 2, axis=0)
+        msd -= np.sum(md**2, axis=0)
         md = np.sum(md, axis=0)
         if np.any(msd < 0):
             raise ValueError(
