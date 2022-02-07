@@ -32,9 +32,11 @@ For a basic installation just type the command::
 
     python setup.py install
 
-For more in-depth instructions, see the :ref:`installation-labe` section
-in MDTools' documentation
+For more in-depth instructions, see the :ref:`installation-label`
+section in MDTools' documentation
 """
+
+__author__ = "Andreas Thum"
 
 
 import setuptools
