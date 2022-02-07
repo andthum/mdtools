@@ -78,6 +78,9 @@ def excel_colname(n, upper=True):
     >>> mdt.nph.excel_colname(1, upper=False)
     'a'
 
+    >>> mdt.nph.excel_colname(-1)
+    'A'
+
     >>> mdt.nph.excel_colname(26)
     'Z'
 
@@ -87,10 +90,8 @@ def excel_colname(n, upper=True):
     >>> mdt.nph.excel_colname(27, upper=False)
     'aa'
     """
+    n = abs(n)
     if n == 0:
-        return '0'
-    elif n < 0:
-        n = n * -1
     if upper:
         first_letter = 'A'
     else:
