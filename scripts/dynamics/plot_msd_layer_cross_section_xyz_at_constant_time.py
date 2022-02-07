@@ -298,7 +298,7 @@ if __name__ == "__main__":
         msd[i] = np.loadtxt(infile)
         times[i] = msd[i][1:, 0] * args.TCONV
         bins[i] = msd[i][0] * args.LCONV
-        msd[i] = msd[i][1:, 1:] * args.LCONV ** 2
+        msd[i] = msd[i][1:, 1:] * args.LCONV**2
     for i in range(len(args.INFILES)):
         if times[i].shape != times[0].shape:
             raise ValueError(
@@ -358,7 +358,7 @@ if __name__ == "__main__":
         del times_md, bins_md
         md = np.asarray(md)
         md = md[:, tix]
-        msd -= md ** 2
+        msd -= md**2
         if np.any(msd < 0):
             raise ValueError(
                 "At least one displacement variance is less than zero. Are you"

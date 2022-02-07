@@ -184,15 +184,15 @@ def mem_usage(proc=None, pid=None, unit="MiB"):
     if unit == "B":
         scaling = 1
     elif unit == "KiB":
-        scaling = 2 ** 10
+        scaling = 2**10
     elif unit == "MiB":
-        scaling = 2 ** 20
+        scaling = 2**20
     elif unit == "GiB":
-        scaling = 2 ** 30
+        scaling = 2**30
     elif unit == "TiB":
-        scaling = 2 ** 40
+        scaling = 2**40
     elif unit == "PiB":
-        scaling = 2 ** 50
+        scaling = 2**50
     elif unit == "KB":
         scaling = 1e3
     elif unit == "MB":

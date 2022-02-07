@@ -691,7 +691,7 @@ if __name__ == "__main__":
     # Average size and variance of all blocks
     # (Must be normalized by n_blocks)
     block_size_av = dtrj.size
-    block_size_var = dtrj.size ** 2
+    block_size_var = dtrj.size**2
     # Average size and variance of valid blocks
     valid_block_size_av = 0
     valid_block_size_var = 0
@@ -778,7 +778,7 @@ if __name__ == "__main__":
         n_valid_blocks += n_valid_blocks_tmp
         block_size_tmp = np.sum(block_sizes[valid_blocks])
         valid_block_size_av += block_size_tmp
-        valid_block_size_var += block_size_tmp ** 2
+        valid_block_size_var += block_size_tmp**2
         # MDAnalysis AtomGroup containing a single reference compound:
         refcmp = ref[refcmp_slices[rc] : refcmp_slices[rc + 1]]
         # Frame index where the current block ends:
@@ -825,12 +825,12 @@ if __name__ == "__main__":
                 )
             n_block_trans[tt] += 1
             gap_size_av[tt] += gap_size
-            gap_size_var[tt] += gap_size ** 2
+            gap_size_var[tt] += gap_size**2
             if gap_size > MAX_GAP_SIZE_EFF:
                 # Gap between two consecutive valid blocks is too large
                 continue
             valid_gap_size_av[tt] += gap_size
-            valid_gap_size_var[tt] += gap_size ** 2
+            valid_gap_size_var[tt] += gap_size**2
             n_valid_block_trans[tt] += 1
             # refcmp-selatm contact matrix at t0_b-dt (b = "before"):
             ts = md_trj[frame - LAG_EFF]
@@ -871,7 +871,7 @@ if __name__ == "__main__":
                 # n_attached = n_contacts_after - n_contacts_remain
                 n_contacts_tmp[:-1] -= n_contacts_tmp[-1]
                 n_contacts_av[sc][tt] += n_contacts_tmp
-                n_contacts_var[sc][tt] += n_contacts_tmp ** 2
+                n_contacts_var[sc][tt] += n_contacts_tmp**2
                 # Contact statistics before block transition
                 selix_stats_b_tmp = np.squeeze(mdt.strc.cm_selix_stats(cm_b))
                 if selix_stats_b_tmp[0] > 0:  # selix_stats_b_tmp[0] -> n_sel
@@ -895,7 +895,7 @@ if __name__ == "__main__":
                         selix_stats_b_tmp[1:] - selix_stats_a_tmp[1:]
                     )
                     selix_stats_diff_av[sc][tt] += selix_stats_diff_tmp
-                    selix_stats_diff_var[sc][tt] += selix_stats_diff_tmp ** 2
+                    selix_stats_diff_var[sc][tt] += selix_stats_diff_tmp**2
         # ProgressBar update:
         progress_bar_mem = mdt.rti.mem_usage(proc)
         dtrj.set_postfix_str(
@@ -934,39 +934,39 @@ if __name__ == "__main__":
 
     # Effective frame numbers -> real frame numbers
     block_size_av *= EVERY
-    block_size_var *= EVERY ** 2
+    block_size_var *= EVERY**2
     valid_block_size_av *= EVERY
-    valid_block_size_var *= EVERY ** 2
+    valid_block_size_var *= EVERY**2
     gap_size_av *= EVERY
-    gap_size_var *= EVERY ** 2
+    gap_size_var *= EVERY**2
     valid_gap_size_av *= EVERY
-    valid_gap_size_var *= EVERY ** 2
+    valid_gap_size_var *= EVERY**2
 
     # Compute averages:
     block_size_av /= n_blocks
     block_size_var /= n_blocks
-    block_size_var -= block_size_av ** 2
+    block_size_var -= block_size_av**2
     valid_block_size_av /= n_valid_blocks
     valid_block_size_var /= n_valid_blocks
-    valid_block_size_var -= valid_block_size_av ** 2
+    valid_block_size_var -= valid_block_size_av**2
     gap_size_av = gap_size_av / n_block_trans
     gap_size_var = gap_size_var / n_block_trans
-    gap_size_var -= gap_size_av ** 2
+    gap_size_var -= gap_size_av**2
     valid_gap_size_av = valid_gap_size_av / n_valid_block_trans
     valid_gap_size_var = valid_gap_size_var / n_valid_block_trans
-    valid_gap_size_var -= valid_gap_size_av ** 2
+    valid_gap_size_var -= valid_gap_size_av**2
     n_contacts_av = n_contacts_av / n_valid_block_trans[:, None]
     n_contacts_var = n_contacts_var / n_valid_block_trans[:, None]
-    n_contacts_var -= n_contacts_av ** 2
+    n_contacts_var -= n_contacts_av**2
     selix_stats_b_av /= n_refcmps_bound_b[:, None]
     selix_stats_b_var /= n_refcmps_bound_b[:, None]
-    selix_stats_b_var -= selix_stats_b_av ** 2
+    selix_stats_b_var -= selix_stats_b_av**2
     selix_stats_a_av /= n_refcmps_bound_a[:, None]
     selix_stats_a_var /= n_refcmps_bound_a[:, None]
-    selix_stats_a_var -= selix_stats_a_av ** 2
+    selix_stats_a_var -= selix_stats_a_av**2
     selix_stats_diff_av /= n_refcmps_bound_ba[:, None]
     selix_stats_diff_var /= n_refcmps_bound_ba[:, None]
-    selix_stats_diff_var -= selix_stats_diff_av ** 2
+    selix_stats_diff_var -= selix_stats_diff_av**2
 
     print("\n")
     print("Creating output...")
