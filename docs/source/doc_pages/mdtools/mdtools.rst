@@ -14,6 +14,10 @@ referred to as "core package").  If you are only interested in
     Revise and document all modules that are not already contained in
     this documentation.
 
+.. contents:: Site contents
+    :depth: 2
+    :local:
+
 
 Modules
 =======
