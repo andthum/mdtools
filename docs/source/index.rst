@@ -19,29 +19,31 @@ Welcome to the documentation of :raw-html:`<br />` |MDTools_writing|
 |Made_with_Python| |Made_with_Sphinx| |Code_style_black|
 |Powered_by_MDAnalysis|
 
-.. contents::
+.. contents:: Site contents
+    :depth: 2
     :local:
 
 
 Introduction
 ============
 
-MDTools is a collection of ready-to-use |Python| scripts to prepare and
-analyze molecular dynamics (MD) simulations.
+MDTools is a collection of generic, ready-to-use |Python| scripts to
+prepare and analyze molecular dynamics (MD) simulations, inspired by
+|MDAnalysis| and the `Gromacs command-line tools`_.
 
-The main feature of this package is not the package itself, but the
-Python :ref:`scripts-label` shipped along with this package in the
-:file:`scripts/` directory.  These Python scripts are fully functional
-and directly executable (provided you have installed |Python|) without
-the need to go into the source code.
+The main feature of this package is therefore not the package itself,
+but the Python :ref:`scripts-label` shipped along with this package in
+the :file:`scripts/` directory.  These Python scripts are fully
+functional and directly executable (provided you have installed
+|Python|) without the need to go into the source code.
 
-The idea is to provide you with a collection of scripts to prepare and
-analyze MD simulations similar to the command-line tools shipped along
-with |Gromacs|.  For instance, the script
+The idea is to provide the user with a collection of scripts to prepare
+and analyze MD simulations similar to the command-line tools shipped
+along with |Gromacs|.  For instance, the script
 :file:`scripts/dynamics/msd_serial.py` can be used to calculate the mean
 square displacement of a given selection (i.e. a user-defined group of
-atoms).  Since MDTools is based on |MDAnalysis|, you are not limited to
-|Gromacs| trajectories but you can read and analyze a variety of
+atoms).  Because MDTools is based on |MDAnalysis|, you are not limited
+to Gromacs trajectories but you can read and analyze a variety of
 different |trajectory_and_topology_formats|.  You also benefit from
 MDAnalysis' rich |selection_syntax|.
 
@@ -76,10 +78,10 @@ packages |MDAnalysis|, |NumPy|, |SciPy| and |matplotlib|.
     The scripts and functions are **not** (extensively) tested!  The
     only test cases we have so far are the examples from the Examples
     sections of the docstrings, which are verified using :mod:`doctest`.
-    The plan is to implement extensive unittests using |pytest|, but so
-    far we did not had the time for this.  Implementing unittest would
-    thus be great way for you to contribute to this project and it would
-    be highly appreciated.
+    The plan is to implement extensive unit tests using |pytest|, but so
+    far we did not had the time for this.  Implementing unit test would
+    thus be a great way for you to contribute to this project and it
+    would be highly appreciated.
 
 .. toctree::
     :caption: Table of Contents
@@ -105,6 +107,14 @@ section.  The basic usage of the scripts is described in the
 :ref:`usage-label` section.
 
 
+Support
+=======
+
+If you have any questions, feel free to use our |Q&A| forum on |GitHub|.
+If you encounter a bug or want to request a new feature, please open a
+new |issue|.
+
+
 Contributing
 ============
 
@@ -115,13 +125,13 @@ If you want to contribute to the project, please read the
 Source code
 ===========
 
-**Source code** is available from https://github.com/andthum/mdtools
-under the |GNU_GPLv3|, version 3.  You can download or clone the
-repository with |Git|:
+Source code is available from https://github.com/andthum/mdtools under
+the |GNU_GPLv3|, version 3.  You can download or clone the repository
+with |Git|:
 
 .. code-block:: bash
 
-    git clone https://github.com/andthum/mdtools
+    git clone https://github.com/andthum/mdtools.git
 
 
 License
@@ -145,6 +155,8 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+
+.. _Gromacs command-line tools: https://manual.gromacs.org/documentation/current/user-guide/cmdline.html#commands-by-name
 
 .. |MDTools_writing| image:: ../logo/mdtools_label_3900x760.png
     :width: 450 px
