@@ -5,7 +5,7 @@
 MDTools
 #######
 
-|Test_status| |Documentation_Status| |License_GPLv3|
+|Test_Status| |Documentation_Status| |License_GPLv3|
 |Made_with_Python| |Made_with_Sphinx| |Code_style_black|
 |Powered_by_MDAnalysis|
 
@@ -13,24 +13,25 @@ MDTools
 Introduction
 ============
 
-MDTools is a collection of ready-to-use Python_ scripts to prepare and
-analyze molecular dynamics (MD) simulations.
+MDTools is a collection of generic, ready-to-use Python_ scripts to
+prepare and analyze molecular dynamics (MD) simulations, inspired by
+MDAnalysis_ and the `Gromacs command-line tools`_.
 
-The main feature of this package is not the package itself, but the
-Python scripts shipped along with this package in the ``scripts/``
-directory.  These Python scripts are fully functional and directly
-executable (provided you have installed Python_) without the need to go
-into the source code.
+The main feature of this package is therefore not the package itself,
+but the Python scripts shipped along with this package in the
+``scripts/`` directory.  These Python scripts are fully functional and
+directly executable (provided you have installed Python_) without the
+need to go into the source code.
 
-The idea is to provide you with a collection of scripts to prepare and
-analyze MD simulations similar to the command-line tools shipped along
-with Gromacs_.  For instance, the script
+The idea is to provide the user with a collection of scripts to prepare
+and analyze MD simulations similar to the command-line tools shipped
+along with Gromacs_.  For instance, the script
 ``scripts/dynamics/msd_serial.py`` can be used to calculate the mean
 square displacement of a given selection (i.e. a user-defined group of
-atoms).  Since MDTools is based on MDAnalysis_, you are not limited to
-Gromacs_ trajectories but you can read and analyze a variety of
-different `trajectory and topology formats`_.  You also benefit from
-MDAnalysis' rich `selection syntax`_.
+atoms).  Because MDTools is based on MDAnalysis_, you are not limited to
+Gromacs trajectories but you can read and analyze a variety of different
+`trajectory and topology formats`_.  You also benefit from MDAnalysis'
+rich `selection syntax`_.
 
 
 Documentation
@@ -39,6 +40,14 @@ Documentation
 The complete documentation of MDTools including installation_ and usage_
 instructions can be found
 `here <https://mdtools.readthedocs.io/en/latest/>`_.
+
+
+Support
+=======
+
+If you have any questions, feel free to use our `Question&Answer`_ forum
+on GitHub_.  If you encounter a bug or want to request a new feature,
+please `open a new issue`_.
 
 
 License
@@ -56,24 +65,28 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 
 
 .. _Python: https://www.python.org/
+.. _Gromacs command-line tools: https://manual.gromacs.org/documentation/current/user-guide/cmdline.html#commands-by-name
 .. _Gromacs: https://manual.gromacs.org/
 .. _MDAnalysis: https://www.mdanalysis.org/
 .. _trajectory and topology formats: https://userguide.mdanalysis.org/stable/formats/index.html
 .. _selection syntax: https://userguide.mdanalysis.org/stable/selections.html
 .. _installation: https://mdtools.readthedocs.io/en/latest/doc_pages/general_docs/installation.html
 .. _usage: https://mdtools.readthedocs.io/en/latest/doc_pages/general_docs/usage.html
+.. _Question&Answer: https://github.com/andthum/mdtools/discussions/categories/q-a
+.. _GitHub: https://github.com/
+.. _open a new issue: https://github.com/andthum/mdtools/issues
 .. _Developers guide: https://mdtools.readthedocs.io/en/latest/doc_pages/developers_guide/developers_guide.html
 .. _GNU General Public License: https://www.gnu.org/licenses/gpl-3.0.html
 
-.. |Test_status| image:: https://github.com/andthum/mdtools/actions/workflows/tests.yml/badge.svg
+.. |Test_Status| image:: https://github.com/andthum/mdtools/actions/workflows/tests.yml/badge.svg
+    :alt: Test Status
     :target: https://github.com/andthum/mdtools/actions/workflows/tests.yml
-    :alt: Test status
-.. |Documentation_status| image:: https://readthedocs.org/projects/mdtools/badge/?version=latest
+.. |Documentation_Status| image:: https://readthedocs.org/projects/mdtools/badge/?version=latest
     :alt: Documentation Status
     :target: https://mdtools.readthedocs.io/en/latest/?badge=latest
 .. |License_GPLv3| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
     :alt: License GPLv3
-    :target: http://perso.crans.org/besson/LICENSE.html
+    :target: https://www.gnu.org/licenses/gpl-3.0.html
 .. |Made_with_Python| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
     :alt: Made with Python
     :target: https://www.python.org/

@@ -1,28 +1,72 @@
-.. _coding-style-label:
+.. _code-guidelines-label:
 
-Coding Style
-============
+Code guidelines
+===============
 
-Follow style guides :pep:`8` and :pep:`20`.  We strongly recommend you
-to read these style guides (if not already done), because these are the
-official Python style guides which give you advice how to create
-beautiful, readable and clean (in short "pythonic") code.  For
-reference reasons, we summarize the most important points for this
-project and points that are often overlooked here:
-    
-    * Use four spaces per indentation level.  Do not use tabs!
+.. contents:: Site contents
+    :depth: 2
+    :local:
+
+
+.. _formatters-and-linters-label:
+
+Formatters and linters
+----------------------
+
+Formatters and linters automatically enforce a specific code style and
+quality.  They help you to focus on your actual task - the coding -
+without having to think about the code style.
+
+When writting Python code for this project, please
+
+    * Format your code with |black| (automatically enforces Python code
+      style guide :pep:`8`).
+
+      For installation instructions, please refer to the
+      `documentation of Black`_.  To format a file :file:`spam.py`,
+      simply run
+      :bash:`python3 -m black path/to/spam.py --line-length 79` in a
+      terminal.
+
+    * Use |flake8| to lint your code.
+
+      For installation instructions, please refer to the
+      `documentation of Flake8`_.  To lint a file :file:`spam.py`,
+      simply run :bash:`python3 -m flake8 path/to/spam.py` in a
+      terminal.  The settings to use are specified in :file:`setup.cfg`,
+      which is automatically read by Flake8.
+
+.. note::
+
+    |black| and |flake8| offer plugins for many text editors.  When
+    using these plugins, Black and Flake8 format and lint your code on
+    the fly, so you don't have to run the commands yourself.
+
+
+Code guidelines that Black and Flake8 don't take care of
+--------------------------------------------------------
+
+    * Adhere to the Zen of Python (:pep:`20`).
+
     * Imports are put at the top of the file, just after any module
       comments and docstrings.  Imports should be grouped in the
       following order:
-        
+
         1. Standard library imports.
         2. Related third party imports.
         3. Local application/library specific imports.
-    
+
+      Within these groups, imports should be sorted alphabetically.
+
+      .. todo::
+
+          Maybe we should make use of |isort|, so that we don't have to
+          care about this point?
+
     * Naming conventions (A comprehensive summary of the following
       naming conventions can be found
       `here <https://github.com/naming-convention/naming-convention-guides/tree/master/python>`_):
-        
+
         - Use meaningful, descriptive, but not too long names.
         - Too specific names might mean too specific code.
         - Spend time thinking about readability.
@@ -35,7 +79,7 @@ project and points that are often overlooked here:
         - Variable names: ``lower_case_with_underscores``
         - Constant variable names: ``UPPER_CASE_WITH_UNDERSCORES``
         - Underscores:
-        
+
             + ``_``: For throwaway varibales, i.e. for variables that
               will never be used.  For instance if a function returns
               two values, but only one is of interest.
@@ -51,9 +95,9 @@ project and points that are often overlooked here:
               (double underscores).  "Magic" objects or attributes that
               live in user-controlled namespaces, like ``__init__``.
               Never invent such names, only use them as documented.
-        
+
         - Standard names for
-            
+
             + MDAnalysis
               :class:`Universes <MDAnalysis.core.universe.Universe>`:
               ``u``
@@ -87,7 +131,9 @@ project and points that are often overlooked here:
               :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>`:
               ``sel``
             + `selection strings`_: ``sel`` or ``sel_str``
-            + NumPy index :class:`arrays <numpy.ndarray>`: ``ix``
+            + Indices: ``ix`` or ``ndx``
+            + NumPy index :class:`arrays <numpy.ndarray>`: ``ix``,
+              ``ndx`` or ``ixs``, ``ndxs``
             + NumPy boolean :class:`arrays <numpy.ndarray>` to use as
               mask for other :class:`arrays <numpy.ndarray>`: ``mask``
             + temporary varibles: ``tmp`` or ``varname_tmp``
@@ -97,40 +143,25 @@ project and points that are often overlooked here:
               ``ligands`` (if it does not disturb readability) instead
               of ``coord`` for varibales related to coordinations.
 
-Project specific deviations from and additions to :pep:`8`:
+    * Try to avoid hardcoding anything too keep code as generic and
+      flexible as possible.
+
+
+Code guidelines for MDTools scripts
+-----------------------------------
 
     * When writing a new script, make use of the
       :mod:`~scripts.script_template` in the :file:`scripts/` directory.
-      You can also use it as an example to illustrate the following
-      points.
-    * Limit *all* lines (not only docstrings and comments) to a maximum
-      of 72 characters.  :pep:`8` says that docstrings and comments must
-      always be limited to 72 characters.  On the other hand, code
-      should be limited to 79 characters.  To keep things simple, we
-      apply the same rule to comments/docstrings and code.  By doing so,
-      you can set up your editor to warn you if you exceed 72 characters.
-      The limited line length of 72 characters can be exceeded if it
-      improves readability.
-    * Trailing spaces are only allowed in blank lines.  In fact, in
-      indented blocks we recommend "trailing" spaces in blank lines
-      until the indentation level.  But this might depend on the
-      convenience of your text editor.
-    * Use single quotes for keywords and double quotes for "real"
-      strings.  We consider a string as "real" string, when it is
-      intended to be read and understood by humans (so particulary any
-      strings printed to stdout or stderr).  On the other hand, a string
-      like '__main__' in ``if __name__ == '__main__':`` is what we
-      consider a "keyword" string, since it is only interpreted as a key
-      phrase by the computer.  So, use single quotes here.
     * If you import objects from other scripts into your current script,
       only import from scripts in the same directory or subdirectories.
     * When writting a script, use :mod:`argparse` as command-line
       interface.
-    * Try to avoid hardcoding anything too keep code as generic and
-      flexible as possible.
     * When dealing with a lot of data like MD trajectories, performance
       (speed and memory usage) counts.  Make a good compromise between
-      performance and code readability.  As a guide line, scripts should
+      performance and code readability.  As a guideline, scripts should
       be able to run on an average desktop PC.
 
+
+.. _documentation of Black: https://github.com/psf/black/#installation
+.. _documentation of Flake8: https://flake8.pycqa.org/en/latest/index.html#installation
 .. _selection strings: https://userguide.mdanalysis.org/stable/selections.html

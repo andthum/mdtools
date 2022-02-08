@@ -15,9 +15,9 @@ instead.
     * Revise all scripts that are not already contained in this
       documentation.
 
-.. contents::
+.. contents:: Site contents
+    :depth: 2
     :local:
-    :depth: 1
 
 
 Scripts by Application
@@ -48,17 +48,3 @@ Scripts for Developers
     script_template
     script_template_dtrj
     script_template_plot
-
-
-.. _debug-mode-label:
-
-Debug mode
-==========
-
-Many scripts and functions have a simple debug mode which triggers
-additional checks of input parameters and consistency checks of
-output values.  These checks can be computationally expensive, which
-is the reason why they are not performed on default.  If you get
-weird results or errors from a script, first try to run the script
-in debug mode and see if warnings or errors are raised.  These might
-help you to identify bad user input, parameter settings or bugs.

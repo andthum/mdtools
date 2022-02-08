@@ -6,6 +6,10 @@ Discretization
 Scripts that either discretze MD trajectories or that work with
 discretized trajectories.
 
+.. contents:: Site contents
+    :depth: 2
+    :local:
+
 
 Scripts that create discretized trajectories
 --------------------------------------------
