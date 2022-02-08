@@ -5,6 +5,10 @@ Structure
 
 Scripts that analyze the structure of the system.
 
+.. contents:: Site contents
+    :depth: 2
+    :local:
+
 
 Scripts
 -------
