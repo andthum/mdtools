@@ -116,15 +116,20 @@ exclude_patterns = []
 # as relative to the configuration directory.
 templates_path = ["_templates"]
 
-# A string of reStructuredText that will be included at the end of every
-# source file that is read.  This is a possible place to add
+# A string of reStructuredText that will be included at the beginning of
+# every source file that is read.  This is a possible place to add
 # substitutions that should be available in every file
-rst_epilog = """
+rst_prolog = """
 .. role:: bash(code)
     :language: bash
 .. role:: raw-html(raw)
     :format: html
+"""
 
+# A string of reStructuredText that will be included at the end of every
+# source file that is read.  This is a possible place to add
+# substitutions that should be available in every file
+rst_epilog = """
 .. |GNU_GPLv3| replace::
     :raw-html:`<a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>`
 .. |GCC| replace::
@@ -133,8 +138,14 @@ rst_epilog = """
     :raw-html:`<a href="https://lmod.readthedocs.io/en/latest/">Lmod</a>`
 .. |Git| replace::
     :raw-html:`<a href="https://git-scm.com/">Git</a>`
+.. |Git_Book| replace::
+    :raw-html:`<a href="https://git-scm.com/book/en/v2">Git Book</a>`
 .. |GitHub| replace::
     :raw-html:`<a href="https://github.com/">GitHub</a>`
+.. |issue| replace::
+    :raw-html:`<a href="https://github.com/andthum/mdtools/issues">issue</a>`
+.. |Q&A| replace::
+    :raw-html:`<a href="https://github.com/andthum/mdtools/discussions/categories/q-a">Question&Answer</a>`
 .. |Gromacs| replace::
     :raw-html:`<a href="https://manual.gromacs.org/">Gromacs</a>`
 
@@ -150,6 +161,14 @@ rst_epilog = """
     :raw-html:`<a href="https://docs.python.org/3/library/venv.html">venv</a>`
 .. |Virtualenv| replace::
     :raw-html:`<a href="https://virtualenv.pypa.io/en/latest/">Virtualenv</a>`
+.. |black| replace::
+    :raw-html:`<a href="https://github.com/psf/black/">Black</a>`
+.. |isort| replace::
+    :raw-html:`<a href="https://pycqa.github.io/isort/">isort</a>`
+.. |flake8| replace::
+    :raw-html:`<a href="https://github.com/pycqa/flake8">Flake8</a>`
+.. |flake8-docstrings| replace::
+    :raw-html:`<a href="https://gitlab.com/pycqa/flake8-docstrings">Flake8-Docstrings</a>`
 .. |pytest| replace::
     :raw-html:`<a href="https://docs.pytest.org/en/stable/">pytest</a>`
 .. |NumPy| replace::
