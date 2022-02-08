@@ -5,6 +5,10 @@ Dynamics
 
 Scripts that analyze the dynamics of the system.
 
+.. contents:: Site contents
+    :depth: 2
+    :local:
+
 
 Scripts
 -------
