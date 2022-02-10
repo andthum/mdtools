@@ -48,7 +48,7 @@ def wcenter(
     debug=False
 ):
     """
-    Calculate the weighted center of (compounds of) a MDAnalysis
+    Calculate the weighted center of (compounds of) an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup`.
 
     Parameters
@@ -122,7 +122,10 @@ def wcenter(
         Center of geometry of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
         Center of mass of (compounds of) the group
-    :func:`mdtools.structure.com` :
+    :func:`mdtools.structure.coc` :
+        Center of charge of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.cog` :
         Center of geometry of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
     :func:`mdtools.structure.com` :
@@ -312,7 +315,7 @@ def coc(ag, pbc=False, compound='group', make_whole=False, debug=False):
 def cog(ag, pbc=False, compound='group', make_whole=False, debug=False):
     """
     Calculate the center of geometry (a.k.a centroid) of (compounds of)
-    a MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup`.
+    an MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup`.
 
     Parameters
     ----------
@@ -369,14 +372,17 @@ def cog(ag, pbc=False, compound='group', make_whole=False, debug=False):
 
     See Also
     --------
+    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
+        Weighted center of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
         Center of geometry of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
         Center of mass of (compounds of) the group
-    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
-        Weighted center of (compounds of) the group
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.coc` :
+        Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
     :func:`mdtools.structure.com` :
         Center of mass of (compounds of) an MDAnalysis
@@ -488,14 +494,17 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
 
     See Also
     --------
-    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
-        Center of mass of (compounds of) the group
-    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
-        Center of geometry of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center` :
         Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.coc` :
+        Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
     :func:`mdtools.structure.cog` :
         Center of geometry of (compounds of) an MDAnalysis
