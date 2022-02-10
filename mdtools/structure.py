@@ -231,8 +231,16 @@ def cog(ag, pbc=False, compound='group', make_whole=False, debug=False):
     --------
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
         Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center` :
         Weighted center of (compounds of) the group
+    :func:`mdtools.structure.wcenter` :
+        Weighted center of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.com` :
+        Center of mass of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
 
     Notes
     -----
@@ -271,8 +279,8 @@ def cog(ag, pbc=False, compound='group', make_whole=False, debug=False):
     if make_whole:
         mdt.box.wrap(
             ag=ag,
-            compound='atoms',  # Does not trigger an additional
-            center='cog',      # call of mdt.check.masses_new()
+            compound='atoms',  # Does not trigger a call of
+            center='cog',      # mdt.check.masses_new()
             box=None,
             inplace=True,
             debug=debug
