@@ -180,6 +180,135 @@ def wcenter(
     )
 
 
+def coc(ag, pbc=False, compound='group', make_whole=False, debug=False):
+    """
+    Calculate the center of charge of (compounds of) an MDAnalysis
+    :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
+        which to calculate the center of charge.
+    pbc : bool, optional
+        If ``True`` and `compound` is ``'group'``, move all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` to the
+        primary unit cell **before** calculating the center of charge.
+        If ``True`` and `compound` is not ``'group'``, the center of
+        charge of each compound will be calculated without moving any
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` to keep the
+        compounds intact (if they were intact before).  Instead, the
+        resulting position vectors will be moved to the primary unit
+        cell **after** calculating the center of charge.
+    compound : {'group', 'segments', 'residues', 'molecules', \
+        'fragments'}, optional
+        The compounds of `ag` for which to calculate the center of
+        charge.  If ``'group'``, the center of charge of all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` will be
+        returned as a single position vector.  Else, the centers of
+        charge of each :class:`~MDAnalysis.core.groups.Segment`,
+        :class:`~MDAnalysis.core.groups.Residue`, molecule, or
+        :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>`
+        contained in `ag` will be returned as an array of position
+        vectors, i.e. a 2d array.  Refer to the MDAnalysis' user guide
+        for an |explanation_of_these_terms|.  Note that in any case,
+        also if `compound` is e.g. ``'residues'``, only the
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
+        are taken into account, even if the compound might comprise
+        additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
+        not contained in `ag`.
+    make_whole : bool, optional
+        If ``True``, compounds whose bonds are broken across the box
+        edges are made whole before calculating the center of charge.
+        Note that all :class:`Atoms <MDAnalysis.core.groups.Atom>` in
+        `ag` are wrapped back into the primary unit cell before making
+        compounds whole to ensure that the algorithm is working
+        properly.  This means that making compounds whole in an
+        unwrapped trajectory while keeping the trajectory unwrapped is
+        not possible with this option.
+    debug : bool, optional
+        If ``True``, run in debug mode.
+
+    Returns
+    -------
+    center : numpy.ndarray
+        Center of charge positions of the compounds in `ag`.  If
+        `compound` was set to ``'group'``, the output will be a single
+        position vector of shape ``(3,)``.  Else, the output will be a
+        2d array of shape ``(n, 3)`` where ``n`` is the number of
+        compounds in `ag`.
+
+    See Also
+    --------
+    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
+        Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
+    :func:`mdtools.structure.wcenter` :
+        Weighted center of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.cog` :
+        Center of geometry of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.com` :
+        Center of mass of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+
+    Notes
+    -----
+    This function uses :func:`mdtools.structure.wcenter` which in turn
+    relies on :meth:`~MDAnalysis.core.groups.AtomGroup.center` to
+    calculate the center of charge.
+
+    .. important::
+
+        If the charges of a compound sum up to zero, the coordinates of
+        that compound's center of charge will be NaN!  If `debug` is set
+        to ``True``, a warning will be raised if any compound's center
+        of charge is NaN.
+
+    If `make_whole` is ``True``, all
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
+    back into the primary unit cell using :func:`mdtools.box.wrap`
+    before calling
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` with the option
+    `unwrap` set to ``True``.  This is done to make sure that the unwrap
+    algorithm (better called "make whole" algorithm) of
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` is working
+    properly.  This means that making compounds whole in an unwrapped
+    trajectory while keeping the trajectory unwrapped is not possible
+    with this function.
+
+    .. todo::
+
+        Check if it is really necessary to wrap all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` back into the
+        primary unit cell before calling
+        :meth:`~MDAnalysis.core.groups.AtomGroup.center` with `unwrap`
+        set to ``True``.  The currently done back-wrapping is a serious
+        problem, because it implies an inplace change of the
+        :class:`~MDAnalysis.core.groups.Atom` coordinates.
+
+    """
+    center_of_charge = mdt.strc.wcenter(
+        ag=ag,
+        weights=ag.charges,
+        pbc=pbc,
+        compound=compound,
+        make_whole=make_whole,
+        debug=debug,
+    )
+    if debug and np.any(np.isnan(center_of_charge)):
+        warnings.warn(
+            "At least one compound's center of charge is NaN.  Probably, the"
+            " charges of this compound sum up to zero",
+            RuntimeWarning
+        )
+    return center_of_charge
+
+
 def cog(ag, pbc=False, compound='group', make_whole=False, debug=False):
     """
     Calculate the center of geometry (a.k.a centroid) of (compounds of)
