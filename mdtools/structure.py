@@ -64,7 +64,8 @@ def wcenter(
         identical weights for all
         :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` and
         therefore this is equivalent to calculating the center of
-        geometry.
+        geometry.  If the weights of a compound sum up to zero, the
+        coordinates of that compound's weighted center will be NaN.
     pbc : bool, optional
         If ``True`` and `compound` is ``'group'``, move all
         :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` to the
@@ -117,6 +118,16 @@ def wcenter(
     --------
     :meth:`MDAnalysis.core.groups.AtomGroup.center` :
         Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
+    :func:`mdtools.structure.com` :
+        Center of geometry of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.com` :
+        Center of mass of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
 
     Notes
     -----
