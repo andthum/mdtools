@@ -39,6 +39,136 @@ import MDAnalysis.lib.distances as mdadist
 import mdtools as mdt
 
 
+def wcenter(
+    ag,
+    weights=None,
+    pbc=False,
+    compound='group',
+    make_whole=False,
+    debug=False
+):
+    """
+    Calculate the weighted center of (compounds of) a MDAnalysis
+    :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
+        which to calculate the weighted center.
+    weights : array_like or None
+        Weights to be used, given as a 1d array containing the weights
+        for each :class:`MDAnalysis.core.groups.Atom` in `ag`.  Weights
+        are mapped to :class:`Atoms <MDAnalysis.core.groups.Atom>` by
+        order.  Setting `weights` to ``None`` is equivalent to passing
+        identical weights for all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` and
+        therefore this is equivalent to calculating the center of
+        geometry.
+    pbc : bool, optional
+        If ``True`` and `compound` is ``'group'``, move all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` to the
+        primary unit cell **before** calculating the weighted center.
+        If ``True`` and `compound` is not ``'group'``, the weighted
+        center of each compound will be calculated without moving any
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` to keep the
+        compounds intact (if they were intact before).  Instead, the
+        resulting position vectors will be moved to the primary unit
+        cell **after** calculating the weighted center.
+    compound : {'group', 'segments', 'residues', 'molecules', \
+        'fragments'}, optional
+        The compounds of `ag` for which to calculate the weighted
+        center.  If ``'group'``, the weighted center of all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` will be
+        returned as a single position vector.  Else, the weighted
+        center of each :class:`~MDAnalysis.core.groups.Segment`,
+        :class:`~MDAnalysis.core.groups.Residue`, molecule, or
+        :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>`
+        contained in `ag` will be returned as an array of position
+        vectors, i.e. a 2d array.  Refer to the MDAnalysis' user guide
+        for an |explanation_of_these_terms|.  Note that in any case,
+        also if `compound` is e.g. ``'residues'``, only the
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
+        are taken into account, even if the compound might comprise
+        additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
+        not contained in `ag`.
+    make_whole : bool, optional
+        If ``True``, compounds whose bonds are broken across the box
+        edges are made whole before calculating the weighted center.
+        Note that all :class:`Atoms <MDAnalysis.core.groups.Atom>` in
+        `ag` are wrapped back into the primary unit cell before making
+        compounds whole to ensure that the algorithm is working
+        properly.  This means that making compounds whole in an
+        unwrapped trajectory while keeping the trajectory unwrapped is
+        not possible with this option.
+    debug : bool, optional
+        If ``True``, run in debug mode.
+
+    Returns
+    -------
+    center : numpy.ndarray
+        Positions of the weighted centers of the compounds in `ag`.  If
+        `compound` was set to ``'group'``, the output will be a single
+        position vector of shape ``(3,)``.  Else, the output will be a
+        2d array of shape ``(n, 3)`` where ``n`` is the number of
+        compounds in `ag`.
+
+    See Also
+    --------
+    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
+        Weighted center of (compounds of) the group
+
+    Notes
+    -----
+    This function uses the
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` method of the input
+    :class:`~MDAnalysis.core.groups.AtomGroup` to calculate the weighted
+    center.
+
+    If `make_whole` is ``True``, all
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
+    back into the primary unit cell using :func:`mdtools.box.wrap`
+    before calling
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` with the option
+    `unwrap` set to ``True``.  This is done to make sure that the unwrap
+    algorithm (better called "make whole" algorithm) of
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` is working
+    properly.  This means that making compounds whole in an unwrapped
+    trajectory while keeping the trajectory unwrapped is not possible
+    with this function.
+
+    .. todo::
+
+        Check if it is really necessary to wrap all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` back into the
+        primary unit cell before calling
+        :meth:`~MDAnalysis.core.groups.AtomGroup.center` with `unwrap`
+        set to ``True``.  The currently done back-wrapping is a serious
+        problem, because it implies an inplace change of the
+        :class:`~MDAnalysis.core.groups.Atom` coordinates.
+
+        If no wrapping is necessary, we can mark this function as
+        deprecated and instead recommend the direct use of
+        :meth:`~MDAnalysis.core.groups.AtomGroup.center`.
+
+    """
+    if make_whole:
+        mdt.box.wrap(
+            ag=ag,
+            compound='atoms',  # Does not trigger a call of
+            center='cog',      # mdt.check.masses_new()
+            box=None,
+            inplace=True,
+            debug=debug
+        )
+    return ag.center(
+        weights=weights,
+        pbc=pbc,
+        compound=compound,
+        unwrap=make_whole
+    )
+
+
 def cog(ag, pbc=False, compound='group', make_whole=False, debug=False):
     """
     Calculate the center of geometry (a.k.a centroid) of (compounds of)
