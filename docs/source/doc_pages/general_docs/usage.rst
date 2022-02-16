@@ -110,9 +110,10 @@ using the -O option.
 .. note::
 
     Currently, most of the checks are wrapped in ``if debug: do check``
-    conditions (see section below), even if the check is computationally
-    cheap.  However, when writing new code or refactoring old one, we
-    will use assert statements for computationally cheap checks.
+    conditions (see :ref:`debug-mode-label`), even if the check is
+    computationally cheap.  However, when writing new code or
+    refactoring old one, we will use assert statements for
+    computationally cheap checks.
 
 
 .. _debug-mode-label:
@@ -131,8 +132,8 @@ These might help you to identify bad user input, parameter settings or
 bugs.  If you spot a bug, please open a new |issue| on |GitHub|.
 
 
-The scripts directory
----------------------
+The scripts/ directory
+----------------------
 
 You should not move the scripts to other directories, because some
 scripts import functions from other scripts with relative imports.
@@ -145,3 +146,43 @@ at their default location in :file:`path/to/mdtools/scripts/`.
 
 
 .. _assert statements: https://docs.python.org/3/reference/simple_stmts.html#the-assert-statement
+
+
+Differences to the terminology of MDAnalysis
+--------------------------------------------
+
+Because MDTools is build on MDAnalysis, we use basically the same
+terminology as MDAnalysis.  However, some terms are used differently.
+Here is a list of terms whoose meaning is different in MDTools compared
+to MDAnalysis:
+
+.. Use alphabetical order!
+
+
+unwrap
+^^^^^^
+
+**Meaning in MDAnalysis:**
+
+    Move atoms in such a way that chemical bonds are not split across
+    periodic boundaries of the simulation box (see e.g.
+    :meth:`MDAnalysis.core.groups.AtomGroup.unwrap`).
+
+    In MDTools this operation is called "make whole", because you fix
+    molecules that are broken across periodic boundaries.
+
+**Meaning in MDTools:**
+
+    Get the real-space positions of all atoms.  In other words, unfold a
+    wrapped trajectory, where all atoms lie within the primary unit
+    cell, and get the positions of all atoms like they were if they had
+    not been put back into the primary unit cell when they have crossed
+    a periodic boundary.
+
+    Real-space positions are e.g. needed when calculating the MSD.
+
+    Usually, it makes only sense to unwrap a trajectory starting from
+    the very first frame, because the unwrapped trajectory is
+    (re-)constructed by suming up the displacements from frame to frame
+    and adding these displacements to the initial configuration.  See
+    e.g. Bülow et al., J. Chem. Phys., 2020, 153, 021101.
