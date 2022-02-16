@@ -71,21 +71,26 @@ be called and their meaning.
 --sel       Selection string to select a group of atoms for the
             analysis.  See MDAnalysis' |selection_syntax| for possible
             choices.
---cmp       {'group', 'segments', 'residues', 'fragments', 'atoms'}
+--cmp       {'group', 'segments', 'residues', 'molecules', 'fragments',\
+            'atoms'}
 
             The compounds of the selection group to use for the
             analysis.  Compounds can be 'group' (the entire selection
-            group), 'segments', 'residues', 'fragments', or 'atoms'.
-            Refer to the MDAnalysis' user guide for an
+            group), 'segments', 'residues', 'molecules', 'fragments', or
+            'atoms'.  Refer to the MDAnalysis' user guide for an
             |explanation_of_these_terms|.  Note that in any case, even
             if ``CMP`` is e.g. 'residues', only the atoms belonging to
             the selection group are taken into account, even if the
             compound might comprise additional atoms that are not
             contained in the selection group.  Default: ``'atoms'``.
---center    {'cog', 'com'}
+--center    {'cog', 'com', 'coc'}
 
-            The center of the compounds to use for the analysis.  Choose
-            'cog' for center of geometry or 'com' for center of mass.
+            The center of the compounds to use for the analysis.
+
+                * ``'cog'``: Center of geometry
+                * ``'com'``: Center of mass
+                * ``'coc'``: Center of charge
+
             Note that |mda_always_guesses_atom_masses| from the atom
             types, even if the input file contains the masses.  Default:
             ``'cog'``.
@@ -236,7 +241,14 @@ if __name__ == "__main__":
         dest="CMP",
         type=str,
         required=False,
-        choices=("group", "segments", "residues", "fragments", "atoms"),
+        choices=(
+            "group",
+            "segments",
+            "residues",
+            "molecules",
+            "fragments",
+            "atoms",
+        ),
         default="atoms",
         help=(
             "The compounds of the selection group to use for the analysis."
@@ -248,7 +260,7 @@ if __name__ == "__main__":
         dest="CENTER",
         type=str,
         required=False,
-        choices=("cog", "com"),
+        choices=("cog", "com", "coc"),
         default="cog",
         help=(
             "The center of the compounds to use for the analysis.  Default:"
@@ -296,6 +308,16 @@ if __name__ == "__main__":
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
     for ts in trj:
         # TODO: Put your computations here (preferably as function)
+        # Example for calculating different centers of compounds of an
+        # MDAnalysis AtomGroup:
+        pos = mdt.strc.center(
+            ag=sel,
+            center=args.CENTER,
+            pbc=True,
+            cmp=args.CMP,
+            make_whole=True,
+            debug=args.DEBUG,
+        )
         # ProgressBar update:
         trj.set_postfix_str(
             "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
