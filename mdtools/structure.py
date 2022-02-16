@@ -419,7 +419,7 @@ def wcenter(
     ag : MDAnalysis.core.groups.AtomGroup
         The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
         which to calculate the weighted center.
-    weights : array_like or None
+    weights : array_like or None, optional
         Weights to be used, given as a 1d array containing the weights
         for each :class:`~MDAnalysis.core.groups.Atom` in `ag`.  Weights
         are mapped to :class:`Atoms <MDAnalysis.core.groups.Atom>` by
