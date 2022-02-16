@@ -131,6 +131,8 @@ def center(
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
     :func:`mdtools.structure.coc` :
         Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -498,6 +500,8 @@ def wcenter(
     :func:`mdtools.structure.center` :
         Different types of centers of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
     :func:`mdtools.structure.coc` :
         Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -630,6 +634,8 @@ def coc(ag, pbc=False, cmp='group', make_whole=False, debug=False):
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
     :func:`mdtools.structure.cog` :
         Center of geometry of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -711,6 +717,8 @@ def cog(ag, pbc=False, cmp='group', make_whole=False, debug=False):
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
     :func:`mdtools.structure.coc` :
         Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -817,6 +825,8 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
     :func:`mdtools.structure.coc` :
         Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
