@@ -39,9 +39,540 @@ import MDAnalysis.lib.distances as mdadist
 import mdtools as mdt
 
 
+def center(
+    ag, center='cog', pbc=False, cmp='group', make_whole=False, debug=False
+):
+    """
+    Calculate different types of centers of (compounds of) an MDAnalysis
+    :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
+        which to calculate the center.
+    center : {'cog', 'com', 'coc'}, optional
+        Which type of center to calculate.
+
+            * ``'cog'``: Center of geometry
+            * ``'com'``: Center of mass
+            * ``'coc'``: Center of charge
+
+    pbc : bool, optional
+        If ``True`` and `cmp` is ``'group'``, move all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` to the
+        primary unit cell **before** calculating the center.  If
+        ``True`` and `cmp` is not ``'group'``, the center of each
+        compound will be calculated without moving any
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` to keep the
+        compounds intact.  Instead, the resulting position vectors will
+        be moved to the primary unit cell **after** calculating the
+        center.  Note that this option does not make compounds whole
+        that are split across periodic boundaries.  To fix broken
+        compounds before calculating their center use the option
+        `make_whole`.
+    cmp : {'group', 'segments', 'residues', 'molecules', 'fragments', \
+        'atoms'}, optional
+        The compounds of `ag` for which to calculate the center.  If
+        ``'group'``, the center of all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` will be
+        returned as a single position vector.  If ``'atoms'``, simply
+        the positions of all atoms in `ag` will be returned (2d array).
+        Else, the center of each
+        :class:`~MDAnalysis.core.groups.Segment`,
+        :class:`~MDAnalysis.core.groups.Residue`, molecule, or
+        :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>`
+        contained in `ag` will be returned as an array of position
+        vectors, i.e. a 2d array.  Refer to the MDAnalysis' user guide
+        for an |explanation_of_these_terms|.  Note that in any case,
+        also if `cmp` is e.g. ``'residues'``, only the
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
+        are taken into account, even if the compound might comprise
+        additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
+        not contained in `ag`.
+    make_whole : bool, optional
+        If ``True``, compounds whose bonds are split across periodic
+        boundaries are made whole before calculating their center.  Note
+        that all :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag`
+        are wrapped back into the primary unit cell before making
+        compounds whole to ensure that the algorithm is working
+        properly.  This means that making compounds whole in an
+        unwrapped trajectory will lead to a wrapped trajectory with
+        whole compounds (some
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie outside the
+        primary unit cell, but each compound's center will lie inside
+        the primary unit cell).  Note that `make_whole` has no effect if
+        `cmp` is set to ``'atoms'``.
+    debug : bool, optional
+        If ``True``, run in debug mode.
+
+    Returns
+    -------
+    centers : numpy.ndarray
+        Position of the center of each compound in `ag`.  If `cmp` was
+        set to ``'group'``, the output will be a single position vector
+        of shape ``(3,)``.  Else, the output will be a 2d array of shape
+        ``(n, 3)`` where ``n`` is the number of compounds in `ag`.
+
+    Raises
+    ------
+    RuntimeWarning :
+        If `debug` is ``True`` and the center of any compound is
+        ``nan``.
+
+    See Also
+    --------
+    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
+        Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
+    :func:`mdtools.structure.wcenter` :
+        Weighted center of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.coc` :
+        Center of charge of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.cog` :
+        Center of geometry of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.com` :
+        Center of mass of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+
+    Notes
+    -----
+    This function calls either :func:`mdtools.structure.coc`,
+    :func:`mdtools.structure.cog` or :func:`mdtools.structure.com`
+    depending on the value of `center`.  These functions in turn call
+    the corresponding method of the input
+    :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    .. important::
+
+        If the weights of a compound (i.e. the charges in the case of
+        ``center='coc'`` or the masses in the case of ``center='com'``)
+        sum up to zero, the coordinates of that compound's center will
+        be ``nan``!  If `debug` is set to ``True``, a warning will be
+        raised if any compound's center is ``nan``.
+
+    If `make_whole` is ``True``, all
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
+    back into the primary unit cell using :func:`mdtools.box.wrap`
+    before making compounds whole.  This is done to ensure that the unwrap
+    algorithm (better called "make whole" algorithm) of MDAnalysis is
+    working properly.  This means that making compounds whole in an
+    unwrapped trajectory will lead to a wrapped trajectory with whole
+    compounds (some :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie
+    outside the primary unit cell, but each compound's center will lie
+    inside the primary unit cell).  `make_whole` has no effect if `cmp`
+    is set to ``'atoms'``.
+
+    .. todo::
+
+        Check if it is really necessary to wrap all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` back into the
+        primary unit cell before making compounds whole.  The currently
+        done back-wrapping is a serious problem, because it implies an
+        inplace-change of the :class:`~MDAnalysis.core.groups.Atom`
+        coordinates.
+
+    .. note:: For developers
+
+        This function is meant to be used in MDTools scripts that offer
+        the user to choose a specific compound and center for which to
+        perform the analysis (see the \\--cmp and \\--center options of
+        the :mod:`scripts.script_template`).  To get the requested
+        positions, you can simply do
+        ``pos = mdt.strc.center(ag, center=args.CENTER, cmp=args.CMP)``.
+
+    """  # noqa D301
+    if center == 'cog':
+        return mdt.strc.cog(
+            ag=ag, pbc=pbc, cmp=cmp, make_whole=make_whole, debug=debug
+        )
+    elif center == 'com':
+        return mdt.strc.com(
+            ag=ag, pbc=pbc, compound=cmp, make_whole=make_whole, debug=debug
+        )
+    elif center == 'coc':
+        return mdt.strc.coc(
+            ag=ag, pbc=pbc, cmp=cmp, make_whole=make_whole, debug=debug
+        )
+    else:
+        raise ValueError(
+            "'center' must be either 'cog', 'com' or 'coc', but you gave"
+            " {}".format(center)
+        )
+
+
+def wcenter(
+    ag, weights=None, pbc=False, cmp='group', make_whole=False, debug=False
+):
+    """
+    Calculate the weighted center of (compounds of) an MDAnalysis
+    :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
+        which to calculate the weighted center.
+    weights : array_like or None
+        Weights to be used, given as a 1d array containing the weights
+        for each :class:`~MDAnalysis.core.groups.Atom` in `ag`.  Weights
+        are mapped to :class:`Atoms <MDAnalysis.core.groups.Atom>` by
+        the order they appear in `ag`.  Setting `weights` to ``None`` is
+        equivalent to passing identical weights for all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` and
+        therefore this is equivalent to calculating the center of
+        geometry.  If the weights of a compound sum up to zero, the
+        coordinates of that compound's weighted center will be ``nan``.
+    pbc : bool, optional
+        If ``True`` and `cmp` is ``'group'``, move all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` to the
+        primary unit cell **before** calculating the weighted center.
+        If ``True`` and `cmp` is not ``'group'``, the weighted center of
+        each compound will be calculated without moving any
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` to keep the
+        compounds intact (if they were intact before).  Instead, the
+        resulting position vectors will be moved to the primary unit
+        cell **after** calculating the weighted center.
+    cmp : {'group', 'segments', 'residues', 'molecules', 'fragments', \
+        'atoms'}, optional
+        The compounds of `ag` for which to calculate the weighted
+        center.  If ``'group'``, the weighted center of all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` will be
+        returned as a single position vector.  If ``'atoms'``, simply
+        the positions of all atoms in `ag` will be returned (2d array).
+        Else, the weighted center of each
+        :class:`~MDAnalysis.core.groups.Segment`,
+        :class:`~MDAnalysis.core.groups.Residue`, molecule, or
+        :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>`
+        contained in `ag` will be returned as an array of position
+        vectors, i.e. a 2d array.  Refer to the MDAnalysis' user guide
+        for an |explanation_of_these_terms|.  Note that in any case,
+        also if `cmp` is e.g. ``'residues'``, only the
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
+        are taken into account, even if the compound might comprise
+        additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
+        not contained in `ag`.
+    make_whole : bool, optional
+        If ``True``, compounds whose bonds are split across periodic
+        boundaries are made whole before calculating their center.  Note
+        that all :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag`
+        are wrapped back into the primary unit cell before making
+        compounds whole to ensure that the algorithm is working
+        properly.  This means that making compounds whole in an
+        unwrapped trajectory will lead to a wrapped trajectory with
+        whole compounds (some
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie outside the
+        primary unit cell, but each compound's center will lie inside
+        the primary unit cell).  Note that `make_whole` has no effect if
+        `cmp` is set to ``'atoms'``.
+    debug : bool, optional
+        If ``True``, run in debug mode.
+
+    Returns
+    -------
+    centers : numpy.ndarray
+        Position of the weighted center of each compound in `ag`.  If
+        `cmp` was set to ``'group'``, the output will be a single
+        position vector of shape ``(3,)``.  Else, the output will be a
+        2d array of shape ``(n, 3)`` where ``n`` is the number of
+        compounds in `ag`.
+
+    Raises
+    ------
+    RuntimeWarning :
+        If `debug` is ``True`` and the weighted center of any compound
+        is ``nan``.
+
+    See Also
+    --------
+    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
+        Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.coc` :
+        Center of charge of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.cog` :
+        Center of geometry of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.com` :
+        Center of mass of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+
+    Notes
+    -----
+    This function uses the
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` method of the input
+    :class:`~MDAnalysis.core.groups.AtomGroup` to calculate the weighted
+    center.
+
+    .. important::
+
+        If the weights of a compound sum up to zero, the coordinates of
+        that compound's weighted center will be ``nan``!  If `debug` is
+        set to ``True``, a warning will be raised if any compound's
+        weighted center is ``nan``.
+
+    If `make_whole` is ``True``, all
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
+    back into the primary unit cell using :func:`mdtools.box.wrap`
+    before calling
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` with the option
+    `unwrap` set to ``True``.  This is done to ensure that the unwrap
+    algorithm (better called "make whole" algorithm) of
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` is working
+    properly.  This means that making compounds whole in an unwrapped
+    trajectory will lead to a wrapped trajectory with whole compounds
+    (some :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie outside
+    the primary unit cell, but each compound's center will lie inside
+    the primary unit cell).  `make_whole` has no effect if `cmp` is set
+    to ``'atoms'``.
+
+    .. todo::
+
+        Check if it is really necessary to wrap all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` back into the
+        primary unit cell before calling
+        :meth:`~MDAnalysis.core.groups.AtomGroup.center` with `unwrap`
+        set to ``True``.  The currently done back-wrapping is a serious
+        problem, because it implies an inplace change of the
+        :class:`~MDAnalysis.core.groups.Atom` coordinates.
+
+    """
+    if cmp == 'atoms':
+        if pbc:
+            centers = mdt.box.wrap(
+                ag=ag,
+                compound=cmp,
+                center='cog',  # Does not rely on masses
+                inplace=False,
+                debug=debug,
+            )
+        else:
+            centers = ag.positions
+        debug_info = "Some of your atom positions might be NaN"
+    else:
+        if make_whole:
+            mdt.box.wrap(
+                ag=ag,
+                compound='atoms',
+                center='cog',  # Does not rely on masses
+                inplace=True,
+                debug=debug,
+            )
+        centers = ag.center(
+            weights=weights, pbc=pbc, compound=cmp, unwrap=make_whole,
+        )
+        debug_info = "Probably, the weights of this compound sum up to zero"
+    if debug and np.any(np.isnan(centers)):
+        warnings.warn(
+            "At least one compound's weighted center is NaN.  " + debug_info,
+            RuntimeWarning
+        )
+    return centers
+
+
+def coc(ag, pbc=False, cmp='group', make_whole=False, debug=False):
+    """
+    Calculate the center of charge of (compounds of) an MDAnalysis
+    :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
+        which to calculate the center of charge.
+    pbc : bool, optional
+        See :func:`mdtools.structure.center`.
+    cmp : {'group', 'segments', 'residues', 'molecules', 'fragments', \
+        'atoms'}, optional
+        See :func:`mdtools.structure.center`.
+    make_whole : bool, optional
+        See :func:`mdtools.structure.center`.
+    debug : bool, optional
+        If ``True``, run in debug mode.
+
+    Returns
+    -------
+    center : numpy.ndarray
+        Center of charge position of each compound in `ag`.  If `cmp`
+        was set to ``'group'``, the output will be a single position
+        vector of shape ``(3,)``.  Else, the output will be a 2d array
+        of shape ``(n, 3)`` where ``n`` is the number of compounds in
+        `ag`.
+
+    Raises
+    ------
+    RuntimeWarning :
+        If `debug` is ``True`` and the center of charge of any compound
+        is ``nan``.
+
+    See Also
+    --------
+    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
+        Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter` :
+        Weighted center of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.cog` :
+        Center of geometry of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.com` :
+        Center of mass of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+
+    Notes
+    -----
+    This function uses :func:`mdtools.structure.wcenter` which in turn
+    relies on the :meth:`~MDAnalysis.core.groups.AtomGroup.center`
+    method of the input :class:`~MDAnalysis.core.groups.AtomGroup` to
+    calculate the center of charge.
+
+    .. important::
+
+        If the charges of a compound sum up to zero, the coordinates of
+        that compound's center of charge will be ``nan``!  If `debug` is
+        set to ``True``, a warning will be raised if any compound's
+        center of charge is ``nan``.
+
+    """
+    return mdt.strc.wcenter(
+        ag=ag,
+        weights=ag.charges,
+        pbc=pbc,
+        cmp=cmp,
+        make_whole=make_whole,
+        debug=debug,
+    )
+
+
+def cog(ag, pbc=False, cmp='group', make_whole=False, debug=False):
+    """
+    Calculate the center of geometry (a.k.a centroid) of (compounds of)
+    an MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
+        which to calculate the center of geometry.
+    pbc : bool, optional
+        See :func:`mdtools.structure.center`.
+    cmp : {'group', 'segments', 'residues', 'molecules', 'fragments', \
+       'atoms'}, optional
+        See :func:`mdtools.structure.center`.
+    make_whole : bool, optional
+        See :func:`mdtools.structure.center`.
+    debug : bool, optional
+        If ``True``, run in debug mode.
+
+    Returns
+    -------
+    center : numpy.ndarray
+        Center of geometry position of each compound in `ag`.  If `cmp`
+        was set to ``'group'``, the output will be a single position
+        vector of shape ``(3,)``.  Else, the output will be a 2d array
+        of shape ``(n, 3)`` where ``n`` is the number of compounds in
+        `ag`.
+
+    Raises
+    ------
+    RuntimeWarning :
+        If `debug` is ``True`` and the center of geometry of any
+        compound is ``nan``.
+
+    See Also
+    --------
+    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
+        Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter` :
+        Weighted center of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.coc` :
+        Center of charge of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.com` :
+        Center of mass of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+
+    Notes
+    -----
+    This function uses the
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center_of_geometry` method
+    of the input :class:`~MDAnalysis.core.groups.AtomGroup` to calculate
+    the center of geometry.
+
+    .. todo::
+
+        Check if it is really necessary to wrap all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` back into the
+        primary unit cell before calling
+        :meth:`~MDAnalysis.core.groups.AtomGroup.center_of_geometry`
+        with `unwrap` set to ``True``.  The currently done back-wrapping
+        is a serious problem, because it implies an inplace change of
+        the :class:`~MDAnalysis.core.groups.Atom` coordinates.
+
+    """
+    if cmp == 'atoms':
+        if pbc:
+            centers = mdt.box.wrap(
+                ag=ag,
+                compound=cmp,
+                center='cog',  # Does not rely on masses
+                inplace=False,
+                debug=debug,
+            )
+        else:
+            centers = ag.positions
+    else:
+        if make_whole:
+            mdt.box.wrap(
+                ag=ag,
+                compound='atoms',
+                center='cog',  # Does not rely on masses
+                inplace=True,
+                debug=debug,
+            )
+        centers = ag.center_of_geometry(
+            pbc=pbc, compound=cmp, unwrap=make_whole
+        )
+    if debug and np.any(np.isnan(centers)):
+        warnings.warn(
+            "At least one compound's center of geometry is NaN.  Some of your"
+            " atom positions might be NaN",
+            RuntimeWarning
+        )
+    return centers
+
+
 def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
     """
-    Calculate the center of mass of (compounds of) a MDAnalysis
+    Calculate the center of mass of (compounds of) an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup`.
 
     Parameters
@@ -50,56 +581,50 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
         The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
         which to calculate the center of mass.
     pbc : bool, optional
-        If ``True`` and `compound` is ``'group'``, move all
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` to the primary unit
-        cell **before** calculating the center of mass.  If ``True`` and
-        `compound` is not ``'group'``, the center of mass of each
-        compound will be calculated without moving any
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` to keep the
-        compounds intact (if they were intact before).  Instead, the
-        resulting position vectors will be moved to the primary unit
-        cell **after** calculating the center of mass.
-    compound : {'group', 'segments', 'residues', 'molecules', 'fragments'}, optional
-        The compounds of `ag` for which to calculate the center of mass.
-        If ``'group'``, the center of mass of all
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` will be
-        returned as a single position vector.  Else, the centers of mass
-        of each :class:`~MDAnalysis.core.groups.Segment`,
-        :class:`~MDAnalysis.core.groups.Residue`, molecule, or
-        :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>`
-        contained in `ag` will be returned as an array of position
-        vectors, i.e. a 2d array.  Refer to the MDAnalysis' user guide
-        for an |explanation_of_these_terms|.  Note that in any case,
-        even if `compound` is e.g. ``'residues'``, only the
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
-        are taken into account, even if the compound might comprise
-        additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
-        not contained in `ag`.
+        See :func:`mdtools.structure.center`.
+    compound : {'group', 'segments', 'residues', 'molecules',\
+        'fragments', 'atoms'}, optional
+        See :func:`mdtools.structure.center`.
     make_whole : bool, optional
-        If ``True``, first all
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
-        back into the primary unit cell, to make sure that the algorithm
-        is working properly.  Then compounds whose bonds are broken
-        across the box edges are made whole again.  This means that
-        making compounds whole in an unwrapped trajectory while keeping
-        the trajectory unwrapped is not possible with this function.
+        See :func:`mdtools.structure.center`.
     debug : bool, optional
         If ``True``, run in debug mode.
 
     Returns
     -------
     center : numpy.ndarray
-        Center of mass positions of the compounds in `ag`.  If `compound`
-        was set to ``'group'``, the output will be a single position
-        vector.  Else, the output will be a 2d array of shape ``(n, 3)``
-        where ``n`` is the number of compounds in `ag`.
+        Center of mass position of each compound in `ag`.  If
+        `compound` was set to ``'group'``, the output will be a single
+        position vector of shape ``(3,)``.  Else, the output will be a
+        2d array of shape ``(n, 3)`` where ``n`` is the number of
+        compounds in `ag`.
+
+    Raises
+    ------
+    RuntimeWarning :
+        If `debug` is ``True`` and the center of mass of any compound is
+        ``nan``.
 
     See Also
     --------
-    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
-        Center of mass of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center` :
         Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter` :
+        Weighted center of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.coc` :
+        Center of charge of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.cog` :
+        Center of geometry of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
 
     Notes
     -----
@@ -108,17 +633,16 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
     the input :class:`~MDAnalysis.core.groups.AtomGroup` to calculate
     the center of mass.
 
-    If `make_whole` is ``True``, all
-    :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
-    back into the primary unit cell using :func:`mdtools.box.wrap`
-    before calling
-    :meth:`~MDAnalysis.core.groups.AtomGroup.center_of_mass` with the
-    option `unwrap` set to ``True``.  This is done to make sure that the
-    unwrap algorithm (better called "make whole" algorithm) of
-    :meth:`~MDAnalysis.core.groups.AtomGroup.center_of_mass` is working
-    properly.  This means that making compounds whole in an unwrapped
-    trajectory while keeping the trajectory unwrapped is not possible
-    with this function.
+    .. important::
+
+        `MDAnalysis always guesses atom masses`_!  If MDAnalysis cannot
+        guess the mass from the atom type, it will asign this atom a
+        zero mass.  If the mass of a compound sum up to zero, the
+        coordinates of that compound's center of mass will be ``nan``!
+        If `debug` is set to ``True``, a warning will be raised if any
+        compound's weighted center is ``nan``.  Also in the case if
+        ``debug is false``, a ValueError will be raised, if the mass of
+        any atom in `ag` is less than or equal to zero.
 
     .. todo::
 
@@ -130,22 +654,43 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
         serious problem, because it implies an inplace change of the
         :class:`~MDAnalysis.core.groups.Atom` coordinates.
 
-        If the no wrapping is necessary, we can mark this function as
-        deprecated and instead recommend the direct use of
-        :meth:`~MDAnalysis.core.groups.AtomGroup.center_of_mass`.
-
+    .. _MDAnalysis always guesses atom masses:
+        https://userguide.mdanalysis.org/formats/guessing.html
     """
-    mdt.check.masses_new(ag=ag, verbose=debug)
-    if make_whole:
-        mdt.box.wrap(ag=ag,
-                     compound='atoms',  # Does not trigger an additional
-                     center='cog',      # call of mdt.check.masses_new()
-                     box=None,
-                     inplace=True,
-                     debug=debug)
-    return ag.center_of_mass(pbc=pbc,
-                             compound=compound,
-                             unwrap=make_whole)
+    if compound == 'atoms':
+        if pbc:
+            centers = mdt.box.wrap(
+                ag=ag,
+                compound=compound,
+                center='cog',  # Does not rely on masses
+                inplace=False,
+                debug=debug,
+            )
+        else:
+            centers = ag.positions
+    else:
+        mdt.check.masses_new(ag=ag, verbose=debug)
+        if make_whole:
+            mdt.box.wrap(
+                ag=ag,
+                compound='atoms',
+                center='cog',  # Does not rely on masses
+                inplace=True,
+                debug=debug,
+            )
+        centers = ag.center_of_mass(
+            pbc=pbc, compound=compound, unwrap=make_whole
+        )
+    if debug and np.any(np.isnan(centers)):
+        # Masses cannot sum up to zero, because `mdt.check.masses_new`
+        # raises a ValueError if the mass of any atom is less than or
+        # equal to zero.
+        warnings.warn(
+            "At least one compound's center of mass is NaN.  Some of your atom"
+            " positions might be NaN",
+            RuntimeWarning
+        )
+    return centers
 
 
 def discrete_pos_trj(
