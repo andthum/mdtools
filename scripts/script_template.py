@@ -71,8 +71,8 @@ be called and their meaning.
 --sel       Selection string to select a group of atoms for the
             analysis.  See MDAnalysis' |selection_syntax| for possible
             choices.
---cmp       {'group', 'segments', 'residues', 'molecules', 'fragments',\
-            'atoms'}
+--cmp       {'group', 'segments', 'residues', 'molecules', \
+            'fragments', 'atoms'}
 
             The compounds of the selection group to use for the
             analysis.  Compounds can be 'group' (the entire selection
