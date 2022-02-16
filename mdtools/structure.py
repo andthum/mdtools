@@ -295,6 +295,9 @@ def wcenter(
         Center of geometry of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
         Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
     :func:`mdtools.structure.coc` :
         Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -422,6 +425,9 @@ def coc(ag, pbc=False, compound='group', make_whole=False, debug=False):
         Center of geometry of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
         Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -551,6 +557,9 @@ def cog(ag, pbc=False, compound='group', make_whole=False, debug=False):
         Center of geometry of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
         Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -673,6 +682,9 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
         Center of geometry of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
         Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
