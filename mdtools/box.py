@@ -21,12 +21,14 @@
 
 # Standard libraries
 from datetime import datetime
+
 # Third party libraries
 import psutil
 import numpy as np
 import MDAnalysis as mda
 import MDAnalysis.lib.distances as mdadist
 import MDAnalysis.lib.mdamath as mdamath
+
 # Local application/library specific imports
 import mdtools as mdt
 
@@ -77,8 +79,9 @@ def box_volume(box, debug=False):
     volume = mdamath.box_volume(box)
     if volume <= 0:
         mdt.check.box(box=box, with_angles=True, dim=1)
-        raise ValueError("The box volume ({}) is equal to or less than"
-                         " zero".format(volume))
+        raise ValueError(
+            "The box volume ({}) is equal to or less than zero".format(volume)
+        )
     return volume
 
 
@@ -132,7 +135,7 @@ def volume(box, debug=False, **kwargs):
     lengths using :func:`numpy.prod`.
     """
     mdt.check.box(box=box, orthorhombic=True)
-    kwargs.pop('axis', None)
+    kwargs.pop("axis", None)
     return np.prod(box, axis=-1, **kwargs)
 
 
@@ -317,8 +320,8 @@ def wrap_pos(pos, box, mda_backend=None):
 
 
 def wrap(
-        ag, compound='atoms', center='cog', box=None, inplace=True,
-        debug=False):
+    ag, compound="atoms", center="cog", box=None, inplace=True, debug=False
+):
     """
     Shift compounds of an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` back into the primary
@@ -335,7 +338,8 @@ def wrap(
     ag : MDAnalysis.core.groups.AtomGroup instance
         The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` whose
         compounds shall be wrapped back into the primary unit cell.
-    compound : {'atoms', 'group', 'segments', 'residues', 'molecules', 'fragments'}, optional
+    compound : {'atoms', 'group', 'segments', 'residues', 'molecules', \
+        'fragments'}, optional
         Which type of compound to keep together during wrapping.
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the
         same compound are shifted by the same translation vector such
@@ -348,16 +352,13 @@ def wrap(
         individual translation vector so that finally all
         :class:`Atoms <MDAnalysis.core.groups.Atom>` of `ag` will be
         inside the unit cell.  Refer to the MDAnalysis' user guide
-        for an `explanation of the terms`_.  Note that in any case,
+        for an |explanation_of_these_terms|.  Note that in any case,
         even if `compound` is e.g. ``'residues'``, only the
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
         are taken into account, even if the compound might comprise
         additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
         not contained in `ag`.  Also note that broken compounds are
         note made whole by this function.
-
-        .. _explanation of the terms: https://userguide.mdanalysis.org/stable/groups_of_atoms.html
-
     center : {'cog', 'com'}, optional
         How to define the center of a compound.  Parse ``'cog'`` for
         center of geometry or ``'com'`` for center of mass.  If compound
@@ -386,8 +387,9 @@ def wrap(
     See Also
     --------
     :meth:`MDAnalysis.core.groups.AtomGroup.wrap` :
-        Shift compounds of the :class:`~MDAnalysis.core.groups.AtomGroup`
-        back into the primary unit cell
+        Shift compounds of the
+        :class:`~MDAnalysis.core.groups.AtomGroup` back into the primary
+        unit cell
     :meth:`MDAnalysis.core.groups.AtomGroup.pack_into_box`
         Shift all :class:`Atoms <MDAnalysis.core.groups.Atom>` in the
         :class:`~MDAnalysis.core.groups.AtomGroup` into the primary unit
@@ -430,24 +432,23 @@ def wrap(
     MDAnalysis user guide about trajectories_ (second last
     paragraph) and `in-memory trajectories`_.
 
-    .. _trajectories: https://userguide.mdanalysis.org/stable/trajectories/trajectories.html
-    .. _in-memory trajectories: https://userguide.mdanalysis.org/stable/reading_and_writing.html#in-memory-trajectories
+    .. _trajectories:
+        https://userguide.mdanalysis.org/stable/trajectories/trajectories.html
+    .. _in-memory trajectories:
+        https://userguide.mdanalysis.org/stable/reading_and_writing.html#in-memory-trajectories
     """
     if ag.n_atoms == 1:
         # => 'com' and 'cog' are the same, but because the mass might be
         # zero, it is safer to use 'cog'
-        center = 'cog'
-    elif center == 'com' and compound != 'atoms':  # and ag.n_atoms > 1
+        center = "cog"
+    elif center == "com" and compound != "atoms":  # and ag.n_atoms > 1
         mdt.check.masses_new(ag=ag, verbose=debug)
-    return ag.wrap(compound=compound,
-                   center=center,
-                   box=box,
-                   inplace=inplace)
+    return ag.wrap(compound=compound, center=center, box=box, inplace=inplace)
 
 
 def make_whole(
-        ag, compound='fragments', reference='cog', inplace=True,
-        debug=False):
+    ag, compound="fragments", reference="cog", inplace=True, debug=False
+):
     """
     Make compounds of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` whole that are split
@@ -462,7 +463,8 @@ def make_whole(
     ag : MDAnalysis.core.groups.AtomGroup instance
         The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` whose
         compounds shall be made whole.
-    compound : {'group', 'segments', 'residues', 'molecules', 'fragments'}, optional
+    compound : {'group', 'segments', 'residues', 'molecules', \
+        'fragments'}, optional
         Which type of component to make whole.  Note that in any case,
         all :class:`Atoms <MDAnalysis.core.groups.Atom>` within each
         compound must be interconnected by bonds, i.e. compounds must
@@ -489,7 +491,8 @@ def make_whole(
         :class:`Atoms <MDAnalysis.core.groups.Atom>` of these molecules
         are part of `ag`.
 
-        .. _MDAnalysis user guide: https://userguide.mdanalysis.org/stable/groups_of_atoms.html
+        .. _MDAnalysis user guide:
+            https://userguide.mdanalysis.org/stable/groups_of_atoms.html
 
     reference : {'cog', 'com', None}, optional
         If 'cog' (center of geometry) or 'com' (center of mass), the
@@ -530,16 +533,16 @@ def make_whole(
     :meth:`~MDAnalysis.core.groups.AtomGroup.unwrap` method of the
     input :class:`~MDAnalysis.core.groups.AtomGroup` that additionally
     checks the masses of all
-    :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` when `reference`
-    is set to ``'com'``.  See :func:`mdtools.check.masses_new` for
-    further information.
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` when
+    `reference` is set to ``'com'``.  See
+    :func:`mdtools.check.masses_new` for further information.
 
     Before making any compound whole, all
     :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
     back into the primary unit cell.  This is done to make sure that the
     unwrap algorithm (better "make whole" algorithm) of
-    :meth:`~MDAnalysis.core.groups.AtomGroup.unwrap` is working properly.
-    This means that making compounds whole in an unwrapped
+    :meth:`~MDAnalysis.core.groups.AtomGroup.unwrap` is working
+    properly.  This means that making compounds whole in an unwrapped
     :attr:`~MDAnalysis.core.universe.Universe.trajectory` while keeping
     the :attr:`~MDAnalysis.core.universe.Universe.trajectory` unwrapped
     is not possible with this function.
@@ -568,25 +571,28 @@ def make_whole(
     MDAnalysis user guide about trajectories_ (second last
     paragraph) and `in-memory trajectories`_.
 
-    .. _trajectories: https://userguide.mdanalysis.org/stable/trajectories/trajectories.html
-    .. _in-memory trajectories: https://userguide.mdanalysis.org/stable/reading_and_writing.html#in-memory-trajectories
+    .. _trajectories:
+        https://userguide.mdanalysis.org/stable/trajectories/trajectories.html
+    .. _in-memory trajectories:
+        https://userguide.mdanalysis.org/stable/reading_and_writing.html#in-memory-trajectories
     """
     if ag.n_atoms == 1:
         # => 'com' and 'cog' are the same, but because the mass might be
         # zero, it is safer to use 'cog'
-        reference = 'cog'
-    elif reference == 'com':  # and ag.n_atoms > 1
+        reference = "cog"
+    elif reference == "com":  # and ag.n_atoms > 1
         mdt.check.masses_new(ag=ag, verbose=debug)
-    wrap(ag=ag,
-         compound='atoms',
-         center='cog',
-         box=None,
-         inplace=True,
-         debug=debug)
-    return ag.unwrap(compound=compound,
-                     reference=reference,
-                     inplace=inplace,
-                     debug=debug)
+    wrap(
+        ag=ag,
+        compound="atoms",
+        center="cog",
+        box=None,
+        inplace=True,
+        debug=debug,
+    )
+    return ag.unwrap(
+        compound=compound, reference=reference, inplace=inplace, debug=debug
+    )
 
 
 def vdist(pos1, pos2, box=None, out=None):
@@ -821,14 +827,20 @@ def vdist(pos1, pos2, box=None, out=None):
             # This else clause should never be entered, because this
             # error should already be raised by `mdt.check.box(box)`.
             raise ValueError(
-                "{}".format(box.shape)
+                "'box' must have shape (6,) or (k, 6), but has shape"
+                " {}".format(box.shape)
             )
         dist_vecs -= np.floor(dist_vecs / box + 0.5) * box
     return dist_vecs
 
 
-def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
-           inplace=False, debug=False):
+def unwrap(
+    atm_grp,
+    coord_unwrapped_prev,
+    displacement=None,
+    inplace=False,
+    debug=False,
+):
     """
     Unwrap the atoms of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` out of the primary unit
@@ -855,7 +867,7 @@ def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
     the change with that from the file except if the
     :attr:`~MDAnalysis.core.universe.Universe.trajectory` is held in
     memory, e.g., when the
-    :method:`~MDAnalysis.core.universe.Universe.transfer_to_memory`
+    :meth:`~MDAnalysis.core.universe.Universe.transfer_to_memory`
     method was used.
 
     Parameters
@@ -870,10 +882,10 @@ def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
         `coord_unwrapped_prev` should be the wrapped coordinates of
         `atm_grp` from the very first frame and `atm_grp` should be
         parsed from the second frame so that ``atm_grp.positions``
-        contains the atom coordinates of `atm_grp` from the second frame.
-        For all further frames, `coord_unwrapped_prev` should be the
-        result of this function and `atm_grp` should be parsed from next
-        frame.
+        contains the atom coordinates of `atm_grp` from the second
+        frame.  For all further frames, `coord_unwrapped_prev` should be
+        the result of this function and `atm_grp` should be parsed from
+        next frame.
     displacement : numpy.ndarray, optional
         Preallocated temporary array of the same shape as
         ``atm_grp.positions.shape`` and dtype ``numpy.float64``. If
@@ -897,12 +909,13 @@ def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
         nominally ``coord_unwrapped_prev + displacement``.
     """
     if debug:
-        mdt.check.pos_array(coord_unwrapped_prev,
-                            shape=atm_grp.positions.shape)
+        mdt.check.pos_array(
+            coord_unwrapped_prev, shape=atm_grp.positions.shape
+        )
         if displacement is not None:
-            mdt.check.pos_array(displacement,
-                                shape=atm_grp.positions.shape,
-                                dtype=np.float64)
+            mdt.check.pos_array(
+                displacement, shape=atm_grp.positions.shape, dtype=np.float64
+            )
 
     displacement = mdt.box.vdist(
         pos1=atm_grp.positions,
@@ -917,9 +930,19 @@ def unwrap(atm_grp, coord_unwrapped_prev, displacement=None,
         return coord_unwrapped_prev + displacement
 
 
-def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
-               make_whole=False, keep_whole=False, compound='fragments',
-               reference='com', verbose=False, debug=False):
+def unwrap_trj(
+    topfile,
+    trjfile,
+    universe,
+    atm_grp,
+    end=-1,
+    make_whole=False,
+    keep_whole=False,
+    compound="fragments",
+    reference="com",
+    verbose=False,
+    debug=False,
+):
     """
     Unwrap the atoms of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` out of the primary unit
@@ -952,6 +975,10 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
         the unwrapping precedure is done, you can create a new universe
         from this unwrapped trajectory and topology. See the
         `MDAnalysis user guide`_ for supported file formats.
+
+        .. _MDAnalysis user guide:
+            https://userguide.mdanalysis.org/1.0.0/formats/index.html
+
     universe : MDAnalysis.core.universe.Universe
         The universe holding the trajectory and
         :class:`~MDAnalysis.core.groups.AtomGroup` to unwrap. You cannot
@@ -999,31 +1026,34 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
         If ``True``, print progress information to standard output.
     debug : bool, optional
         If ``True``, check the input arguments.
-
-    .. _MDAnalysis user guide: https://userguide.mdanalysis.org/1.0.0/formats/index.html
     """
-
     if debug:
         if isinstance(atm_grp, mda.core.groups.UpdatingAtomGroup):
-            raise TypeError("atm_grp must not be an"
-                            " MDAnalysis.core.groups.UpdatingAtomGroup")
-        if (make_whole and
-            compound != 'group' and
-            compound != 'segments' and
-            compound != 'residues' and
-            compound != 'molecules' and
-                compound != 'fragments'):
-            raise ValueError("compound must be either 'group',"
-                             " 'segments', 'residues', 'molecules' or"
-                             " 'fragments', but you gave '{}'"
-                             .format(compound))
-        if (make_whole and
-            reference != 'com' and
-            reference != 'cog' and
-                reference is not None):
-            raise ValueError("reference must be either 'com', 'cog' or"
-                             " None, but you gave {}".format(reference))
-        if make_whole and reference == 'com':
+            raise TypeError("atm_grp must not be an UpdatingAtomGroup")
+        if (
+            make_whole
+            and compound != "group"
+            and compound != "segments"
+            and compound != "residues"
+            and compound != "molecules"
+            and compound != "fragments"
+        ):
+            raise ValueError(
+                "compound must be either 'group',"
+                " 'segments', 'residues', 'molecules' or"
+                " 'fragments', but you gave '{}'".format(compound)
+            )
+        if (
+            make_whole
+            and reference != "com"
+            and reference != "cog"
+            and reference is not None
+        ):
+            raise ValueError(
+                "reference must be either 'com', 'cog' or None, but you gave"
+                " {}".format(reference)
+            )
+        if make_whole and reference == "com":
             mdt.check.masses(ag=atm_grp, flash_test=False)
         if make_whole and len(atm_grp.bonds) <= 0:
             raise ValueError("The AtomGroup contains no bonds")
@@ -1031,10 +1061,8 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
     if end < 0:
         end = universe.trajectory.n_frames
     _, end, _, _ = mdt.check.frame_slicing(
-        start=0,
-        stop=end,
-        step=1,
-        n_frames_tot=universe.trajectory.n_frames)
+        start=0, stop=end, step=1, n_frames_tot=universe.trajectory.n_frames
+    )
     displacement = np.zeros(atm_grp.positions.shape, dtype=np.float64)
 
     ts = universe.trajectory[0]
@@ -1043,29 +1071,33 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
         proc = psutil.Process()
         last_frame = universe.trajectory[end - 1].frame
         ts = universe.trajectory[0]
-        print("  Frame   {:12d}".format(ts.frame), flush=True)
-        print("    Step: {:>12}    Time: {:>12} (ps)"
-              .format(ts.data['step'], ts.data['time']),
-              flush=True)
-        print("    Elapsed time:             {}"
-              .format(datetime.now() - timer),
-              flush=True)
-        print("    Current memory usage: {:18.2f} MiB"
-              .format(proc.memory_info().rss / 2**20),
-              flush=True)
+        print("  Frame   {:12d}".format(ts.frame))
+        print(
+            "    Step: {:>12}    Time: {:>12} (ps)".format(
+                ts.data["step"], ts.data["time"]
+            ),
+        )
+        print(
+            "    Elapsed time:             {}".format(datetime.now() - timer),
+        )
+        print(
+            "    Current memory usage: {:18.2f} MiB".format(
+                proc.memory_info().rss / 2**20
+            ),
+        )
         timer = datetime.now()
     if debug:
         mdt.check.box(box=ts.dimensions, with_angles=True, dim=1)
     if make_whole or keep_whole:
-        coord_unwrapped = mdt.box.make_whole(ag=atm_grp,
-                                             compound=compound,
-                                             reference=reference,
-                                             inplace=True,
-                                             debug=debug)
+        coord_unwrapped = mdt.box.make_whole(
+            ag=atm_grp,
+            compound=compound,
+            reference=reference,
+            inplace=True,
+            debug=debug,
+        )
     else:
-        coord_unwrapped = mdt.box.wrap(ag=atm_grp,
-                                       inplace=True,
-                                       debug=debug)
+        coord_unwrapped = mdt.box.wrap(ag=atm_grp, inplace=True, debug=debug)
 
     mdt.fh.backup(topfile)
     atm_grp.write(topfile)
@@ -1073,37 +1105,48 @@ def unwrap_trj(topfile, trjfile, universe, atm_grp, end=-1,
     with mda.Writer(trjfile, atm_grp.n_atoms) as w:
         w.write(atm_grp)
         for ts in universe.trajectory[1:end]:
-            if (verbose and
-                (ts.frame % 10**(len(str(ts.frame)) - 1) == 0 or
-                 ts.frame == last_frame)):
-                print("  Frame   {:12d}".format(ts.frame), flush=True)
-                print("    Step: {:>12}    Time: {:>12} (ps)"
-                      .format(ts.data['step'], ts.data['time']),
-                      flush=True)
-                print("    Elapsed time:             {}"
-                      .format(datetime.now() - timer),
-                      flush=True)
-                print("    Current memory usage: {:18.2f} MiB"
-                      .format(proc.memory_info().rss / 2**20),
-                      flush=True)
+            if verbose and (
+                ts.frame % 10 ** (len(str(ts.frame)) - 1) == 0
+                or ts.frame == last_frame
+            ):
+                print("  Frame   {:12d}".format(ts.frame))
+                print(
+                    "    Step: {:>12}    Time: {:>12} (ps)".format(
+                        ts.data["step"], ts.data["time"]
+                    ),
+                )
+                print(
+                    "    Elapsed time:             {}".format(
+                        datetime.now() - timer
+                    ),
+                )
+                print(
+                    "    Current memory usage: {:18.2f} MiB".format(
+                        proc.memory_info().rss / 2**20
+                    ),
+                )
                 timer = datetime.now()
             if debug:
                 mdt.check.box(box=ts.dimensions, with_angles=True, dim=1)
             if make_whole:
-                mdt.box.make_whole(ag=atm_grp,
-                                   compound=compound,
-                                   reference=reference,
-                                   inplace=True,
-                                   debug=debug)
-            mdt.box.unwrap(atm_grp=atm_grp,
-                           coord_unwrapped_prev=coord_unwrapped,
-                           displacement=displacement,
-                           inplace=True,
-                           debug=debug)
+                mdt.box.make_whole(
+                    ag=atm_grp,
+                    compound=compound,
+                    reference=reference,
+                    inplace=True,
+                    debug=debug,
+                )
+            mdt.box.unwrap(
+                atm_grp=atm_grp,
+                coord_unwrapped_prev=coord_unwrapped,
+                displacement=displacement,
+                inplace=True,
+                debug=debug,
+            )
             atm_grp.positions = coord_unwrapped
             w.write(atm_grp)
 
     if verbose:
-        print(flush=True)
-        print("  Created {}".format(topfile), flush=True)
-        print("  Created {}".format(trjfile), flush=True)
+        print()
+        print("  Created {}".format(topfile))
+        print("  Created {}".format(trjfile))

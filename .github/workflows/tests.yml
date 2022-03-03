@@ -92,6 +92,7 @@ jobs:
         docs/source/conf.py \
         mdtools/__init__.py \
         mdtools/_metadata.py \
+        mdtools/box.py \
         mdtools/file_handler.py \
         mdtools/numpy_helper_functions.py \
         mdtools/plot.py \
