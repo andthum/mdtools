@@ -45,7 +45,7 @@ def wcenter_pos(
     wrap_pos=False,
     wrap_result=False,
     box=None,
-    mda_backend=None
+    mda_backend=None,
 ):
     r"""
     Calculate the weighted center of an position array.
@@ -61,48 +61,61 @@ def wcenter_pos(
         contains the position of a single particle, the weighted center
         is identical to `pos`.
     weights : None or array_like, optional
-        Array of shape ``(n,)`` containing the weights associated to the
-        particles whose positions are contained in `pos`.  If `weights`
-        is ``None``, then all particles are assumed to have a weight
-        equal to one.
+        Array of shape ``(n,)`` containing the weight of each particle
+        contained in `pos`.  If `weights` is ``None``, all particles are
+        assumed to have a weight equal to one.
     wrap_pos : bool, optional
         If ``True``, wrap all positions in `pos` back to the primary
-        unit cell using :func:`MDAnalysis.lib.distances.apply_PBC`
-        **before** calculating the weigted center.  Note that this
-        likely splits up molecules across periodic boundaries, which is
-        bad for calculating their centers.  If ``True``, `box` must be
-        provided.
+        unit cell using :func:`mdtools.box.wrap_pos` **before**
+        calculating the weigted center.  Note that this likely splits
+        molecules across periodic boundaries, which is undesired when
+        calculating their centers.  If ``True``, `box` must be provided.
     wrap_result : bool, optional
         If ``True``, wrap the calculated center(s) into the primary unit
-        cell using :func:`MDAnalysis.lib.distances.apply_PBC`.  If
-        ``True``, `box` must be provided.
-    box : array_like, optional
-        The unit cell dimensions of the system, which can be orthogonal
-        or triclinic and must be provided in the same format as returned
-        by :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
-        ``[lx, ly, lz, alpha, beta, gamma]``.  Must be provided if
-        `wrap_pos` and/or `wrap_result` is ``True``.  Is ignored
-        otherwise.
+        cell using :func:`mdtools.box.wrap_pos`.  If ``True``, `box`
+        must be provided.
+    box : None or array_like, optional
+        See :func:`mdtools.box.wrap_pos`.  Note that the shape of `pos`
+        is interpreted as ``(k, 3)``, if both `pos` and `box` are
+        2-dimensional.
     mda_backend : {None, 'serial', 'OpenMP'}, optional
-        The backend to parse to
-        :func:`MDAnalysis.lib.distances.apply_PBC`.  If ``None``, it
-        will be set to ``'OpenMP'`` if more than one CPU is available
-        (as determined by :func:`mdtools.run_time_info.get_num_CPUs`) or
-        to ``'serial'`` if only one CPU is available.
+        See :func:`mdtools.box.wrap_pos`.
 
     Returns
     -------
     center : numpy.ndarray
-        The weighted center of all particle positions in `pos`.  If
-        `pos` had shape ``(3,)`` or ``(n, 3)``, `center` will have shape
-        ``(3,)``.  If `pos` had shape ``(k, n, 3)``, `center` will have
-        shape ``(k, 3)`` (one center for each trajectory frame ``k``).
+        The weighted center of all particle positions in `pos` per
+        frame.
+
+        .. list-table:: Shapes
+            :align: left
+            :header-rows: 1
+
+            *   - `pos`
+                - `box`
+                - `center`
+            *   - ``(3,)``
+                - ``(3,)``
+                - ``(3,)``
+            *   - ``(n, 3)``
+                - ``(3,)``
+                - ``(3,)``
+            *   - ``(k, 3)``
+                - ``(k, 3)``
+                - ``(k, 3)``
+            *   - ``(k, n, 3)``
+                - ``(3,)``
+                - ``(k, 3)``
+            *   - ``(k, n, 3)``
+                - ``(k, 3)``
+                - ``(k, 3)``
+
+        ``n`` particles are lumped into one center for each individual
+        frame ``k``.
 
     See Also
     --------
     :func:`numpy.average` : Compute the weighted average
-    :func:`MDAnalysis.lib.distances.apply_PBC` :
-        Move coordinates into the primary unit cell
     :meth:`MDAnalysis.core.groups.AtomGroup.center` :
         Weighted center of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
@@ -131,11 +144,12 @@ def wcenter_pos(
 
     .. math::
 
-        \mathbf{r}_{center} = \frac{1}{\sum_i^n w_i} \
-        \sum_i^n w_i \mathbf{r}_i
+        \mathbf{r}_{center} = \frac{1}{\sum_i^N w_i} \
+        \sum_i^N w_i \mathbf{r}_i
 
     where :math:`r_i` is the position vector of the :math:`i`-th
-    particle and :math:`w_i` is its weight.
+    particle, :math:`w_i` is its weight and :math:`N` is the number of
+    particles.
 
     Examples
     --------
@@ -144,7 +158,7 @@ def wcenter_pos(
     >>> pos = np.array([0, 2, 5])
     >>> mdt.strc.wcenter_pos(pos)
     array([0, 2, 5])
-    >>> mdt.strc.wcenter_pos(pos, weights=np.array([3]))
+    >>> mdt.strc.wcenter_pos(pos, weights=[3])
     array([0, 2, 5])
     >>> box = np.array([2, 2, 2, 90, 90, 90])
     >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
@@ -162,12 +176,26 @@ def wcenter_pos(
     ...                 [1, 0, 1]])
     >>> mdt.strc.wcenter_pos(pos)
     array([0.5, 1. , 3. ])
-    >>> mdt.strc.wcenter_pos(pos, weights=np.array([3, 1]))
+    >>> mdt.strc.wcenter_pos(pos, weights=[3, 1])
     array([0.25, 1.5 , 4.  ])
     >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
     array([0.5, 0. , 1. ], dtype=float32)
     >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
     array([0.5, 1. , 1. ], dtype=float32)
+
+    Shape of `pos` is ``(k, 3)``:
+
+    >>> box = np.array([[2, 2, 2, 90, 90, 90],
+    ...                 [2, 1, 4, 90, 90, 90]])
+    >>> mdt.strc.wcenter_pos(pos, box=box)
+    array([[0, 2, 5],
+    ...    [1, 0, 1]])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([[0., 0., 1.],
+    ...    [1., 0., 1.]], dtype=float32)
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([[0., 0., 1.],
+    ...    [1., 0., 1.]], dtype=float32)
 
     Shape of `pos` is ``(k, n, 3)``:
 
@@ -179,61 +207,64 @@ def wcenter_pos(
     >>> mdt.strc.wcenter_pos(pos)
     array([[0.5, 1. , 3. ],
     ...    [0.5, 1. , 3. ]])
-    >>> mdt.strc.wcenter_pos(pos, weights=np.array([3, 1]))
+    >>> mdt.strc.wcenter_pos(pos, weights=[3, 1])
     array([[0.25, 1.5 , 4.  ],
            [0.75, 0.5 , 2.  ]])
+    >>> box = np.array([2, 2, 2, 90, 90, 90])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([[0.5, 0. , 1. ],
+           [0.5, 0. , 1. ]], dtype=float32)
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([[0.5, 1. , 1. ],
+           [0.5, 1. , 1. ]], dtype=float32)
+    >>> box = np.array([[2, 2, 2, 90, 90, 90],
+    ...                 [2, 1, 4, 90, 90, 90]])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([[0.5, 0. , 1. ],
+    ...    [0.5, 0. , 1. ]], dtype=float32)
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([[0.5, 1. , 1. ],
+    ...    [0.5, 0. , 3. ]], dtype=float32)
     """
     pos = mdt.check.pos_array(pos)
-    if wrap_pos or wrap_result:
-        if box is None:
-            raise ValueError(
-                "'box' must be provided if 'wrap_pos' and/or 'wrap_result' is"
-                " set"
-            )
-        if mda_backend is None:
-            if mdt.rti.get_num_CPUs() > 1:
-                mda_backend = "OpenMP"
-            else:
-                mda_backend = "serial"
+    if box is None and (wrap_pos or wrap_result):
+        raise ValueError(
+            "'box' must be provided if 'wrap_pos' and/or 'wrap_result' is set"
+        )
 
     if wrap_pos:
-        if pos.ndim == 3:
-            # `MDAnalysis.lib.distances.apply_PBC` can only take arrays
-            # of shape (3,) or (n, 3)
-            pos_wrapped = np.full_like(pos, np.nan)
-            for i, pos_frame in enumerate(pos):
-                pos_wrapped[i] = mdadist.apply_PBC(
-                    coords=pos_frame, box=box, backend=mda_backend
-                )
-            pos = pos_wrapped
-        else:
-            pos = mdadist.apply_PBC(coords=pos, box=box, backend=mda_backend)
+        pos = mdt.box.wrap_pos(pos=pos, box=box, mda_backend=mda_backend)
     # The dimension of position arrays can be either 1, 2 or 3 (see
     # `mdtools.check.pos_array`).  If `ndim` is
     #     * 1 (single particle), the center is simply the particle
     #       position.
-    #     * 2 (multiple particles), the center is the average over
-    #       all particle positions (``axis=0``).
+    #     * 2 and box.ndim is 2 (multiple frames, single particles), the
+    #       center is simply the particle position.
+    #     * 2 and box.ndim is 1 (single frame, multiple particles), the
+    #       center is the average over all particle positions
+    #       (``axis=0``).
     #     * 3 (multiple frames), the centers are the averages over
     #       all particle positions in each frame (``axis=1``).
     if pos.ndim == 1:
         center = pos
-    else:
-        center = np.average(pos, axis=pos.ndim-2, weights=weights)
-    if wrap_result:
-        if center.ndim == 3:
-            # `MDAnalysis.lib.distances.apply_PBC` can only take arrays
-            # of shape (3,) or (n, 3)
-            center_wrapped = np.full_like(center, np.nan)
-            for i, center_frame in enumerate(center):
-                center_wrapped[i] = mdadist.apply_PBC(
-                    coords=center_frame, box=box, backend=mda_backend
-                )
-            center = center_wrapped
-        else:
-            center = mdadist.apply_PBC(
-                coords=center, box=box, backend=mda_backend
+    elif box is not None and box.ndim == 2 and pos.ndim == 2:
+        if pos.shape[0] != box.shape[0]:
+            raise ValueError(
+                "If 'box' has 2 dimensions, pos.shape[0] ({}) must"
+                " match box.shape[0] ({})".format(pos.shape[0], box.shape[0])
             )
+        center = pos
+    elif pos.ndim in (2, 3):
+        center = np.average(pos, axis=pos.ndim - 2, weights=weights)
+    else:
+        # This else clause should never be entered, because this error
+        # should already be raised by `mdt.check.pos_array(pos)`.
+        raise ValueError(
+            "'pos' has shape {} but must have shape (3,) or (n, 3) or"
+            " (k, n, 3).  This should not have happened".format(pos.shape)
+        )
+    if wrap_result:
+        center = mdt.box.wrap_pos(pos=center, box=box, mda_backend=mda_backend)
     return center
 
 
