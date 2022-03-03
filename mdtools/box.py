@@ -25,6 +25,7 @@ from datetime import datetime
 import psutil
 import numpy as np
 import MDAnalysis as mda
+import MDAnalysis.lib.distances as mdadist
 import MDAnalysis.lib.mdamath as mdamath
 # Local application/library specific imports
 import mdtools as mdt
@@ -173,11 +174,153 @@ def diagonal(box, dtype=None, debug=False):
     return np.sqrt()
 
 
+def wrap_pos(pos, box, mda_backend=None):
+    """
+    Shift all particle positions into the primary unit cell.
+
+    Parameters
+    ----------
+    pos : array_like
+        The position array which to move into the primary unit cell.
+        Must be either of shape ``(3,)``, ``(n, 3)`` or ``(k, n, 3)``,
+        where ``n`` is the number of particles and ``k`` is the number
+        of frames.
+    box : array_like, optional
+        The unit cell dimensions of the system, which can be orthogonal
+        or triclinic and must be provided in the same format as returned
+        by :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
+        ``[lx, ly, lz, alpha, beta, gamma]``.  `box` can also be an
+        array of boxes of shape ``(k, 6)`` (one box for each frame).  In
+        this case a 2-dimensional position array is interpreted to
+        contain one position per frame instead of ``n`` positions for
+        one frame.
+    mda_backend : {None, 'serial', 'OpenMP'}, optional
+        The backend to parse to
+        :func:`MDAnalysis.lib.distances.apply_PBC`.  If ``None``, it
+        will be set to ``'OpenMP'`` if more than one CPU is available
+        (as determined by :func:`mdtools.run_time_info.get_num_CPUs`) or
+        to ``'serial'`` if only one CPU is available.
+
+    Returns
+    -------
+    pos_wrapped : numpy.ndarray
+        Array of the same shape as `pos` containing the positions that
+        all lie within the primary unit cell as defined by `box`.
+
+    See Also
+    --------
+    :func:`MDAnalysis.lib.distances.apply_PBC` :
+        Moves coordinates into the primary unit cell
+    :func:`mdtools.box.wrap` :
+        Shift compounds of an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup` back into the primary
+        unit cell
+
+    Notes
+    -----
+    This function uses :func:`MDAnalysis.lib.distances.apply_PBC` to
+    wrap the input positions into the primary unit cell.  But in
+    contrast to :func:`MDAnalysis.lib.distances.apply_PBC`, this
+    function also accepts position arrays of shape ``(k, n, 3)`` and box
+    arrays of shape ``(k, 6)``.
+
+    Examples
+    --------
+    >>> pos = np.array([0, 3, 6])
+    >>> mdt.box.wrap_pos(pos, [4, 5, 6, 90, 90, 90])
+    array([0., 3., 0.], dtype=float32)
+
+    >>> pos = np.array([[0, 3, 6],
+    ...                 [1, 5, 7]])
+    >>> mdt.box.wrap_pos(pos, [4, 5, 6, 90, 90, 90])
+    array([[0., 3., 0.],
+           [1., 0., 1.]], dtype=float32)
+    >>> box = np.array([[4, 5, 6, 90, 90, 90],
+    ...                 [6, 5, 4, 90, 90, 90]])
+    >>> mdt.box.wrap_pos(pos, box)
+    array([[0., 3., 0.],
+           [1., 0., 3.]], dtype=float32)
+
+    >>> pos = np.array([[[0, 3, 6],
+    ...                  [1, 5, 7]],
+    ...
+    ...                 [[2, 6, 10],
+    ...                  [3, 7, 11]]])
+    >>> mdt.box.wrap_pos(pos, [4, 5, 6, 90, 90, 90])
+    array([[[0., 3., 0.],
+            [1., 0., 1.]],
+    <BLANKLINE>
+           [[2., 1., 4.],
+            [3., 2., 5.]]], dtype=float32)
+    >>> mdt.box.wrap_pos(pos, box)
+    array([[[0., 3., 0.],
+            [1., 0., 1.]],
+    <BLANKLINE>
+           [[2., 1., 2.],
+            [3., 2., 3.]]], dtype=float32)
+    """
+    pos = mdt.check.pos_array(pos)
+    box = mdt.check.box(box)
+    if mda_backend is None:
+        if mdt.rti.get_num_CPUs() > 1:
+            mda_backend = "OpenMP"
+        else:
+            mda_backend = "serial"
+
+    if box.ndim == 1:
+        if pos.ndim in (1, 2):
+            pos_wrapped = mdadist.apply_PBC(
+                coords=pos, box=box, backend=mda_backend
+            )
+        elif pos.ndim == 3:
+            # `MDAnalysis.lib.distances.apply_PBC` returns array of
+            # dtype numpy.float32
+            pos_wrapped = np.full_like(pos, np.nan, dtype=np.float32)
+            for i, pos_frame in enumerate(pos):
+                pos_wrapped[i] = mdadist.apply_PBC(
+                    coords=pos_frame, box=box, backend=mda_backend
+                )
+        else:
+            # This else clause should never be entered, because this
+            # error should already be raised by
+            # `mdt.check.pos_array(pos)`.
+            raise ValueError(
+                "'pos' has shape {} but must have shape (3,) or (n, 3) or"
+                " (k, n, 3).  This should not have happened".format(pos.shape)
+            )
+    elif box.ndim == 2:
+        if pos.ndim not in (2, 3):
+            raise ValueError(
+                "If 'box' has shape (k, 6), 'pos' must have shape (k, n, 3) or"
+                " (k, 3), but has shape {}".format(pos.shape)
+            )
+        if pos.shape[0] != box.shape[0]:
+            raise ValueError(
+                "If 'box' has 2 dimensions, pos.shape[0] ({}) must"
+                " match box.shape[0] ({})".format(pos.shape[0], box.shape[0])
+            )
+        # `MDAnalysis.lib.distances.apply_PBC` returns array of dtype
+        # numpy.float32
+        pos_wrapped = np.full_like(pos, np.nan, dtype=np.float32)
+        for i, pos_frame in enumerate(pos):
+            pos_wrapped[i] = mdadist.apply_PBC(
+                coords=pos_frame, box=box[i], backend=mda_backend
+            )
+    else:
+        # This else clause should never be entered, because this error
+        # should already be raised by `mdt.check.box(box)`
+        raise ValueError(
+            "'box' has shape {} but must have shape (3,) or (k, 3).  This"
+            " should not have happened".format(box.shape)
+        )
+    return pos_wrapped
+
+
 def wrap(
         ag, compound='atoms', center='cog', box=None, inplace=True,
         debug=False):
     """
-    Shift compounds of a MDAnalysis
+    Shift compounds of an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` back into the primary
     unit cell.
 
