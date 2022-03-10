@@ -238,13 +238,13 @@ def wcenter_pos(
     # `mdtools.check.pos_array`).  If `ndim` is
     #     * 1 (single particle), the center is simply the particle
     #       position.
-    #     * 2 and box.ndim is 2 (multiple frames, single particles), the
-    #       center is simply the particle position.
-    #     * 2 and box.ndim is 1 (single frame, multiple particles), the
-    #       center is the average over all particle positions
+    #     * 2 and ``box.ndim`` is 2 (multiple frames, single particles),
+    #       the center is simply the particle position in each frame.
+    #     * 2 and ``box.ndim`` is 1 (single frame, multiple particles),
+    #       the center is the average over all particle positions
     #       (``axis=0``).
-    #     * 3 (multiple frames), the centers are the averages over
-    #       all particle positions in each frame (``axis=1``).
+    #     * 3 (multiple frames), the center is the average over all
+    #       particle positions in each frame (``axis=1``).
     if pos.ndim == 1:
         center = pos
     elif box is not None and box.ndim == 2 and pos.ndim == 2:
