@@ -189,13 +189,13 @@ def wcenter_pos(
     ...                 [2, 1, 4, 90, 90, 90]])
     >>> mdt.strc.wcenter_pos(pos, box=box)
     array([[0, 2, 5],
-    ...    [1, 0, 1]])
+           [1, 0, 1]])
     >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
     array([[0., 0., 1.],
-    ...    [1., 0., 1.]], dtype=float32)
+           [1., 0., 1.]], dtype=float32)
     >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
     array([[0., 0., 1.],
-    ...    [1., 0., 1.]], dtype=float32)
+           [1., 0., 1.]], dtype=float32)
 
     Shape of `pos` is ``(k, n, 3)``:
 
@@ -206,7 +206,7 @@ def wcenter_pos(
     ...                  [0, 2, 5]]])
     >>> mdt.strc.wcenter_pos(pos)
     array([[0.5, 1. , 3. ],
-    ...    [0.5, 1. , 3. ]])
+           [0.5, 1. , 3. ]])
     >>> mdt.strc.wcenter_pos(pos, weights=[3, 1])
     array([[0.25, 1.5 , 4.  ],
            [0.75, 0.5 , 2.  ]])
@@ -221,10 +221,10 @@ def wcenter_pos(
     ...                 [2, 1, 4, 90, 90, 90]])
     >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
     array([[0.5, 0. , 1. ],
-    ...    [0.5, 0. , 1. ]], dtype=float32)
+           [0.5, 0. , 1. ]], dtype=float32)
     >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
     array([[0.5, 1. , 1. ],
-    ...    [0.5, 0. , 3. ]], dtype=float32)
+           [0.5, 0. , 3. ]], dtype=float32)
     """
     pos = mdt.check.pos_array(pos)
     if box is None and (wrap_pos or wrap_result):
