@@ -683,15 +683,15 @@ def vdist(pos1, pos2, box=None, out=None):
     ...                  [0, 2, 4]])
     >>> mdt.box.vdist(pos1, pos2)
     array([[-5., -1.,  3.],
-    ...    [ 5.,  1., -3.]])
+           [ 5.,  1., -3.]])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[ 1., -1., -1.],
-    ...    [-1., -1., -1.]])
+           [-1., -1., -1.]])
     >>> box = np.array([[3, 2, 2, 90, 90, 90],
     ...                 [2, 3, 4, 90, 90, 90]])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[ 1., -1., -1.],
-    ...    [-1.,  1.,  1.]])
+           [-1.,  1.,  1.]])
 
     Shape of `pos1` and `pos2` is ``(k, n, 3)``:
 
@@ -734,16 +734,16 @@ def vdist(pos1, pos2, box=None, out=None):
     ...                  [0, 2, 4]])
     >>> mdt.box.vdist(pos1, pos2)
     array([[-5., -1.,  3.],
-    ...    [ 0.,  0.,  0.]])
+           [ 0.,  0.,  0.]])
     >>> box = np.array([3, 2, 2, 90, 90, 90])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[ 1., -1., -1.],
-    ...    [ 0.,  0.,  0.]])
+           [ 0.,  0.,  0.]])
     >>> box = np.array([[3, 2, 2, 90, 90, 90],
     ...                 [2, 3, 4, 90, 90, 90]])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[ 1., -1., -1.],
-    ...    [ 0.,  0.,  0.]])
+           [ 0.,  0.,  0.]])
 
     Shape of `pos1` is ``(3,)`` and shape of `pos2` is ``(k, n, 3)``:
 
