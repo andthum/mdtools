@@ -30,6 +30,7 @@ Modules
     :recursive:
     :nosignatures:
 
+    box
     check
     dtrj
     dynamics

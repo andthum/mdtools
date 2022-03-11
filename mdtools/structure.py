@@ -39,6 +39,413 @@ import MDAnalysis.lib.distances as mdadist
 import mdtools as mdt
 
 
+def wcenter_pos(
+    pos,
+    weights=None,
+    wrap_pos=False,
+    wrap_result=False,
+    box=None,
+    mda_backend=None,
+):
+    r"""
+    Calculate the weighted center of an position array.
+
+    Parameters
+    ----------
+    pos : array_like
+        The position array for which to calculate the weighted center.
+        Must be either of shape ``(3,)``, ``(n, 3)`` or ``(k, n, 3)``,
+        where ``n`` is the number of particles and ``k`` is the number
+        of frames.  If `pos` has shape ``(k, n, 3)``, the center for
+        each frame is computed.  If `pos` has shape ``(3,)``, i.e. `pos`
+        contains the position of a single particle, the weighted center
+        is identical to `pos`.
+    weights : None or array_like, optional
+        Array of shape ``(n,)`` containing the weight of each particle
+        contained in `pos`.  If `weights` is ``None``, all particles are
+        assumed to have a weight equal to one.
+    wrap_pos : bool, optional
+        If ``True``, wrap all positions in `pos` back to the primary
+        unit cell using :func:`mdtools.box.wrap_pos` **before**
+        calculating the weigted center.  Note that this likely splits
+        molecules across periodic boundaries, which is undesired when
+        calculating their centers.  If ``True``, `box` must be provided.
+    wrap_result : bool, optional
+        If ``True``, wrap the calculated center(s) into the primary unit
+        cell using :func:`mdtools.box.wrap_pos`.  If ``True``, `box`
+        must be provided.
+    box : None or array_like, optional
+        See :func:`mdtools.box.wrap_pos`.  Note that the shape of `pos`
+        is interpreted as ``(k, 3)``, if both `pos` and `box` are
+        2-dimensional.
+    mda_backend : {None, 'serial', 'OpenMP'}, optional
+        See :func:`mdtools.box.wrap_pos`.
+
+    Returns
+    -------
+    center : numpy.ndarray
+        The weighted center of all particle positions in `pos` per
+        frame.
+
+        .. list-table:: Shapes
+            :align: left
+            :header-rows: 1
+
+            *   - `pos`
+                - `box`
+                - `center`
+            *   - ``(3,)``
+                - ``(3,)``
+                - ``(3,)``
+            *   - ``(n, 3)``
+                - ``(3,)``
+                - ``(3,)``
+            *   - ``(k, 3)``
+                - ``(k, 3)``
+                - ``(k, 3)``
+            *   - ``(k, n, 3)``
+                - ``(3,)``
+                - ``(k, 3)``
+            *   - ``(k, n, 3)``
+                - ``(k, 3)``
+                - ``(k, 3)``
+
+        ``n`` particles are lumped into one center for each individual
+        frame ``k``.
+
+    See Also
+    --------
+    :func:`numpy.average` : Compute the weighted average
+    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
+        Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter` :
+        Weighted center of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.coc` :
+        Center of charge of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.cog` :
+        Center of geometry of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.com` :
+        Center of mass of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+
+    Notes
+    -----
+    The weighted center is calculated accroding to
+
+    .. math::
+
+        \mathbf{r}_{center} = \frac{1}{\sum_i^N w_i} \
+        \sum_i^N w_i \mathbf{r}_i
+
+    where :math:`r_i` is the position vector of the :math:`i`-th
+    particle, :math:`w_i` is its weight and :math:`N` is the number of
+    particles.
+
+    Examples
+    --------
+    Shape of `pos` is ``(3,)``:
+
+    >>> pos = np.array([0, 2, 5])
+    >>> mdt.strc.wcenter_pos(pos)
+    array([0, 2, 5])
+    >>> mdt.strc.wcenter_pos(pos, weights=[3])
+    array([0, 2, 5])
+    >>> box = np.array([2, 2, 2, 90, 90, 90])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([0., 0., 1.], dtype=float32)
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([0., 0., 1.], dtype=float32)
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: ...
+
+    Shape of `pos` is ``(n, 3)``:
+
+    >>> pos = np.array([[0, 2, 5],
+    ...                 [1, 0, 1]])
+    >>> mdt.strc.wcenter_pos(pos)
+    array([0.5, 1. , 3. ])
+    >>> mdt.strc.wcenter_pos(pos, weights=[3, 1])
+    array([0.25, 1.5 , 4.  ])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([0.5, 0. , 1. ], dtype=float32)
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([0.5, 1. , 1. ], dtype=float32)
+
+    Shape of `pos` is ``(k, 3)``:
+
+    >>> box = np.array([[2, 2, 2, 90, 90, 90],
+    ...                 [2, 1, 4, 90, 90, 90]])
+    >>> mdt.strc.wcenter_pos(pos, box=box)
+    array([[0, 2, 5],
+           [1, 0, 1]])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([[0., 0., 1.],
+           [1., 0., 1.]], dtype=float32)
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([[0., 0., 1.],
+           [1., 0., 1.]], dtype=float32)
+
+    Shape of `pos` is ``(k, n, 3)``:
+
+    >>> pos = np.array([[[0, 2, 5],
+    ...                  [1, 0, 1]],
+    ...
+    ...                 [[1, 0, 1],
+    ...                  [0, 2, 5]]])
+    >>> mdt.strc.wcenter_pos(pos)
+    array([[0.5, 1. , 3. ],
+           [0.5, 1. , 3. ]])
+    >>> mdt.strc.wcenter_pos(pos, weights=[3, 1])
+    array([[0.25, 1.5 , 4.  ],
+           [0.75, 0.5 , 2.  ]])
+    >>> box = np.array([2, 2, 2, 90, 90, 90])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([[0.5, 0. , 1. ],
+           [0.5, 0. , 1. ]], dtype=float32)
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([[0.5, 1. , 1. ],
+           [0.5, 1. , 1. ]], dtype=float32)
+    >>> box = np.array([[2, 2, 2, 90, 90, 90],
+    ...                 [2, 1, 4, 90, 90, 90]])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([[0.5, 0. , 1. ],
+           [0.5, 0. , 1. ]], dtype=float32)
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([[0.5, 1. , 1. ],
+           [0.5, 0. , 3. ]], dtype=float32)
+    """
+    pos = mdt.check.pos_array(pos)
+    if box is None and (wrap_pos or wrap_result):
+        raise ValueError(
+            "'box' must be provided if 'wrap_pos' and/or 'wrap_result' is set"
+        )
+
+    if wrap_pos:
+        pos = mdt.box.wrap_pos(pos=pos, box=box, mda_backend=mda_backend)
+    # The dimension of position arrays can be either 1, 2 or 3 (see
+    # `mdtools.check.pos_array`).  If `ndim` is
+    #     * 1 (single particle), the center is simply the particle
+    #       position.
+    #     * 2 and ``box.ndim`` is 2 (multiple frames, single particles),
+    #       the center is simply the particle position in each frame.
+    #     * 2 and ``box.ndim`` is 1 (single frame, multiple particles),
+    #       the center is the average over all particle positions
+    #       (``axis=0``).
+    #     * 3 (multiple frames), the center is the average over all
+    #       particle positions in each frame (``axis=1``).
+    if pos.ndim == 1:
+        center = pos
+    elif box is not None and box.ndim == 2 and pos.ndim == 2:
+        if pos.shape[0] != box.shape[0]:
+            raise ValueError(
+                "If 'box' has 2 dimensions, pos.shape[0] ({}) must"
+                " match box.shape[0] ({})".format(pos.shape[0], box.shape[0])
+            )
+        center = pos
+    elif pos.ndim in (2, 3):
+        center = np.average(pos, axis=pos.ndim - 2, weights=weights)
+    else:
+        # This else clause should never be entered, because this error
+        # should already be raised by `mdt.check.pos_array(pos)`.
+        raise ValueError(
+            "'pos' has shape {} but must have shape (3,) or (n, 3) or"
+            " (k, n, 3).  This should not have happened".format(pos.shape)
+        )
+    if wrap_result:
+        center = mdt.box.wrap_pos(pos=center, box=box, mda_backend=mda_backend)
+    return center
+
+
+def wcenter(
+    ag, weights=None, pbc=False, cmp='group', make_whole=False, debug=False
+):
+    """
+    Calculate the weighted center of (compounds of) an MDAnalysis
+    :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
+        which to calculate the weighted center.
+    weights : array_like or None, optional
+        Weights to be used, given as a 1d array containing the weights
+        for each :class:`~MDAnalysis.core.groups.Atom` in `ag`.  Weights
+        are mapped to :class:`Atoms <MDAnalysis.core.groups.Atom>` by
+        the order they appear in `ag`.  Setting `weights` to ``None`` is
+        equivalent to passing identical weights for all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` and
+        therefore this is equivalent to calculating the center of
+        geometry.  If the weights of a compound sum up to zero, the
+        coordinates of that compound's weighted center will be ``nan``.
+    pbc : bool, optional
+        If ``True`` and `cmp` is ``'group'``, move all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` to the
+        primary unit cell **before** calculating the weighted center.
+        If ``True`` and `cmp` is not ``'group'``, the weighted center of
+        each compound will be calculated without moving any
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` to keep the
+        compounds intact (if they were intact before).  Instead, the
+        resulting position vectors will be moved to the primary unit
+        cell **after** calculating the weighted center.
+    cmp : {'group', 'segments', 'residues', 'molecules', 'fragments', \
+        'atoms'}, optional
+        The compounds of `ag` for which to calculate the weighted
+        center.  If ``'group'``, the weighted center of all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` will be
+        returned as a single position vector.  If ``'atoms'``, simply
+        the positions of all atoms in `ag` will be returned (2d array).
+        Else, the weighted center of each
+        :class:`~MDAnalysis.core.groups.Segment`,
+        :class:`~MDAnalysis.core.groups.Residue`, molecule, or
+        :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>`
+        contained in `ag` will be returned as an array of position
+        vectors, i.e. a 2d array.  Refer to the MDAnalysis' user guide
+        for an |explanation_of_these_terms|.  Note that in any case,
+        also if `cmp` is e.g. ``'residues'``, only the
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
+        are taken into account, even if the compound might comprise
+        additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
+        not contained in `ag`.
+    make_whole : bool, optional
+        If ``True``, compounds whose bonds are split across periodic
+        boundaries are made whole before calculating their center.  Note
+        that all :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag`
+        are wrapped back into the primary unit cell before making
+        compounds whole to ensure that the algorithm is working
+        properly.  This means that making compounds whole in an
+        unwrapped trajectory will lead to a wrapped trajectory with
+        whole compounds (some
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie outside the
+        primary unit cell, but each compound's center will lie inside
+        the primary unit cell).  Note that `make_whole` has no effect if
+        `cmp` is set to ``'atoms'``.
+    debug : bool, optional
+        If ``True``, run in debug mode.
+
+    Returns
+    -------
+    centers : numpy.ndarray
+        Position of the weighted center of each compound in `ag`.  If
+        `cmp` was set to ``'group'``, the output will be a single
+        position vector of shape ``(3,)``.  Else, the output will be a
+        2d array of shape ``(n, 3)`` where ``n`` is the number of
+        compounds in `ag`.
+
+    Raises
+    ------
+    RuntimeWarning :
+        If `debug` is ``True`` and the weighted center of any compound
+        is ``nan``.
+
+    See Also
+    --------
+    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
+        Weighted center of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
+        Center of geometry of (compounds of) the group
+    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
+        Center of mass of (compounds of) the group
+    :func:`mdtools.structure.center` :
+        Different types of centers of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
+    :func:`mdtools.structure.coc` :
+        Center of charge of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.cog` :
+        Center of geometry of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.com` :
+        Center of mass of (compounds of) an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+
+    Notes
+    -----
+    This function uses the
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` method of the input
+    :class:`~MDAnalysis.core.groups.AtomGroup` to calculate the weighted
+    center.
+
+    .. important::
+
+        If the weights of a compound sum up to zero, the coordinates of
+        that compound's weighted center will be ``nan``!  If `debug` is
+        set to ``True``, a warning will be raised if any compound's
+        weighted center is ``nan``.
+
+    If `make_whole` is ``True``, all
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
+    back into the primary unit cell using :func:`mdtools.box.wrap`
+    before calling
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` with the option
+    `unwrap` set to ``True``.  This is done to ensure that the unwrap
+    algorithm (better called "make whole" algorithm) of
+    :meth:`~MDAnalysis.core.groups.AtomGroup.center` is working
+    properly.  This means that making compounds whole in an unwrapped
+    trajectory will lead to a wrapped trajectory with whole compounds
+    (some :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie outside
+    the primary unit cell, but each compound's center will lie inside
+    the primary unit cell).  `make_whole` has no effect if `cmp` is set
+    to ``'atoms'``.
+
+    .. todo::
+
+        Check if it is really necessary to wrap all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` back into the
+        primary unit cell before calling
+        :meth:`~MDAnalysis.core.groups.AtomGroup.center` with `unwrap`
+        set to ``True``.  The currently done back-wrapping is a serious
+        problem, because it implies an inplace change of the
+        :class:`~MDAnalysis.core.groups.Atom` coordinates.
+
+    """
+    if cmp == 'atoms':
+        if pbc:
+            centers = mdt.box.wrap(
+                ag=ag,
+                compound=cmp,
+                center='cog',  # Does not rely on masses
+                inplace=False,
+                debug=debug,
+            )
+        else:
+            centers = ag.positions
+        debug_info = "Some of your atom positions might be NaN"
+    else:
+        if make_whole:
+            mdt.box.wrap(
+                ag=ag,
+                compound='atoms',
+                center='cog',  # Does not rely on masses
+                inplace=True,
+                debug=debug,
+            )
+        centers = ag.center(
+            weights=weights, pbc=pbc, compound=cmp, unwrap=make_whole,
+        )
+        debug_info = "Probably, the weights of this compound sum up to zero"
+    if debug and np.any(np.isnan(centers)):
+        warnings.warn(
+            "At least one compound's weighted center is NaN.  " + debug_info,
+            RuntimeWarning
+        )
+    return centers
+
+
 def center(
     ag, center='cog', pbc=False, cmp='group', make_whole=False, debug=False
 ):
@@ -131,6 +538,8 @@ def center(
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
     :func:`mdtools.structure.coc` :
         Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -207,182 +616,6 @@ def center(
         )
 
 
-def wcenter(
-    ag, weights=None, pbc=False, cmp='group', make_whole=False, debug=False
-):
-    """
-    Calculate the weighted center of (compounds of) an MDAnalysis
-    :class:`~MDAnalysis.core.groups.AtomGroup`.
-
-    Parameters
-    ----------
-    ag : MDAnalysis.core.groups.AtomGroup
-        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
-        which to calculate the weighted center.
-    weights : array_like or None
-        Weights to be used, given as a 1d array containing the weights
-        for each :class:`~MDAnalysis.core.groups.Atom` in `ag`.  Weights
-        are mapped to :class:`Atoms <MDAnalysis.core.groups.Atom>` by
-        the order they appear in `ag`.  Setting `weights` to ``None`` is
-        equivalent to passing identical weights for all
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` and
-        therefore this is equivalent to calculating the center of
-        geometry.  If the weights of a compound sum up to zero, the
-        coordinates of that compound's weighted center will be ``nan``.
-    pbc : bool, optional
-        If ``True`` and `cmp` is ``'group'``, move all
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` to the
-        primary unit cell **before** calculating the weighted center.
-        If ``True`` and `cmp` is not ``'group'``, the weighted center of
-        each compound will be calculated without moving any
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` to keep the
-        compounds intact (if they were intact before).  Instead, the
-        resulting position vectors will be moved to the primary unit
-        cell **after** calculating the weighted center.
-    cmp : {'group', 'segments', 'residues', 'molecules', 'fragments', \
-        'atoms'}, optional
-        The compounds of `ag` for which to calculate the weighted
-        center.  If ``'group'``, the weighted center of all
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` will be
-        returned as a single position vector.  If ``'atoms'``, simply
-        the positions of all atoms in `ag` will be returned (2d array).
-        Else, the weighted center of each
-        :class:`~MDAnalysis.core.groups.Segment`,
-        :class:`~MDAnalysis.core.groups.Residue`, molecule, or
-        :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>`
-        contained in `ag` will be returned as an array of position
-        vectors, i.e. a 2d array.  Refer to the MDAnalysis' user guide
-        for an |explanation_of_these_terms|.  Note that in any case,
-        also if `cmp` is e.g. ``'residues'``, only the
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
-        are taken into account, even if the compound might comprise
-        additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
-        not contained in `ag`.
-    make_whole : bool, optional
-        If ``True``, compounds whose bonds are split across periodic
-        boundaries are made whole before calculating their center.  Note
-        that all :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag`
-        are wrapped back into the primary unit cell before making
-        compounds whole to ensure that the algorithm is working
-        properly.  This means that making compounds whole in an
-        unwrapped trajectory will lead to a wrapped trajectory with
-        whole compounds (some
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie outside the
-        primary unit cell, but each compound's center will lie inside
-        the primary unit cell).  Note that `make_whole` has no effect if
-        `cmp` is set to ``'atoms'``.
-    debug : bool, optional
-        If ``True``, run in debug mode.
-
-    Returns
-    -------
-    centers : numpy.ndarray
-        Position of the weighted center of each compound in `ag`.  If
-        `cmp` was set to ``'group'``, the output will be a single
-        position vector of shape ``(3,)``.  Else, the output will be a
-        2d array of shape ``(n, 3)`` where ``n`` is the number of
-        compounds in `ag`.
-
-    Raises
-    ------
-    RuntimeWarning :
-        If `debug` is ``True`` and the weighted center of any compound
-        is ``nan``.
-
-    See Also
-    --------
-    :meth:`MDAnalysis.core.groups.AtomGroup.center` :
-        Weighted center of (compounds of) the group
-    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
-        Center of geometry of (compounds of) the group
-    :meth:`MDAnalysis.core.groups.AtomGroup.center_of_mass` :
-        Center of mass of (compounds of) the group
-    :func:`mdtools.structure.center` :
-        Different types of centers of (compounds of) an MDAnalysis
-        :class:`~MDAnalysis.core.groups.AtomGroup`
-    :func:`mdtools.structure.coc` :
-        Center of charge of (compounds of) an MDAnalysis
-        :class:`~MDAnalysis.core.groups.AtomGroup`
-    :func:`mdtools.structure.cog` :
-        Center of geometry of (compounds of) an MDAnalysis
-        :class:`~MDAnalysis.core.groups.AtomGroup`
-    :func:`mdtools.structure.com` :
-        Center of mass of (compounds of) an MDAnalysis
-        :class:`~MDAnalysis.core.groups.AtomGroup`
-
-    Notes
-    -----
-    This function uses the
-    :meth:`~MDAnalysis.core.groups.AtomGroup.center` method of the input
-    :class:`~MDAnalysis.core.groups.AtomGroup` to calculate the weighted
-    center.
-
-    .. important::
-
-        If the weights of a compound sum up to zero, the coordinates of
-        that compound's weighted center will be ``nan``!  If `debug` is
-        set to ``True``, a warning will be raised if any compound's
-        weighted center is ``nan``.
-
-    If `make_whole` is ``True``, all
-    :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
-    back into the primary unit cell using :func:`mdtools.box.wrap`
-    before calling
-    :meth:`~MDAnalysis.core.groups.AtomGroup.center` with the option
-    `unwrap` set to ``True``.  This is done to ensure that the unwrap
-    algorithm (better called "make whole" algorithm) of
-    :meth:`~MDAnalysis.core.groups.AtomGroup.center` is working
-    properly.  This means that making compounds whole in an unwrapped
-    trajectory will lead to a wrapped trajectory with whole compounds
-    (some :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie outside
-    the primary unit cell, but each compound's center will lie inside
-    the primary unit cell).  `make_whole` has no effect if `cmp` is set
-    to ``'atoms'``.
-
-    .. todo::
-
-        Check if it is really necessary to wrap all
-        :class:`Atoms <MDAnalysis.core.groups.Atom>` back into the
-        primary unit cell before calling
-        :meth:`~MDAnalysis.core.groups.AtomGroup.center` with `unwrap`
-        set to ``True``.  The currently done back-wrapping is a serious
-        problem, because it implies an inplace change of the
-        :class:`~MDAnalysis.core.groups.Atom` coordinates.
-
-    """
-    if cmp == 'atoms':
-        if pbc:
-            centers = mdt.box.wrap(
-                ag=ag,
-                compound=cmp,
-                center='cog',  # Does not rely on masses
-                inplace=False,
-                debug=debug,
-            )
-        else:
-            centers = ag.positions
-        debug_info = "Some of your atom positions might be NaN"
-    else:
-        if make_whole:
-            mdt.box.wrap(
-                ag=ag,
-                compound='atoms',
-                center='cog',  # Does not rely on masses
-                inplace=True,
-                debug=debug,
-            )
-        centers = ag.center(
-            weights=weights, pbc=pbc, compound=cmp, unwrap=make_whole,
-        )
-        debug_info = "Probably, the weights of this compound sum up to zero"
-    if debug and np.any(np.isnan(centers)):
-        warnings.warn(
-            "At least one compound's weighted center is NaN.  " + debug_info,
-            RuntimeWarning
-        )
-    return centers
-
-
 def coc(ag, pbc=False, cmp='group', make_whole=False, debug=False):
     """
     Calculate the center of charge of (compounds of) an MDAnalysis
@@ -432,6 +665,8 @@ def coc(ag, pbc=False, cmp='group', make_whole=False, debug=False):
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
     :func:`mdtools.structure.cog` :
         Center of geometry of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -513,6 +748,8 @@ def cog(ag, pbc=False, cmp='group', make_whole=False, debug=False):
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
     :func:`mdtools.structure.coc` :
         Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -619,6 +856,8 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
     :func:`mdtools.structure.wcenter` :
         Weighted center of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
+    :func:`mdtools.structure.wcenter_pos` :
+        Calculate the weighted center of a position array
     :func:`mdtools.structure.coc` :
         Center of charge of (compounds of) an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup`
@@ -3552,3 +3791,398 @@ def contact_hists(
             hist_refcmp_same_selcmp,
             hist_refcmp_selcmp_tot,
             hist_refcmp_selcmp_pair)
+
+
+def rmsd(
+    refpos,
+    selpos,
+    weights=None,
+    center=False,
+    inplace=False,
+    xyz=False,
+    box=None,
+):
+    r"""
+    Calculate the Root Mean Square Deviation (RMSD) between two sets of
+    positions.
+
+    .. todo::
+
+        Implement a "superposition" functionality like in
+        :func:`MDAnalysis.analysis.rms.rmsd`.
+
+    Parameters
+    ----------
+    refpos, selpos : array_like
+        Reference and candidate set of positions.  Position arrays must
+        be of shape ``(3,)``, ``(n, 3)`` or ``(k, n, 3)`` where ``n`` is
+        the number of particles and ``k`` is the number of frames.
+        `refpos` and `selpos` must contain the same number of particles
+        ``n``, but can have different numbers of frames ``k``.  If
+        `refpos` and `selpos` do not have the same shape, they must be
+        broadcastable to a common shape (which becomes the shape of the
+        output).  The user is responsible to provide inputs that result
+        in a physically meaningful broadcasting!
+    weights : None or array_like, optional
+        Array of shape ``(n,)`` containing the weight of each particle
+        contained in the position arrays.  If `weights` is ``None``, all
+        particles are assumed to have a weight equal to one.
+    center : bool, optional
+        If ``True``, shift the `refpos` and `selpos` by their (weighted)
+        center, respectively, before calculating the RMSD.
+    inplace : bool, optional
+        If ``True``, subtract the weighted center from the reference and
+        candidate positions in place (i.e. the input arrays will be
+        changed).  Note that `refpos` and `selpos` must have an
+        appropriate dtype in this case.
+    xyz : bool, optional
+        If ``True``, return the x, y and z component of the RMSD
+        separately instead of summing all components.  Note however,
+        that in this case the square root is not taken, because you
+        cannot extract the square root of each summand individually.
+    box : None or array_like, optional
+        The unit cell dimensions of the system, which must be orthogonal
+        and provided in the same format as returned by
+        :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
+        ``[lx, ly, lz, alpha, beta, gamma]``.  `box` can also be an
+        array of boxes of shape ``(k, 6)``, where ``k`` must match the
+        number of frames in `refpos`.  If given, the minimum image
+        convention is taken into account when calculating the distance
+        between the reference and candidate positions.  Works currently
+        only for orthogonal boxes.
+
+    Raises
+    ------
+    ValueError :
+        If `weights` is not of shape ``(n,)`` or if it sums up to zero.
+
+    See Also
+    --------
+    :class:`MDAnalysis.analysis.rms.RMSD` :
+        Class to perform RMSD analysis on a trajectory
+    :func:`MDAnalysis.analysis.rms.rmsd` :
+        Calculate the RMSD between two coordinate sets
+
+    Notes
+    -----
+    The root mean square deviation is calculated by
+
+    .. math::
+
+        RMSD = \sqrt{\frac{1}{N} \frac{1}{W} \sum_i^N w_i \
+        \left( \mathbf{r}_i - \mathbf{r}_i^{ref} \right)^2}
+
+    where :math:`N` is the number of particles,
+    :math:`w_i` is the weight of the :math:`i`-th particle,
+    :math:`W = \sum_i^N w_i` is the sum of particle weights,
+    :math:`\mathbf{r}_i` are the candidate positions and
+    :math:`\mathbf{r}_i^{ref}` are the reference positions.
+
+    If `xyz` is ``True``, each component of the RMSD is returned
+    individually without taking the square root.  For instance, the
+    :math:`x`-component is
+
+    .. math::
+
+        \langle \Delta x^2 \rangle = \frac{1}{N} \frac{1}{W} \
+        \sum_i^N w_i \left( x_i - x_i^{ref} \right)^2.
+
+    Examples
+    --------
+    Shape of `refpos` and `selpos` is ``(3,)``:
+
+    >>> refpos = np.array([ 3,  4,  5])
+    >>> selpos = np.array([ 1,  7, -1])
+    >>> selpos - refpos
+    array([-2,  3, -6])
+    >>> mdt.strc.rmsd(refpos, selpos)
+    7.0
+    >>> mdt.strc.rmsd(refpos, selpos, xyz=True)
+    array([ 4.,  9., 36.])
+    >>> box = np.array([5, 3, 3, 90, 90, 90])
+    >>> mdt.strc.rmsd(refpos, selpos, xyz=True, box=box)
+    array([4., 0., 0.])
+    >>> mdt.strc.rmsd(refpos, selpos, box=box)
+    2.0
+    >>> mdt.strc.rmsd(refpos, selpos, weights=[3])
+    7.0
+    >>> mdt.strc.rmsd(refpos, selpos, weights=[3], center=True)
+    0.0
+    >>> mdt.strc.rmsd(refpos, selpos, center=True, inplace=True)
+    0.0
+    >>> refpos
+    array([0, 0, 0])
+    >>> selpos
+    array([0, 0, 0])
+
+    Shape of `refpos` and `selpos` is ``(n, 3)``:
+
+    >>> refpos = np.array([[ 3.,  4.,  5.],
+    ...                    [ 1., -1.,  1.]])
+    >>> selpos = np.array([[ 1.,  7., -1.],
+    ...                    [-1.,  0., -1.]])
+    >>> selpos - refpos
+    array([[-2.,  3., -6.],
+           [-2.,  1., -2.]])
+    >>> rmsd = mdt.strc.rmsd(refpos, selpos)
+    >>> rmsd_expected = np.sqrt(0.5 * (49 + 9))
+    >>> np.isclose(rmsd, rmsd_expected, rtol=0)
+    True
+    >>> mdt.strc.rmsd(refpos, selpos, xyz=True)
+    array([ 4.,  5., 20.])
+    >>> mdt.strc.rmsd(refpos, selpos, xyz=True, box=box)
+    array([4. , 0.5, 0.5])
+    >>> weights = np.array([0.575, 0.425])
+    >>> rmsd = mdt.strc.rmsd(refpos, selpos, weights=weights)
+    >>> np.isclose(rmsd, 4, rtol=0)
+    True
+    >>> mdt.strc.rmsd(refpos, selpos, weights=weights, center=True)
+    1.5632498200863483
+    >>> mdt.strc.rmsd(
+    ...     refpos, selpos, xyz=True, center=True, inplace=True
+    ... )
+    array([0., 1., 4.])
+    >>> refpos
+    array([[ 1. ,  2.5,  2. ],
+           [-1. , -2.5, -2. ]])
+    >>> selpos
+    array([[ 1. ,  3.5,  0. ],
+           [-1. , -3.5,  0. ]])
+
+    Shape of `refpos` and `selpos` is ``(k, n, 3)``:
+
+    >>> refpos = np.array([[[ 3.,  4.,  5.],
+    ...                     [ 1., -1.,  1.]],
+    ...
+    ...                    [[ 5.,  0.,  1.],
+    ...                     [ 1.,  2., -3.]]])
+    >>> selpos = np.array([[[ 1.,  7., -1.],
+    ...                     [-1.,  0., -1.]],
+    ...
+    ...                    [[ 3.,  4.,  5.],
+    ...                     [ 1., -1.,  1.]]])
+    >>> selpos - refpos
+    array([[[-2.,  3., -6.],
+            [-2.,  1., -2.]],
+    <BLANKLINE>
+           [[-2.,  4.,  4.],
+            [ 0., -3.,  4.]]])
+    >>> rmsd = mdt.strc.rmsd(refpos, selpos)
+    >>> rmsd_expected = np.sqrt(0.5 * np.array([49 + 9, 36 + 25]))
+    >>> np.allclose(rmsd, rmsd_expected, rtol=0)
+    True
+    >>> mdt.strc.rmsd(refpos, selpos, xyz=True)
+    array([[ 4. ,  5. , 20. ],
+           [ 2. , 12.5, 16. ]])
+    >>> mdt.strc.rmsd(refpos, selpos, xyz=True, box=box)
+    array([[4. , 0.5, 0.5],
+           [2. , 0.5, 1. ]])
+    >>> box = np.array([[5, 3, 3, 90, 90, 90],
+    ...                 [3, 5, 5, 90, 90, 90]])
+    >>> mdt.strc.rmsd(refpos, selpos, xyz=True, box=box)
+    array([[4. , 0.5, 0.5],
+           [0.5, 2.5, 1. ]])
+    >>> rmsd = mdt.strc.rmsd(refpos, selpos, weights=weights)
+    >>> rmsd_expected = np.sqrt([16.    , 15.6625])
+    >>> np.allclose(rmsd, rmsd_expected, rtol=0)
+    True
+    >>> mdt.strc.rmsd(refpos, selpos, weights=weights, center=True)
+    array([1.56324982, 2.54478634])
+    >>> mdt.strc.rmsd(
+    ...    refpos, selpos, xyz=True, center=True, inplace=True
+    ... )
+    array([[ 0.  ,  1.  ,  4.  ],
+           [ 1.  , 12.25,  0.  ]])
+    >>> refpos
+    array([[[ 1. ,  2.5,  2. ],
+            [-1. , -2.5, -2. ]],
+    <BLANKLINE>
+           [[ 2. , -1. ,  2. ],
+            [-2. ,  1. , -2. ]]])
+    >>> selpos
+    array([[[ 1. ,  3.5,  0. ],
+            [-1. , -3.5,  0. ]],
+    <BLANKLINE>
+           [[ 1. ,  2.5,  2. ],
+            [-1. , -2.5, -2. ]]])
+
+    Shape of `refpos` is ``(n, 3)`` and shape of `selpos` is
+    ``(k, n, 3)``:
+
+    >>> refpos = np.array([[ 3.,  4.,  5.],
+    ...                    [ 1., -1.,  1.]])
+    >>> selpos = np.array([[[ 1.,  7., -1.],
+    ...                     [-1.,  0., -1.]],
+    ...
+    ...                    [[ 3.,  4.,  5.],
+    ...                     [ 1., -1.,  1.]]])
+    >>> selpos - refpos
+    array([[[-2.,  3., -6.],
+            [-2.,  1., -2.]],
+    <BLANKLINE>
+           [[ 0.,  0.,  0.],
+            [ 0.,  0.,  0.]]])
+    >>> rmsd = mdt.strc.rmsd(refpos, selpos)
+    >>> rmsd_expected = np.sqrt(0.5 * np.array([49 + 9, 0]))
+    >>> np.allclose(rmsd, rmsd_expected, rtol=0)
+    True
+    >>> mdt.strc.rmsd(refpos, selpos, xyz=True)
+    array([[ 4.,  5., 20.],
+           [ 0.,  0.,  0.]])
+    >>> box = np.array([5, 3, 3, 90, 90, 90])
+    >>> mdt.strc.rmsd(refpos, selpos, xyz=True, box=box)
+    array([[4. , 0.5, 0.5],
+           [0. , 0. , 0. ]])
+    >>> rmsd = mdt.strc.rmsd(refpos, selpos, weights=weights)
+    >>> rmsd_expected = np.array([4., 0.])
+    >>> np.allclose(rmsd, rmsd_expected, rtol=0)
+    True
+    >>> mdt.strc.rmsd(refpos, selpos, weights=weights, center=True)
+    array([1.56324982, 0.        ])
+    >>> mdt.strc.rmsd(
+    ...    refpos, selpos, xyz=True, center=True, inplace=True
+    ... )
+    array([[0., 1., 4.],
+           [0., 0., 0.]])
+    >>> refpos
+    array([[ 1. ,  2.5,  2. ],
+           [-1. , -2.5, -2. ]])
+    >>> selpos
+    array([[[ 1. ,  3.5,  0. ],
+            [-1. , -3.5,  0. ]],
+    <BLANKLINE>
+           [[ 1. ,  2.5,  2. ],
+            [-1. , -2.5, -2. ]]])
+    """
+    refpos = mdt.check.pos_array(refpos)
+    selpos = mdt.check.pos_array(selpos)
+    if refpos.ndim == 1:
+        n_particles = 1
+    elif refpos.ndim in (2, 3):
+        n_particles = refpos.shape[refpos.ndim - 2]
+    else:
+        # This else clause should never be entered, because this error
+        # should already be raised by `mdt.check.pos_array(refpos)`.
+        raise ValueError(
+            "The shape of 'refpos' must be either (3,) or (n, 3) or (k, n, 3)"
+            " but is {}.  This should not have happened".format(refpos.shape)
+        )
+    if (
+        (selpos.ndim == 1 and n_particles != 1)
+        or (selpos.ndim == 2 and selpos.shape[0] != n_particles)
+        or (selpos.ndim == 3 and selpos.shape[1] != n_particles)
+    ):
+        raise ValueError(
+            "'selpos' does not contain the same number of particles as"
+            " 'refpos'.  The shape of 'selpos' is {}.  The shape of 'refpos'"
+            " is {}".format(selpos.shape, refpos.shape)
+        )
+
+    if weights is not None:
+        weights = np.asarray(weights, dtype=np.float64)
+        if weights.shape != (n_particles,):
+            raise ValueError(
+                "'weights' must have shape {} but has shape"
+                " {}".format((n_particles,), weights.shape)
+            )
+        weights_sum = np.sum(weights)
+        if weights_sum == 0:
+            raise ValueError("'weights' must not sum up to zero")
+        weights /= weights_sum
+
+    if box is not None:
+        box = mdt.check.box(box)
+        if box.ndim == 2:
+            if refpos.ndim != 3:
+                raise ValueError(
+                    "box dimensions given for {} frames, but reference"
+                    " positions given for only 1 frame".format(box.shape[0])
+                )
+            if box.shape[0] != refpos.shape[0]:
+                raise ValueError(
+                    "If 'box' has 2 dimensions, box.shape[0] ({}) must match"
+                    " refpos.shape[0]"
+                    " ({})".format(box.shape[0], refpos.shape[0])
+                )
+
+    if center:
+        refcenter = mdt.strc.wcenter_pos(pos=refpos, weights=weights, box=box)
+        if refpos.ndim == 3:
+            refcenter = np.expand_dims(refcenter, axis=1)
+        selcenter = mdt.strc.wcenter_pos(pos=selpos, weights=weights, box=box)
+        if selpos.ndim == 3:
+            selcenter = np.expand_dims(selcenter, axis=1)
+        if inplace:
+            refpos -= refcenter
+            selpos -= selcenter
+        else:
+            refpos = refpos - refcenter
+            selpos = selpos - selcenter
+
+    rmsd = mdt.box.vdist(selpos, refpos, box=box)
+    rmsd **= 2
+    # The dimension of position arrays and thus of `rmsd` can be either
+    # 1, 2 or 3 (see `mdtools.check.pos_array`).  If `component` is
+    # ``True`` and `ndim` is
+    #     * 1 (single particle), the RMSD is simply the distance between
+    #       the reference and candidate particle.
+    #     * 2 (multiple particles), the RMSD is the sum over all
+    #       reference-candidate distances (``axis=0``).
+    #     * 3 (multiple frames), the RMSD is the sum over all
+    #       reference-candidate distances in each frame (``axis=1``).
+    # If `component` is ``False``, the x, y and z component must be
+    # summed up.
+    if weights is not None and rmsd.ndim > 1:
+        rmsd *= np.expand_dims(weights, axis=1)
+    if rmsd.ndim == 1:
+        if n_particles != 1:
+            raise ValueError(
+                "The shape of 'rmsd' ({}) does not match the number of"
+                " particles ({}).  You might want to check the shape of"
+                " 'refpos' ({}) and 'selpos' ({}) and which shape they"
+                " broadcast to".format(
+                    rmsd.shape, n_particles, refpos.shape, selpos.shape
+                )
+            )
+        if not xyz:
+            rmsd = np.sum(rmsd)
+    elif rmsd.ndim == 2:
+        if rmsd.shape[rmsd.ndim - 2] != n_particles:
+            raise ValueError(
+                "The shape of 'rmsd' ({}) does not match the number of"
+                " particles ({}).  You might want to check the shape of"
+                " 'refpos' ({}) and 'selpos' ({}) and which shape they"
+                " broadcast to".format(
+                    rmsd.shape, n_particles, refpos.shape, selpos.shape
+                )
+            )
+        if xyz:
+            rmsd = np.sum(rmsd, axis=rmsd.ndim - 2)
+        else:
+            rmsd = np.sum(rmsd)
+    elif rmsd.ndim == 3:
+        if rmsd.shape[rmsd.ndim - 2] != n_particles:
+            raise ValueError(
+                "The shape of 'rmsd' ({}) does not match the number of"
+                " particles ({}).  You might want to check the shape of"
+                " 'refpos' ({}) and 'selpos' ({}) and which shape they"
+                " broadcast to".format(
+                    rmsd.shape, n_particles, refpos.shape, selpos.shape
+                )
+            )
+        rmsd = np.sum(rmsd, axis=rmsd.ndim - 2)
+        if not xyz:
+            rmsd = np.sum(rmsd, axis=1)
+    else:
+        raise ValueError(
+            "The shape of 'rmsd' must be either (3,) or (n, 3) or (k, n, 3)"
+            " but is {}.  This should not have happened.  You might want to"
+            " check the shape of 'refpos' ({}) and 'selpos' ({}) and which"
+            " shape they broadcast to".format(
+                rmsd.shape, refpos.shape, selpos.shape
+            )
+        )
+    rmsd /= n_particles
+    if not xyz:
+        rmsd = np.sqrt(rmsd)
+    return rmsd

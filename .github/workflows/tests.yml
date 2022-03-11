@@ -92,6 +92,7 @@ jobs:
         docs/source/conf.py \
         mdtools/__init__.py \
         mdtools/_metadata.py \
+        mdtools/box.py \
         mdtools/file_handler.py \
         mdtools/numpy_helper_functions.py \
         mdtools/plot.py \
@@ -101,6 +102,7 @@ jobs:
         scripts/dynamics/plot_msd_layer*.py \
         scripts/structure/lig_change_at_pos_change_blocks.py \
         scripts/structure/plot_gmx_densmap.py \
+        scripts/structure/rmsd_vs_time.py \
         setup.py
     - name: Install/Upgrade flake8 and flake8-docstrings extension
       run: python -m pip install --user --upgrade flake8 flake8-docstrings

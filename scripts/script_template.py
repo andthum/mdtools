@@ -71,8 +71,8 @@ be called and their meaning.
 --sel       Selection string to select a group of atoms for the
             analysis.  See MDAnalysis' |selection_syntax| for possible
             choices.
---cmp       {'group', 'segments', 'residues', 'molecules', 'fragments',\
-            'atoms'}
+--cmp       {'group', 'segments', 'residues', 'molecules', \
+            'fragments', 'atoms'}
 
             The compounds of the selection group to use for the
             analysis.  Compounds can be 'group' (the entire selection
@@ -290,8 +290,8 @@ if __name__ == "__main__":
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames,
     )
-    first_frame_read = u.trajectory[BEGIN]
-    last_frame_read = u.trajectory[END - 1]
+    first_frame_read = u.trajectory[BEGIN].copy()
+    last_frame_read = u.trajectory[END - 1].copy()
 
     print("\n")
     print("Reading trajectory...")
