@@ -290,8 +290,8 @@ if __name__ == "__main__":
         step=args.EVERY,
         n_frames_tot=u.trajectory.n_frames,
     )
-    first_frame_read = u.trajectory[BEGIN]
-    last_frame_read = u.trajectory[END - 1]
+    first_frame_read = u.trajectory[BEGIN].copy()
+    last_frame_read = u.trajectory[END - 1].copy()
 
     print("\n")
     print("Reading trajectory...")
