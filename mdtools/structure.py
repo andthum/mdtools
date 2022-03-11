@@ -3828,9 +3828,8 @@ def rmsd(
         contained in the position arrays.  If `weights` is ``None``, all
         particles are assumed to have a weight equal to one.
     center : bool, optional
-        If ``True``, shift the reference and candidate particles by
-        their weighted center, respectively, before calculating the
-        RMSD.
+        If ``True``, shift the `refpos` and `selpos` by their (weighted)
+        center, respectively, before calculating the RMSD.
     inplace : bool, optional
         If ``True``, subtract the weighted center from the reference and
         candidate positions in place (i.e. the input arrays will be
