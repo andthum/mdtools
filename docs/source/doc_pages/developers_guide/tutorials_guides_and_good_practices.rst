@@ -75,7 +75,7 @@ already established for research data to research software:
       Stephanie van de Sandt, Jon Ison, Paula Andrea Martinez, Peter
       McQuilton, Alfonso Valencia, Jennifer Harrow, Fotis Psomopoulos,
       Josep Ll. Gelpi, Neil Chue Hong, Carole Goble, Salvador
-      Capella-Gutierrez, `"Towards {FAIR} Principles For Research
+      Capella-Gutierrez, `"Towards FAIR Principles For Research
       Software" <https://doi.org/10.3233/DS-190026>`_, Data Science,
       2020, 3, 37-59.
 
