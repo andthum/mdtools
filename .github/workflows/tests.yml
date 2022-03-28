@@ -67,7 +67,7 @@ jobs:
         python -m pip install --user --upgrade pip
         echo "::set-output name=dir::$(pip cache dir)"
     - name: Create/Restore cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ steps.pip-cache.outputs.dir }}/**
@@ -146,7 +146,7 @@ jobs:
         python -m pip install --user --upgrade pip
         echo "::set-output name=dir::$(pip cache dir)"
     - name: Create/Restore cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ steps.pip-cache.outputs.dir }}/**
