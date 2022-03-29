@@ -37,5 +37,5 @@ alreay done, please take a look at the |mda_user_guide|.
     test_guidelines
     git_workflow
     versioning
-    tutorials_guides_and_good_practices
+    guides_and_good_practices
     frequently_overlooked_tools
