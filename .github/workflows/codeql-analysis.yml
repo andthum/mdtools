@@ -63,7 +63,7 @@ jobs:
         python -m pip install --user --upgrade pip
         echo "::set-output name=dir::$(pip cache dir)"
     - name: Create/Restore Cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{ steps.pip-cache.outputs.dir }}/**
         key: ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
