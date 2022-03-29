@@ -1,7 +1,7 @@
-.. _tutorials-guides-and-good-practices-label:
+.. _guides-and-good-practices-label:
 
-Tutorials, guides and good practices
-====================================
+Guides and good practices
+=========================
 
 This page contains further resources on various topics ranging from good
 coding practices to reproducible research.  It is meant as a reference,
