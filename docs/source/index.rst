@@ -99,6 +99,16 @@ packages |MDAnalysis|, |NumPy|, |SciPy| and |matplotlib|.
     doc_pages/general_docs/references
 
 
+Related projects
+================
+
+There exist packages/projects that pursue very similar goals as MDTools
+and have grown much further.  You might want to consider to use these
+packages instead of or in addition to MDTools.  Most notably, these are
+taurenmd_ and mdacli_.  Also have a look at the `projects that are based
+on MDAnalysis <https://www.mdanalysis.org/pages/used-by/>`_.
+
+
 Getting started
 ===============
 
@@ -157,6 +167,8 @@ Indices and tables
 
 
 .. _Gromacs command-line tools: https://manual.gromacs.org/documentation/current/user-guide/cmdline.html#commands-by-name
+.. _taurenmd: https://github.com/joaomcteixeira/taurenmd
+.. _mdacli: https://github.com/MDAnalysis/mdacli
 
 .. |MDTools_writing| image:: ../logo/mdtools_label_3900x760.png
     :width: 450 px
