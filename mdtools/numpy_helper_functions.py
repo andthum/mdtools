@@ -902,10 +902,14 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     >>> mdt.nph.ix_of_item_change(e, axis=ax)
     (array([1, 1, 1, 1]), array([0, 0, 1, 1]), array([0, 2, 0, 2]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, wrap=True)
-    (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 2, 0, 2, 0, 2, 0, 2]))
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
     >>> ix = mdt.nph.ix_of_item_change(e, axis=ax, prepend_zero=True)
     >>> ix
-    (array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 0, 1, 1, 1, 0, 0, 1, 1]), array([0, 1, 2, 0, 1, 2, 0, 2, 0, 2]))
+    (array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 0, 1, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 2, 0, 1, 2, 0, 2, 0, 2]))
     >>> e[ix]
     array([1, 2, 2, 2, 2, 1, 2, 1, 1, 2])
 
@@ -913,17 +917,25 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     >>> mdt.nph.ix_of_item_change(e, axis=ax)
     (array([0, 0, 1, 1]), array([1, 1, 1, 1]), array([0, 2, 0, 2]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, wrap=True)
-    (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 2, 0, 2, 0, 2, 0, 2]))
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, prepend_zero=True)
-    (array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]), array([0, 0, 0, 1, 1, 0, 0, 0, 1, 1]), array([0, 1, 2, 0, 2, 0, 1, 2, 0, 2]))
+    (array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]), \
+array([0, 0, 0, 1, 1, 0, 0, 0, 1, 1]), \
+array([0, 1, 2, 0, 2, 0, 1, 2, 0, 2]))
 
     >>> ax = 2
     >>> mdt.nph.ix_of_item_change(e, axis=ax)
     (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([1, 2, 2, 1]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, wrap=True)
-    (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 1, 0, 2, 0, 2, 0, 1]))
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 0, 2, 0, 2, 0, 1]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, prepend_zero=True)
-    (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 1, 0, 2, 0, 2, 0, 1]))
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 0, 2, 0, 2, 0, 1]))
 
     Edge cases:
 
@@ -951,7 +963,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     Traceback (most recent call last):
     ...
     ValueError: The dimension of a must be greater than zero
-    """  # noqa: W505,E501
+    """
     if wrap and prepend_zero:
         raise ValueError("wrap and prepend_zero must not be used together")
     a = np.asarray(a)
