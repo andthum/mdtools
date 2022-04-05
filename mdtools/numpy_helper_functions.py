@@ -712,14 +712,17 @@ def ix_of_item_change_1d(a):
     Get the indices of a 1-dimensional array where its elements change.
 
     .. deprecated:: 0.0.0.dev0
-       :func:`mdtools.numpy_helper_functions.ix_of_item_change_1d` might
-       be removed in a future release.  It is replaced by
-       :func:`mdtools.numpy_helper_functions.ix_of_item_change`, because
-       this function works for arrays with arbitrary dimensions and
-       provides additional functionality.
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change_1d`
+        might be removed in a future release.  It is replaced by
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change`,
+        because this function works for arrays with arbitrary dimensions
+        and provides additional functionality.
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change` with
+        `prepend_zero` set to ``True`` is equivalent to
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change_1d`.
 
     .. todo::
-       Check for scripts using this function before removing it.
+        Check for scripts using this function before removing it.
 
     Parameters
     ----------
