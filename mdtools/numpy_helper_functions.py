@@ -785,6 +785,20 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     Get the indices of an array where its elements change along a given
     axis.
 
+    .. deprecated:: 0.0.0.dev1
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change` might
+        be removed in a future release.  It is replaced by
+        :func:`mdtools.numpy_helper_functions.item_change_ix`, because
+        this function provides additional functionality.
+        :func:`mdtools.numpy_helper_functions.item_change_ix` with
+        `pin` set to ``"after"`` is equivalent to
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change`.  The
+        option `tfic` is equivalent to `prepend_zero`.
+
+    .. todo::
+        Check for modules and scripts using this function before
+        removing it.
+
     Parameters
     ----------
     a : array_like
@@ -810,6 +824,11 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
         Tuple of arrays, one for each dimension of `a`, containing the
         indices where the elements of `a` change.  `ix` can be used to
         index `a` and get the values of the changed elements.
+
+    See Also
+    --------
+    :func:`mdtools.numpy_helper_functions.item_change_ix` :
+        Equivalent function with additional features.
 
     Examples
     --------
