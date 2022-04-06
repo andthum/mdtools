@@ -130,6 +130,74 @@ def locate_trans(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
     )
 
 
+def trans_ix(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
+    """
+    Get the frames indices of state transitions in a discrete
+    trajectory.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        The discrete trajectory for which to get all frame indices where
+        its elements change.
+    axis : int
+        See :func:`mdtools.dtrj.locate_trans`.
+    pin : {"end", "start", "both"}
+        See :func:`mdtools.dtrj.locate_trans`.
+    wrap : bool, optional
+        See :func:`mdtools.dtrj.locate_trans`.
+    tfft : bool, optional
+        See :func:`mdtools.dtrj.locate_trans`.
+    tlft : bool, optional
+        See :func:`mdtools.dtrj.locate_trans`.
+
+    Returns
+    -------
+    ix_start : tuple of numpy.ndarray
+        Tuple of arrays, one for each dimension of `dtrj`, containing
+        the frame indices where a state transition will occur.  Can be
+        used to index `dtrj` and get the states right before the state
+        transition.  Is not returned if `pin` is ``"end"``.
+    ix_end : tuple of numpy.ndarray
+        Tuple of arrays, one for each dimension of `dtrj`, containing
+        the frame indices where a state transition has occurred.  Can be
+        used to index `dtrj` and get the states right after the state
+        transition.  Is not returned if `pin` is ``"start"``.
+
+    See Also
+    --------
+    :func:`mdtools.numpy_helper_functions.item_change_ix` :
+        Get the indices of item changes in arbitrary arrays
+    :func:`mdtools.dtrj.locate_trans` :
+        Locate the frames of state transitions inside a discrete
+        trajectory.
+
+    Notes
+    -----
+    This function only applies :func:`numpy.nonzero` to the output of
+    :func:`mdtools.dtrj.locate_trans`.
+
+    Examples
+    --------
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> start, end = mdt.dtrj.trans_ix(dtrj, pin="both")
+    >>> start
+    (array([0, 0, 1, 1, 2, 2, 3, 3]), array([0, 2, 1, 4, 2, 3, 0, 3]))
+    >>> end
+    (array([0, 0, 1, 1, 2, 2, 3, 3]), array([1, 3, 2, 5, 3, 4, 1, 4]))
+    """
+    trans = mdt.dtrj.locate_trans(
+        dtrj=dtrj, axis=axis, pin=pin, wrap=wrap, tfft=tfft, tlft=tlft
+    )
+    if pin == "both":
+        return tuple(np.nonzero(tr) for tr in trans)
+    else:
+        return np.nonzero(trans)
+
+
 def trans_per_state(dtrj, axis=-1):
     """
     Count the number of transitions leading into or out of a given state.
