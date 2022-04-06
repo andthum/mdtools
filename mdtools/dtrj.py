@@ -95,6 +95,9 @@ def locate_trans(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
     --------
     :func:`mdtools.numpy_helper_functions.locate_item_change`:
         Locate the positions of item changes in arbitrary arrays
+    :func:`mdtools.dtrj.trans_ix` :
+        Get the frames indices of state transitions in a discrete
+        trajectory
 
     Notes
     -----
@@ -102,9 +105,11 @@ def locate_trans(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
     trajectory using :func:`mdtools.check.dtrj` and then calls
     :func:`mdtools.numpy_helper_functions.locate_item_change`.
 
-    To get the indices (i.e. frames) of the state transitions for each
-    compound, apply :func:`numpy.nonzero` to the output arrays of this
-    function.
+    To get the frame indices of the state transitions for each compound,
+    apply :func:`numpy.nonzero` to the output array(s) of this function.
+    If you are only interested in the frame indices but not in the
+    boolean arrays returned by this function, you can use
+    :func:`mdtools.dtrj.trans_ix` instead.
 
     Examples
     --------
