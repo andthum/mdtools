@@ -412,6 +412,8 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
           convertet to a :class:`numpy.ndarray`.
         * Must be of shape ``(f,)`` or ``(n, f)``, where ``n`` is the
           number of compounds and ``f`` is the number of frames.
+          Transposed discrete trajectories of shape ``(f, n)`` are also
+          valid.
         * Must contain only integers or floats whose fractional part is
           zero, because the elements of a discrete trajectory are
           interpreted as the indices of the states in which a given
@@ -441,7 +443,10 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     Returns
     -------
     dtrj : numpy.ndarray
-        The input array as :class:`numpy.ndarray` with two dimensions.
+        The input array as :class:`numpy.ndarray` with two dimensions
+        and in row-major order (C-style memory layout).   No copy is
+        performed if the input is already a 2-dimensional
+        :class:`numpy.ndarray` with matching order.
 
     Raises
     ------
