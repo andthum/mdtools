@@ -202,9 +202,20 @@ def trans_ix(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
         return np.nonzero(trans)
 
 
-def trans_per_state(dtrj, axis=-1):
+def trans_per_state(
+    dtrj, axis=-1, resolve_direction=False, wrap=False, tfft=False, tlft=False
+):
     """
-    Count the number of transitions leading into or out of a given state.
+    Count the number of transitions leading into or out of a state.
+
+    .. todo::
+
+        Minimum image convention: Add the possibility to respect the
+        minium image convention when resolving the transition direction
+        (`resolve_direction` set to ``True``).  This is usefull, when
+        the states continue periodically, for instance because the
+        states are position bins along a box dimension with periodic
+        boundary conditions.
 
     Parameters
     ----------
@@ -217,26 +228,63 @@ def trans_per_state(dtrj, axis=-1):
         arbitrary shape.
     axis : int
         The axis along which to search for state transitions.  For
-        ordinary discrete trajectories with shape ``(n, f)`` or ``(f,)``,
-        where ``n`` is the number of compounds and ``f`` is the number
-        of frames, set `axis` to ``-1``.  If you parse a transposed
-        discrete trajectory to `dtrj`, set `axis` to ``0``.
+        ordinary discrete trajectories with shape ``(n, f)`` or
+        ``(f,)``, where ``n`` is the number of compounds and ``f`` is
+        the number of frames, set `axis` to ``-1`` or to ``1``.  If you
+        parse a transposed discrete trajectory of shape ``(f, n)``, set
+        `axis` to ``0``.
+    resolve_direction : bool, optional
+        If ``True``, distinct between transitions from/into higher
+        states or from/into lower states.
+    wrap : bool, optional
+        If ``True``, `dtrj` is assumed to be continued after the last
+        frame by `dtrj` itself, like when using periodic boundary
+        conditions.  Consequently, if the first and last state in the
+        trajectory do not match, this is interpreted as state
+        transition.  The start of this transition is the last frame of
+        the trajectory and the end is the first frame.
+    tfft : bool, optional
+        Treat First Frame as Transition.  If ``True``, treat the first
+        frame as the end of a state transition.  Must not be used
+        together with `wrap` or `resolve_direction`.
+    tlft : bool, optional
+        Treat Last Frame as Transition.  If ``True``, treat the last
+        frame as the start of a state transition.  Must not be used
+        together with `wrap` or `resolve_direction`.
 
     Returns
     -------
     hist_start : numpy.ndarray
         Histogram counting how many state transitions **started** from a
         given state, i.e. how many transitons led out of a given state.
+        If `resolve_direction` is ``True``, `hist_start` will be a
+        2-dimensional array.  ``hist_start[0]`` is then the histogram
+        counting how many transitions starting from a given state ended
+        in an higher state.  ``hist_start[1]`` is the histogram counting
+        how many transitions starting from a given state ended in a
+        lower state.  If `resolve_direction` is ``False``, `hist_start`
+        will be a 1-dimensional array that is formally the sum of the
+        two above histograms:
+        ``hist_start = np.sum(hist_start, axis=0)``.
     hist_end : numpy.ndarray
-        Histogram counting how many state transitions **ended** it a
+        Histogram counting how many state transitions **ended** in a
         given state, i.e. how many transitions led into a given state.
+        If `resolve_direction` is ``True``, `hist_end` will be a
+        2-dimensional array.  ``hist_end[0]`` is then the histogram
+        counting how many transitions ending in a given state started
+        from a lower state.  ``hist_end[1]`` is the histogram counting
+        how many transitions ending in a given state started from an
+        higher state.  If `resolve_direction` is ``False``, `hist_end`
+        will be a 1-dimensional array that is formally the sum of the
+        two above histograms: ``hist_end = np.sum(hist_end, axis=0)``.
 
     Notes
     -----
     The histograms contain the counts for all states ranging from the
-    minimum to the maximum state in `dtrj` in whole numbers.  This means,
-    the states corresponding to the counts in `hist_start` and `hist_end`
-    are given by ``numpy.arange(np.min(dtrj), np.max(dtrj)+1)``.
+    minimum to the maximum state in `dtrj` in whole numbers.  This
+    means, the states corresponding to the counts in `hist_start` and
+    `hist_end` are given by
+    ``numpy.arange(np.min(dtrj), np.max(dtrj)+1)``.
 
     Examples
     --------
@@ -251,6 +299,73 @@ def trans_per_state(dtrj, axis=-1):
     >>> # Number of transitions ending in the 1st, 2nd or 3rd state
     >>> hist_end
     array([2, 3, 3])
+    >>> hist_start_resolve, hist_end_resolve = mdt.dtrj.trans_per_state(
+    ...     dtrj, resolve_direction=True
+    ... )
+    >>> # Number of transitions starting from the 1st, 2nd or 3rd state\
+ and
+    >>> #   * hist_start_resolve[0]: ending in an higher state
+    >>> #   * hist_start_resolve[0]: ending in a lower state
+    >>> hist_start_resolve
+    array([[3, 2, 0],
+           [0, 0, 3]])
+    >>> np.array_equal(np.sum(hist_start_resolve, axis=0), hist_start)
+    True
+    >>> # Number of transitions ending in the 1st, 2nd or 3rd state and
+    >>> #   * hist_end_resolve[0]: starting from a lower state
+    >>> #   * hist_end_resolve[0]: starting from an higher state
+    >>> hist_end_resolve
+    array([[0, 2, 3],
+           [2, 1, 0]])
+    >>> np.array_equal(np.sum(hist_end_resolve, axis=0), hist_end)
+    True
+    >>> hist_start_wrap, hist_end_wrap = mdt.dtrj.trans_per_state(
+    ...     dtrj, wrap=True
+    ... )
+    >>> hist_start_wrap
+    array([4, 4, 4])
+    >>> hist_end_wrap
+    array([4, 4, 4])
+    >>> hist_start_resolve_wrap, hist_end_resolve_wrap = \
+mdt.dtrj.trans_per_state(
+    ...     dtrj, resolve_direction=True, wrap=True
+    ... )
+    >>> hist_start_resolve_wrap
+    array([[4, 3, 0],
+           [0, 1, 4]])
+    >>> np.array_equal(
+    ...     np.sum(hist_start_resolve_wrap, axis=0), hist_start_wrap
+    ... )
+    True
+    >>> hist_end_resolve_wrap
+    array([[0, 3, 4],
+           [4, 1, 0]])
+    >>> np.array_equal(
+    ...     np.sum(hist_end_resolve_wrap, axis=0), hist_end_wrap
+    ...  )
+    True
+    >>> hist_start_tfft, hist_end_tfft = mdt.dtrj.trans_per_state(
+    ...     dtrj, tfft=True
+    ... )
+    >>> hist_start_tfft
+    array([3, 2, 3])
+    >>> hist_end_tfft
+    array([4, 4, 4])
+    >>> hist_start_tlft, hist_end_tlft = mdt.dtrj.trans_per_state(
+    ...     dtrj, tlft=True
+    ... )
+    >>> hist_start_tlft
+    array([4, 4, 4])
+    >>> hist_end_tlft
+    array([2, 3, 3])
+    >>> hist_start_tfft_tlft, hist_end_tfft_tlft = \
+mdt.dtrj.trans_per_state(
+    ...     dtrj, tfft=True, tlft=True
+    ... )
+    >>> hist_start_tfft_tlft
+    array([4, 4, 4])
+    >>> hist_end_tfft_tlft
+    array([4, 4, 4])
 
     Iterprete first dimension as frames and second dimension as
     compounds:
@@ -260,21 +375,146 @@ def trans_per_state(dtrj, axis=-1):
     array([3, 3, 4])
     >>> hist_end
     array([3, 3, 4])
+    >>> hist_start_resolve, hist_end_resolve = mdt.dtrj.trans_per_state(
+    ...     dtrj, axis=0, resolve_direction=True
+    ... )
+    >>> hist_start_resolve
+    array([[3, 3, 0],
+           [0, 0, 4]])
+    >>> np.array_equal(np.sum(hist_start_resolve, axis=0), hist_start)
+    True
+    >>> hist_end_resolve
+    array([[0, 2, 4],
+           [3, 1, 0]])
+    >>> np.array_equal(np.sum(hist_end_resolve, axis=0), hist_end)
+    True
+    >>> hist_start_wrap, hist_end_wrap = mdt.dtrj.trans_per_state(
+    ...     dtrj, axis=0, wrap=True
+    ... )
+    >>> hist_start_wrap
+    array([3, 5, 6])
+    >>> hist_end_wrap
+    array([3, 5, 6])
+    >>> hist_start_resolve_wrap, hist_end_resolve_wrap = \
+mdt.dtrj.trans_per_state(
+    ...     dtrj, axis=0, resolve_direction=True, wrap=True
+    ... )
+    >>> hist_start_resolve_wrap
+    array([[3, 5, 0],
+           [0, 0, 6]])
+    >>> np.array_equal(
+    ...     np.sum(hist_start_resolve_wrap, axis=0), hist_start_wrap
+    ... )
+    True
+    >>> hist_end_resolve_wrap
+    array([[0, 2, 6],
+           [3, 3, 0]])
+    >>> np.array_equal(
+    ...     np.sum(hist_end_resolve_wrap, axis=0), hist_end_wrap
+    ...  )
+    True
+    >>> hist_start_tfft, hist_end_tfft = mdt.dtrj.trans_per_state(
+    ...     dtrj, axis=0, tfft=True
+    ... )
+    >>> hist_start_tfft
+    array([3, 3, 4])
+    >>> hist_end_tfft
+    array([4, 5, 7])
+    >>> hist_start_tlft, hist_end_tlft = mdt.dtrj.trans_per_state(
+    ...     dtrj, axis=0, tlft=True
+    ... )
+    >>> hist_start_tlft
+    array([4, 5, 7])
+    >>> hist_end_tlft
+    array([3, 3, 4])
+    >>> hist_start_tfft_tlft, hist_end_tfft_tlft = \
+mdt.dtrj.trans_per_state(
+    ...     dtrj, axis=0, tfft=True, tlft=True
+    ... )
+    >>> hist_start_tfft_tlft
+    array([4, 5, 7])
+    >>> hist_end_tfft_tlft
+    array([4, 5, 7])
     """
     dtrj = np.asarray(dtrj)
     if np.any(np.modf(dtrj)[0] != 0):
-        raise ValueError("At least one element of 'dtrj' is not an"
-                         " integer")
-    trans = (np.diff(dtrj, axis=axis) != 0)
-    shape = list(trans.shape)
+        raise ValueError("At least one element of 'dtrj' is not an integer")
+    if resolve_direction and (tfft or tlft):
+        raise ValueError(
+            "'resolve_direction' must not be used together with 'tfft' of"
+            " 'tlft'"
+        )
+    if wrap and (tfft or tlft):
+        raise ValueError(
+            "'wrap' must not be used together with 'tfft' of 'tlft'"
+        )
+
+    state_diff = np.diff(dtrj, axis=axis)
+    if resolve_direction:
+        # Distinct between transitions to higher and to lower states
+        trans = np.asarray([state_diff > 0, state_diff < 0])
+    else:
+        # Don't discriminate between different types of transitions
+        trans = np.asarray([state_diff != 0])
+    # Only index `dtrj.shape` with `axis` after np.diff to get a proper
+    # numpy.AxisError if `axis` is out of bounds (instead of an
+    # IndexError)
+    if dtrj.shape[axis] == 0:
+        return tuple(
+            np.squeeze(np.array([], dtype=int).reshape(len(trans), 0)),
+            np.squeeze(np.array([], dtype=int).reshape(len(trans), 0)),
+        )
+
+    shape = list(state_diff.shape)
     shape[axis] = 1
-    insertion = np.zeros(shape, dtype=bool)
-    # States from which transitions start
-    trans_start = np.concatenate([trans, insertion], axis=axis)
-    # States in which transitions end
-    trans_end = np.concatenate([insertion, trans], axis=axis)
-    del trans, insertion
-    bins = np.arange(np.min(dtrj), np.max(dtrj) + 2)
-    hist_start = np.histogram(dtrj[trans_start], bins)[0]
-    hist_end = np.histogram(dtrj[trans_end], bins)[0]
+    shape = tuple(shape)
+    # `insertion` = array to insert after or before `trans` to bring
+    # `trans` to the same shape as `dtrj` and make `trans` a mask for
+    # states from which transitions start or in which transitions end.
+    if wrap:
+        state_diff = dtrj.take(0, axis=axis) - dtrj.take(-1, axis=axis)
+        if resolve_direction:
+            insertion_start = np.asarray(
+                [
+                    (state_diff > 0).reshape(shape),
+                    (state_diff < 0).reshape(shape),
+                ]
+            )
+        else:
+            insertion_start = np.asarray([(state_diff != 0).reshape(shape)])
+        insertion_end = insertion_start
+    else:
+        if tfft:
+            insertion_end = np.ones((len(trans),) + shape, dtype=bool)
+        else:
+            insertion_end = np.zeros((len(trans),) + shape, dtype=bool)
+        if tlft:
+            insertion_start = np.ones((len(trans),) + shape, dtype=bool)
+        else:
+            insertion_start = np.zeros((len(trans),) + shape, dtype=bool)
+    del state_diff
+
+    # States from which transitions start or in which transitions end
+    trans_start = np.zeros((len(trans),) + dtrj.shape, dtype=bool)
+    trans_end = np.zeros_like(trans_start, dtype=bool)
+    # Loop over different transition types (only relevant if
+    # `resolve_direction` is True).
+    for i, tr in enumerate(trans):
+        trans_start[i] = np.concatenate([tr, insertion_start[i]], axis=axis)
+        trans_end[i] = np.concatenate([insertion_end[i], tr], axis=axis)
+    del trans, tr, insertion_start, insertion_end
+
+    min_state, max_state = np.min(dtrj), np.max(dtrj)
+    bins = np.arange(min_state, max_state + 2)
+    hist_start = np.zeros(
+        (len(trans_start), max_state - min_state + 1), dtype=int
+    )
+    hist_end = np.zeros_like(hist_start)
+    # Loop over different transition types (only relevant if
+    # `resolve_direction` is True).
+    for i, tr_start in enumerate(trans_start):
+        hist_start[i] = np.histogram(dtrj[tr_start], bins)[0]
+        hist_end[i] = np.histogram(dtrj[trans_end[i]], bins)[0]
+    hist_start = np.squeeze(hist_start)
+    hist_end = np.squeeze(hist_end)
     return hist_start, hist_end
