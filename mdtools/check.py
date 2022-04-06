@@ -466,7 +466,7 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     If the input array has only shape ``(f,)``, it is expanded to shape
     ``(1, f)``.  Hence, the output array will always have two dimensions.
     """
-    dtrj = np.asarray(dtrj)
+    dtrj = np.asarray(dtrj, order="C")
     # Check input paramaters:
     if shape is not None and len(shape) != 2:
         raise ValueError("The length of 'shape' is {} but must be 2"
