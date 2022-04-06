@@ -21,8 +21,7 @@ Functions dealing with discrete trajectories.
 
 Discrete trajectories must be stored in arrays.  Arrays that serve as
 discrete trajectory must meet the requirements listed in
-:func:`mdtools.check.dtrj`.  If a function in this module deviates from
-these requirements, it will be cleary stated.
+:func:`mdtools.check.dtrj`.
 """
 
 
