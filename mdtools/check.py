@@ -475,26 +475,28 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     dtrj = np.asarray(dtrj, order="C")
     # Check input paramaters:
     if shape is not None and len(shape) != 2:
-        raise ValueError("The length of 'shape' is {} but must be 2"
-                         .format(len(shape)))
+        raise ValueError(
+            "The length of 'shape' is {} but must be 2".format(len(shape))
+        )
     # Check discrete trajectory array:
     if dtrj.ndim == 1:
         dtrj = np.expand_dims(dtrj, axis=0)
     elif dtrj.ndim > 2:
-        raise ValueError("'dtrj' has {} dimensions but must have one or"
-                         " two dimensions".format(dtrj.ndim))
+        raise ValueError(
+            "'dtrj' has {} dimensions but must have one or two"
+            " dimensions".format(dtrj.ndim)
+        )
     if np.any(np.modf(dtrj)[0] != 0):
-        raise ValueError("At least one element of 'dtrj' is not an"
-                         " integer")
+        raise ValueError(
+            "At least one element of 'dtrj' is not an integer"
+        )
     if (shape is not None or
         amin is not None or
         amax is not None or
             dtype is not None):
-        array(a=dtrj,
-              shape=shape,
-              amin=amin,
-              amax=amax,
-              dtype=dtype)
+        mdt.check.array(
+            a=dtrj, shape=shape, amin=amin, amax=amax, dtype=dtype
+        )
     return dtrj
 
 
