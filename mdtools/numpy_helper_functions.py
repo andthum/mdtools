@@ -1045,6 +1045,8 @@ def locate_item_change(
     --------
     :func:`mdtools.numpy_helper_functions.item_change_ix` :
         Get the indices of item changes in an array
+    :func:`mdtools.dtrj.locate_trans` :
+        Same function but specifically for discrete trajectories
 
     Notes
     -----
