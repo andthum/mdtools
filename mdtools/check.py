@@ -469,7 +469,8 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     Notes
     -----
     If the input array has only shape ``(f,)``, it is expanded to shape
-    ``(1, f)``.  Hence, the output array will always have two dimensions.
+    ``(1, f)``.  Hence, the output array will always have two
+    dimensions.
     """
     dtrj = np.asarray(dtrj, order="C")
     # Check input paramaters:
