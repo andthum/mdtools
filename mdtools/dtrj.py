@@ -29,6 +29,106 @@ these requirements, it will be cleary stated.
 # Third party libraries
 import numpy as np
 
+# First party libraries
+import mdtools as mdt
+
+
+def locate_trans(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
+    """
+    Locate the frames of state transitions inside a discrete trajectory.
+
+    Get a boolean array of the same shape as `dtrj` that indicates at
+    which positions in `dtrj` state transitions occur.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        Array containing the discrete trajectory.
+    axis : int
+        The axis along which to search for state transitions.  For
+        ordinary discrete trajectories with shape ``(n, f)`` or
+        ``(f,)``, where ``n`` is the number of compounds and ``f`` is
+        the number of frames, set `axis` to ``-1`` or to ``1``.  If you
+        parse a transposed discrete trajectory of shape ``(f, n)``, set
+        `axis` to ``0``.
+    pin : {"end", "start", "both"}
+        Whether to return the start (last frame where a given compound
+        is in the previous state) or end (first frame where a given
+        compound is in the next state) of the state transitions.  If set
+        to ``"both"``, two output arrays will be returned, one for
+        ``"start"`` and one for ``"end"``.
+    wrap : bool, optional
+        If ``True``, `dtrj` is assumed to be continued after the last
+        frame by `dtrj` itself, like when using periodic boundary
+        conditions.  Consequently, if the first and last state in the
+        trajectory do not match, this is interpreted as state
+        transition.  The start of this transition is the last frame of
+        the trajectory and the end is the first frame.
+    tfft : bool, optional
+        Treat First Frame as Transition.  If ``True``, treat the first
+        frame as the end of a state transition.  Has no effect if `pin`
+        is set to ``"start"``.  Must not be used together with `wrap`.
+    tlft : bool, optional
+        Treat Last Frame as Transition.  If ``True``, treat the last
+        frame as the start of a state transition.  Has no effect if
+        `pin` is set to ``"end"``.  Must not be used together with
+        `wrap`.
+
+    Returns
+    -------
+    trans_start : numpy.ndarray
+        Boolean array of the same shape as `dtrj`.  Elements that
+        evaluate to ``True`` indicate frames in `dtrj` where a given
+        compound is the last time in a given state before it will be in
+        another state in the next frame.  Can be used to index `dtrj`
+        and get the states right before a state transition.  Is not
+        returned if `pin` is ``"end"``.
+    trans_end : numpy.ndarray
+        Boolean array of the same shape as `dtrj`.  Elements that
+        evaluate to ``True`` indicate frames in `dtrj` where a given
+        compound is the first time in a new state after it was in
+        another state one frame before.  Can be used to index `dtrj` and
+        get the states right after a state transition.  Is not returned
+        if `pin` is ``"start"``.
+
+    See Also
+    --------
+    :func:`mdtools.numpy_helper_functions.locate_item_change`:
+        Locate the positions of item changes in arbitrary arrays
+
+    Notes
+    -----
+    This function only checks if the input array is a discrete
+    trajectory using :func:`mdtools.check.dtrj` and then calls
+    :func:`mdtools.numpy_helper_functions.locate_item_change`.
+
+    To get the indices (i.e. frames) of the state transitions for each
+    compound, apply :func:`numpy.nonzero` to the output arrays of this
+    function.
+
+    Examples
+    --------
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> start, end = mdt.dtrj.locate_trans(dtrj, pin="both")
+    >>> start
+    array([[ True, False,  True, False, False, False],
+           [False,  True, False, False,  True, False],
+           [False, False,  True,  True, False, False],
+           [ True, False, False,  True, False, False]])
+    >>> end
+    array([[False,  True, False,  True, False, False],
+           [False, False,  True, False, False,  True],
+           [False, False, False,  True,  True, False],
+           [False,  True, False, False,  True, False]])
+    """
+    dtrj = mdt.check.dtrj(dtrj)
+    return mdt.nph.locate_item_change(
+        a=dtrj, axis=axis, pin=pin, wrap=wrap, tfic=tfft, tlic=tlft
+    )
+
 
 def trans_per_state(dtrj, axis=-1):
     """
