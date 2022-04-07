@@ -712,14 +712,17 @@ def ix_of_item_change_1d(a):
     Get the indices of a 1-dimensional array where its elements change.
 
     .. deprecated:: 0.0.0.dev0
-       :func:`mdtools.numpy_helper_functions.ix_of_item_change_1d` might
-       be removed in a future release.  It is replaced by
-       :func:`mdtools.numpy_helper_functions.ix_of_item_change`, because
-       this function works for arrays with arbitrary dimensions and
-       provides additional functionality.
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change_1d`
+        might be removed in a future release.  It is replaced by
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change`,
+        because this function works for arrays with arbitrary dimensions
+        and provides additional functionality.
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change` with
+        `prepend_zero` set to ``True`` is equivalent to
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change_1d`.
 
     .. todo::
-       Check for scripts using this function before removing it.
+        Check for scripts using this function before removing it.
 
     Parameters
     ----------
@@ -785,6 +788,20 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     Get the indices of an array where its elements change along a given
     axis.
 
+    .. deprecated:: 0.0.0.dev1
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change` might
+        be removed in a future release.  It is replaced by
+        :func:`mdtools.numpy_helper_functions.item_change_ix`, because
+        this function provides additional functionality.
+        :func:`mdtools.numpy_helper_functions.item_change_ix` with
+        `pin` set to ``"after"`` is equivalent to
+        :func:`mdtools.numpy_helper_functions.ix_of_item_change`.  The
+        option `tfic` is equivalent to `prepend_zero`.
+
+    .. todo::
+        Check for modules and scripts using this function before
+        removing it.
+
     Parameters
     ----------
     a : array_like
@@ -810,6 +827,11 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
         Tuple of arrays, one for each dimension of `a`, containing the
         indices where the elements of `a` change.  `ix` can be used to
         index `a` and get the values of the changed elements.
+
+    See Also
+    --------
+    :func:`mdtools.numpy_helper_functions.item_change_ix` :
+        Equivalent function with additional features.
 
     Examples
     --------
@@ -883,10 +905,14 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     >>> mdt.nph.ix_of_item_change(e, axis=ax)
     (array([1, 1, 1, 1]), array([0, 0, 1, 1]), array([0, 2, 0, 2]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, wrap=True)
-    (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 2, 0, 2, 0, 2, 0, 2]))
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
     >>> ix = mdt.nph.ix_of_item_change(e, axis=ax, prepend_zero=True)
     >>> ix
-    (array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 0, 1, 1, 1, 0, 0, 1, 1]), array([0, 1, 2, 0, 1, 2, 0, 2, 0, 2]))
+    (array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 0, 1, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 2, 0, 1, 2, 0, 2, 0, 2]))
     >>> e[ix]
     array([1, 2, 2, 2, 2, 1, 2, 1, 1, 2])
 
@@ -894,17 +920,25 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     >>> mdt.nph.ix_of_item_change(e, axis=ax)
     (array([0, 0, 1, 1]), array([1, 1, 1, 1]), array([0, 2, 0, 2]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, wrap=True)
-    (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 2, 0, 2, 0, 2, 0, 2]))
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, prepend_zero=True)
-    (array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]), array([0, 0, 0, 1, 1, 0, 0, 0, 1, 1]), array([0, 1, 2, 0, 2, 0, 1, 2, 0, 2]))
+    (array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]), \
+array([0, 0, 0, 1, 1, 0, 0, 0, 1, 1]), \
+array([0, 1, 2, 0, 2, 0, 1, 2, 0, 2]))
 
     >>> ax = 2
     >>> mdt.nph.ix_of_item_change(e, axis=ax)
     (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([1, 2, 2, 1]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, wrap=True)
-    (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 1, 0, 2, 0, 2, 0, 1]))
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 0, 2, 0, 2, 0, 1]))
     >>> mdt.nph.ix_of_item_change(e, axis=ax, prepend_zero=True)
-    (array([0, 0, 0, 0, 1, 1, 1, 1]), array([0, 0, 1, 1, 0, 0, 1, 1]), array([0, 1, 0, 2, 0, 2, 0, 1]))
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 0, 2, 0, 2, 0, 1]))
 
     Edge cases:
 
@@ -932,7 +966,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     Traceback (most recent call last):
     ...
     ValueError: The dimension of a must be greater than zero
-    """  # noqa: W505,E501
+    """
     if wrap and prepend_zero:
         raise ValueError("wrap and prepend_zero must not be used together")
     a = np.asarray(a)
@@ -951,6 +985,979 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     if not wrap and not prepend_zero:
         ix[axis] += 1
     return tuple(ix)
+
+
+def locate_item_change(
+    a, axis=-1, pin="after", wrap=False, tfic=False, tlic=False
+):
+    """
+    Locate the positions of item changes in an array.
+
+    Get a boolean array of the same shape as `a` that indicates at which
+    positions the elements of `a` change their value.
+
+    Parameters
+    ----------
+    a : array_like
+        Array for which to get the positions where its elements change.
+    axis : int, optional
+        The axis along which to search for changing elements.  By
+        default, the search is perfomed along the last axis.
+    pin : {"after", "before", "both"}
+        Whether to return the last position ``"before"`` an item change
+        or the first position ``"after"`` an item change.  If set to
+        ``"both"``, two output arrays will be returned, one for
+        ``"before"`` and one for ``"after"``.
+    wrap : bool, optional
+        If ``True``, the array `a` is assumed to be continued after the
+        last element along `axis` by `a` itself, like when using
+        periodic boundary conditions.  Consequently, if the first and
+        the last element of `a` do not match, this is interpreted as
+        item change.  In this case, the last element of `a` is
+        considered to be the last position before an item change and the
+        first element of `a` is considered to be the first posistion
+        after an item change.  `wrap` must not be used together with
+        `tfic` or `tlic`.
+    tfic : bool, optional
+        Treat First Item as Change.  If ``True``, treat the first item
+        as the first position after an item change.  Has no effect if
+        `pin` is set to ``"before"``.  Must not be used together with
+        `wrap`.
+    tlic : bool, optional
+        Treat Last Item as Change.  If ``True``, treat the last item as
+        the last position before an item change.  Has no effect if `pin`
+        is set to ``"after"``.  Must not be used together with `wrap`.
+
+    Returns
+    -------
+    item_change_before : numpy.ndarray
+        Boolean array of the same shape as `a`.  Elements that evaluate
+        to ``True`` indicate the last positions before an item change in
+        `a`.  Can be used to index `a` and get its values right before
+        the item change.  Is not returned if `pin` is ``"after"``.
+    item_change_after : numpy.ndarray
+        Boolean array of the same shape as `a`.  Elements that evaluate
+        to ``True`` indicate the first positions after an item change in
+        `a`.  Can be used to index `a` and get its values right after
+        the item change.  Is not returned if `pin` is ``"before"``.
+
+    See Also
+    --------
+    :func:`mdtools.numpy_helper_functions.item_change_ix` :
+        Get the indices of item changes in an array
+    :func:`mdtools.dtrj.locate_trans` :
+        Same function but specifically for discrete trajectories
+
+    Notes
+    -----
+    To get the indices of the item changes, apply :func:`numpy.nonzero`
+    to the output array(s) of this function.  If you are only interested
+    in the indices but not in the boolean arrays returned by this
+    function, you can use
+    :func:`mdtools.numpy_helper_functions.item_change_ix` instead.
+
+    Examples
+    --------
+    >>> a = np.array([1, 2, 2, 3, 3, 3])
+    >>> before, after = mdt.nph.locate_item_change(a, pin="both")
+    >>> before
+    array([ True, False,  True, False, False, False])
+    >>> after
+    array([False,  True, False,  True, False, False])
+    >>> before_wrap, after_wrap = mdt.nph.locate_item_change(
+    ...     a, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    array([ True, False,  True, False, False,  True])
+    >>> after_wrap
+    array([ True,  True, False,  True, False, False])
+    >>> before_tfic, after_tfic = mdt.nph.locate_item_change(
+    ...     a, pin="both", tfic=True
+    ... )
+    >>> before_tfic
+    array([ True, False,  True, False, False, False])
+    >>> after_tfic
+    array([ True,  True, False,  True, False, False])
+    >>> before_tlic, after_tlic = mdt.nph.locate_item_change(
+    ...     a, pin="both", tlic=True
+    ... )
+    >>> before_tlic
+    array([ True, False,  True, False, False,  True])
+    >>> after_tlic
+    array([False,  True, False,  True, False, False])
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([ True, False,  True, False, False,  True])
+    >>> after_tfic_tlic
+    array([ True,  True, False,  True, False, False])
+
+    >>> a = np.array([1, 2, 2, 3, 3, 3, 1])
+    >>> before, after = mdt.nph.locate_item_change(a, pin="both")
+    >>> before
+    array([ True, False,  True, False, False,  True, False])
+    >>> after
+    array([False,  True, False,  True, False, False,  True])
+    >>> before_wrap, after_wrap = mdt.nph.locate_item_change(
+    ...     a, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    array([ True, False,  True, False, False,  True, False])
+    >>> after_wrap
+    array([False,  True, False,  True, False, False,  True])
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([ True, False,  True, False, False,  True,  True])
+    >>> after_tfic_tlic
+    array([ True,  True, False,  True, False, False,  True])
+
+    2-dimensional example:
+
+    >>> a = np.array([[1, 3, 3, 3],
+    ...               [3, 1, 3, 3],
+    ...               [3, 3, 1, 3]])
+    >>> ax = 0
+    >>> before, after = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both"
+    ... )
+    >>> before
+    array([[ True,  True, False, False],
+           [False,  True,  True, False],
+           [False, False, False, False]])
+    >>> after
+    array([[False, False, False, False],
+           [ True,  True, False, False],
+           [False,  True,  True, False]])
+    >>> before_wrap, after_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    array([[ True,  True, False, False],
+           [False,  True,  True, False],
+           [ True, False,  True, False]])
+    >>> after_wrap
+    array([[ True, False,  True, False],
+           [ True,  True, False, False],
+           [False,  True,  True, False]])
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([[ True,  True, False, False],
+           [False,  True,  True, False],
+           [ True,  True,  True,  True]])
+    >>> after_tfic_tlic
+    array([[ True,  True,  True,  True],
+           [ True,  True, False, False],
+           [False,  True,  True, False]])
+
+    >>> ax = 1
+    >>> before, after = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both"
+    ... )
+    >>> before
+    array([[ True, False, False, False],
+           [ True,  True, False, False],
+           [False,  True,  True, False]])
+    >>> after
+    array([[False,  True, False, False],
+           [False,  True,  True, False],
+           [False, False,  True,  True]])
+    >>> before_wrap, after_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    array([[ True, False, False,  True],
+           [ True,  True, False, False],
+           [False,  True,  True, False]])
+    >>> after_wrap
+    array([[ True,  True, False, False],
+           [False,  True,  True, False],
+           [False, False,  True,  True]])
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([[ True, False, False,  True],
+           [ True,  True, False,  True],
+           [False,  True,  True,  True]])
+    >>> after_tfic_tlic
+    array([[ True,  True, False, False],
+           [ True,  True,  True, False],
+           [ True, False,  True,  True]])
+
+    3-dimensional expample:
+
+    >>> a = np.array([[[1, 2, 2],
+    ...                [2, 2, 1]],
+    ...
+    ...               [[2, 2, 1],
+    ...                [1, 2, 2]]])
+    >>> ax = 0
+    >>> before, after = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both"
+    ... )
+    >>> before
+    array([[[ True, False,  True],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False, False]]])
+    >>> after
+    array([[[False, False, False],
+            [False, False, False]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True, False,  True]]])
+    >>> before_wrap, after_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    array([[[ True, False,  True],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True, False,  True]]])
+    >>> after_wrap
+    array([[[ True, False,  True],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True, False,  True]]])
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([[[ True, False,  True],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True,  True,  True],
+            [ True,  True,  True]]])
+    >>> after_tfic_tlic
+    array([[[ True,  True,  True],
+            [ True,  True,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True, False,  True]]])
+
+    >>> ax = 1
+    >>> before, after = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both"
+    ... )
+    >>> before
+    array([[[ True, False,  True],
+            [False, False, False]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [False, False, False]]])
+    >>> after
+    array([[[False, False, False],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[False, False, False],
+            [ True, False,  True]]])
+    >>> before_wrap, after_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    array([[[ True, False,  True],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True, False,  True]]])
+    >>> after_wrap
+    array([[[ True, False,  True],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True, False,  True]]])
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([[[ True, False,  True],
+            [ True,  True,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True,  True,  True]]])
+    >>> after_tfic_tlic
+    array([[[ True,  True,  True],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True,  True,  True],
+            [ True, False,  True]]])
+
+    >>> ax = 2
+    >>> before, after = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both"
+    ... )
+    >>> before
+    array([[[ True, False, False],
+            [False,  True, False]],
+    <BLANKLINE>
+           [[False,  True, False],
+            [ True, False, False]]])
+    >>> after
+    array([[[False,  True, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False,  True, False]]])
+    >>> before_wrap, after_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    array([[[ True, False,  True],
+            [False,  True,  True]],
+    <BLANKLINE>
+           [[False,  True,  True],
+            [ True, False,  True]]])
+    >>> after_wrap
+    array([[[ True,  True, False],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True,  True, False]]])
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([[[ True, False,  True],
+            [False,  True,  True]],
+    <BLANKLINE>
+           [[False,  True,  True],
+            [ True, False,  True]]])
+    >>> after_tfic_tlic
+    array([[[ True,  True, False],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True,  True, False]]])
+
+    Edge cases:
+
+    >>> a = np.array([[1, 2, 2]])
+    >>> ax = 0
+    >>> mdt.nph.locate_item_change(a, axis=ax, pin="both")
+    (array([[False, False, False]]), array([[False, False, False]]))
+    >>> mdt.nph.locate_item_change(a, axis=ax, pin="both", wrap=True)
+    (array([[False, False, False]]), array([[False, False, False]]))
+    >>> mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    (array([[ True,  True,  True]]), array([[ True,  True,  True]]))
+    >>> ax = 1
+    >>> mdt.nph.locate_item_change(a, axis=ax, pin="both")
+    (array([[ True, False, False]]), array([[False,  True, False]]))
+    >>> mdt.nph.locate_item_change(a, axis=ax, pin="both", wrap=True)
+    (array([[ True, False,  True]]), array([[ True,  True, False]]))
+    >>> mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    (array([[ True, False,  True]]), array([[ True,  True, False]]))
+
+    >>> a = np.array([]).reshape(2,0)
+    >>> ax = 0
+    >>> before, after = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both"
+    ... )
+    >>> before
+    array([], shape=(2, 0), dtype=bool)
+    >>> after
+    array([], shape=(2, 0), dtype=bool)
+    >>> before_wrap, after_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    array([], shape=(2, 0), dtype=bool)
+    >>> after_wrap
+    array([], shape=(2, 0), dtype=bool)
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([], shape=(2, 0), dtype=bool)
+    >>> after_tfic_tlic
+    array([], shape=(2, 0), dtype=bool)
+    >>> ax = 1
+    >>> before, after = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both"
+    ... )
+    >>> before
+    array([], shape=(2, 0), dtype=bool)
+    >>> after
+    array([], shape=(2, 0), dtype=bool)
+    >>> before_wrap, after_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    array([], shape=(2, 0), dtype=bool)
+    >>> after_wrap
+    array([], shape=(2, 0), dtype=bool)
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([], shape=(2, 0), dtype=bool)
+    >>> after_tfic_tlic
+    array([], shape=(2, 0), dtype=bool)
+
+    >>> a = np.array(0)
+    >>> mdt.nph.locate_item_change(a, pin="both")
+    Traceback (most recent call last):
+    ...
+    ValueError: The input array must be at least one dimensional
+
+    >>> mdt.nph.locate_item_change(a, pin="both", wrap=True, tfic=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: 'wrap' must not be used together with 'tfic' of 'tlic'
+    """
+    a = np.asarray(a)
+    if a.ndim == 0:
+        raise ValueError("The input array must be at least 1-dimensional")
+    if wrap and (tfic or tlic):
+        raise ValueError(
+            "'wrap' must not be used together with 'tfic' of 'tlic'"
+        )
+
+    changes = np.diff(a, axis=axis) != 0
+    # Only index `a.shape` with `axis` after np.diff to get a proper
+    # numpy.AxisError if `axis` is out of bounds (instead of an
+    # IndexError)
+    if a.shape[axis] == 0:
+        if pin == "both":
+            return np.zeros_like(a, dtype=bool), np.zeros_like(a, dtype=bool)
+        else:
+            return np.zeros_like(a, dtype=bool)
+
+    shape = list(changes.shape)
+    shape[axis] = 1
+    shape = tuple(shape)
+    if wrap:
+        insertion_before = a.take(0, axis=axis) - a.take(-1, axis=axis)
+        insertion_before = (insertion_before != 0).reshape(shape)
+        insertion_after = insertion_before
+    else:
+        if tfic:
+            insertion_after = np.ones(shape, dtype=bool)
+        else:
+            insertion_after = np.zeros(shape, dtype=bool)
+        if tlic:
+            insertion_before = np.ones(shape, dtype=bool)
+        else:
+            insertion_before = np.zeros(shape, dtype=bool)
+
+    if pin in ("before", "both"):
+        item_change_before = np.concatenate(
+            (changes, insertion_before), axis=axis
+        )
+        assert item_change_before.shape == a.shape
+        if pin == "before":
+            return item_change_before
+    if pin in ("after", "both"):
+        item_change_after = np.concatenate(
+            (insertion_after, changes), axis=axis
+        )
+        assert item_change_after.shape == a.shape
+        if pin == "after":
+            return item_change_after
+    else:
+        return ValueError(
+            "'pin' must be either 'after', 'before' or 'both' but you gave"
+            " {}".format(pin)
+        )
+    return item_change_before, item_change_after
+
+
+def item_change_ix(
+    a, axis=-1, pin="after", wrap=False, tfic=False, tlic=False
+):
+    """
+    Get the indices of item changes in an array.
+
+    Parameters
+    ----------
+    a : array_like
+        Array for which to get all indices where its elements change.
+    axis : int, optional
+        See :func:`mdtools.numpy_helper_functions.locate_item_change`.
+    pin : {"after", "before", "both"}
+        See :func:`mdtools.numpy_helper_functions.locate_item_change`.
+    wrap : bool, optional
+        See :func:`mdtools.numpy_helper_functions.locate_item_change`.
+    tfic : bool, optional
+        See :func:`mdtools.numpy_helper_functions.locate_item_change`.
+    tlic : bool, optional
+        See :func:`mdtools.numpy_helper_functions.locate_item_change`.
+
+    Returns
+    -------
+    ix_before : tuple of numpy.ndarray
+        Tuple of arrays, one for each dimension of `a`, containing the
+        indices where the elements of `a` will change.  Can be used to
+        index `a` and get its values right before the item change.  Is
+        not returned if `pin` is ``"after"``.
+    ix_after : tuple of numpy.ndarray
+        Tuple of arrays, one for each dimension of `a`, containing the
+        indices where the elements of `a` have changed.  Can be used to
+        index `a` and get its values right after the item change.  Is
+        not returned if `pin` is ``"before"``.
+
+    See Also
+    --------
+    :func:`mdtools.numpy_helper_functions.locate_item_change` :
+        Locate the positions of item changes in an array
+    :func:`mdtools.dtrj.trans_ix` :
+        Same function but specifically for discrete trajectories
+
+    Notes
+    -----
+    This function only applies :func:`numpy.nonzero` to the output of
+    :func:`mdtools.numpy_helper_functions.locate_item_change`.
+
+    Examples
+    --------
+    >>> a = np.array([1, 2, 2, 3, 3, 3])
+    >>> before, after = mdt.nph.item_change_ix(a, pin="both")
+    >>> before
+    (array([0, 2]),)
+    >>> after
+    (array([1, 3]),)
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([0, 2, 5]),)
+    >>> after_wrap
+    (array([0, 1, 3]),)
+    >>> before_tfic, after_tfic = mdt.nph.item_change_ix(
+    ...     a, pin="both", tfic=True
+    ... )
+    >>> before_tfic
+    (array([0, 2]),)
+    >>> after_tfic
+    (array([0, 1, 3]),)
+    >>> before_tlic, after_tlic = mdt.nph.item_change_ix(
+    ...     a, pin="both", tlic=True
+    ... )
+    >>> before_tlic
+    (array([0, 2, 5]),)
+    >>> after_tlic
+    (array([1, 3]),)
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([0, 2, 5]),)
+    >>> after_tfic_tlic
+    (array([0, 1, 3]),)
+
+    >>> a = np.array([1, 2, 2, 3, 3, 3, 1])
+    >>> before, after = mdt.nph.item_change_ix(a, pin="both")
+    >>> before
+    (array([0, 2, 5]),)
+    >>> after
+    (array([1, 3, 6]),)
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([0, 2, 5]),)
+    >>> after_wrap
+    (array([1, 3, 6]),)
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([0, 2, 5, 6]),)
+    >>> after_tfic_tlic
+    (array([0, 1, 3, 6]),)
+
+    2-dimensional example:
+
+    >>> a = np.array([[1, 3, 3, 3],
+    ...               [3, 1, 3, 3],
+    ...               [3, 3, 1, 3]])
+    >>> ax = 0
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([0, 0, 1, 1]), array([0, 1, 1, 2]))
+    >>> after
+    (array([1, 1, 2, 2]), array([0, 1, 1, 2]))
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([0, 0, 1, 1, 2, 2]), array([0, 1, 1, 2, 0, 2]))
+    >>> after_wrap
+    (array([0, 0, 1, 1, 2, 2]), array([0, 2, 0, 1, 1, 2]))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([0, 0, 1, 1, 2, 2, 2, 2]), array([0, 1, 1, 2, 0, 1, 2, 3]))
+    >>> after_tfic_tlic
+    (array([0, 0, 0, 0, 1, 1, 2, 2]), array([0, 1, 2, 3, 0, 1, 1, 2]))
+
+    >>> ax = 1
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([0, 1, 1, 2, 2]), array([0, 0, 1, 1, 2]))
+    >>> after
+    (array([0, 1, 1, 2, 2]), array([1, 1, 2, 2, 3]))
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([0, 0, 1, 1, 2, 2]), array([0, 3, 0, 1, 1, 2]))
+    >>> after_wrap
+    (array([0, 0, 1, 1, 2, 2]), array([0, 1, 1, 2, 2, 3]))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([0, 0, 1, 1, 1, 2, 2, 2]), array([0, 3, 0, 1, 3, 1, 2, 3]))
+    >>> after_tfic_tlic
+    (array([0, 0, 1, 1, 1, 2, 2, 2]), array([0, 1, 0, 1, 2, 0, 2, 3]))
+
+    3-dimensional expample:
+
+    >>> a = np.array([[[1, 2, 2],
+    ...                [2, 2, 1]],
+    ...
+    ...               [[2, 2, 1],
+    ...                [1, 2, 2]]])
+    >>> ax = 0
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([0, 0, 0, 0]), array([0, 0, 1, 1]), array([0, 2, 0, 2]))
+    >>> after
+    (array([1, 1, 1, 1]), array([0, 0, 1, 1]), array([0, 2, 0, 2]))
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
+    >>> after_wrap
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1]), \
+array([0, 2, 0, 2, 0, 1, 2, 0, 1, 2]))
+    >>> after_tfic_tlic
+    (array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 0, 1, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 2, 0, 1, 2, 0, 2, 0, 2]))
+
+    >>> ax = 1
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([0, 0, 1, 1]), array([0, 0, 0, 0]), array([0, 2, 0, 2]))
+    >>> after
+    (array([0, 0, 1, 1]), array([1, 1, 1, 1]), array([0, 2, 0, 2]))
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
+    >>> after_wrap
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 1, 0, 0, 1, 1, 1]), \
+array([0, 2, 0, 1, 2, 0, 2, 0, 1, 2]))
+    >>> after_tfic_tlic
+    (array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]), \
+array([0, 0, 0, 1, 1, 0, 0, 0, 1, 1]), \
+array([0, 1, 2, 0, 2, 0, 1, 2, 0, 2]))
+
+    >>> ax = 2
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([0, 1, 1, 0]))
+    >>> after
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([1, 2, 2, 1]))
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 1, 2, 1, 2, 0, 2]))
+    >>> after_wrap
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 0, 2, 0, 2, 0, 1]))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 1, 2, 1, 2, 0, 2]))
+    >>> after_tfic_tlic
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 0, 2, 0, 2, 0, 1]))
+
+    Edge cases:
+
+    >>> a = np.array([[1, 2, 2]])
+    >>> ax = 0
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after_wrap
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([0, 0, 0]), array([0, 1, 2]))
+    >>> after_tfic_tlic
+    (array([0, 0, 0]), array([0, 1, 2]))
+    >>> ax = 1
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([0]), array([0]))
+    >>> after
+    (array([0]), array([1]))
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([0, 0]), array([0, 2]))
+    >>> after_wrap
+    (array([0, 0]), array([0, 1]))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([0, 0]), array([0, 2]))
+    >>> after_tfic_tlic
+    (array([0, 0]), array([0, 1]))
+
+    >>> a = np.array([]).reshape(2,0)
+    >>> ax = 0
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after_wrap
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after_tfic_tlic
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> ax = 1
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", wrap=True
+    ... )
+    >>> before_wrap
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after_wrap
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after_tfic_tlic
+    (array([], dtype=int64), array([], dtype=int64))
+
+    >>> a = np.array(0)
+    >>> mdt.nph.item_change_ix(a, pin="both")
+    Traceback (most recent call last):
+    ...
+    ValueError: The input array must be at least one dimensional
+
+    >>> mdt.nph.item_change_ix(a, pin="both", wrap=True, tfic=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: 'wrap' must not be used together with 'tfic' of 'tlic'
+
+    Examples from
+    :func:`mdtools.numpy_helper_functions.ix_of_item_change` mapped to
+    :func:`mdtools.numpy_helper_functions.item_change_ix`:
+
+    >>> a = np.arange(3)
+    >>> a
+    array([0, 1, 2])
+    >>> mdt.nph.item_change_ix(a, pin="after")
+    (array([1, 2]),)
+    >>> mdt.nph.item_change_ix(a, pin="after", wrap=True)
+    (array([0, 1, 2]),)
+    >>> ix = mdt.nph.item_change_ix(a, pin="after", tfic=True)
+    >>> ix
+    (array([0, 1, 2]),)
+    >>> a[ix]
+    array([0, 1, 2])
+
+    >>> b = np.array([1, 2, 2, 3, 3, 3, 1])
+    >>> mdt.nph.item_change_ix(b, pin="after")
+    (array([1, 3, 6]),)
+    >>> mdt.nph.item_change_ix(b, pin="after", wrap=True)
+    (array([1, 3, 6]),)
+    >>> ix = mdt.nph.item_change_ix(b, pin="after", tfic=True)
+    >>> ix
+    (array([0, 1, 3, 6]),)
+    >>> b[ix]
+    array([1, 2, 3, 1])
+
+    >>> c = np.ones(3)
+    >>> ix = mdt.nph.item_change_ix(c, pin="after")
+    >>> ix
+    (array([], dtype=int64),)
+    >>> c[ix]
+    array([], dtype=float64)
+    >>> mdt.nph.item_change_ix(c, pin="after", wrap=True)
+    (array([], dtype=int64),)
+    >>> mdt.nph.item_change_ix(c, pin="after", tfic=True)
+    (array([0]),)
+
+    2-dimensional example:
+
+    >>> d = np.array([[1, 3, 3, 3],
+    ...               [3, 1, 3, 3],
+    ...               [3, 3, 1, 3]])
+    >>> ax = 0
+    >>> mdt.nph.item_change_ix(d, axis=ax, pin="after")
+    (array([1, 1, 2, 2]), array([0, 1, 1, 2]))
+    >>> mdt.nph.item_change_ix(d, axis=ax, pin="after", wrap=True)
+    (array([0, 0, 1, 1, 2, 2]), array([0, 2, 0, 1, 1, 2]))
+    >>> ix = mdt.nph.item_change_ix(d, axis=ax, pin="after", tfic=True)
+    >>> ix
+    (array([0, 0, 0, 0, 1, 1, 2, 2]), array([0, 1, 2, 3, 0, 1, 1, 2]))
+    >>> d[ix]
+    array([1, 3, 3, 3, 3, 1, 3, 1])
+
+    >>> ax = 1
+    >>> mdt.nph.item_change_ix(d, axis=ax, pin="after")
+    (array([0, 1, 1, 2, 2]), array([1, 1, 2, 2, 3]))
+    >>> mdt.nph.item_change_ix(d, axis=ax, pin="after", wrap=True)
+    (array([0, 0, 1, 1, 2, 2]), array([0, 1, 1, 2, 2, 3]))
+    >>> mdt.nph.item_change_ix(d, axis=ax, pin="after", tfic=True)
+    (array([0, 0, 1, 1, 1, 2, 2, 2]), array([0, 1, 0, 1, 2, 0, 2, 3]))
+
+    3-dimensional expample:
+
+    >>> e = np.array([[[1, 2, 2],
+    ...                [2, 2, 1]],
+    ...
+    ...               [[2, 2, 1],
+    ...                [1, 2, 2]]])
+    >>> ax = 0
+    >>> mdt.nph.item_change_ix(e, axis=ax, pin="after")
+    (array([1, 1, 1, 1]), array([0, 0, 1, 1]), array([0, 2, 0, 2]))
+    >>> mdt.nph.item_change_ix(e, axis=ax, pin="after", wrap=True)
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
+    >>> ix = mdt.nph.item_change_ix(e, axis=ax, pin="after", tfic=True)
+    >>> ix
+    (array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 0, 1, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 2, 0, 1, 2, 0, 2, 0, 2]))
+    >>> e[ix]
+    array([1, 2, 2, 2, 2, 1, 2, 1, 1, 2])
+
+    >>> ax = 1
+    >>> mdt.nph.item_change_ix(e, axis=ax, pin="after")
+    (array([0, 0, 1, 1]), array([1, 1, 1, 1]), array([0, 2, 0, 2]))
+    >>> mdt.nph.item_change_ix(e, axis=ax, pin="after", wrap=True)
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 2, 0, 2, 0, 2, 0, 2]))
+    >>> mdt.nph.item_change_ix(e, axis=ax, pin="after", tfic=True)
+    (array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]), \
+array([0, 0, 0, 1, 1, 0, 0, 0, 1, 1]), \
+array([0, 1, 2, 0, 2, 0, 1, 2, 0, 2]))
+
+    >>> ax = 2
+    >>> mdt.nph.item_change_ix(e, axis=ax, pin="after")
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([1, 2, 2, 1]))
+    >>> mdt.nph.item_change_ix(e, axis=ax, pin="after", wrap=True)
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 0, 2, 0, 2, 0, 1]))
+    >>> mdt.nph.item_change_ix(e, axis=ax, pin="after", tfic=True)
+    (array([0, 0, 0, 0, 1, 1, 1, 1]), \
+array([0, 0, 1, 1, 0, 0, 1, 1]), \
+array([0, 1, 0, 2, 0, 2, 0, 1]))
+
+    Edge cases:
+
+    >>> x = np.array([1])
+    >>> mdt.nph.item_change_ix(x, pin="after")
+    (array([], dtype=int64),)
+    >>> mdt.nph.item_change_ix(x, pin="after", wrap=True)
+    (array([], dtype=int64),)
+    >>> mdt.nph.item_change_ix(x, pin="after", tfic=True)
+    (array([0]),)
+
+    >>> x = np.array([])
+    >>> mdt.nph.item_change_ix(x, pin="after")
+    (array([], dtype=int64),)
+    >>> mdt.nph.item_change_ix(x, pin="after", wrap=True)
+    (array([], dtype=int64),)
+    >>> ix = mdt.nph.item_change_ix(x, pin="after", tfic=True)
+    >>> ix
+    (array([], dtype=int64),)
+    >>> x[ix]
+    array([], dtype=float64)
+
+    >>> x = np.array(0)
+    >>> mdt.nph.item_change_ix(x, pin="after")
+    Traceback (most recent call last):
+    ...
+    ValueError: The dimension of a must be greater than zero
+    """
+    item_changes = mdt.nph.locate_item_change(
+        a=a, axis=axis, pin=pin, wrap=wrap, tfic=tfic, tlic=tlic
+    )
+    if pin == "both":
+        return tuple(np.nonzero(ic) for ic in item_changes)
+    else:
+        return np.nonzero(item_changes)
 
 
 def argmin_last(a, axis=None, out=None):

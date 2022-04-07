@@ -412,6 +412,8 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
           convertet to a :class:`numpy.ndarray`.
         * Must be of shape ``(f,)`` or ``(n, f)``, where ``n`` is the
           number of compounds and ``f`` is the number of frames.
+          Transposed discrete trajectories of shape ``(f, n)`` are also
+          valid.
         * Must contain only integers or floats whose fractional part is
           zero, because the elements of a discrete trajectory are
           interpreted as the indices of the states in which a given
@@ -441,7 +443,10 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     Returns
     -------
     dtrj : numpy.ndarray
-        The input array as :class:`numpy.ndarray` with two dimensions.
+        The input array as :class:`numpy.ndarray` with two dimensions
+        and in row-major order (C-style memory layout).   No copy is
+        performed if the input is already a 2-dimensional
+        :class:`numpy.ndarray` with matching order.
 
     Raises
     ------
@@ -464,31 +469,34 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     Notes
     -----
     If the input array has only shape ``(f,)``, it is expanded to shape
-    ``(1, f)``.  Hence, the output array will always have two dimensions.
+    ``(1, f)``.  Hence, the output array will always have two
+    dimensions.
     """
-    dtrj = np.asarray(dtrj)
+    dtrj = np.asarray(dtrj, order="C")
     # Check input paramaters:
     if shape is not None and len(shape) != 2:
-        raise ValueError("The length of 'shape' is {} but must be 2"
-                         .format(len(shape)))
+        raise ValueError(
+            "The length of 'shape' is {} but must be 2".format(len(shape))
+        )
     # Check discrete trajectory array:
     if dtrj.ndim == 1:
         dtrj = np.expand_dims(dtrj, axis=0)
     elif dtrj.ndim > 2:
-        raise ValueError("'dtrj' has {} dimensions but must have one or"
-                         " two dimensions".format(dtrj.ndim))
+        raise ValueError(
+            "'dtrj' has {} dimensions but must have one or two"
+            " dimensions".format(dtrj.ndim)
+        )
     if np.any(np.modf(dtrj)[0] != 0):
-        raise ValueError("At least one element of 'dtrj' is not an"
-                         " integer")
+        raise ValueError(
+            "At least one element of 'dtrj' is not an integer"
+        )
     if (shape is not None or
         amin is not None or
         amax is not None or
             dtype is not None):
-        array(a=dtrj,
-              shape=shape,
-              amin=amin,
-              amax=amax,
-              dtype=dtype)
+        mdt.check.array(
+            a=dtrj, shape=shape, amin=amin, amax=amax, dtype=dtype
+        )
     return dtrj
 
 

@@ -93,6 +93,7 @@ jobs:
         mdtools/__init__.py \
         mdtools/_metadata.py \
         mdtools/box.py \
+        mdtools/dtrj.py \
         mdtools/file_handler.py \
         mdtools/numpy_helper_functions.py \
         mdtools/plot.py \
