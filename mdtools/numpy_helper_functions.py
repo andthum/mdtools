@@ -987,6 +987,237 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     return tuple(ix)
 
 
+def subtract_mic(x1, x2, amin=None, amax=None, **kwargs):
+    """
+    Subtract two arrays element-wise respecting the minium image
+    convention.
+
+    Parameters
+    ----------
+    x1, x2 : array_like
+        The arrays to be subtracted from each other.  If
+        ``x1.shape != x2.shape``, they must be broadcastable to a common
+        shape (which becomes the shape of the output).
+    amin, amax : scalar or array_like, optional
+        The lower and upper bound(s) for the minimum image convention.
+        If ``None``, the minium and maximum value of `a` is taken,
+        respectively.  If `amin` and/or `amax` is an array, they must be
+        broadcastable to a common shape and the difference
+        ``amax - amin`` must be broadcastable to the shape of
+        ``npumpy.subtract(x1, x2, **kwargs)``.  `amin` must be smaller
+        than `amax`.  If the difference between the `x1` and `x2` is
+        larger than ``0.5 * (amax - amin)``, it is wrapped back to lie
+        within that range (see Notes section).
+    kwargs : dict, optional
+        Keyword arguments to parse to :func:`numpy.subtract`.  Note that
+        the keyword argument `dtype` is always set to ``numpy.float64``.
+
+    Returns
+    -------
+    diff : numpy.ndarray
+        The element-wise difference ``x1 - x2``.
+
+    See Also
+    --------
+    :func:`numpy.subtract` : Subtract two arrays element-wise
+    :func:`mdtools.box.vdist` :
+        Calculate the distance vectors between two position arrays
+
+    Notes
+    -----
+    This function is just a wrapper around :func:`numpy.subtract` that
+    respects the minimum image convention.  The minimum image convention
+    is taken into account using algorithm C4 from Deiters [#]_
+    (``diff -= numpy.floor(diff / (amax - amin) + 0.5) *
+    (amax - amin)``).
+
+    In contrast to :func:`numpy.subtract`, the output array of this
+    function always has dtype ``numpy.float64``.
+
+    If you want to calculate distance vectors between particle
+    positions, use :func:`mdtools.box.vdist`, because this funtion
+    interpretes position and box arrays correctly.
+
+    References
+    ----------
+    .. [#] U. K. Deiters, `"Efficient Coding of the Minimum Image
+            Convention" <https://doi.org/10.1524/zpch.2013.0311>`_,
+            Zeitschrift für Physikalische Chemie, 2013, 227, 345-352.
+
+    Examples
+    --------
+    >>> x1 = np.array([0, 2, 4])
+    >>> x2 = np.array([5, 3, 1])
+    >>> np.subtract(x1, x2)
+    array([-5, -1,  3])
+    >>> mdt.nph.subtract_mic(x1, x2)
+    array([ 0., -1., -2.])
+    >>> mdt.nph.subtract_mic(x1, x2, amin=0, amax=[3, 2, 2])
+    array([ 1., -1., -1.])
+
+    >>> x1 = np.array([[0, 2, 4],
+    ...                [5, 3, 1]])
+    >>> x2 = np.array([[5, 3, 1],
+    ...                [0, 2, 4]])
+    >>> np.subtract(x1, x2)
+    array([[-5, -1,  3],
+           [ 5,  1, -3]])
+    >>> mdt.nph.subtract_mic(x1, x2)
+    array([[ 0., -1., -2.],
+           [ 0.,  1.,  2.]])
+    >>> mdt.nph.subtract_mic(x1, x2, amin=0, amax=[3, 2, 2])
+    array([[ 1., -1., -1.],
+           [-1., -1., -1.]])
+    >>> mdt.nph.subtract_mic(
+    ...     x1, x2, amin=0, amax=[[3, 2, 2], [2, 3, 4]]
+    ... )
+    array([[ 1., -1., -1.],
+           [-1.,  1.,  1.]])
+
+    >>> x1 = np.array([[[0, 2, 4],
+    ...                 [5, 3, 1]],
+    ...
+    ...                [[4, 0, 2],
+    ...                 [5, 3, 1]]])
+    >>> x2 = np.array([[[5, 3, 1],
+    ...                 [0, 2, 4]],
+    ...
+    ...                [[5, 3, 1],
+    ...                 [4, 0, 2]]])
+    >>> np.subtract(x1, x2)
+    array([[[-5, -1,  3],
+            [ 5,  1, -3]],
+    <BLANKLINE>
+           [[-1, -3,  1],
+            [ 1,  3, -1]]])
+    >>> mdt.nph.subtract_mic(x1, x2)
+    array([[[ 0., -1., -2.],
+            [ 0.,  1.,  2.]],
+    <BLANKLINE>
+           [[-1.,  2.,  1.],
+            [ 1., -2., -1.]]])
+    >>> mdt.nph.subtract_mic(x1, x2, amin=0, amax=[3, 2, 2])
+    array([[[ 1., -1., -1.],
+            [-1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.],
+            [ 1., -1., -1.]]])
+    >>> # The following behavior is different to `mdtools.box.vdist`!
+    >>> mdt.nph.subtract_mic(
+    ...     x1, x2, amin=0, amax=[[3, 2, 2], [2, 3, 4]]
+    ... )
+    array([[[ 1., -1., -1.],
+            [-1.,  1.,  1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.],
+            [-1.,  0., -1.]]])
+
+    >>> x1 = np.array([0, 2, 4])
+    >>> x2 = np.array([[5, 3, 1],
+    ...                [0, 2, 4]])
+    >>> np.subtract(x1, x2)
+    array([[-5, -1,  3],
+           [ 0,  0,  0]])
+    >>> mdt.nph.subtract_mic(x1, x2)
+    array([[ 0., -1., -2.],
+           [ 0.,  0.,  0.]])
+    >>> mdt.nph.subtract_mic(x1, x2, amin=0, amax=[3, 2, 2])
+    array([[ 1., -1., -1.],
+           [ 0.,  0.,  0.]])
+    >>> mdt.nph.subtract_mic(
+    ...     x1, x2, amin=0, amax=[[3, 2, 2], [2, 3, 4]]
+    ... )
+    array([[ 1., -1., -1.],
+           [ 0.,  0.,  0.]])
+
+    >>> x1 = np.array([0, 2, 4])
+    >>> x2 = np.array([[[5, 3, 1],
+    ...                 [0, 2, 4]],
+    ...
+    ...                [[5, 3, 1],
+    ...                 [4, 0, 2]]])
+    >>> np.subtract(x1, x2)
+    array([[[-5, -1,  3],
+            [ 0,  0,  0]],
+    <BLANKLINE>
+           [[-5, -1,  3],
+            [-4,  2,  2]]])
+    >>> mdt.nph.subtract_mic(x1, x2)
+    array([[[ 0., -1., -2.],
+            [ 0.,  0.,  0.]],
+    <BLANKLINE>
+           [[ 0., -1., -2.],
+            [ 1.,  2.,  2.]]])
+    >>> mdt.nph.subtract_mic(x1, x2, amin=0, amax=[3, 2, 2])
+    array([[[ 1., -1., -1.],
+            [ 0.,  0.,  0.]],
+    <BLANKLINE>
+           [[ 1., -1., -1.],
+            [-1.,  0.,  0.]]])
+    >>> # The following behavior is different to `mdtools.box.vdist`!
+    >>> mdt.nph.subtract_mic(
+    ...     x1, x2, amin=0, amax=[[3, 2, 2], [2, 3, 4]]
+    ... )
+    array([[[ 1., -1., -1.],
+            [ 0.,  0.,  0.]],
+    <BLANKLINE>
+           [[ 1., -1., -1.],
+            [ 0., -1., -2.]]])
+
+    >>> x1 = np.array([[0, 2, 4],
+    ...                [5, 3, 1]])
+    >>> x2 = np.array([[[5, 3, 1],
+    ...                 [0, 2, 4]],
+    ...
+    ...                [[5, 3, 1],
+    ...                 [4, 0, 2]]])
+    >>> np.subtract(x1, x2)
+    array([[[-5, -1,  3],
+            [ 5,  1, -3]],
+    <BLANKLINE>
+           [[-5, -1,  3],
+            [ 1,  3, -1]]])
+    >>> mdt.nph.subtract_mic(x1, x2)
+    array([[[ 0., -1., -2.],
+            [ 0.,  1.,  2.]],
+    <BLANKLINE>
+           [[ 0., -1., -2.],
+            [ 1., -2., -1.]]])
+    >>> mdt.nph.subtract_mic(x1, x2, amin=0, amax=[3, 2, 2])
+    array([[[ 1., -1., -1.],
+            [-1., -1., -1.]],
+    <BLANKLINE>
+           [[ 1., -1., -1.],
+            [ 1., -1., -1.]]])
+    >>> # The following behavior is different to `mdtools.box.vdist`!
+    >>> mdt.nph.subtract_mic(
+    ...     x1, x2, amin=0, amax=[[3, 2, 2], [2, 3, 4]]
+    ... )
+    array([[[ 1., -1., -1.],
+            [-1.,  1.,  1.]],
+    <BLANKLINE>
+           [[ 1., -1., -1.],
+            [-1.,  0., -1.]]])
+    """
+    x1 = np.asarray(x1)
+    x2 = np.asarray(x2)
+    amin = min(np.min(x1), np.min(x2)) if amin is None else amin
+    amax = max(np.max(x1), np.max(x2)) if amax is None else amax
+    # np.subtract keeps the dtype of the input arrays => If the dtype of
+    # the input arrays is an unsigned integer type, negative differences
+    # are not possible.
+    gap = np.subtract(amax, amin, dtype=np.float64, casting="safe")
+    if np.any(gap <= 0):
+        raise ValueError(
+            "'amax' ({}) must be greater than 'amin' ({})".format(amax, amin)
+        )
+    kwargs.pop("dtype", None)
+    casting = kwargs.pop("casting", "safe")
+    diff = np.subtract(x1, x2, dtype=np.float64, casting=casting, **kwargs)
+    diff -= np.floor(diff / gap + 0.5) * gap
+    return diff
+
+
 def locate_item_change(
     a, axis=-1, pin="after", wrap=False, tfic=False, tlic=False
 ):
