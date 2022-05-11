@@ -646,6 +646,9 @@ def vdist(pos1, pos2, box=None, out=None):
     :func:`mdtools.numpy_helper_functions.subtract_mic` :
         Subtract two arrays element-wise respecting the minium image
         convention
+    :func:`mdtools.numpy_helper_functions.diff_mic` :
+        Calculate the difference between array elements respecting the
+        minimum image convention.
 
     Notes
     -----
