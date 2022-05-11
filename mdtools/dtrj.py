@@ -288,12 +288,24 @@ def trans_per_state(
 
     .. todo::
 
-        Minimum image convention: Add the possibility to respect the
-        minium image convention when resolving the transition direction
-        (`resolve_direction` set to ``True``).  This is usefull, when
-        the states continue periodically, for instance because the
-        states are position bins along a box dimension with periodic
-        boundary conditions.
+        * Minimum image convention: Add the possibility to respect the
+          minium image convention when resolving the transition
+          direction (`resolve_direction` set to ``True``).  This is
+          usefull, when the states continue periodically, for instance
+          because the states are position bins along a box dimension
+          with periodic boundary conditions.
+
+        * Use :func:`mdtools.numpy_helper_functions.locate_item_change`
+          to get the boolean masks (``trans_start`` and ``trans_end``)
+          and only keep the last part of this function that calculates
+          the histograms.  See
+          :func:`mdtools.dtrj.trans_per_state_vs_time` for how to do
+          that.
+
+        * Don't return 2-dimensional arrays when `resolve_direction` is
+          ``True``.  Instead return a tuple of tuples like in
+          :func:`mdtools.numpy_helper_functions.locate_item_change` (or
+          :func:`mdtools.dtrj.locate_trans`).
 
     Parameters
     ----------
@@ -388,16 +400,16 @@ def trans_per_state(
     ... )
     >>> # Number of transitions starting from the 1st, 2nd or 3rd state\
  and
-    >>> #   * hist_start_resolve[0]: ending in an higher state
-    >>> #   * hist_start_resolve[0]: ending in a lower state
+    >>> #   * ending in an higher state (hist_start_resolve[0])
+    >>> #   * ending in a lower state (hist_start_resolve[1])
     >>> hist_start_resolve
     array([[3, 2, 0],
            [0, 0, 3]])
     >>> np.array_equal(np.sum(hist_start_resolve, axis=0), hist_start)
     True
     >>> # Number of transitions ending in the 1st, 2nd or 3rd state and
-    >>> #   * hist_end_resolve[0]: starting from a lower state
-    >>> #   * hist_end_resolve[0]: starting from an higher state
+    >>> #   * starting from a lower state (hist_end_resolve[0])
+    >>> #   * starting from an higher state (hist_end_resolve[1])
     >>> hist_end_resolve
     array([[0, 2, 3],
            [2, 1, 0]])
@@ -525,14 +537,19 @@ mdt.dtrj.trans_per_state(
         raise ValueError("At least one element of 'dtrj' is not an integer")
     if resolve_direction and (tfft or tlft):
         raise ValueError(
-            "'resolve_direction' must not be used together with 'tfft' of"
+            "'resolve_direction' must not be used together with 'tfft' or"
             " 'tlft'"
         )
     if wrap and (tfft or tlft):
         raise ValueError(
-            "'wrap' must not be used together with 'tfft' of 'tlft'"
+            "'wrap' must not be used together with 'tfft' or 'tlft'"
         )
 
+    if resolve_direction and np.issubdtype(dtrj.dtype, np.unsignedinteger):
+        # np.diff keeps the dtype of the input array => If the dtype of
+        # the input array is an unsigned integer type, negative
+        # differences are not possible.
+        dtrj = dtrj.astype(np.int64, casting="safe")
     state_diff = np.diff(dtrj, axis=axis)
     if resolve_direction:
         # Distinct between transitions to higher and to lower states
@@ -540,21 +557,23 @@ mdt.dtrj.trans_per_state(
     else:
         # Don't discriminate between different types of transitions
         trans = np.asarray([state_diff != 0])
-    # Only index `dtrj.shape` with `axis` after np.diff to get a proper
-    # numpy.AxisError if `axis` is out of bounds (instead of an
-    # IndexError)
+
+    # Only index `dtrj.shape` with `axis` after np.diff(dtrj, axis) to
+    # get a proper numpy.AxisError if `axis` is out of bounds (instead
+    # of an IndexError)
     if dtrj.shape[axis] == 0:
         return tuple(
             np.squeeze(np.array([], dtype=int).reshape(len(trans), 0)),
             np.squeeze(np.array([], dtype=int).reshape(len(trans), 0)),
         )
 
+    # Construct an insertion array which will be inserted after or
+    # before `trans` to bring `trans` to the same shape as `dtrj` and
+    # make `trans` a mask for states from which transitions start or in
+    # which transitions end.
     shape = list(state_diff.shape)
     shape[axis] = 1
     shape = tuple(shape)
-    # `insertion` = array to insert after or before `trans` to bring
-    # `trans` to the same shape as `dtrj` and make `trans` a mask for
-    # states from which transitions start or in which transitions end.
     if wrap:
         state_diff = dtrj.take(0, axis=axis) - dtrj.take(-1, axis=axis)
         if resolve_direction:
@@ -589,6 +608,11 @@ mdt.dtrj.trans_per_state(
     del trans, tr, insertion_start, insertion_end
 
     min_state, max_state = np.min(dtrj), np.max(dtrj)
+    if max_state <= min_state:
+        raise ValueError(
+            "'max_state' ({}) must be less than 'min_state'"
+            " ({})".format(max_state, min_state)
+        )
     bins = np.arange(min_state, max_state + 2)
     hist_start = np.zeros(
         (len(trans_start), max_state - min_state + 1), dtype=int
