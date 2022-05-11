@@ -184,7 +184,18 @@ def locate_trans(
     )
 
 
-def trans_ix(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
+def trans_ix(
+    dtrj,
+    axis=-1,
+    pin="end",
+    trans_type=None,
+    wrap=False,
+    tfft=False,
+    tlft=False,
+    mic=False,
+    min_state=None,
+    max_state=None,
+):
     """
     Get the frames indices of state transitions in a discrete
     trajectory.
@@ -198,11 +209,17 @@ def trans_ix(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
         See :func:`mdtools.dtrj.locate_trans`.
     pin : {"end", "start", "both"}
         See :func:`mdtools.dtrj.locate_trans`.
+    trans_type : {None, "higher", "lower", "both"}, optional
+        See :func:`mdtools.dtrj.locate_trans`.
     wrap : bool, optional
         See :func:`mdtools.dtrj.locate_trans`.
     tfft : bool, optional
         See :func:`mdtools.dtrj.locate_trans`.
     tlft : bool, optional
+        See :func:`mdtools.dtrj.locate_trans`.
+    mic : bool, optional
+        See :func:`mdtools.dtrj.locate_trans`.
+    min_state, max_state : scalar or array_like, optional
         See :func:`mdtools.dtrj.locate_trans`.
 
     Returns
@@ -244,11 +261,22 @@ def trans_ix(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
     (array([0, 0, 1, 1, 2, 2, 3, 3]), array([1, 3, 2, 5, 3, 4, 1, 4]))
     """
     trans = mdt.dtrj.locate_trans(
-        dtrj=dtrj, axis=axis, pin=pin, wrap=wrap, tfft=tfft, tlft=tlft
+        dtrj=dtrj,
+        axis=axis,
+        pin=pin,
+        trans_type=trans_type,
+        wrap=wrap,
+        tfft=tfft,
+        tlft=tlft,
+        mic=mic,
+        min_state=min_state,
+        max_state=max_state,
     )
-    if pin == "both":
+    if pin == "both" and trans_type == "both":
+        return tuple(tuple(np.nonzero(tr) for tr in trns) for trns in trans)
+    elif pin == "both" or trans_type == "both":
         return tuple(np.nonzero(tr) for tr in trans)
-    else:
+    else:  # pin != "both" and trans_type != "both"
         return np.nonzero(trans)
 
 
