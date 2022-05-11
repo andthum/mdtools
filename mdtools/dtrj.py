@@ -32,7 +32,18 @@ import numpy as np
 import mdtools as mdt
 
 
-def locate_trans(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
+def locate_trans(
+    dtrj,
+    axis=-1,
+    pin="end",
+    trans_type=None,
+    wrap=False,
+    tfft=False,
+    tlft=False,
+    mic=False,
+    min_state=None,
+    max_state=None,
+):
     """
     Locate the frames of state transitions inside a discrete trajectory.
 
@@ -47,15 +58,24 @@ def locate_trans(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
         The axis along which to search for state transitions.  For
         ordinary discrete trajectories with shape ``(n, f)`` or
         ``(f,)``, where ``n`` is the number of compounds and ``f`` is
-        the number of frames, set `axis` to ``-1`` or to ``1``.  If you
-        parse a transposed discrete trajectory of shape ``(f, n)``, set
-        `axis` to ``0``.
+        the number of frames, set `axis` to ``-1``.  If you parse a
+        transposed discrete trajectory of shape ``(f, n)``, set `axis`
+        to ``0``.
     pin : {"end", "start", "both"}
         Whether to return the start (last frame where a given compound
         is in the previous state) or end (first frame where a given
         compound is in the next state) of the state transitions.  If set
         to ``"both"``, two output arrays will be returned, one for
         ``"start"`` and one for ``"end"``.
+    trans_type : {None, "higher", "lower", "both"}, optional
+        Whether to locate all state transitions without discriminating
+        between different transition types (``None``) or whether to
+        locate only state transitions into higher states (``"higher"``)
+        or into lower states (``"lower"``).  If set to ``"both"``, two
+        output arrays will be returned, one for ``"higher"`` and one for
+        ``"lower"``.  If `pin` is set to ``"both"``, too, a 2x2 tuple
+        will be returned.  The first index addresses `pin`, the second
+        index addresses `trans_type`.
     wrap : bool, optional
         If ``True``, `dtrj` is assumed to be continued after the last
         frame by `dtrj` itself, like when using periodic boundary
@@ -66,12 +86,33 @@ def locate_trans(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
     tfft : bool, optional
         Treat First Frame as Transition.  If ``True``, treat the first
         frame as the end of a state transition.  Has no effect if `pin`
-        is set to ``"start"``.  Must not be used together with `wrap`.
+        is set to ``"start"``.  Must not be used together with
+        `trans_type`, `wrap` or `mic`.
     tlft : bool, optional
         Treat Last Frame as Transition.  If ``True``, treat the last
         frame as the start of a state transition.  Has no effect if
         `pin` is set to ``"end"``.  Must not be used together with
-        `wrap`.
+        `trans_type`, `wrap` or `mic`.
+    mic : bool, optional
+        If ``True``, respect the Minimum Image Convention when
+        evaluating the transition type, i.e. when evaluating whether the
+        transition was in positive direction (to a higher state) or in
+        negative direction (to a lower state).  Has no effect if
+        `trans_type` is ``None``.  This option could be usefull, when
+        the states have periodic boundary conditions, for instance
+        because the states are position bins along a box dimension with
+        periodic boundary conditions.  In this case, the states should
+        result from an equidistant binning, otherwise the MIC algorithm
+        will give wrong results.
+    min_state, max_state : scalar or array_like, optional
+        The lower and upper bound(s) for the minimum image convention.
+        Has no effect if `mic` is ``False`` or `trans_type` is ``None``.
+        If ``None``, the minium and maximum value of `dtrj` is taken,
+        respectively.  `min_state` must be smaller than `max_state`.  If
+        the transition between two states is larger than
+        ``0.5 * (max_state - min_state)``, it is wrapped back to lie
+        within that range.  See also
+        :func:`mdtools.numpy_helper_functions.diff_mic`.
 
     Returns
     -------
@@ -130,7 +171,16 @@ def locate_trans(dtrj, axis=-1, pin="end", wrap=False, tfft=False, tlft=False):
     """
     dtrj = mdt.check.dtrj(dtrj)
     return mdt.nph.locate_item_change(
-        a=dtrj, axis=axis, pin=pin, wrap=wrap, tfic=tfft, tlic=tlft
+        a=dtrj,
+        axis=axis,
+        pin=pin,
+        change_type=trans_type,
+        wrap=wrap,
+        tfic=tfft,
+        tlic=tlft,
+        mic=mic,
+        amin=min_state,
+        amax=max_state,
     )
 
 
