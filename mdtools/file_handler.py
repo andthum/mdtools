@@ -847,5 +847,4 @@ def load_dtrj(fname, **kwargs):
     the loaded :class:`numpy.ndarray` is a suitable discrete trajectory.
     """
     dtrj = np.load(fname, **kwargs)
-    mdt.check.dtrj(dtrj)
-    return dtrj
+    return mdt.check.dtrj(dtrj)

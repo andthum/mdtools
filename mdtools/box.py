@@ -643,6 +643,12 @@ def vdist(pos1, pos2, box=None, out=None):
     :func:`MDAnalysis.analysis.distances.dist` :
         Calculate the distance between atoms in two MDAnalysis
         :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>`
+    :func:`mdtools.numpy_helper_functions.subtract_mic` :
+        Subtract two arrays element-wise respecting the minium image
+        convention
+    :func:`mdtools.numpy_helper_functions.diff_mic` :
+        Calculate the difference between array elements respecting the
+        minimum image convention.
 
     Notes
     -----
