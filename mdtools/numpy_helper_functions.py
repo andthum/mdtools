@@ -1020,6 +1020,9 @@ def subtract_mic(x1, x2, amin=None, amax=None, **kwargs):
     See Also
     --------
     :func:`numpy.subtract` : Subtract two arrays element-wise
+    :func:`mdtools.numpy_helper_functions.diff_mic` :
+        Calculate the difference between array elements respecting the
+        minimum image convention.
     :func:`mdtools.box.vdist` :
         Calculate the distance vectors between two position arrays
 
