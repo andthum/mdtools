@@ -1218,6 +1218,164 @@ def subtract_mic(x1, x2, amin=None, amax=None, **kwargs):
     return diff
 
 
+def diff_mic(a, amin=None, amax=None, **kwargs):
+    """
+    Calculate the difference between array elements respecting the
+    minimum image convention.
+
+    Parameters
+    ----------
+    a : array_like
+        Input array.
+    amin, amax : scalar or array_like, optional
+        The lower and upper bound(s) for the minimum image convention.
+        If ``None``, the minium and maximum value of `a` is taken,
+        respectively.  If `amin` and/or `amax` is an array, they must be
+        broadcastable to a common shape and the difference
+        ``amax - amin`` must be broadcastable to the shape of
+        ``npumpy.diff(a, **kwargs)``.  `amin` must be smaller than
+        `amax`.  If the difference between two elements in `a` is larger
+        than ``0.5 * (amax - amin)``, it is wrapped back to lie within
+        that range (see Notes section).
+    kwargs : dict, optional
+        Keyword arguments to parse to :func:`numpy.diff`.  Note that the
+        keyword argument `n` of :func:`numpy.diff` is not supported by
+        this function.
+
+    Returns
+    -------
+    diff : numpy.ndarray
+        The differences between the elements of the input array along
+        the given axis.  The shape of `diff` is the same as the shape of
+        `a` except along the given axis where the dimension is smaller
+        by 1.  The dtype of `diff` is ``numpy.float64``.
+
+    See Also
+    --------
+    :func:`numpy.diff` :
+        Calculate the n-th discrete difference along a given axis
+    :func:`mdtools.numpy_helper_functions.subtract_mic` :
+        Subtract two arrays element-wise respecting the minium image
+        convention.
+    :func:`mdtools.box.vdist` :
+        Calculate the distance vectors between two position arrays
+
+    Notes
+    -----
+    This function is just a wrapper around :func:`numpy.diff` that
+    respects the minimum image convention.  The minimum image convention
+    is taken into account using algorithm C4 from Deiters [#]_
+    (``diff -= numpy.floor(diff / (amax - amin) + 0.5) *
+    (amax - amin)``).
+
+    In contrast to :func:`numpy.diff`, the output array of this function
+    always has dtype ``numpy.float64``.
+
+    References
+    ----------
+    .. [#] U. K. Deiters, `"Efficient Coding of the Minimum Image
+            Convention" <https://doi.org/10.1524/zpch.2013.0311>`_,
+            Zeitschrift für Physikalische Chemie, 2013, 227, 345-352.
+
+    Examples
+    --------
+    >>> a = np.array([5, 0, 3, 2, 1, 4])
+    >>> np.diff(a)
+    array([-5,  3, -1, -1,  3])
+    >>> mdt.nph.diff_mic(a)
+    array([ 0., -2., -1., -1., -2.])
+    >>> mdt.nph.diff_mic(a, amin=0, amax=[3, 1.5, 2, 0.5, 2])
+    array([ 1.,  0., -1.,  0., -1.])
+
+    >>> a = np.array([[5, 3, 1],
+    ...               [0, 2, 4]])
+    >>> axis = 0
+    >>> np.diff(a, axis=axis)
+    array([[-5, -1,  3]])
+    >>> mdt.nph.diff_mic(a, axis=axis)
+    array([[ 0., -1., -2.]])
+    >>> mdt.nph.diff_mic(a, axis=axis, amin=0, amax=[3, 2, 2])
+    array([[ 1., -1., -1.]])
+    >>> axis = 1
+    >>> np.diff(a, axis=axis)
+    array([[-2, -2],
+           [ 2,  2]])
+    >>> mdt.nph.diff_mic(a, axis=axis)
+    array([[-2., -2.],
+           [ 2.,  2.]])
+    >>> mdt.nph.diff_mic(a, axis=axis, amin=0, amax=[3, 2])
+    array([[ 1.,  0.],
+           [-1.,  0.]])
+
+    >>> a = np.array([[[0, 2, 4],
+    ...                [5, 3, 1]],
+    ...
+    ...               [[4, 0, 2],
+    ...                [5, 3, 1]]])
+    >>> axis = 0
+    >>> np.diff(a, axis=axis)
+    array([[[ 4, -2, -2],
+            [ 0,  0,  0]]])
+    >>> mdt.nph.diff_mic(a, axis=axis)
+    array([[[-1., -2., -2.],
+            [ 0.,  0.,  0.]]])
+    >>> mdt.nph.diff_mic(a, axis=axis, amin=0, amax=[3, 2, 2])
+    array([[[1., 0., 0.],
+            [0., 0., 0.]]])
+    >>> axis = 1
+    >>> np.diff(a, axis=axis)
+    array([[[ 5,  1, -3]],
+    <BLANKLINE>
+           [[ 1,  3, -1]]])
+    >>> mdt.nph.diff_mic(a, axis=axis)
+    array([[[ 0.,  1.,  2.]],
+    <BLANKLINE>
+           [[ 1., -2., -1.]]])
+    >>> mdt.nph.diff_mic(a, axis=axis, amin=0, amax=[3, 2, 2])
+    array([[[-1., -1., -1.]],
+    <BLANKLINE>
+           [[ 1., -1., -1.]]])
+    >>> axis = 2
+    >>> np.diff(a, axis=axis)
+    array([[[ 2,  2],
+            [-2, -2]],
+    <BLANKLINE>
+           [[-4,  2],
+            [-2, -2]]])
+    >>> mdt.nph.diff_mic(a, axis=axis)
+    array([[[ 2.,  2.],
+            [-2., -2.]],
+    <BLANKLINE>
+           [[ 1.,  2.],
+            [-2., -2.]]])
+    >>> mdt.nph.diff_mic(a, axis=axis, amin=0, amax=[3, 2])
+    array([[[-1.,  0.],
+            [ 1.,  0.]],
+    <BLANKLINE>
+           [[-1.,  0.],
+            [ 1.,  0.]]])
+    """
+    # np.diff and np.subtract keep the dtype of the input array(s) => If
+    # the dtype of the input array(s) is an unsigned integer type,
+    # negative differences are not possible.
+    a = np.asarray(a).astype(dtype=np.float64, casting="safe")
+    if "n" in kwargs:
+        raise TypeError(
+            "The keyword argument 'n' of numpy.diff is not supported by this"
+            " function"
+        )
+    amin = np.min(a) if amin is None else amin
+    amax = np.max(a) if amax is None else amax
+    gap = np.subtract(amax, amin, dtype=np.float64, casting="safe")
+    if np.any(gap <= 0):
+        raise ValueError(
+            "'amax' ({}) must be greater than 'amin' ({})".format(amax, amin)
+        )
+    diff = np.diff(a, **kwargs)
+    diff -= np.floor(diff / gap + 0.5) * gap
+    return diff
+
+
 def locate_item_change(
     a, axis=-1, pin="after", wrap=False, tfic=False, tlic=False
 ):
