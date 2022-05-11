@@ -2409,7 +2409,16 @@ array([], shape=(2, 0), dtype=bool))
 
 
 def item_change_ix(
-    a, axis=-1, pin="after", wrap=False, tfic=False, tlic=False
+    a,
+    axis=-1,
+    pin="after",
+    change_type=None,
+    wrap=False,
+    tfic=False,
+    tlic=False,
+    mic=False,
+    amin=None,
+    amax=None,
 ):
     """
     Get the indices of item changes in an array.
@@ -2422,11 +2431,17 @@ def item_change_ix(
         See :func:`mdtools.numpy_helper_functions.locate_item_change`.
     pin : {"after", "before", "both"}
         See :func:`mdtools.numpy_helper_functions.locate_item_change`.
+    change_type : {None, "higher", "lower", "both"}, optional
+        See :func:`mdtools.numpy_helper_functions.locate_item_change`.
     wrap : bool, optional
         See :func:`mdtools.numpy_helper_functions.locate_item_change`.
     tfic : bool, optional
         See :func:`mdtools.numpy_helper_functions.locate_item_change`.
     tlic : bool, optional
+        See :func:`mdtools.numpy_helper_functions.locate_item_change`.
+    mic : bool, optional
+        See :func:`mdtools.numpy_helper_functions.locate_item_change`.
+    amin, amax : scalar or array_like, optional
         See :func:`mdtools.numpy_helper_functions.locate_item_change`.
 
     Returns
@@ -2462,6 +2477,27 @@ def item_change_ix(
     (array([0, 2]),)
     >>> after
     (array([1, 3]),)
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, pin="both", change_type="both"
+    ... )
+    >>> before_type[0]  # Changes to higher values
+    (array([0, 2]),)
+    >>> before_type[1]  # Changes to lower values
+    (array([], dtype=int64),)
+    >>> for i, bt in enumerate(zip(*before_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(bt)), np.sort(before[i])
+    ...     )
+    True
+    >>> after_type[0]  # Changes to higher values
+    (array([1, 3]),)
+    >>> after_type[1]  # Changes to lower values
+    (array([], dtype=int64),)
+    >>> for i, at in enumerate(zip(*after_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(at)), np.sort(after[i])
+    ...     )
+    True
     >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
     ...     a, pin="both", wrap=True
     ... )
@@ -2469,6 +2505,27 @@ def item_change_ix(
     (array([0, 2, 5]),)
     >>> after_wrap
     (array([0, 1, 3]),)
+    >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
+    ...     a, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap[0]
+    (array([0, 2]),)
+    >>> before_type_wrap[1]
+    (array([5]),)
+    >>> for i, btw in enumerate(zip(*before_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(btw)), np.sort(before_wrap[i])
+    ...     )
+    True
+    >>> after_type_wrap[0]
+    (array([1, 3]),)
+    >>> after_type_wrap[1]
+    (array([0]),)
+    >>> for i, atw in enumerate(zip(*after_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(atw)), np.sort(after_wrap[i])
+    ...     )
+    True
     >>> before_tfic, after_tfic = mdt.nph.item_change_ix(
     ...     a, pin="both", tfic=True
     ... )
@@ -2497,6 +2554,27 @@ def item_change_ix(
     (array([0, 2, 5]),)
     >>> after
     (array([1, 3, 6]),)
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, pin="both", change_type="both"
+    ... )
+    >>> before_type[0]
+    (array([0, 2]),)
+    >>> before_type[1]
+    (array([5]),)
+    >>> for i, bt in enumerate(zip(*before_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(bt)), np.sort(before[i])
+    ...     )
+    True
+    >>> after_type[0]
+    (array([1, 3]),)
+    >>> after_type[1]
+    (array([6]),)
+    >>> for i, at in enumerate(zip(*after_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(at)), np.sort(after[i])
+    ...     )
+    True
     >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
     ...     a, pin="both", wrap=True
     ... )
@@ -2504,6 +2582,27 @@ def item_change_ix(
     (array([0, 2, 5]),)
     >>> after_wrap
     (array([1, 3, 6]),)
+    >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
+    ...     a, pin="both", change_type="both"
+    ... )
+    >>> before_type_wrap[0]
+    (array([0, 2]),)
+    >>> before_type_wrap[1]
+    (array([5]),)
+    >>> for i, btw in enumerate(zip(*before_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(btw)), np.sort(before_wrap[i])
+    ...     )
+    True
+    >>> after_type_wrap[0]
+    (array([1, 3]),)
+    >>> after_type_wrap[1]
+    (array([6]),)
+    >>> for i, atw in enumerate(zip(*after_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(atw)), np.sort(after_wrap[i])
+    ...     )
+    True
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, pin="both", tfic=True, tlic=True
     ... )
@@ -2523,6 +2622,29 @@ def item_change_ix(
     (array([0, 0, 1, 1]), array([0, 1, 1, 2]))
     >>> after
     (array([1, 1, 2, 2]), array([0, 1, 1, 2]))
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both"
+    ... )
+    >>> before_type[0]
+    (array([0, 1]), array([0, 1]))
+    >>> before_type[1]
+    (array([0, 1]), array([1, 2]))
+    >>> for i, bt in enumerate(zip(*before_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(bt)), np.sort(before[i])
+    ...     )
+    True
+    True
+    >>> after_type[0]
+    (array([1, 2]), array([0, 1]))
+    >>> after_type[1]
+    (array([1, 2]), array([1, 2]))
+    >>> for i, at in enumerate(zip(*after_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(at)), np.sort(after[i])
+    ...     )
+    True
+    True
     >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", wrap=True
     ... )
@@ -2533,6 +2655,29 @@ def item_change_ix(
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
+    >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap[0]
+    (array([0, 1, 2]), array([0, 1, 2]))
+    >>> before_type_wrap[1]
+    (array([0, 1, 2]), array([1, 2, 0]))
+    >>> for i, btw in enumerate(zip(*before_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(btw)), np.sort(before_wrap[i])
+    ...     )
+    True
+    True
+    >>> after_type_wrap[0]
+    (array([0, 1, 2]), array([2, 0, 1]))
+    >>> after_type_wrap[1]
+    (array([0, 1, 2]), array([0, 1, 2]))
+    >>> for i, atw in enumerate(zip(*after_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(atw)), np.sort(after_wrap[i])
+    ...     )
+    True
+    True
     >>> before_tfic_tlic
     (array([0, 0, 1, 1, 2, 2, 2, 2]), array([0, 1, 1, 2, 0, 1, 2, 3]))
     >>> after_tfic_tlic
@@ -2544,6 +2689,29 @@ def item_change_ix(
     (array([0, 1, 1, 2, 2]), array([0, 0, 1, 1, 2]))
     >>> after
     (array([0, 1, 1, 2, 2]), array([1, 1, 2, 2, 3]))
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both"
+    ... )
+    >>> before_type[0]
+    (array([0, 1, 2]), array([0, 1, 2]))
+    >>> before_type[1]
+    (array([1, 2]), array([0, 1]))
+    >>> for i, bt in enumerate(zip(*before_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(bt)), np.sort(before[i])
+    ...     )
+    True
+    True
+    >>> after_type[0]
+    (array([0, 1, 2]), array([1, 2, 3]))
+    >>> after_type[1]
+    (array([1, 2]), array([1, 2]))
+    >>> for i, at in enumerate(zip(*after_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(at)), np.sort(after[i])
+    ...     )
+    True
+    True
     >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", wrap=True
     ... )
@@ -2551,6 +2719,29 @@ def item_change_ix(
     (array([0, 0, 1, 1, 2, 2]), array([0, 3, 0, 1, 1, 2]))
     >>> after_wrap
     (array([0, 0, 1, 1, 2, 2]), array([0, 1, 1, 2, 2, 3]))
+    >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap[0]
+    (array([0, 1, 2]), array([0, 1, 2]))
+    >>> before_type_wrap[1]
+    (array([0, 1, 2]), array([3, 0, 1]))
+    >>> for i, btw in enumerate(zip(*before_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(btw)), np.sort(before_wrap[i])
+    ...     )
+    True
+    True
+    >>> after_type_wrap[0]
+    (array([0, 1, 2]), array([1, 2, 3]))
+    >>> after_type_wrap[1]
+    (array([0, 1, 2]), array([0, 1, 2]))
+    >>> for i, atw in enumerate(zip(*after_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(atw)), np.sort(after_wrap[i])
+    ...     )
+    True
+    True
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
@@ -2572,6 +2763,31 @@ def item_change_ix(
     (array([0, 0, 0, 0]), array([0, 0, 1, 1]), array([0, 2, 0, 2]))
     >>> after
     (array([1, 1, 1, 1]), array([0, 0, 1, 1]), array([0, 2, 0, 2]))
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both"
+    ... )
+    >>> before_type[0]
+    (array([0, 0]), array([0, 1]), array([0, 2]))
+    >>> before_type[1]
+    (array([0, 0]), array([0, 1]), array([2, 0]))
+    >>> for i, bt in enumerate(zip(*before_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(bt)), np.sort(before[i])
+    ...     )
+    True
+    True
+    True
+    >>> after_type[0]
+    (array([1, 1]), array([0, 1]), array([0, 2]))
+    >>> after_type[1]
+    (array([1, 1]), array([0, 1]), array([2, 0]))
+    >>> for i, at in enumerate(zip(*after_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(at)), np.sort(after[i])
+    ...     )
+    True
+    True
+    True
     >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", wrap=True
     ... )
@@ -2583,6 +2799,31 @@ array([0, 2, 0, 2, 0, 2, 0, 2]))
     (array([0, 0, 0, 0, 1, 1, 1, 1]), \
 array([0, 0, 1, 1, 0, 0, 1, 1]), \
 array([0, 2, 0, 2, 0, 2, 0, 2]))
+    >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap[0]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([0, 2, 2, 0]))
+    >>> before_type_wrap[1]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([2, 0, 0, 2]))
+    >>> for i, btw in enumerate(zip(*before_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(btw)), np.sort(before_wrap[i])
+    ...     )
+    True
+    True
+    True
+    >>> after_type_wrap[0]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([2, 0, 0, 2]))
+    >>> after_type_wrap[1]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([0, 2, 2, 0]))
+    >>> for i, atw in enumerate(zip(*after_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(atw)), np.sort(after_wrap[i])
+    ...     )
+    True
+    True
+    True
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
@@ -2594,13 +2835,38 @@ array([0, 2, 0, 2, 0, 1, 2, 0, 1, 2]))
     (array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]), \
 array([0, 0, 0, 1, 1, 1, 0, 0, 1, 1]), \
 array([0, 1, 2, 0, 1, 2, 0, 2, 0, 2]))
-
     >>> ax = 1
     >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
     >>> before
     (array([0, 0, 1, 1]), array([0, 0, 0, 0]), array([0, 2, 0, 2]))
     >>> after
     (array([0, 0, 1, 1]), array([1, 1, 1, 1]), array([0, 2, 0, 2]))
+
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both"
+    ... )
+    >>> before_type[0]
+    (array([0, 1]), array([0, 0]), array([0, 2]))
+    >>> before_type[1]
+    (array([0, 1]), array([0, 0]), array([2, 0]))
+    >>> for i, bt in enumerate(zip(*before_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(bt)), np.sort(before[i])
+    ...     )
+    True
+    True
+    True
+    >>> after_type[0]
+    (array([0, 1]), array([1, 1]), array([0, 2]))
+    >>> after_type[1]
+    (array([0, 1]), array([1, 1]), array([2, 0]))
+    >>> for i, at in enumerate(zip(*after_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(at)), np.sort(after[i])
+    ...     )
+    True
+    True
+    True
     >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", wrap=True
     ... )
@@ -2612,6 +2878,31 @@ array([0, 2, 0, 2, 0, 2, 0, 2]))
     (array([0, 0, 0, 0, 1, 1, 1, 1]), \
 array([0, 0, 1, 1, 0, 0, 1, 1]), \
 array([0, 2, 0, 2, 0, 2, 0, 2]))
+    >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap[0]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([0, 2, 2, 0]))
+    >>> before_type_wrap[1]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([2, 0, 0, 2]))
+    >>> for i, btw in enumerate(zip(*before_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(btw)), np.sort(before_wrap[i])
+    ...     )
+    True
+    True
+    True
+    >>> after_type_wrap[0]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([2, 0, 0, 2]))
+    >>> after_type_wrap[1]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([0, 2, 2, 0]))
+    >>> for i, atw in enumerate(zip(*after_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(atw)), np.sort(after_wrap[i])
+    ...     )
+    True
+    True
+    True
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
@@ -2630,6 +2921,31 @@ array([0, 1, 2, 0, 2, 0, 1, 2, 0, 2]))
     (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([0, 1, 1, 0]))
     >>> after
     (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([1, 2, 2, 1]))
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both"
+    ... )
+    >>> before_type[0]
+    (array([0, 1]), array([0, 1]), array([0, 0]))
+    >>> before_type[1]
+    (array([0, 1]), array([1, 0]), array([1, 1]))
+    >>> for i, bt in enumerate(zip(*before_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(bt)), np.sort(before[i])
+    ...     )
+    True
+    True
+    True
+    >>> after_type[0]
+    (array([0, 1]), array([0, 1]), array([1, 1]))
+    >>> after_type[1]
+    (array([0, 1]), array([1, 0]), array([2, 2]))
+    >>> for i, at in enumerate(zip(*after_type)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(at)), np.sort(after[i])
+    ...     )
+    True
+    True
+    True
     >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", wrap=True
     ... )
@@ -2641,6 +2957,31 @@ array([0, 2, 1, 2, 1, 2, 0, 2]))
     (array([0, 0, 0, 0, 1, 1, 1, 1]), \
 array([0, 0, 1, 1, 0, 0, 1, 1]), \
 array([0, 1, 0, 2, 0, 2, 0, 1]))
+    >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap[0]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([0, 2, 2, 0]))
+    >>> before_type_wrap[1]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([2, 1, 1, 2]))
+    >>> for i, btw in enumerate(zip(*before_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(btw)), np.sort(before_wrap[i])
+    ...     )
+    True
+    True
+    True
+    >>> after_type_wrap[0]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([1, 0, 0, 1]))
+    >>> after_type_wrap[1]
+    (array([0, 0, 1, 1]), array([0, 1, 0, 1]), array([0, 2, 2, 0]))
+    >>> for i, atw in enumerate(zip(*after_type_wrap)):
+    ...     np.array_equal(
+    ...         np.sort(np.concatenate(atw)), np.sort(after_wrap[i])
+    ...     )
+    True
+    True
+    True
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
@@ -2657,18 +2998,24 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
 
     >>> a = np.array([[1, 2, 2]])
     >>> ax = 0
-    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
-    >>> before
-    (array([], dtype=int64), array([], dtype=int64))
-    >>> after
-    (array([], dtype=int64), array([], dtype=int64))
-    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
-    ...     a, axis=ax, pin="both", wrap=True
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both"
     ... )
-    >>> before_wrap
-    (array([], dtype=int64), array([], dtype=int64))
-    >>> after_wrap
-    (array([], dtype=int64), array([], dtype=int64))
+    >>> before_type
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
+    >>> after_type
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
+    >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
+    >>> after_type_wrap
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
@@ -2677,18 +3024,22 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     >>> after_tfic_tlic
     (array([0, 0, 0]), array([0, 1, 2]))
     >>> ax = 1
-    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
-    >>> before
-    (array([0]), array([0]))
-    >>> after
-    (array([0]), array([1]))
-    >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
-    ...     a, axis=ax, pin="both", wrap=True
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both"
     ... )
-    >>> before_wrap
-    (array([0, 0]), array([0, 2]))
-    >>> after_wrap
-    (array([0, 0]), array([0, 1]))
+    >>> before_type
+    ((array([0]), array([0])), \
+(array([], dtype=int64), array([], dtype=int64)))
+    >>> after_type
+    ((array([0]), array([1])), \
+(array([], dtype=int64), array([], dtype=int64)))
+    >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap
+    ((array([0]), array([0])), (array([0]), array([2])))
+    >>> after_type_wrap
+    ((array([0]), array([1])), (array([0]), array([0])))
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
@@ -2704,6 +3055,15 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     (array([], dtype=int64), array([], dtype=int64))
     >>> after
     (array([], dtype=int64), array([], dtype=int64))
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both"
+    ... )
+    >>> before_type
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
+    >>> after_type
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
     >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", wrap=True
     ... )
@@ -2711,6 +3071,15 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     (array([], dtype=int64), array([], dtype=int64))
     >>> after_wrap
     (array([], dtype=int64), array([], dtype=int64))
+    >>> before_type_wrap, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
+    >>> after_type
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
@@ -2724,6 +3093,15 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     (array([], dtype=int64), array([], dtype=int64))
     >>> after
     (array([], dtype=int64), array([], dtype=int64))
+    >>> before_type, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both"
+    ... )
+    >>> before_type
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
+    >>> after_type
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
     >>> before_wrap, after_wrap = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", wrap=True
     ... )
@@ -2731,6 +3109,15 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     (array([], dtype=int64), array([], dtype=int64))
     >>> after_wrap
     (array([], dtype=int64), array([], dtype=int64))
+    >>> before_type_wrap, after_type = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", change_type="both", wrap=True
+    ... )
+    >>> before_type_wrap
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
+    >>> after_type
+    ((array([], dtype=int64), array([], dtype=int64)), \
+(array([], dtype=int64), array([], dtype=int64)))
     >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
@@ -2887,11 +3274,24 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     ValueError: The dimension of a must be greater than zero
     """
     item_changes = mdt.nph.locate_item_change(
-        a=a, axis=axis, pin=pin, wrap=wrap, tfic=tfic, tlic=tlic
+        a=a,
+        axis=axis,
+        pin=pin,
+        change_type=change_type,
+        wrap=wrap,
+        tfic=tfic,
+        tlic=tlic,
+        mic=mic,
+        amin=amin,
+        amax=amax,
     )
-    if pin == "both":
+    if pin == "both" and change_type == "both":
+        return tuple(
+            tuple(np.nonzero(ic) for ic in ics) for ics in item_changes
+        )
+    elif pin == "both" or change_type == "both":
         return tuple(np.nonzero(ic) for ic in item_changes)
-    else:
+    else:  # pin != "both" and change_type != "both"
         return np.nonzero(item_changes)
 
 
