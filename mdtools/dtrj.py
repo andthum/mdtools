@@ -356,6 +356,12 @@ def trans_per_state(
         will be a 1-dimensional array that is formally the sum of the
         two above histograms: ``hist_end = np.sum(hist_end, axis=0)``.
 
+    See Also
+    --------
+    :func:`mdtools.dtrj.trans_per_state_vs_time` :
+        Count the number of transitions leading into or out of a state
+        for each frame in a discrete trajectory
+
     Notes
     -----
     The histograms contain the counts for all states ranging from the
