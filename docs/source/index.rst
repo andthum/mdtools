@@ -15,9 +15,9 @@ Welcome to the documentation of :raw-html:`<br />` |MDTools_writing|
 :Release: |release|
 :Date: |today|
 
-|Test_Status| |Documentation_Status| |License_GPLv3|
-|Made_with_Python| |Made_with_Sphinx| |Code_style_black|
-|Powered_by_MDAnalysis|
+|pre-commit| |pre-commit.ci_status| |Test_Status| |CodeQL_Status|
+|Documentation_Status| |License_GPLv3| |Made_with_Python|
+|Made_with_Sphinx| |Code_style_black| |Powered_by_MDAnalysis|
 
 .. contents:: Site contents
     :depth: 2
@@ -184,9 +184,18 @@ Indices and tables
     :align: middle
     :alt: MDTools
 
+.. |pre-commit| image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
+    :alt: pre-commit
+    :target: https://github.com/pre-commit/pre-commit
+.. |pre-commit.ci_status| image:: https://results.pre-commit.ci/badge/github/andthum/mdtools/main.svg
+    :alt: pre-commit.ci status
+    :target: https://results.pre-commit.ci/latest/github/andthum/mdtools/main
 .. |Test_Status| image:: https://github.com/andthum/mdtools/actions/workflows/tests.yml/badge.svg
     :alt: Test Status
     :target: https://github.com/andthum/mdtools/actions/workflows/tests.yml
+.. |CodeQL_Status| image:: https://github.com/andthum/mdtools/actions/workflows/codeql-analysis.yml/badge.svg
+    :alt: CodeQL Status
+    :target: https://github.com/andthum/mdtools/actions/workflows/codeql-analysis.yml
 .. |Documentation_Status| image:: https://readthedocs.org/projects/mdtools/badge/?version=latest
     :alt: Documentation Status
     :target: https://mdtools.readthedocs.io/en/latest/?badge=latest
