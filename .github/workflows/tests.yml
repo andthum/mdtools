@@ -72,8 +72,12 @@ jobs:
           ${{ runner.os }}
     - name: Install/Upgrade setuptools and wheel
       run: python -m pip install --user --upgrade setuptools wheel
-    - name: Install/Upgrade black
-      run: python -m pip install --user --upgrade black
+    - name: Install/Upgrade packages in requirements-dev.txt
+      run: |
+          python -m pip install \
+          --user \
+          --upgrade \
+          --requirement requirements-dev.txt
     - name: Check code formatting with black
       # TODO: The --include flag should be removed once all files are
       # formatted with black.  But as long as this is not the case, only
@@ -98,8 +102,6 @@ jobs:
         scripts/structure/plot_gmx_densmap.py \
         scripts/structure/rmsd_vs_time.py \
         setup.py
-    - name: Install/Upgrade flake8 and flake8-docstrings extension
-      run: python -m pip install --user --upgrade flake8 flake8-docstrings
     - name: Lint code and docstrings with flake8
       # Use setup.cfg to configure flake8
       # TODO: The --select flag should be removed once all files are
