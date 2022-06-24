@@ -1,0 +1,23 @@
+# Editor configuration file.
+# See https://editorconfig.org/
+#
+# You might need to install a plugin for your editor in order to make
+# your editor aware of this file.
+#
+# Sort all entries alphabetically!
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+max_line_length = 79
+trim_trailing_whitespace = true
+
+[*.md]
+# Markdown uses two or more spaces at the end of a line to signify a
+# line break
+trim_trailing_whitespace = false
