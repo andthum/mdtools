@@ -1,0 +1,26 @@
+check-sourced=true
+shell=bash
+severity=style
+
+# Suggest adding a default case in `case` statements
+#   Example: case $? in 0) echo 'Success';; esac
+#   Fix:     case $? in 0) echo 'Success';; *) echo 'Fail' ;; esac
+enable=add-default-case
+
+# Suggest explicitly using -n in `[ $var ]`
+#   Example: [ "$var" ]
+#   Fix:     [ -n "$var" ]
+enable=avoid-nullary-conditions
+
+# Suggest quoting variables without metacharacters
+#   Example: var=hello; echo $var
+#   Fix:     var=hello; echo "$var"
+enable=quote-safe-variables
+
+# Suggest putting braces around all variable references
+#   Example: var=hello; echo $var
+#   Fix:     var=hello; echo ${var}
+enable=require-variable-braces
+
+# SC2230: `which` is non-standard. Use builtin `command -v` instead.
+disable=SC2230
