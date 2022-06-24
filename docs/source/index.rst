@@ -79,9 +79,9 @@ packages |MDAnalysis|, |NumPy|, |SciPy| and |matplotlib|.
     only test cases we have so far are the examples from the Examples
     sections of the docstrings, which are verified using :mod:`doctest`.
     The plan is to implement extensive unit tests using |pytest|, but so
-    far we did not had the time for this.  Implementing unit test would
-    thus be a great way for you to contribute to this project and it
-    would be highly appreciated.
+    far we did not had the time for this.  Implementing (unit) tests
+    would thus be a great way for you to contribute to this project and
+    it would be highly appreciated.
 
 .. toctree::
     :caption: Table of Contents
