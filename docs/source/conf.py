@@ -151,20 +151,22 @@ rst_prolog = """
 rst_epilog = """
 .. |GNU_GPLv3| replace::
     :raw-html:`<a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>`
-.. |GCC| replace::
-    :raw-html:`<a href="https://gcc.gnu.org/">GCC</a>`
-.. |Lmod| replace::
-    :raw-html:`<a href="https://lmod.readthedocs.io/en/latest/">Lmod</a>`
 .. |Git| replace::
     :raw-html:`<a href="https://git-scm.com/">Git</a>`
 .. |Git_Book| replace::
     :raw-html:`<a href="https://git-scm.com/book/en/v2">Git Book</a>`
 .. |GitHub| replace::
     :raw-html:`<a href="https://github.com/">GitHub</a>`
-.. |issue| replace::
-    :raw-html:`<a href="https://github.com/andthum/mdtools/issues">issue</a>`
+.. |Issue| replace::
+    :raw-html:`<a href="https://github.com/andthum/mdtools/issues">Issue</a>`
 .. |Q&A| replace::
     :raw-html:`<a href="https://github.com/andthum/mdtools/discussions/categories/q-a">Question&Answer</a>`
+
+.. |GCC| replace::
+    :raw-html:`<a href="https://gcc.gnu.org/">GCC</a>`
+.. |Lmod| replace::
+    :raw-html:`<a href="https://lmod.readthedocs.io/en/latest/">Lmod</a>`
+
 .. |Gromacs| replace::
     :raw-html:`<a href="https://manual.gromacs.org/">Gromacs</a>`
 
@@ -180,14 +182,12 @@ rst_epilog = """
     :raw-html:`<a href="https://docs.python.org/3/library/venv.html">venv</a>`
 .. |Virtualenv| replace::
     :raw-html:`<a href="https://virtualenv.pypa.io/en/latest/">Virtualenv</a>`
-.. |black| replace::
+.. |Black| replace::
     :raw-html:`<a href="https://github.com/psf/black/">Black</a>`
 .. |isort| replace::
     :raw-html:`<a href="https://pycqa.github.io/isort/">isort</a>`
-.. |flake8| replace::
+.. |Flake8| replace::
     :raw-html:`<a href="https://github.com/pycqa/flake8">Flake8</a>`
-.. |flake8-docstrings| replace::
-    :raw-html:`<a href="https://gitlab.com/pycqa/flake8-docstrings">Flake8-Docstrings</a>`
 .. |pytest| replace::
     :raw-html:`<a href="https://docs.pytest.org/en/stable/">pytest</a>`
 .. |NumPy| replace::
@@ -198,7 +198,7 @@ rst_epilog = """
     :raw-html:`<a href="https://matplotlib.org/">matplotlib</a>`
 .. |MDAnalysis| replace::
     :raw-html:`<a href="https://www.mdanalysis.org/">MDAnalysis</a>`
-.. |mda_user_guide| replace::
+.. |MDA_user_guide| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/index.html">MDAnalysis user guide</a>`
 
 .. |RTD| replace::
@@ -207,14 +207,14 @@ rst_epilog = """
     :raw-html:`<a href="https://www.sphinx-doc.org">Sphinx</a>`
 .. |RST| replace::
     :raw-html:`<a href="https://docutils.sourceforge.io/rst.html">reStructuredText</a>`
-.. |rst_option_list| replace::
+.. |RST_option_list| replace::
     :raw-html:`<a href="https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#option-lists">reStructuredText option list</a>`
 .. |NumPy_docstring_convention| replace::
     :raw-html:`<a href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy docstring convention</a>`
 
-.. |mda_trj| replace::
+.. |MDA_trj| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/trajectories/trajectories.html">MDAnalysis trajectory</a>`
-.. |mda_trjs| replace::
+.. |MDA_trjs| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/trajectories/trajectories.html">MDAnalysis trajectories</a>`
 .. |trajectory_and_topology_formats| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/formats/index.html">trajectory and topology formats</a>`
@@ -226,7 +226,7 @@ rst_epilog = """
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/selections.html">selection syntax</a>`
 .. |explanation_of_these_terms| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/groups_of_atoms.html">explanation of these terms</a>`
-.. |mda_always_guesses_atom_masses| replace::
+.. |MDA_always_guesses_atom_masses| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/formats/guessing.html">MDAnalysis always guesses atom masses</a>`
 """  # noqa: E501
 
