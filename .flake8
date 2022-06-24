@@ -1,0 +1,268 @@
+# Flake8 configuration file.
+# Written in INI language.
+# See https://flake8.pycqa.org/en/latest/user/configuration.html
+#
+# Sort all entries alphabetically!
+#
+# Keep Flake8 plugins in sync with `requirements-dev.txt` and
+# `.pre-commit-config.yaml`!
+
+
+[flake8]
+# Print the total number of errors.
+count = true
+docstring-convention = numpy
+# Enable PyFlakes syntax checking of doctests in docstrings.
+doctests = true
+extend-exclude =
+    .build/,
+    build/,
+    .cache/,
+    cache/,
+    *.cover,
+    cover/,
+    .coverage,
+    .coverage.*,
+    develop-eggs/,
+    dist/,
+    *.egg,
+    *.egg-info/,
+    .eggs/,
+    eggs/,
+    .env/,
+    .env.bak/,
+    env/,
+    env.bak/,
+    .ENV/,
+    .ENV.bak/,
+    ENV/,
+    ENV.bak/,
+    .git,
+    .github,
+    .gitlab,
+    .hypothesis/,
+    .installed.cfg,
+    lib/,
+    lib64/,
+    .mypy_cache/,
+    .nox,
+    __pycache__,
+    __pypackages__,
+    .pytest_cache/,
+    .Python,
+    .pytype/,
+    sdist/,
+    .tox,
+    .venv/,
+    .venv.bak/,
+    venv/,
+    venv.bak/,
+    .VENV/,
+    .VENV.bak/,
+    VENV/,
+    VENV.bak/,
+    wheels/,
+extend-ignore =
+    ### Allow for docstring summaries that are longer than one line ###
+    # D205: 1 blank line required between summary line and description
+    # D400: First line should end with a period
+    D205,
+    D400,
+    ### Compatibility with black ###
+    # E203: whitespace before ':'
+    # W503: line break before binary operator
+    E203,
+    W503,
+    ### Bandit ###
+    # S404: Consider possible security implications associated with the
+    #       subprocess module
+    # S603: subprocess call - check for execution of untrusted input
+    S404,
+    S603,
+extend-select =
+    ### Compatibility with black ###
+    # W504: line break after binary operator
+    W504
+# List of glob patterns to include for checks.
+filename = *.py
+# Files that are checked by PyFlakes for doctest syntax.
+include-in-doctest = *.py, *.rst
+# Number of spaces used for indentation.
+indent-size = 4
+# Maximum allowed McCabe complexity
+max-complexity = 20
+# Maximum allowed line length of a comment or docstring.
+max-doc-length = 72
+# Maximum allowed line length for code.
+max-line-length = 79
+# Require specific plugins to be installed before running.
+require-plugins =
+    flake8-bandit,
+    flake8-bugbear,
+    flake8-builtins,
+    flake8-comprehensions,
+    flake8-docstrings,
+    flake8-isort,
+    flake8-logging-format,
+    flake8-pytest-style,
+    flake8-rst,
+    flake8-rst-docstrings,
+    pep8-naming,
+# Allowed reStructuredText directives.
+# See https://github.com/peterjc/flake8-rst-docstrings/pull/16
+rst-directives =
+    autosummary,
+    moduleauthor,
+    # Spinx-specific directives from
+    # https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html
+    centered,
+    code-block,
+    codeauthor,
+    deprecated,
+    glossary,
+    highlight,
+    hlist,
+    index,
+    literalinclude,
+    math,
+    note,
+    only,
+    productionlist,
+    rubric,
+    sectionauthor,
+    seealso,
+    tabularcolumns,
+    toctree,
+    versionadded,
+    versionchanged,
+    warning,
+    # Spinx-specific domains from
+    # https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html
+    attribute,
+    class,
+    classmethod,
+    currentmodule,
+    data,
+    decorator,
+    decoratormethod,
+    default-domain,
+    exception,
+    function,
+    method,
+    module,
+    property,
+    staticmethod,
+    # sphinx.ext.doctest directives from
+    # https://www.sphinx-doc.org/en/master/usage/extensions/doctest.html
+    doctest,
+    testcleanup,
+    testcode,
+    testoutput,
+    testsetup,
+# Allowed reStructuredText roles.
+# See https://github.com/peterjc/flake8-rst-docstrings/pull/16
+rst-roles =
+    ref,
+    # Self-defined roles:
+    bash,
+    # reStructuredText Interpreted Text Roles from
+    # https://docutils.sourceforge.io/docs/ref/rst/roles.html
+    code,
+    emphasis,
+    literal,
+    math,
+    pep-reference,
+    raw,
+    rfc-reference,
+    strong,
+    subscript,
+    superscript,
+    title-reference,
+    # Spinx-specific roles from
+    # https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html
+    abbr,
+    any,
+    code,
+    command,
+    dfn,
+    doc,
+    download,
+    envvar,
+    eq,
+    file,
+    guilabel,
+    kbd,
+    keyword,
+    mailheader,
+    makevar,
+    manpage,
+    math,
+    menuselection,
+    mimetype,
+    newsgroup,
+    numref,
+    option,
+    pep,
+    program,
+    ref,
+    regexp,
+    rfc,
+    samp,
+    term,
+    token,
+    # Spinx-specific domains from
+    # https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html
+    attr,
+    class,
+    const,
+    data,
+    exc,
+    func,
+    meth,
+    mod,
+    obj,
+# Allowed reStructuredText roles.
+# See https://github.com/peterjc/flake8-rst-docstrings/pull/62
+rst-substitutions =
+    # Self-defined substitutions:
+    GNU_GPLv3,
+    Git,
+    Git_Book,
+    GitHub,
+    Issue,
+    Q&A,
+    GCC,
+    Lmod,
+    Gromacs,
+    Python,
+    PyPI,
+    pip,
+    virtual_Python_environment,
+    venv,
+    Virtualenv,
+    Black,
+    isort,
+    Flake8,
+    pytest,
+    NumPy,
+    SciPy,
+    matplotlib,
+    MDAnalysis,
+    MDA_user_guide
+    RTD,
+    Sphinx,
+    RST,
+    RST_option_list,
+    NumPy_docstring_convention,
+    MDA_trj,
+    MDA_trjs,
+    trajectory_and_topology_formats,
+    supported_coordinate_formats,
+    supported_topology_formats,
+    selection_syntax,
+    explanation_of_these_terms,
+    MDA_always_guesses_atom_masses,
+# Print the source code generating the error/warning in question.
+show-source = true
+# Count the number of occurrences of each error/warning.
+statistics = true
