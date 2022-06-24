@@ -1,5 +1,4 @@
-# Minimal makefile for Sphinx documentation
-#
+# Makefile for Sphinx documentation
 
 # You can set these variables from the command line.
 SPHINXOPTS         =
@@ -10,7 +9,7 @@ BUILDDIR           = build
 AUTOSUMDIR_PATTERN = _sphinx_autosummary*
 AUTOSUMDIR         = $(shell find $(SOURCEDIR) -name "$(AUTOSUMDIR_PATTERN)")
 
-# Put it first so that "make" without argument is like "make help".
+# Put this first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	@echo "  clean          to remove everything under '$(BUILDDIR)'"
@@ -18,8 +17,9 @@ help:
 
 .PHONY: help clean_autosum Makefile
 
-# Custom clean target to remove autosummary generated files. Can be removed
-# when https://github.com/sphinx-doc/sphinx/issues/1999 is fixed.
+# Custom clean target to remove autosummary generated files. Can be
+# removed when https://github.com/sphinx-doc/sphinx/issues/1999 is
+# fixed.
 clean_autosum:
 	@echo "Removing all '$(AUTOSUMDIR_PATTERN)' directories in '$(SOURCEDIR)' recursively..."
 	@rm -r $(AUTOSUMDIR)
