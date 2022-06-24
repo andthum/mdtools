@@ -10,14 +10,7 @@ on:
     # The branches below must be a subset of the branches above
     branches: [main, develop]
     paths-ignore:
-      - ./.github/*template**
-      - ./.github/*TEMPLATE**
-      - ./.readthedocs.yaml
       - ./LICENSE.txt
-      - ./*.rst
-      - "**/README"
-      - "**/README.*"
-      - "**/*.md"
       - "**/*.eps"
       - "**/*.EPS"
       - "**/*.jpg"
