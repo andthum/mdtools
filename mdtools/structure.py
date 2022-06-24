@@ -596,7 +596,7 @@ def center(
         positions, you can simply do
         ``pos = mdt.strc.center(ag, center=args.CENTER, cmp=args.CMP)``.
 
-    """  # noqa D301
+    """  # noqa: D301
     if center == 'cog':
         return mdt.strc.cog(
             ag=ag, pbc=pbc, cmp=cmp, make_whole=make_whole, debug=debug
