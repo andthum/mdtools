@@ -130,7 +130,7 @@ Support
 
 If you have any questions, feel free to use our |Q&A| forum on |GitHub|.
 If you encounter a bug or want to request a new feature, please open a
-new |issue|.
+new |Issue|.
 
 
 Contributing

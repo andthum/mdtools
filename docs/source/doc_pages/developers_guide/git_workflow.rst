@@ -160,12 +160,12 @@ For Python code:
 .. note::
 
     You must install the above tools on your local machine.  Refer to
-    the documentation of |black| and |flake8| for installation
+    the documentation of |Black| and |Flake8| for installation
     instructions.
 
 .. note::
 
-    |black| and |flake8| offer plugins for many text editors.  When
+    |Black| and |Flake8| offer plugins for many text editors.  When
     using these plugins, Black and Flake8 format and lint the code on
     the fly, so you can skip this step.
 

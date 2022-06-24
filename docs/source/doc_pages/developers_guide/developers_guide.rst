@@ -13,7 +13,7 @@ consistent code is much easier and thus more fun than maintaining a mess.
 
 Also make yourself familiar with the philosophy and functionality of
 |MDAnalysis|, because MDTools is mainly based on this package.  If not
-alreay done, please take a look at the |mda_user_guide|.
+alreay done, please take a look at the |MDA_user_guide|.
 
 .. note::
 

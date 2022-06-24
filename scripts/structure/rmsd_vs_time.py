@@ -88,7 +88,7 @@ Options
                 * ``'com'``: Center of mass
                 * ``'coc'``: Center of charge
 
-            Note that |mda_always_guesses_atom_masses| from the atom
+            Note that |MDA_always_guesses_atom_masses| from the atom
             types, even if the input file contains the masses.  Default:
             ``'cog'``.
 --weights   {'mass', 'charge'}

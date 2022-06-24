@@ -129,7 +129,7 @@ of ``debug`` is set to ``False``.  If you get weird results or errors
 from a script and the script offers a debug option, we advise you to run
 the script in debug mode and see if warnings or errors are raised.
 These might help you to identify bad user input, parameter settings or
-bugs.  If you spot a bug, please open a new |issue| on |GitHub|.
+bugs.  If you spot a bug, please open a new |Issue| on |GitHub|.
 
 
 The scripts/ directory
