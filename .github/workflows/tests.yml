@@ -108,11 +108,21 @@ jobs:
       # revised to be compliant with flake8.  But as long as this is not
       # the case, select only those error codes that have been fixed in
       # all files.
+      # F821 ("undefined name name") gives false positives in doctests,
+      # because it does not recognize `doctest_global_setup` in the
+      # Sphinx configuration file `conf.py`.  The other ignored error
+      # codes are copied from the .flake8 config file.
       run: |
-        python -m flake8 ./ --select=\
+        python -m flake8 ./ \
+        --select=\
         E1,E2,E3,E4,E9,\
         F4,F7,F63,F82,\
-        W1,W2,W3
+        W1,W2,W3 \
+        --extend-ignore=\
+        F821,\
+        D205,D400,\
+        E203,W503,\
+        S404,S603
 
   test:
     strategy:
