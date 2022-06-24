@@ -14,14 +14,7 @@ on:
     # Run this workflow on every PR, except for PRs that only changes
     # files from the following ignore list.
     paths-ignore:
-      - ./.github/*template**
-      - ./.github/*TEMPLATE**
-      - ./.readthedocs.yaml
       - ./LICENSE.txt
-      - ./*.rst
-      - "**/README"
-      - "**/README.*"
-      - "**/*.md"
       - "**/*.eps"
       - "**/*.EPS"
       - "**/*.jpg"
