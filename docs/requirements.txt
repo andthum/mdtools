@@ -6,4 +6,3 @@
 
 sphinx >=3.0, <6.0
 sphinx-rtd-theme <2.0
-readthedocs-sphinx-search <1.0
