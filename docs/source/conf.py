@@ -114,7 +114,7 @@ extensions = [
     # Read the Docs Sphinx Theme
     "sphinx_rtd_theme",
     # Enable "search-as-you-type" on Read the Docs
-    "sphinx_search.extension",
+    # "sphinx_search.extension",
 ]
 
 # The file extensions of source files.
