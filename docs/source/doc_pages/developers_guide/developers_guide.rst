@@ -9,7 +9,8 @@ highly appreciated!
 
 Although you certainly want to start right away, please take a while and
 get familiar with the style guide this project follows.  Maintaining a
-consistent code is much easier and thus more fun than maintaining a mess.
+consistent code is much easier and thus more fun than maintaining a
+mess.
 
 Also make yourself familiar with the philosophy and functionality of
 |MDAnalysis|, because MDTools is mainly based on this package.  If not
@@ -22,7 +23,7 @@ alreay done, please take a look at the |MDA_user_guide|.
     open-source, but all derivative work must be as well.  **Any code,
     documentation, or files that you contribute to MDTools will also be
     made available under this license**.  Be sure that you are
-    comfortable with that **before** you contribute to the project.
+    comfortable with that *before* you contribute to the project.
 
 .. toctree::
     :caption: Table of contens
