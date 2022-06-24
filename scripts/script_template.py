@@ -53,7 +53,7 @@ section) when implementing the command-line interface with
 
 Options
 -------
-A |rst_option_list| listing all options with which the script can/must
+A |RST_option_list| listing all options with which the script can/must
 be called and their meaning.
 
 -f          Trajectory file.  See |supported_coordinate_formats| of
@@ -91,7 +91,7 @@ be called and their meaning.
                 * ``'com'``: Center of mass
                 * ``'coc'``: Center of charge
 
-            Note that |mda_always_guesses_atom_masses| from the atom
+            Note that |MDA_always_guesses_atom_masses| from the atom
             types, even if the input file contains the masses.  Default:
             ``'cog'``.
 --debug     Run in :ref:`debug mode <debug-mode-label>`.

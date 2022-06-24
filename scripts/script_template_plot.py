@@ -60,7 +60,7 @@ section) when implementing the command-line interface with
 
 Options
 -------
-A |rst_option_list| listing all options with which the script can/must
+A |RST_option_list| listing all options with which the script can/must
 be called and their meaning.
 
 -f          Input filename.  The input file must be a text file with at

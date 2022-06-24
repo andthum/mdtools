@@ -19,7 +19,7 @@ without having to think about the code style.
 
 When writting Python code for this project, please
 
-    * Format your code with |black| (automatically enforces Python code
+    * Format your code with |Black| (automatically enforces Python code
       style guide :pep:`8`).
 
       For installation instructions, please refer to the
@@ -28,7 +28,7 @@ When writting Python code for this project, please
       :bash:`python3 -m black path/to/spam.py --line-length 79` in a
       terminal.
 
-    * Use |flake8| to lint your code.
+    * Use |Flake8| to lint your code.
 
       For installation instructions, please refer to the
       `documentation of Flake8`_.  To lint a file :file:`spam.py`,
@@ -38,7 +38,7 @@ When writting Python code for this project, please
 
 .. note::
 
-    |black| and |flake8| offer plugins for many text editors.  When
+    |Black| and |Flake8| offer plugins for many text editors.  When
     using these plugins, Black and Flake8 format and lint your code on
     the fly, so you don't have to run the commands yourself.
 

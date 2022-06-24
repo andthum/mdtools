@@ -10,16 +10,15 @@ to Git, you might want to read the first three (or more) chapters of the
 The `project repository`_ is hosted on |GitHub|.  Newcomers to GitHub
 should take a look at the `GitHub Quickstart Guide`_.
 
-To keep things simple, we **follow the** `GitHub Flow`_ in our
-development process.  In this workflow, the only hard rule that must
-always be obeyed is that **anything in the** ``main`` **branch must be
-stable**.  This means before you make any changes to the code (e.g.
-implement a new feature, fix a bug, add a docstring/comment, etc.),
-create a new branch out of ``main``.  Your branch name should be
-descriptive, so that others can see what is being worked on (see
-:ref:`Step 2 <step2-label>`, below).  Only after your code was tested,
-has no known bugs and works stable, it can be merged back into the
-``main`` branch.
+To keep things simple, we follow the `GitHub Flow`_ in our development
+process.  In this workflow, the only hard rule that must always be
+obeyed is that **anything in the** ``main`` **branch must be stable**.
+This means before you make any changes to the code (e.g. implement a new
+feature, fix a bug, add a docstring/comment, etc.), create a new branch
+out of ``main``.  Your branch name should be descriptive, so that others
+can see what is being worked on (see :ref:`Step 2 <step2-label>`,
+below).  Only after your code was tested, has no known bugs and works
+stable, it can be merged back into the ``main`` branch.
 
 The following demonstrates an example workflow that can be used as
 reference.
@@ -89,7 +88,7 @@ but only fetch and merge the upstream ``main`` branch into your fork's
 2. Create a new topic branch
 ----------------------------
 
-Create a new `topic branch`_ (usually out off the ``main`` branch).
+Create a new `topic branch`_ (usually out of the ``main`` branch).
 
 .. code-block:: bash
 
@@ -160,12 +159,12 @@ For Python code:
 .. note::
 
     You must install the above tools on your local machine.  Refer to
-    the documentation of |black| and |flake8| for installation
+    the documentation of |Black| and |Flake8| for installation
     instructions.
 
 .. note::
 
-    |black| and |flake8| offer plugins for many text editors.  When
+    |Black| and |Flake8| offer plugins for many text editors.  When
     using these plugins, Black and Flake8 format and lint the code on
     the fly, so you can skip this step.
 
@@ -179,8 +178,8 @@ If you did not touch the source code and did not write or change code
 examples in the documentation, you can skip this step.  Also in other
 cases you might skip this step, because all tests suites are run
 automatically when pushing changes to the upstream repository.  However,
-if the tests on GitHub fail, you might be simply asked to fix the
-failing tests before any your code is reviewed.
+if the tests on GitHub fail, you might simply be asked to fix the
+failing tests before your code is reviewed.
 
 
 6. Stage and commit your changes
@@ -190,7 +189,7 @@ failing tests before any your code is reviewed.
 
 .. code-block:: bash
 
-    git add changed/files
+    git add path/to/changed/files
     git commit
 
 Commit conventions:
@@ -289,19 +288,34 @@ changes.  In the latter case, please go back to
 
 
 .. _project repository: https://github.com/andthum/mdtools
-.. _GitHub Quickstart Guide: https://docs.github.com/en/get-started/quickstart
+.. _GitHub Quickstart Guide:
+    https://docs.github.com/en/get-started/quickstart
 .. _GitHub Flow: https://guides.github.com/introduction/flow/
-.. _Contributing to a Project: https://git-scm.com/book/en/v2/GitHub-Contributing-to-a-Project
-.. _Contributing to projects: https://docs.github.com/en/get-started/quickstart/contributing-to-projects
-.. _fork: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks
-.. _configure a remote: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork
-.. _Get the latest changes: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork
-.. _Basic Branching and Merging: https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging
-.. _topic branch: https://git-scm.com/book/en/v2/Git-Branching-Branching-Workflows#_topic_branch
-.. _Record your changes to the repository: https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository
-.. _note about Git commit messages: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
-.. _reordering: https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#_reordering_commits
-.. _squashing: https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#_squashing
-.. _splitting: https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#_splitting_a_commit
-.. _rebase: https://git-scm.com/book/en/v2/Git-Branching-Rebasing
-.. _open a pull request from your fork: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork
+.. _Contributing to a Project:
+    https://git-scm.com/book/en/v2/GitHub-Contributing-to-a-Project
+.. _Contributing to projects:
+    https://docs.github.com/en/get-started/quickstart/contributing-to-projects
+.. _fork:
+    https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks
+.. _configure a remote:
+    https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork
+.. _Get the latest changes:
+    https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork
+.. _Basic Branching and Merging:
+    https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging
+.. _topic branch:
+    https://git-scm.com/book/en/v2/Git-Branching-Branching-Workflows#_topic_branch
+.. _Record your changes to the repository:
+    https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository
+.. _note about Git commit messages:
+    https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+.. _reordering:
+    https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#_reordering_commits
+.. _squashing:
+    https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#_squashing
+.. _splitting:
+    https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#_splitting_a_commit
+.. _rebase:
+    https://git-scm.com/book/en/v2/Git-Branching-Rebasing
+.. _open a pull request from your fork:
+    https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork

@@ -959,7 +959,7 @@ def discrete_pos_trj(
         ``None``).  See MDAnalysis' |selection_syntax| for possible
         choices of selection strings.
     trj : MDAnalysis.coordinates.base.ReaderBase or MDAnalysis.coordinates.base.FrameIteratorBase, optional
-        |mda_trj| to read.  If ``None``, a new MDAnalysis
+        |MDA_trj| to read.  If ``None``, a new MDAnalysis
         :class:`~MDAnalysis.core.universe.Universe` and trajectory are
         created from `topfile` and `trjfile`.
     topfile : str, optional
@@ -2086,7 +2086,7 @@ def contact_matrices(
         are considered to be in contact, if their distance is less than
         or equal to this cutoff.  Must be greater than zero.
     trj : MDAnalysis.coordinates.base.ReaderBase or MDAnalysis.coordinates.base.FrameIteratorBase, optional
-        |mda_trj| to read.  If ``None``, a new MDAnalysis
+        |MDA_trj| to read.  If ``None``, a new MDAnalysis
         :class:`~MDAnalysis.core.universe.Universe` and trajectory are
         created from `topfile` and `trjfile`.
     topfile : str, optional

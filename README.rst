@@ -45,9 +45,9 @@ instructions can be found
 Support
 =======
 
-If you have any questions, feel free to use our `Question&Answer`_ forum
+If you have any questions, feel free to use the `Question&Answer`_ forum
 on GitHub_.  If you encounter a bug or want to request a new feature,
-please `open a new issue`_.
+please open a new Issue_.
 
 
 License
@@ -65,18 +65,26 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 
 
 .. _Python: https://www.python.org/
-.. _Gromacs command-line tools: https://manual.gromacs.org/documentation/current/user-guide/cmdline.html#commands-by-name
+.. _Gromacs command-line tools:
+    https://manual.gromacs.org/documentation/current/user-guide/cmdline.html#commands-by-name
 .. _Gromacs: https://manual.gromacs.org/
 .. _MDAnalysis: https://www.mdanalysis.org/
-.. _trajectory and topology formats: https://userguide.mdanalysis.org/stable/formats/index.html
-.. _selection syntax: https://userguide.mdanalysis.org/stable/selections.html
-.. _installation: https://mdtools.readthedocs.io/en/latest/doc_pages/general_docs/installation.html
-.. _usage: https://mdtools.readthedocs.io/en/latest/doc_pages/general_docs/usage.html
-.. _Question&Answer: https://github.com/andthum/mdtools/discussions/categories/q-a
+.. _trajectory and topology formats:
+    https://userguide.mdanalysis.org/stable/formats/index.html
+.. _selection syntax:
+    https://userguide.mdanalysis.org/stable/selections.html
+.. _installation:
+    https://mdtools.readthedocs.io/en/latest/doc_pages/general_docs/installation.html
+.. _usage:
+    https://mdtools.readthedocs.io/en/latest/doc_pages/general_docs/usage.html
+.. _Question&Answer:
+    https://github.com/andthum/mdtools/discussions/categories/q-a
 .. _GitHub: https://github.com/
-.. _open a new issue: https://github.com/andthum/mdtools/issues
-.. _Developers guide: https://mdtools.readthedocs.io/en/latest/doc_pages/developers_guide/developers_guide.html
-.. _GNU General Public License: https://www.gnu.org/licenses/gpl-3.0.html
+.. _Issue: https://github.com/andthum/mdtools/issues
+.. _Developers guide:
+    https://mdtools.readthedocs.io/en/latest/doc_pages/developers_guide/developers_guide.html
+.. _GNU General Public License:
+    https://www.gnu.org/licenses/gpl-3.0.html
 
 .. |Test_Status| image:: https://github.com/andthum/mdtools/actions/workflows/tests.yml/badge.svg
     :alt: Test Status

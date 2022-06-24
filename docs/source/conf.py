@@ -1,8 +1,27 @@
-# -*- coding: utf-8 -*-
+# This file is part of MDTools.
+# Copyright (C) 2021, 2022  The MDTools Development Team and all
+# contributors listed in the file AUTHORS.rst
+#
+# MDTools is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# MDTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
+
+# Configuration file for Sphinx.
+#
 # Sort configuration options in the same order as in the documentation
-# of Spinx.
+# of Spinx.  See
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+
 
 """
 Configuration file for the Sphinx documentation builder.
@@ -26,8 +45,8 @@ import sys
 
 # Either install MDTools before building the docs or add MDTools to
 # sys.path.
-module_path = os.path.abspath("./../..")
-sys.path.insert(0, module_path)
+module_path = os.path.abspath("../../")
+sys.path.insert(1, module_path)
 try:
     import mdtools as mdt
 except ModuleNotFoundError:
@@ -37,9 +56,9 @@ except ModuleNotFoundError:
     )
 
 # Recursively import all directories containing scripts.
-script_path = os.path.abspath("./../../scripts")
+script_path = os.path.abspath("../../scripts/")
 for script_dir in os.walk(script_path):
-    sys.path.insert(0, script_dir[0])
+    sys.path.insert(1, script_dir[0])
 
 
 # -- Project information -----------------------------------------------
@@ -68,7 +87,7 @@ release = mdt.__version__
 extensions = [
     # Include documentation from docstrings
     "sphinx.ext.autodoc",
-    # Allow reference sections using its title
+    # Allow referencing sections using its title
     #  "sphinx.ext.autosectionlabel",
     # Generate autodoc summaries
     "sphinx.ext.autosummary",
@@ -95,7 +114,7 @@ extensions = [
     # Read the Docs Sphinx Theme
     "sphinx_rtd_theme",
     # Enable "search-as-you-type" on Read the Docs
-    "sphinx_search.extension",
+    # "sphinx_search.extension",
 ]
 
 # The file extensions of source files.
@@ -132,20 +151,22 @@ rst_prolog = """
 rst_epilog = """
 .. |GNU_GPLv3| replace::
     :raw-html:`<a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>`
-.. |GCC| replace::
-    :raw-html:`<a href="https://gcc.gnu.org/">GCC</a>`
-.. |Lmod| replace::
-    :raw-html:`<a href="https://lmod.readthedocs.io/en/latest/">Lmod</a>`
 .. |Git| replace::
     :raw-html:`<a href="https://git-scm.com/">Git</a>`
 .. |Git_Book| replace::
     :raw-html:`<a href="https://git-scm.com/book/en/v2">Git Book</a>`
 .. |GitHub| replace::
     :raw-html:`<a href="https://github.com/">GitHub</a>`
-.. |issue| replace::
-    :raw-html:`<a href="https://github.com/andthum/mdtools/issues">issue</a>`
+.. |Issue| replace::
+    :raw-html:`<a href="https://github.com/andthum/mdtools/issues">Issue</a>`
 .. |Q&A| replace::
     :raw-html:`<a href="https://github.com/andthum/mdtools/discussions/categories/q-a">Question&Answer</a>`
+
+.. |GCC| replace::
+    :raw-html:`<a href="https://gcc.gnu.org/">GCC</a>`
+.. |Lmod| replace::
+    :raw-html:`<a href="https://lmod.readthedocs.io/en/latest/">Lmod</a>`
+
 .. |Gromacs| replace::
     :raw-html:`<a href="https://manual.gromacs.org/">Gromacs</a>`
 
@@ -161,14 +182,12 @@ rst_epilog = """
     :raw-html:`<a href="https://docs.python.org/3/library/venv.html">venv</a>`
 .. |Virtualenv| replace::
     :raw-html:`<a href="https://virtualenv.pypa.io/en/latest/">Virtualenv</a>`
-.. |black| replace::
+.. |Black| replace::
     :raw-html:`<a href="https://github.com/psf/black/">Black</a>`
 .. |isort| replace::
     :raw-html:`<a href="https://pycqa.github.io/isort/">isort</a>`
-.. |flake8| replace::
+.. |Flake8| replace::
     :raw-html:`<a href="https://github.com/pycqa/flake8">Flake8</a>`
-.. |flake8-docstrings| replace::
-    :raw-html:`<a href="https://gitlab.com/pycqa/flake8-docstrings">Flake8-Docstrings</a>`
 .. |pytest| replace::
     :raw-html:`<a href="https://docs.pytest.org/en/stable/">pytest</a>`
 .. |NumPy| replace::
@@ -179,7 +198,7 @@ rst_epilog = """
     :raw-html:`<a href="https://matplotlib.org/">matplotlib</a>`
 .. |MDAnalysis| replace::
     :raw-html:`<a href="https://www.mdanalysis.org/">MDAnalysis</a>`
-.. |mda_user_guide| replace::
+.. |MDA_user_guide| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/index.html">MDAnalysis user guide</a>`
 
 .. |RTD| replace::
@@ -188,14 +207,14 @@ rst_epilog = """
     :raw-html:`<a href="https://www.sphinx-doc.org">Sphinx</a>`
 .. |RST| replace::
     :raw-html:`<a href="https://docutils.sourceforge.io/rst.html">reStructuredText</a>`
-.. |rst_option_list| replace::
+.. |RST_option_list| replace::
     :raw-html:`<a href="https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#option-lists">reStructuredText option list</a>`
 .. |NumPy_docstring_convention| replace::
     :raw-html:`<a href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy docstring convention</a>`
 
-.. |mda_trj| replace::
+.. |MDA_trj| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/trajectories/trajectories.html">MDAnalysis trajectory</a>`
-.. |mda_trjs| replace::
+.. |MDA_trjs| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/trajectories/trajectories.html">MDAnalysis trajectories</a>`
 .. |trajectory_and_topology_formats| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/formats/index.html">trajectory and topology formats</a>`
@@ -207,7 +226,7 @@ rst_epilog = """
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/selections.html">selection syntax</a>`
 .. |explanation_of_these_terms| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/groups_of_atoms.html">explanation of these terms</a>`
-.. |mda_always_guesses_atom_masses| replace::
+.. |MDA_always_guesses_atom_masses| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/formats/guessing.html">MDAnalysis always guesses atom masses</a>`
 """  # noqa: E501
 
@@ -222,9 +241,8 @@ default_role = None
 needs_sphinx = "3.0"
 
 # If true, Sphinx will warn about all references where the target cannot
-# be found.
-# Would be nice if we could activate this.  However, therefore we have
-# to revise a lot of docstrings first.
+# be found.  This includes also argument types like "array_like",
+# "iterable" or "callable".
 nitpicky = False
 
 # The default language to highlight source code in.
@@ -271,12 +289,12 @@ html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see
-# the documentation.
+# the documentation that theme.
 html_theme_options = {
     "logo_only": True,
     "display_version": True,
     "prev_next_buttons_location": "both",
-    # Toc options
+    # Table-of-contents options.
     "collapse_navigation": True,
     "sticky_navigation": True,
     "navigation_depth": 4,
@@ -285,13 +303,13 @@ html_theme_options = {
 }
 
 # If given, this must be the name of an image file (path relative to the
-# configuration directory) that is the logo of the docs.   It is placed
+# configuration directory) that is the logo of the docs.  It is placed
 # at the top of the sidebar; its width should therefore not exceed 200
 # pixels.
 html_logo = "../logo/mdtools_logo_192x135.png"
 
 # If given, this must be the name of an image file (path relative to the
-# configuration directory) that is the favicon of the docs.   It should
+# configuration directory) that is the favicon of the docs.  It should
 # be a Windows-style icon file (.ico), which is 16x16 or 32x32 pixels
 # large.
 html_favicon = "../logo/mdtools_favicon_32x32.png"
@@ -329,7 +347,7 @@ html_copy_source = True
 html_show_sourcelink = True
 
 # If nonempty, an OpenSearch description file will be output, and all
-# pages will contain a <link> tag referring to it.   the value of this
+# pages will contain a <link> tag referring to it.  The value of this
 # option must be the base URL from which these documents are served
 # (without trailing slash)
 html_use_opensearch = "https://mdtools.readthedocs.io"
@@ -455,14 +473,16 @@ autodoc_default_flags = ["members", "undoc-members"]
 # See also napoleon_include_init_with_doc
 # See also napoleon_include_private_with_doc
 # See also napoleon_include_special_with_doc
-# autodoc_default_options = {"members": True,
-#                            "member-order": "groupwise",
-#                            "undoc-members": True,
-#                            "private-members": False,
-#                            "special-members": False,
-#                            "inherited-members": False,
-#                            "show-inheritance": False,
-#                            "imported-members": False}
+# autodoc_default_options = {
+#     "members": True,
+#     "member-order": "groupwise",
+#     "undoc-members": True,
+#     "private-members": False,
+#     "special-members": False,
+#     "inherited-members": False,
+#     "show-inheritance": False,
+#     "imported-members": False,
+# }
 
 # If True, the default argument values of functions will be not
 # evaluated on generating document.  It preserves them as is in the
@@ -511,7 +531,7 @@ coverage_show_missing_items = True
 
 # A list of directories that will be added to sys.path when the doctest
 # builder is used.  Make sure it contains absolute paths.
-doctest_path = [os.path.abspath("./../..")]
+doctest_path = [os.path.abspath("../../")]
 
 # Python code that is treated like it were put in a testsetup directive
 # for every file that is tested.

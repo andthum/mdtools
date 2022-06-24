@@ -28,7 +28,6 @@ the project's root directory):
     # Install the requirements to build the docs
     python3 -m pip install --upgrade -r docs/requirements.txt
 
-
 After installing all requirements, the documentation can be built via
 
 .. code-block:: bash

@@ -987,7 +987,7 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
 
 def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
     """
-    Check if the input parameters are suitable for slicing |mda_trjs|.
+    Check if the input parameters are suitable for slicing |MDA_trjs|.
 
     Bassically, the same rules as for `slicing numpy arrays`_ apply with
     the following limitations:
@@ -1041,10 +1041,10 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
     :func:`mdtools.check.frame_lag` :
         Check if a frame lag ('lag time') is chosen properly
     :func:`mdtools.check.time_step` :
-        Check whether all frames in a |mda_trj| have the same
+        Check whether all frames in a |MDA_trj| have the same
         :attr:`time step <MDAnalysis.coordinates.base.Timestep.dt>`
     :meth:`MDAnalysis.coordinates.base.ReaderBase.check_slice_indices` :
-        Check if frame indices are valid to slice a |mda_trj|
+        Check if frame indices are valid to slice a |MDA_trj|
     :class:`MDAnalysis.coordinates.base.FrameIteratorSliced` :
         Iterable over the frames of a trajectory on the basis of a slice
     """
@@ -1138,11 +1138,11 @@ def block_averaging(n_blocks, n_frames, check_CPUs=False, verbose=True):
     See Also
     --------
     :func:`mdtools.check.frame_slicing` :
-        Check if the input parameters are suitable for slicing |mda_trjs|
+        Check if the input parameters are suitable for slicing |MDA_trjs|
     :func:`mdtools.check.frame_lag` :
         Check if a frame lag ('lag time') is chosen properly
     :func:`mdtools.check.time_step` :
-        Check whether all frames in a |mda_trj| have the same
+        Check whether all frames in a |MDA_trj| have the same
         :attr:`time step <MDAnalysis.coordinates.base.Timestep.dt>`
     """
     # Check input parameters:
@@ -1227,12 +1227,12 @@ def restarts(
     :func:`mdtools.check.frame_lag` :
         Check if a frame lag ('lag time') is chosen properly
     :func:`mdtools.check.frame_slicing` :
-        Check if the input parameters are suitable for slicing |mda_trjs|
+        Check if the input parameters are suitable for slicing |MDA_trjs|
     :func:`mdtools.check.block_averaging` :
         Check if the number of blocks for block averaging is chosen
         properly
     :func:`mdtools.check.time_step` :
-        Check whether all frames in a |mda_trj| have the same
+        Check whether all frames in a |MDA_trj| have the same
         :attr:`time step <MDAnalysis.coordinates.base.Timestep.dt>`
     """
     # Check input parameters:
@@ -1310,12 +1310,12 @@ def frame_lag(
     See Also
     --------
     :func:`mdtools.check.frame_slicing` :
-        Check if the input parameters are suitable for slicing |mda_trjs|
+        Check if the input parameters are suitable for slicing |MDA_trjs|
     :func:`mdtools.check.block_averaging` :
         Check if the number of blocks for block averaging is chosen
         properly
     :func:`mdtools.check.time_step` :
-        Check whether all frames in a |mda_trj| have the same
+        Check whether all frames in a |MDA_trj| have the same
         :attr:`time step <MDAnalysis.coordinates.base.Timestep.dt>`
     """
     # Check input parameters:
@@ -1359,13 +1359,13 @@ def frame_lag(
 
 def time_step(trj, verbose=True):
     """
-    Check whether all frames in a |mda_trj| have the same
+    Check whether all frames in a |MDA_trj| have the same
     :attr:`time step <MDAnalysis.coordinates.base.Timestep.dt>`.
 
     Parameters
     ----------
     trj : MDAnalysis.coordinates.base.ReaderBase or MDAnalysis.coordinates.base.FrameIteratorBase
-        The |mda_trj| to check.
+        The |MDA_trj| to check.
     verbose : bool, optional
         If ``True``, print progress information to standard output.
 
