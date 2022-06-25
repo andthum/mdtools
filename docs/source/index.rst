@@ -56,8 +56,7 @@ interact with the MDTools package directly, when
     * You want to make changes to the scripts;
     * You write your own scripts and want to use functions, classes or
       other objects defined in the MDTools package;
-    * You want to :ref:`contribute <developers-guide-label>` to this
-      package.
+    * You want to :ref:`contribute <dev-guide-label>` to this package.
 
 MDTools is written in pure Python and is mainly based on the Python
 packages |MDAnalysis|, |NumPy|, |SciPy| and |matplotlib|.
@@ -70,8 +69,7 @@ packages |MDAnalysis|, |NumPy|, |SciPy| and |matplotlib|.
     contribute to it and to write scripts for his/her own purposes.  As
     mentioned above, the aim of this project is to build up a collection
     of generic Python scripts to prepare and analyze MD simulations.  If
-    you want to contribute, please read the
-    :ref:`developers-guide-label`.
+    you want to contribute, please read the |dev_guide|.
 
 .. warning::
 
@@ -95,7 +93,7 @@ packages |MDAnalysis|, |NumPy|, |SciPy| and |matplotlib|.
     doc_pages/general_docs/usage
     doc_pages/mdtools/mdtools
     doc_pages/scripts/scripts
-    doc_pages/developers_guide/developers_guide
+    doc_pages/dev_guide/dev_guide
     doc_pages/general_docs/references
 
 
@@ -136,8 +134,7 @@ new |Issue|.
 Contributing
 ============
 
-If you want to contribute to the project, please read the
-:ref:`developers-guide-label`.
+If you want to contribute to the project, please read the |dev_guide|.
 
 
 Source code
