@@ -34,8 +34,8 @@ Script template for plotting scripts.
     * Implement feature xyz.
 
 The following is a guide/template on how to write a docstring for a
-MDTools script.  For more information see the
-:ref:`developers-guide-label` and the |NumPy_docstring_convention|.
+MDTools script.  For more information see the |dev_guide| and the
+|NumPy_docstring_convention|.
 
 Scripts that create plots from the output of other scripts should have
 the same name as the script whose output is plotted, prefixed with
