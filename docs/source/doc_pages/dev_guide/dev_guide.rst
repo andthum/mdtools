@@ -1,4 +1,4 @@
-.. _developers-guide-label:
+.. _dev-guide-label:
 
 *****************
 Developer's guide
@@ -36,6 +36,7 @@ alreay done, please take a look at the |MDA_user_guide|.
     code_guidelines
     doc_guidelines
     test_guidelines
+    pre_commit
     git_workflow
     versioning
     guides_and_good_practices

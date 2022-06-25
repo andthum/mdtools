@@ -1,4 +1,4 @@
-.. _documentation-guidelines-label:
+.. _doc-guide-label:
 
 Documentation guidelines
 ========================
@@ -22,15 +22,15 @@ a good documentation, you might want to read
 <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_.
 In short:
 
-    * Use comments to explain **why** you have written the code the way
+    * Use comments to explain *why* you have written the code the way
       you did (implementation details).
 
       Comments are intended to be read by other developers and by your
       future-you.  Think about what you would like to know if you run
       over your code in a year from now.
 
-    * Use docstrings to explain **what** the code does and
-      **how to use** it.
+    * Use docstrings to explain *what* the code does and *how to use*
+      it.
 
       Documentation is inteded to be read by users that don't
       necessarily know anything about programming.  Especially, they
@@ -38,19 +38,19 @@ In short:
       like to know when using the code from someone else.
 
     * Because we are writing code for the scientific community, users
-      typically also want to know **how the code works**.  Therefore, if
-      appropriate, explain the **theory** and **working principles**
-      behind your code and cite the underlying paper(s).  If possible,
-      also include references to implementation details.
+      typically also want to know *how the code works*.  Therefore, if
+      appropriate, explain the *theory* and *working principles* behind
+      your code and cite the underlying paper(s).  If possible, also
+      include references to implementation details.
 
 
 Documentation style
 -------------------
 
     * The documentation of this project is built with |Sphinx| and
-      hosted on |RTD|.  Hence, the language for **docstrings** is |RST|
-      (**comments** are not part of the documentation and are thus
-      written in plain text).
+      hosted on |RTD|.  Hence, the language for *docstrings* is |RST|
+      (*comments* are not part of the documentation and are thus written
+      in plain text).
     * Please write text-only files, like README's, in reStructuredText,
       too, instead of markdown.
     * Give every function, class or whatever object a docstring!
@@ -72,9 +72,9 @@ Documentation style
       apply:
 
         - The "Parameters" section is replaced by an "Options" section.
-        - In the "Options" section, use a
-          `reStructuredText option list`_ to list the options with which
-          the script can/must be called and their meaning.
+        - In the "Options" section, use a |RST_option_list| to list the
+          options with which the script can/must be called and their
+          meaning.
         - The "Returns" section is replaced by an optional "Output"
           section, which for instance can contain a list of files which
           are created by the script.
@@ -117,8 +117,6 @@ Order of characters in nested `bullet lists`_
 
 .. _sphinx.ext.autodoc:
     https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
-.. _reStructuredText option list:
-    https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#option-lists
 .. _docstring convention for functions:
     https://numpydoc.readthedocs.io/en/latest/format.html#sections
 .. _bullet lists:

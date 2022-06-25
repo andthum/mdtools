@@ -38,8 +38,8 @@ discrete trajectory must meet the requirements listed in
 :func:`mdtools.check.dtrj`.
 
 The following is a guide/template on how to write a docstring for a
-MDTools script.  For more information see the
-:ref:`developers-guide-label` and the |NumPy_docstring_convention|.
+MDTools script.  For more information see the |dev_guide| and the
+|NumPy_docstring_convention|.
 
 The first part of the docstring should contain the following paragraphs
 (all separated by a blank line):

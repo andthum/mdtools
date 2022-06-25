@@ -1,4 +1,4 @@
-.. _code-guidelines-label:
+.. _code-guide-label:
 
 Code guidelines
 ===============
@@ -22,46 +22,59 @@ When writting Python code for this project, please
     * Format your code with |Black| (automatically enforces Python code
       style guide :pep:`8`).
 
-      For installation instructions, please refer to the
-      `documentation of Black`_.  To format a file :file:`spam.py`,
-      simply run
-      :bash:`python3 -m black path/to/spam.py --line-length 79` in a
-      terminal.
+      To format a file :file:`spam.py` run
+      :bash:`python3 -m black path/to/spam.py` in a terminal.  The
+      settings to use are specified in :file:`pyproject.toml`, which is
+      automatically read by Black.
 
-    * Use |Flake8| to lint your code.
+    * Format import statements with |isort|.
 
-      For installation instructions, please refer to the
-      `documentation of Flake8`_.  To lint a file :file:`spam.py`,
-      simply run :bash:`python3 -m flake8 path/to/spam.py` in a
-      terminal.  The settings to use are specified in :file:`setup.cfg`,
-      which is automatically read by Flake8.
+      To format a file :file:`spam.py` run
+      :bash:`python3 -m isort path/to/spam.py` in a terminal.  The
+      settings to use are specified in :file:`pyproject.toml`, which is
+      automatically read by isort.
+
+    * Lint your code with |Flake8|.
+
+      To lint a file :file:`spam.py` run
+      :bash:`python3 -m flake8 path/to/spam.py` in a terminal.  The
+      settings to use are specified in :file:`.flake8`, which is
+      automatically read by Flake8.
 
 .. note::
 
-    |Black| and |Flake8| offer plugins for many text editors.  When
-    using these plugins, Black and Flake8 format and lint your code on
-    the fly, so you don't have to run the commands yourself.
+    The listed formatters and linters offer plugins for many popular
+    text editors.  When using these plugins, your code is formatted and
+    lintted on the fly, so you don't have to run the commands yourself.
+
+.. note::
+
+    If you set up :ref:`pre-commit-label` (strongly recommended), the
+    above formatters and linters check your code before every commit.
+
+.. note::
+
+    All python packages that are required for the development process
+    are listed in :file:`requirements-dev.txt`, so you can easily
+    install them with |pip|.  It is recommended to install the packages
+    inside a |virtual_Python_environment| within the project directory:
+
+    .. code-block:: bash
+
+        python3 -m pip install --user --upgrade virtualenv
+        python3 -m virtualenv env-dev
+        source env-dev/bin/activate
+        python3 -m pip install --upgrade pip setuptools wheel
+        python3 -m pip install --upgrade -r requirements-dev.txt
+
+    To exit the virtual environment when finishing work on the project
+    type :bash:`deactivate`.
 
 
-Code guidelines that Black and Flake8 don't take care of
---------------------------------------------------------
+Other Python Code Guidelines
+----------------------------
 
     * Adhere to the Zen of Python (:pep:`20`).
-
-    * Imports are put at the top of the file, just after any module
-      comments and docstrings.  Imports should be grouped in the
-      following order:
-
-        1. Standard library imports.
-        2. Related third party imports.
-        3. Local application/library specific imports.
-
-      Within these groups, imports should be sorted alphabetically.
-
-      .. todo::
-
-          Maybe we should make use of |isort|, so that we don't have to
-          care about this point?
 
     * Naming conventions (A comprehensive summary of the following
       naming conventions can be found

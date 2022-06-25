@@ -149,24 +149,12 @@ Don't forget to write tests for your code (see
 Check your code quality by using code formatters and linters (see
 :ref:`formatters-and-linters-label`).
 
-For Python code:
-
-.. code-block:: bash
-
-    python3 -m black changed/python/scripts.sh --line-length 79
-    python3 -m flake8 changed/python/scripts.sh
-
 .. note::
 
-    You must install the above tools on your local machine.  Refer to
-    the documentation of |Black| and |Flake8| for installation
-    instructions.
-
-.. note::
-
-    |Black| and |Flake8| offer plugins for many text editors.  When
-    using these plugins, Black and Flake8 format and lint the code on
-    the fly, so you can skip this step.
+    Many editors offer to load the requested code formatters and linters
+    as plugins.  These plugins format and lint the code on the fly as
+    you type or on each save.  When using the corresponding plugins, you
+    can skip this step.
 
 
 5. Run tests

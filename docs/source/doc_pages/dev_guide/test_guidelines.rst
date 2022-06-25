@@ -1,4 +1,4 @@
-.. _test-style-label:
+.. _test-guide-label:
 
 Test guidelines
 ===============
