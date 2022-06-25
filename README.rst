@@ -88,7 +88,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 .. _GitHub: https://github.com/
 .. _Issue: https://github.com/andthum/mdtools/issues
 .. _Developers guide:
-    https://mdtools.readthedocs.io/en/latest/doc_pages/developers_guide/developers_guide.html
+    https://mdtools.readthedocs.io/en/latest/doc_pages/dev_guide/dev_guide.html
 .. _GNU General Public License:
     https://www.gnu.org/licenses/gpl-3.0.html
 
