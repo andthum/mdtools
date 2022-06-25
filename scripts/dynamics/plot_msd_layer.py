@@ -387,7 +387,7 @@ if __name__ == "__main__":
                 loc="upper left",
                 title="Bin number",
                 ncol=1 + len(bin_nums) // 6,
-                **mdtplt.LEGEND_KWARGS_XSMALL
+                **mdtplt.LEGEND_KWARGS_XSMALL,
             )
             pdf.savefig()
             plt.close()
@@ -434,7 +434,7 @@ if __name__ == "__main__":
             loc="upper left",
             title="Bin number",
             ncol=1 + len(bin_nums) // 8,
-            **mdtplt.LEGEND_KWARGS_XSMALL
+            **mdtplt.LEGEND_KWARGS_XSMALL,
         )
         pdf.savefig()
         plt.close()

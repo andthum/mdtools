@@ -94,6 +94,18 @@ package without the need to re-install it.
 When you want to contribute to MDTools, please read the the
 :ref:`developers-guide-label`.
 
+When contributing to MDTools, you should also install the packages
+listed in :file:`requirements-dev.txt`:
+
+.. code-block:: bash
+
+    python3 -m pip install --user --upgrade virtualenv
+    python3 -m virtualenv env-dev
+    source env-dev/bin/activate
+    python3 -m pip install --upgrade pip setuptools wheel
+    python3 -m pip install --upgrade -r requirements-dev.txt
+    deactivate
+
 
 .. _building-the-docs-label:
 

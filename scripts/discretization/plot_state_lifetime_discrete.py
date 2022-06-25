@@ -426,7 +426,7 @@ if __name__ == "__main__":
         ax.legend(
             title=r"$S^\prime$",
             ncol=1 + len(states) // 9,
-            **mdtplt.LEGEND_KWARGS_XSMALL
+            **mdtplt.LEGEND_KWARGS_XSMALL,
         )
         pdf.savefig()
         plt.close()
@@ -447,7 +447,7 @@ if __name__ == "__main__":
         ax.legend(
             title=r"$S^\prime$",
             ncol=1 + len(states) // 9,
-            **mdtplt.LEGEND_KWARGS_XSMALL
+            **mdtplt.LEGEND_KWARGS_XSMALL,
         )
         pdf.savefig()
         plt.close()
@@ -468,7 +468,7 @@ if __name__ == "__main__":
         ax.legend(
             title=r"$S^\prime$",
             ncol=1 + len(states) // 9,
-            **mdtplt.LEGEND_KWARGS_XSMALL
+            **mdtplt.LEGEND_KWARGS_XSMALL,
         )
         pdf.savefig()
         plt.close()

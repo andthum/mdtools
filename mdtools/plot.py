@@ -170,7 +170,7 @@ def plot(
     xlabel=r"$x$",
     ylabel=r"$y$",
     legend_loc="best",
-    **kwargs
+    **kwargs,
 ):
     """
     Plot data to a :class:`matplotlib.axes.Axes` object using
@@ -287,7 +287,7 @@ def scatter(
     xlabel=r"$x$",
     ylabel=r"$y$",
     legend_loc="best",
-    **kwargs
+    **kwargs,
 ):
     """
     Add a scatter plot to a :class:`matplotlib.axes.Axes` object using
@@ -413,7 +413,7 @@ def errorbar(
     xlabel=r"$x$",
     ylabel=r"$y$",
     legend_loc="best",
-    **kwargs
+    **kwargs,
 ):
     """
     Plot data to a :class:`matplotlib.axes.Axes` object with errorbars
@@ -527,7 +527,7 @@ def hist(
     xlabel=r"$x$",
     ylabel=r"$y$",
     legend_loc="best",
-    **kwargs
+    **kwargs,
 ):
     """
     Plot a histogram to a :class:`matplotlib.axes.Axes` object using
@@ -633,7 +633,7 @@ def hlines(
     ymin=None,
     ymax=None,
     legend_loc="best",
-    **kwargs
+    **kwargs,
 ):
     """
     Plot horizontal lines at each `y` from `start` to `stop` into a
@@ -729,7 +729,7 @@ def vlines(
     ymin=None,
     ymax=None,
     legend_loc="best",
-    **kwargs
+    **kwargs,
 ):
     """
     Plot vertical lines at each `x` from `start` to `stop` into a
@@ -1032,7 +1032,7 @@ def fill_between(
     xlabel=r"$x$",
     ylabel=r"$y$",
     legend_loc="best",
-    **kwargs
+    **kwargs,
 ):
     """
     Fill the area between two curves `y1` and `y2` using
@@ -1151,7 +1151,7 @@ def fill_betweenx(
     xlabel=r"$x$",
     ylabel=r"$y$",
     legend_loc="best",
-    **kwargs
+    **kwargs,
 ):
     """
     Fill the area between two vertical curves `x1` and `x2` using
@@ -1269,7 +1269,7 @@ def pcolormesh(
     xlabel=r"$x$",
     ylabel=r"$y$",
     cbarlabel=r"$z$",
-    **kwargs
+    **kwargs,
 ):
     """
     Plot two dimensional data as heatmap with
@@ -1461,7 +1461,7 @@ def imshow(
     xlabel=r"$x$",
     ylabel=r"$y$",
     cbarlabel=r"$z$",
-    **kwargs
+    **kwargs,
 ):
     """
     Plot two dimensional data as heatmap with
@@ -1779,7 +1779,7 @@ def annotate_heatmap(
     fmt="{x:.1f}",
     textcolors=["black", "white"],
     threshold=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Annotate a heatmap.

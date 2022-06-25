@@ -417,7 +417,7 @@ if __name__ == "__main__":
             ax1.legend(
                 title=r"$\Delta t$ / {}".format(args.TUNIT),
                 ncol=1 + len(times) // 6,
-                **mdtplt.LEGEND_KWARGS_XSMALL
+                **mdtplt.LEGEND_KWARGS_XSMALL,
             )
             if args.INFILE2 is not None:
                 ax2.plot(data[:, 0], data[:, 1], color="black")
@@ -483,7 +483,7 @@ if __name__ == "__main__":
         ax1.legend(
             title=r"$\Delta t$ / {}".format(args.TUNIT),
             ncol=1 + len(times) // 6,
-            **mdtplt.LEGEND_KWARGS_XSMALL
+            **mdtplt.LEGEND_KWARGS_XSMALL,
         )
         if args.INFILE2 is not None:
             ax2.plot(data[:, 0], data[:, 1], color="black")
