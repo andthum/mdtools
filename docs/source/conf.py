@@ -149,6 +149,9 @@ rst_prolog = """
 # source file that is read.  This is a possible place to add
 # substitutions that should be available in every file
 rst_epilog = """
+.. |dev_guide| replace::
+    :ref:`dev-guide-label`
+
 .. |GNU_GPLv3| replace::
     :raw-html:`<a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>`
 .. |Git| replace::
@@ -228,6 +231,17 @@ rst_epilog = """
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/groups_of_atoms.html">explanation of these terms</a>`
 .. |MDA_always_guesses_atom_masses| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/formats/guessing.html">MDAnalysis always guesses atom masses</a>`
+
+.. |shfmt| replace::
+    :raw-html:`<a href="https://github.com/mvdan/sh#shfmt">shfmt</a>`
+.. |shfmt-py| replace::
+    :raw-html:`<a href="https://github.com/maxwinterstein/shfmt-py">shfmt-py</a>`
+.. |shellcheck| replace::
+    :raw-html:`<a href="https://github.com/koalaman/shellcheck">shellcheck</a>`
+.. |shellcheck-py| replace::
+    :raw-html:`<a href="https://github.com/shellcheck-py/shellcheck-py">shellcheck-py</a>`
+.. |markdownlint| replace::
+    :raw-html:`<a href="https://github.com/markdownlint/markdownlint">markdownlint</a>`
 """  # noqa: E501
 
 # The name of the default domain.
