@@ -91,8 +91,7 @@ This installs MDTools in development mode.  This means that any changes
 you make to the source directory will immediately affect the installed
 package without the need to re-install it.
 
-When you want to contribute to MDTools, please read the the
-:ref:`developers-guide-label`.
+When you want to contribute to MDTools, please read the the |dev_guide|.
 
 When contributing to MDTools, you should also install the packages
 listed in :file:`requirements-dev.txt`:
