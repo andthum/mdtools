@@ -143,7 +143,11 @@ def str2none_or_type(val, dtype, empty_as_None=False, case_sensitive=True):
     True
     """
     val = str(val)
-    if val == "None" or (empty_as_None and val == ""):
+    if (
+        (case_sensitive and val == "None")
+        or (not case_sensitive and val.lower() == "none")
+        or (empty_as_None and val == "")
+    ):
         return None
     else:
         return dtype(val)
