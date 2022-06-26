@@ -3,13 +3,13 @@
 # https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#creating-issue-forms=
 
 name: "Feature request"
-description: "Request a new feature"
-title: "[Feat]: "
+description: "Request a new feature."
+title: "[Feat]: Descriptive title."
 labels: ["enhancement"]
 body:
   - type: "markdown"
     attributes:
-      value: "Thank you for advancing MDTools!"
+      value: "Thank you for enhancing MDTools!"
   - type: "textarea"
     id: "motivation"
     attributes:
@@ -20,7 +20,7 @@ body:
       placeholder: |
         * I want to calculate X...
         * Doing X is rather cumbersome.  There must be an easier way Y...
-        ...
+        etc.
     validations:
       required: true
   - type: "textarea"
@@ -34,7 +34,7 @@ body:
           that does Z...
         * I want a new script X that calculates Y via method Z...
         * I want the existing script X to have a new option Y that does Z...
-        ...
+        etc.
     validations:
       required: true
   - type: "textarea"

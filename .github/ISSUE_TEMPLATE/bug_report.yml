@@ -3,8 +3,8 @@
 # https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#creating-issue-forms=
 
 name: "Bug report"
-description: "Submit a bug report"
-title: "[Bug]: "
+description: "Submit a bug report."
+title: "[Bug]: Descriptive title"
 labels: ["bug"]
 body:
   - type: "markdown"
@@ -65,7 +65,7 @@ body:
       description: >
         Steps to reproduce the bug.  Optimally, provide a minimal working
         example.
-      value: |
+      placeholder: |
          1. Do this.
          2. Do that.
          3. See the bug.
@@ -77,8 +77,9 @@ body:
       label: "Supposed bug location"
       description: "Where do you suppose the bug to be?"
       placeholder: |
-        Example: In line XY of the script `contact_hist.py`
-        Example: Somewhere in the function `mdtools.structure.contact_matrix`
+        In line XY of the script `contact_hist.py`
+        Somewhere in the function `mdtools.structure.contact_matrix`
+        etc.
     validations:
       required: false
   - type: "textarea"
