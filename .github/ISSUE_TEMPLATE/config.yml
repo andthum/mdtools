@@ -1,0 +1,12 @@
+# Config file for GitHub's template chooser.
+# See
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#configuring-the-template-chooser=
+
+blank_issues_enabled: true
+contact_links:
+  - name: Question&Answer forum
+    url: https://github.com/andthum/mdtools/discussions/categories/q-a
+    about: Please ask support questions here.
+  - name: Discussions forum
+    url: https://github.com/andthum/mdtools/discussions
+    about: Please start general discussions here.
