@@ -1,7 +1,7 @@
 # Install requirements for MDTools in alphabetical order.
 
 matplotlib >=3.3, <4.0
-MDAnalysis >=2.0, <3.0
+MDAnalysis >=2.0, <2.1
 numpy >=1.15, <2.0
 psutil >=5.0, <6.0
 scipy >=1.0, <2.0
