@@ -4,7 +4,7 @@
 
 name: "Feature request"
 description: "Request a new feature."
-title: "[Feat]: Descriptive title."
+title: "[Feat]: Descriptive title"
 labels: ["enhancement"]
 body:
   - type: "markdown"
