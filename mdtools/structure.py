@@ -2275,14 +2275,10 @@ def contact_matrices(
         print("First frame to read:    {:>8d}".format(BEGIN))
         print("Last frame to read:     {:>8d}".format(END - 1))
         print("Read every n-th frame:  {:>8d}".format(EVERY))
-        print("Time first frame:       {:>12.3f} (ps)"
-              .format(trj[BEGIN].time))
-        print("Time last frame:        {:>12.3f} (ps)"
-              .format(trj[END - 1].time))
-        print("Time step first frame:  {:>12.3f} (ps)"
-              .format(trj[BEGIN].dt))
-        print("Time step last frame:   {:>12.3f} (ps)"
-              .format(trj[END - 1].dt))
+        print("Time first frame:       {:>12.3f} (ps)".format(trj[0].time))
+        print("Time last frame:        {:>12.3f} (ps)".format(trj[-1].time))
+        print("Time step first frame:  {:>12.3f} (ps)".format(trj[0].dt))
+        print("Time step last frame:   {:>12.3f} (ps)".format(trj[-1].dt))
         timer = datetime.now()
         trj = mdt.rti.ProgressBar(trj)
     for i, ts in enumerate(trj):
