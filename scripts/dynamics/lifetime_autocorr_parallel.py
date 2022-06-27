@@ -124,34 +124,40 @@ if __name__ == '__main__':
         nchunks = 1
 
     for chunk in range(nchunks):
-        pool.submit_task(func=mdt.strc.contact_matrices,
-                         args=(args.TOPFILE,
-                               args.TRJFILE,
-                               args.REF,
-                               args.SEL,
-                               args.CUTOFF,
-                               args.COMPOUND,
-                               args.MINCONTACTS,
-                               BEGIN + chunk * chunk_size,
-                               BEGIN + (chunk + 1) * chunk_size,
-                               EVERY,
-                               True,
-                               args.DEBUG))
+        pool.submit_task(
+            func=mdt.strc.contact_matrices,
+            kwargs={
+                "ref": " ".join(args.REF),
+                "sel": " ".join(args.SEL),
+                "cutoff": args.CUTOFF,
+                "topfile": args.TOPFILE,
+                "trjfile": args.TRJFILE,
+                "begin": BEGIN + chunk * chunk_size,
+                "end": BEGIN + (chunk + 1) * chunk_size,
+                "every": EVERY,
+                "compound": args.COMPOUND,
+                "min_contacts": args.MINCONTACTS,
+                "verbose": False,
+            },
+        )
     if BEGIN + (chunk + 1) * chunk_size < END:
         chunk += 1
-        pool.submit_task(func=mdt.strc.contact_matrices,
-                         args=(args.TOPFILE,
-                               args.TRJFILE,
-                               args.REF,
-                               args.SEL,
-                               args.CUTOFF,
-                               args.COMPOUND,
-                               args.MINCONTACTS,
-                               BEGIN + chunk * chunk_size,
-                               END,
-                               EVERY,
-                               True,
-                               args.DEBUG))
+        pool.submit_task(
+            func=mdt.strc.contact_matrices,
+            kwargs={
+                "ref": " ".join(args.REF),
+                "sel": " ".join(args.SEL),
+                "cutoff": args.CUTOFF,
+                "topfile": args.TOPFILE,
+                "trjfile": args.TRJFILE,
+                "begin": BEGIN + chunk * chunk_size,
+                "end": END,
+                "every": EVERY,
+                "compound": args.COMPOUND,
+                "min_contacts": args.MINCONTACTS,
+                "verbose": False,
+            },
+        )
     elif BEGIN + (chunk + 1) * chunk_size > END:
         raise ValueError("I've read more frames than given with -e. This"
                          " should not have happened")
