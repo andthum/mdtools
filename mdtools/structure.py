@@ -2063,10 +2063,23 @@ def contact_matrix(
 
 
 def contact_matrices(
-        ref, sel, cutoff, trj=None, topfile=None, trjfile=None, begin=0,
-        end=-1, every=1, updating_ref=False, updating_sel=False,
-        compound='atoms', min_contacts=1, fill_missing_cmp_ix=False,
-        mdabackend='serial', verbose=True):
+    ref,
+    sel,
+    cutoff,
+    trj=None,
+    topfile=None,
+    trjfile=None,
+    begin=0,
+    end=-1,
+    every=1,
+    updating_ref=False,
+    updating_sel=False,
+    compound='atoms',
+    min_contacts=1,
+    fill_missing_cmp_ix=False,
+    mdabackend='serial',
+    verbose=True
+):
     """
     Construct a contact matrix for two MDAnalysis
     :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>` for each
@@ -2075,9 +2088,9 @@ def contact_matrices(
     Parameters
     ----------
     ref, sel : MDAnalysis.core.groups.AtomGroup or str
-        'Reference/Selection group': Either a MDAnalysis
+        Reference and selection group:  Either an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` (if `trj` is not
-        ``None``) or a selection strings for creating a MDAnalysis
+        ``None``) or a selection string for creating an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` (if `trj` is
         ``None``).  See MDAnalysis' |selection_syntax| for possible
         choices of selection strings.
@@ -2085,7 +2098,8 @@ def contact_matrices(
         A reference and selection :class:`~MDAnalysis.core.groups.Atom`
         are considered to be in contact, if their distance is less than
         or equal to this cutoff.  Must be greater than zero.
-    trj : MDAnalysis.coordinates.base.ReaderBase or MDAnalysis.coordinates.base.FrameIteratorBase, optional
+    trj : MDAnalysis.coordinates.base.ReaderBase or \
+MDAnalysis.coordinates.base.FrameIteratorBase, optional
         |MDA_trj| to read.  If ``None``, a new MDAnalysis
         :class:`~MDAnalysis.core.universe.Universe` and trajectory are
         created from `topfile` and `trjfile`.
@@ -2111,17 +2125,18 @@ def contact_matrices(
         Read every n-th frame from the newly created trajectory.
         Ignored if `trj` is not ``None``.
     updating_ref, updating_sel : bool, optional
-        Use and :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` for
-        a newly created reference/selection group.  Selection
-        expressions of
-        :class:`UpdatingAtomGroups <MDAnalysis.core.groups.UpdatingAtomGroup>`
-        are re-evaluated every time step.  E.g. useful for
+        Use an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` for a
+        newly created reference/selection group.  Selection expressions
+        of :class:`UpdatingAtomGroups
+        <MDAnalysis.core.groups.UpdatingAtomGroup>` are re-evaluated
+        every time step.  For instance, this is useful for
         position-based selections like 'type Li and prop z <= 2.0'.
         Note that the contact matrices for different frames might have
-        different shapes when using
-        :class:`UpdatingAtomGroups <MDAnalysis.core.groups.UpdatingAtomGroup>`.
-        Ignored if `trj` is not ``None``.
-    compound : {'atoms', 'group', 'segments', 'residues', 'fragments'}, optional
+        different shapes when using :class:`UpdatingAtomGroups
+        <MDAnalysis.core.groups.UpdatingAtomGroup>`.  Ignored if `trj`
+        is not ``None``.
+    compound : {'atoms', 'group', 'segments', 'residues', \
+'fragments'}, optional
         The compounds of `ref` and `sel` for which to calculate the
         contact matrix.  Must be either a single string which is applied
         to both, `ref` and `sel`, or a 1-dimensional array of two
@@ -2149,7 +2164,8 @@ def contact_matrices(
         higher than `min_contacts`.  Must be greater than zero.
         `min_contacts` is ignored if `compound` is ``'atoms'``, because
         :class:`Atoms <MDAnalysis.core.groups.Atom>` can only have one
-        or no contact with another :class:`~MDAnalysis.core.groups.Atom`.
+        or no contact with another
+        :class:`~MDAnalysis.core.groups.Atom`.
     fill_missing_cmp_ix : bool, optional
         If ``True``, also create matrix elements for missing
         *intermediate* compound indices.  These matrix elements will
@@ -2188,25 +2204,30 @@ def contact_matrices(
         proc.cpu_percent()  # Initiate monitoring of CPU usage
         print("Running mdtools.structure.contact_matrices()...")
     if trj is None and (topfile is None or trjfile is None):
-        raise ValueError("Either 'trj' or 'topfile' and 'trjfile' must"
-                         " be given")
+        raise ValueError(
+            "Either 'trj' or 'topfile' and 'trjfile' must be given"
+        )
     if np.ndim(compound) == 0:
         compound = (compound,) * 2
     elif np.ndim(compound) == 1 and len(compound) == 1:
         compound = (compound[0],) * 2
     elif np.ndim(compound) > 1:
-        raise ValueError("'compound' must either be a string or a 1d"
-                         " array containing 2 strings")
+        raise ValueError(
+            "'compound' must either be a string or a 1d array"
+            " containing 2 strings"
+        )
     if len(compound) != 2:
-        raise ValueError("'compound' must either be a string or a 1d"
-                         " array containing 2 strings")
+        raise ValueError(
+            "'compound' must either be a string or a 1d array"
+            " containing 2 strings"
+        )
 
     if trj is None:
         if verbose:
             print()
-        u = mdt.select.universe(top=topfile,
-                                trj=trjfile,
-                                verbose=verbose)
+        u = mdt.select.universe(
+            top=topfile, trj=trjfile, verbose=verbose
+        )
         if verbose:
             print()
             print("Creating selections...")
@@ -2225,8 +2246,10 @@ def contact_matrices(
             print("Selection group: '{}'".format(sel_str))
             print(mdt.rti.ag_info_str(ag=sel, indent=2))
             print("Elapsed time:         {}".format(datetime.now() - timer))
-            print("Current memory usage: {:.2f} MiB"
-                  .format(proc.memory_info().rss / 2**20))
+            print(
+                "Current memory usage: {:.2f}"
+                " MiB".format(mdt.rti.mem_usage(proc))
+            )
             print()
         N_FRAMES_TOT = u.trajectory.n_frames
         BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
@@ -2241,9 +2264,10 @@ def contact_matrices(
         N_FRAMES_TOT = len(trj)
         BEGIN, END, EVERY, N_FRAMES = (0, len(trj), 1, len(trj))
         if isinstance(sel, str):
-            raise ValueError("'sel' is a string, but if 'trj' is given,"
-                             " 'sel' must be a"
-                             " MDAnalysis.core.groups.AtomGroup instance")
+            raise ValueError(
+                "'sel' is a string, but if 'trj' is given, 'sel' must"
+                " be a MDAnalysis.core.groups.AtomGroup instance"
+            )
 
     cms = [None, ] * N_FRAMES
     if not updating_ref:
@@ -2251,19 +2275,19 @@ def contact_matrices(
             ag=ref,
             compound=compound[0],
             return_cmp_ix=True,
-            check_contiguos=True
+            check_contiguos=True,
         )
     if not updating_sel:
         natms_per_selcmp, selcmp_ix = mdt.strc.natms_per_cmp(
             ag=sel,
             compound=compound[1],
             return_cmp_ix=True,
-            check_contiguos=True
+            check_contiguos=True,
         )
     if not updating_ref and not updating_sel:
-        dist_array_tmp = np.full((ref.n_atoms, sel.n_atoms),
-                                 np.nan,
-                                 dtype=np.float64)
+        dist_array_tmp = np.full(
+            (ref.n_atoms, sel.n_atoms), np.nan, dtype=np.float64
+        )
     else:
         dist_array_tmp = None
 
@@ -2282,53 +2306,61 @@ def contact_matrices(
         timer = datetime.now()
         trj = mdt.rti.ProgressBar(trj)
     for i, ts in enumerate(trj):
-        cm = contact_matrix(ref=ref,
-                            sel=sel,
-                            cutoff=cutoff,
-                            box=ts.dimensions,
-                            result=dist_array_tmp,
-                            mdabackend=mdabackend)
+        cm = contact_matrix(
+            ref=ref,
+            sel=sel,
+            cutoff=cutoff,
+            box=ts.dimensions,
+            result=dist_array_tmp,
+            mdabackend=mdabackend,
+        )
         if updating_ref and compound[0] != 'atoms':
             natms_per_refcmp, refcmp_ix = natms_per_cmp(
                 ag=ref,
                 compound=compound[0],
                 return_cmp_ix=True,
-                check_contiguos=True
+                check_contiguos=True,
             )
         if updating_sel and compound[1] != 'atoms':
             natms_per_selcmp, selcmp_ix = natms_per_cmp(
                 ag=sel,
                 compound=compound[1],
                 return_cmp_ix=True,
-                check_contiguos=True
+                check_contiguos=True,
             )
         if compound[0] != 'atoms' or compound[1] != 'atoms':
-            cm = cmp_contact_matrix(cm=cm,
-                                    natms_per_refcmp=natms_per_refcmp,
-                                    natms_per_selcmp=natms_per_selcmp,
-                                    min_contacts=min_contacts)
+            cm = cmp_contact_matrix(
+                cm=cm,
+                natms_per_refcmp=natms_per_refcmp,
+                natms_per_selcmp=natms_per_selcmp,
+                min_contacts=min_contacts,
+            )
         if fill_missing_cmp_ix:
-            cm = cm_fill_missing_cmp_ix(cm=cm,
-                                        refix=refcmp_ix,
-                                        selix=selcmp_ix)
+            cm = cm_fill_missing_cmp_ix(
+                cm=cm, refix=refcmp_ix, selix=selcmp_ix
+            )
         cms[i] = sparse.csr_matrix(cm, dtype=bool)
         if verbose:
-            progress_bar_mem = proc.memory_info().rss / 2**20
-            trj.set_postfix_str("{:>7.2f}MiB".format(progress_bar_mem),
-                                refresh=False)
+            trj.set_postfix_str(
+                "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
+            )
     if verbose:
         trj.close()
         print("Elapsed time:         {}".format(datetime.now() - timer))
-        print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss / 2**20))
+        print(
+            "Current memory usage: {:.2f}"
+            " MiB".format(mdt.rti.mem_usage(proc))
+        )
         print()
         print("mdtools.structure.contact_matrices() done")
         print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
-        print("CPU time:             {}"
-              .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
+        _cpu_time = timedelta(seconds=sum(proc.cpu_times()[:4]))
+        print("CPU time:             {}".format(_cpu_time))
         print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
-        print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss / 2**20))
+        print(
+            "Current memory usage: {:.2f}"
+            " MiB".format(mdt.rti.mem_usage(proc))
+        )
 
     return cms
 
