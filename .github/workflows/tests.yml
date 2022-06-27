@@ -97,6 +97,7 @@ jobs:
         mdtools/run_time_info.py \
         mdtools/version.py \
         scripts/discretization/plot_*.py \
+        scripts/dynamics/lifetime_autocorr* \
         scripts/dynamics/plot_msd_layer*.py \
         scripts/structure/lig_change_at_pos_change_blocks.py \
         scripts/structure/plot_gmx_densmap.py \
