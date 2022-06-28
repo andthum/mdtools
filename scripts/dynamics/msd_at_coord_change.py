@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2020  Andreas Thum
+# Copyright (C) 2021, 2022  The MDTools Development Team and all
+# contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -18,13 +18,21 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import sys
+"""TODO: Docstring"""
+
+
+# Standard libraries
+import argparse
 import os
+import sys
 import warnings
 from datetime import datetime
-import psutil
-import argparse
+
+# Third-party libraries
 import numpy as np
+import psutil
+
+# First-party libraries
 import mdtools as mdt
 
 
@@ -582,19 +590,26 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-
-    cms = mdt.strc.contact_matrices(topfile=args.TOPFILE,
-                                    trjfile=args.TRJFILE,
-                                    ref=args.REF,
-                                    sel=args.SEL,
-                                    cutoff=args.CUTOFF,
-                                    compound=args.COMPOUND,
-                                    min_contacts=args.MINCONTACTS,
-                                    begin=BEGIN,
-                                    end=END,
-                                    every=EVERY,
-                                    verbose=True,
-                                    debug=args.DEBUG)
+    if mdt.rti.get_num_CPUs() > 1:
+        mdabackend = "OpenMP"
+    else:
+        mdabackend = "serial"
+    print()
+    cms = mdt.strc.contact_matrices(
+        ref=" ".join(args.REF),
+        sel=" ".join(args.SEL),
+        cutoff=args.CUTOFF,
+        topfile=args.TOPFILE,
+        trjfile=args.TRJFILE,
+        begin=BEGIN,
+        end=END,
+        every=EVERY,
+        compound=args.COMPOUND,
+        min_contacts=args.MINCONTACTS,
+        mdabackend=mdabackend,
+        verbose=True,
+    )
+    print()
     if len(cms) != n_frames:
         raise ValueError("The number of contact matrices does not equal"
                          " the number of frames to read. This should not"
