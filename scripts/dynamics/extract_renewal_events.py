@@ -18,19 +18,39 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import sys
+"""TODO: Docstring"""
+
+
+# Standard libraries
+import argparse
 import os
+import sys
 import warnings
 from datetime import datetime
-import psutil
-import argparse
+
+# Third-party libraries
 import numpy as np
+import psutil
+
+# First-party libraries
 import mdtools as mdt
+
+# Local imports
 from msd_at_coord_change import get_pos
 
 
-def extract_renewal_events(universe, ref, sel, cms, compound='atoms',
-                           begin=0, every=1, coord_traj=False, verbose=False, debug=False):
+def extract_renewal_events(
+    universe,
+    ref,
+    sel,
+    cms,
+    compound='atoms',
+    begin=0,
+    every=1,
+    coord_traj=False,
+    verbose=False,
+    debug=False,
+):
     """
     Extract renewal events from a
     :attr:`~MDAnalysis.core.universe.Universe.trajectory`. A renewal
