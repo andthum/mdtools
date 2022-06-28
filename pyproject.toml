@@ -27,6 +27,7 @@ known_local_folder = [
     "lifetime_autocorr_serial",
     "msd_at_coord_change",
     "msd_serial",
+    "msd_layer_serial",
 ]
 line_length = 79
 # Number of blank lines around import statements.

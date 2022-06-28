@@ -18,14 +18,24 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import sys
+"""TODO: Docstring"""
+
+
+# Standard libraries
 import os
+import sys
 from datetime import datetime
-import psutil
+
+# Third-party libraries
 import numpy as np
+import psutil
+
+# First-party libraries
 import mdtools as mdt
+
+# Local imports
+from msd_layer_serial import msd_layer, parse_user_input
 from msd_serial import get_COMs
-from msd_layer_serial import parse_user_input, msd_layer
 
 
 if __name__ == '__main__':
