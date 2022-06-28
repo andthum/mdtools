@@ -41,6 +41,12 @@ from msd_serial import get_COMs
 
 # This function is also used by: msd_layer_parallel.py
 def parse_user_input(add_description=""):
+    """
+    Parse arguments from the command line.
+
+    This function implements the command-line interface of
+    :mod:`msd_layer_serial` and :mod:`msd_layer_parallel`.
+    """
     description = ("Calculate the mean displacement (MD) and the mean"
                    " square displacement (MSD) for compounds of a"
                    " selection group as function of the initial compound"
@@ -50,7 +56,6 @@ def parse_user_input(add_description=""):
     parser = argparse.ArgumentParser(
         description=description + add_description
     )
-
     parser.add_argument(
         '-f',
         dest='TRJFILE',
@@ -90,7 +95,6 @@ def parse_user_input(add_description=""):
              " If --nblocks is greater than one eight additional files"
              " are created containing the respective standard deviations."
     )
-
     parser.add_argument(
         '--sel',
         dest='SEL',
@@ -105,6 +109,7 @@ def parse_user_input(add_description=""):
         dest='COM',
         type=str,
         required=False,
+        choices=(None, 'group', 'segments', 'residues', 'fragments'),
         default=None,
         help="Use the center of mass rather than calculating the"
              " displacement for each individual atom of the selection"
@@ -118,12 +123,12 @@ def parse_user_input(add_description=""):
              " (https://userguide.mdanalysis.org/groups_of_atoms.html)"
              " for the definition of the terms. Default is 'None'"
     )
-
     parser.add_argument(
         '-d',
         dest='DIRECTION',
         type=str,
         required=False,
+        choices=('x', 'y', 'z'),
         default='z',
         help="The spatial direction in which to bin the displacements"
              " according to the starting position of the selection"
@@ -152,7 +157,6 @@ def parse_user_input(add_description=""):
              " starting with '#' are ignored. Bins do not need to be"
              " equidistant.  --bins takes precedence over --bin-num."
     )
-
     parser.add_argument(
         '-b',
         dest='BEGIN',
@@ -201,7 +205,6 @@ def parse_user_input(add_description=""):
              " the MD and MSD. This must be an integer multiply of"
              " --every. Default: 100"
     )
-
     parser.add_argument(
         '--debug',
         dest='DEBUG',
@@ -210,24 +213,8 @@ def parse_user_input(add_description=""):
         action='store_true',
         help="Run in debug mode."
     )
-
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-
-    if (args.COM is not None and
-        args.COM != 'group' and
-        args.COM != 'segments' and
-        args.COM != 'residues' and
-            args.COM != 'fragments'):
-        raise ValueError("--com must be either 'group', 'segments',"
-                         " 'residues' or 'fragments', but you gave {}"
-                         .format(args.COM))
-    if (args.DIRECTION != 'x' and
-        args.DIRECTION != 'y' and
-            args.DIRECTION != 'z'):
-        raise ValueError("-d must be either 'x', 'y' or 'z', but you"
-                         " gave {}".format(args.DIRECTION))
-
     return args
 
 
@@ -235,6 +222,16 @@ def parse_user_input(add_description=""):
 def msd_layer(pos, bins, direction='z', restart=1, debug=False):
     """
     Calculate the mean displacement (MD)
+
+    .. todo::
+
+        Discretization must be done with wrapped coordinates but MSD
+        calculation must be done with unwrapped coordinates!  Currently,
+        everything is done with unwrapped coordinates, which is fine
+        for simulations without periodic boundary conditions in the
+        given `direction`.  However, the discretization will fails for
+        simulations with periodic boundary conditions in the given
+        `direction`.
 
     .. math:
         \langle \Delta r_i(\Delta t, z) \rangle = \langle [r_i(t_0 + \Delta t) - r_i(t_0)] \cdot \delta[z0 - z_i(t_0)]\rangle
@@ -300,6 +297,8 @@ def msd_layer(pos, bins, direction='z', restart=1, debug=False):
     pos = np.asarray(pos)
     bins = np.unique(bins)
 
+    # TODO: Discretization must be done with wrapped coordinates but
+    # MSD calculation must be done with unwrapped coordinates!
     dim = {'x': 0, 'y': 1, 'z': 2}
     d = dim[direction]
     pos_min = np.min(pos[:, :, d])
@@ -418,6 +417,8 @@ if __name__ == '__main__':
     print("Checking bins", flush=True)
     timer = datetime.now()
 
+    # TODO: Discretization must be done with wrapped coordinates but
+    # MSD calculation must be done with unwrapped coordinates!
     lbox_max = [ts.dimensions[d] for ts in u.trajectory[BEGIN:END:EVERY]]
     lbox_max = np.max(lbox_max)
     if args.BINFILE is None:

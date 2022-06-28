@@ -95,6 +95,8 @@ if __name__ == '__main__':
     print("Checking bins", flush=True)
     timer = datetime.now()
 
+    # TODO: Discretization must be done with wrapped coordinates but
+    # MSD calculation must be done with unwrapped coordinates!
     lbox_max = [ts.dimensions[d] for ts in u.trajectory[BEGIN:END:EVERY]]
     lbox_max = np.max(lbox_max)
     if args.BINFILE is None:
