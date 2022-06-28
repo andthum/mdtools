@@ -737,19 +737,26 @@ if __name__ == '__main__':
           .format(u.trajectory[0].dt),
           flush=True)
     timer = datetime.now()
-
-    cms = mdt.strc.contact_matrices(topfile=args.TOPFILE,
-                                    trjfile=args.TRJFILE,
-                                    ref=args.REF,
-                                    sel=args.SEL,
-                                    cutoff=args.CUTOFF,
-                                    compound=args.COMPOUND,
-                                    min_contacts=args.MINCONTACTS,
-                                    begin=BEGIN,
-                                    end=END,
-                                    every=EVERY,
-                                    verbose=True,
-                                    debug=args.DEBUG)
+    if mdt.rti.get_num_CPUs() > 1:
+        mdabackend = "OpenMP"
+    else:
+        mdabackend = "serial"
+    print()
+    cms = mdt.strc.contact_matrices(
+        ref=" ".join(args.REF),
+        sel=" ".join(args.SEL),
+        cutoff=args.CUTOFF,
+        topfile=args.TOPFILE,
+        trjfile=args.TRJFILE,
+        begin=BEGIN,
+        end=END,
+        every=EVERY,
+        compound=args.COMPOUND,
+        min_contacts=args.MINCONTACTS,
+        mdabackend=mdabackend,
+        verbose=True,
+    )
+    print()
     if len(cms) != n_frames:
         raise ValueError("The number of contact matrices does not equal"
                          " the number of frames to read. This should not"
