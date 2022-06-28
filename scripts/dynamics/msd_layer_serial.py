@@ -18,14 +18,24 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import sys
+"""TODO: Docstring"""
+
+
+# Standard libraries
+import argparse
 import os
+import sys
 import warnings
 from datetime import datetime
-import psutil
-import argparse
+
+# Third-party libraries
 import numpy as np
+import psutil
+
+# First-party libraries
 import mdtools as mdt
+
+# Local imports
 from msd_serial import get_COMs
 
 
