@@ -662,7 +662,7 @@ if __name__ == '__main__':
     print("\n")
     print("Checking output for consistency...")
     timer = datetime.now()
-    tol = 1e-6
+    tol = 1e-4
     # Check histogram sums:
     if not np.isclose(np.sum(hist_refatm_selatm), 1, rtol=0, atol=tol):
         raise ValueError("The sum over 'hist_refatm_selatm' ({}) is not"
