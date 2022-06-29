@@ -674,7 +674,7 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
     )
 
 
-def write_matrix_block(
+def write_matrix_block(  # noqa: C901
     fname,
     data,
     var1,
