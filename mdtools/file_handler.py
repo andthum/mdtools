@@ -56,8 +56,8 @@ def cd_up(n, path=__file__):
     p : str
         The `n`-th parent directory of `path`.
     """
-    p = os.path.abspath(path)
-    for i in range(n):
+    p = os.path.abspath(os.path.expandvars(path))
+    for _ in range(n):
         p = os.path.dirname(p)
     return p
 
