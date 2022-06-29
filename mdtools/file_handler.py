@@ -62,6 +62,45 @@ def cd_up(n, path=__file__):
     return p
 
 
+def tail(fname, n):
+    """
+    Read the last n lines from a file.
+
+    Parameters
+    ----------
+    fname : str
+        Name of the input file.
+    n : int
+        The number of lines to read from the end of the input file.
+
+    Returns
+    -------
+    lines : list
+        List containing the last `n` lines of the input file.  Each list
+        item represents one line of the file.
+    """
+    lines = []
+    if n <= 0:
+        return lines
+    # Step width by which to move the cursor (the given value was an
+    # emprically determined to give best performance and might be
+    # further optimized).
+    step_width = max(10 * n, 1)
+    with open(fname, "r") as file:
+        file.seek(0, 2)  # Set cursor to end of file.
+        pos = file.tell()  # Get current cursor position.
+        # Move cursor backwards until the n-th last line is reached.
+        # Termination criterium must be n+1 to get the entire n-th last
+        # line and not just a part of it.
+        while len(lines) < n + 1:
+            pos -= min(step_width, pos)
+            file.seek(pos, 0)
+            lines = file.readlines()
+            if pos == 0:  # Reached start of file.
+                break
+    return lines[-n:]
+
+
 def str2none_or_type(val, dtype, empty_as_None=False, case_sensitive=True):
     """
     Convert a string to the NoneType ``None`` or to a given type.
