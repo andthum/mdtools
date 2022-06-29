@@ -32,10 +32,10 @@ import os
 import warnings
 from datetime import datetime
 
-# Third party libraries
+# Third-party libraries
 import numpy as np
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 
 
