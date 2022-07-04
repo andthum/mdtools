@@ -36,7 +36,7 @@ ci:
 
 repos:
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
-    rev: "v4.2.0"
+    rev: "v4.3.0"
     hooks:
       ### Security ###
       # Detect the presence of private keys.
@@ -101,7 +101,7 @@ repos:
       - id: "check-pre-commit-ci-config"
 
   - repo: "https://github.com/python-jsonschema/check-jsonschema"
-    rev: "0.16.0"
+    rev: "0.16.2"
     hooks:
       # Validate GitHub Actions against the schema provided by
       # SchemaStore.
@@ -159,7 +159,7 @@ repos:
     # to XX but somehow the pre-commit hook has version YY when
     # specifying the hook version without the prefix.  See
     # https://github.com/psf/black/issues/2493#issuecomment-1081987650
-    rev: "refs/tags/22.3.0:refs/tags/22.3.0"
+    rev: "22.6.0"
     hooks:
       # Format Python code with black.
       - id: "black"
