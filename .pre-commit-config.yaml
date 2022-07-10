@@ -159,7 +159,7 @@ repos:
     # to XX but somehow the pre-commit hook has version YY when
     # specifying the hook version without the prefix.  See
     # https://github.com/psf/black/issues/2493#issuecomment-1081987650
-    rev: "22.6.0"
+    rev: "refs/tags/22.6.0:refs/tags/22.6.0"
     hooks:
       # Format Python code with black.
       - id: "black"
