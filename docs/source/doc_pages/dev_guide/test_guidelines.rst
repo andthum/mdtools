@@ -68,9 +68,9 @@ to run doctest on all our example codes.  Simply do:
     cd path/to/mdtools/docs/
     make doctest
 
-Note that you have to install MDTools and the requirements in
-:file:`docs/requirements.txt` to be able to run the above command (see
-:ref:`building-the-docs-label`).
+Note that you have to install the requirements in
+:file:`docs/requirements-docs.txt` to be able to run the above command
+(see :ref:`build-docs-label`).
 
 
 Unit tests

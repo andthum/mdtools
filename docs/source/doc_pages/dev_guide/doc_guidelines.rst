@@ -106,13 +106,13 @@ Convention for section levels in the documentation
 Order of characters in nested `bullet lists`_
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    * Top level: "*"
+    * Top level: ``*``
 
-        - 2nd level: "-"
+        - 2nd level: ``-``
 
-            + 3rd level: "+"
+            + 3rd level: ``+``
 
-                * Afterwards start again with "*"
+                * Afterwards start again with ``*``
 
 
 .. _sphinx.ext.autodoc:

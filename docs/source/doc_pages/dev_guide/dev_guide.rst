@@ -33,10 +33,11 @@ alreay done, please take a look at the |MDA_user_guide|.
     :titlesonly:
     :glob:
 
+    dev_install
+    build_docs
     code_guidelines
     doc_guidelines
     test_guidelines
-    pre_commit
     git_workflow
     versioning
     guides_and_good_practices
