@@ -174,7 +174,7 @@ jobs:
         # Test import of all modules that must be loaded explicitly.
         python -c "import mdtools.plot"
     - name: Install/Upgrade requirements to build the documentation
-      run: python -m pip install --user --upgrade -r docs/requirements.txt
+      run: python -m pip install --user --upgrade -r docs/requirements-docs.txt
     - name: Test build of the documentation
       run: make -C ./docs/ html
     - name: doctest
