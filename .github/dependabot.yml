@@ -7,19 +7,26 @@
 version: 2
 
 updates:
-  - package-ecosystem: pip
+  - package-ecosystem: "pip"
     # Where to search for requirements.txt, pipfile, pipfile.lock or
     # setup.py* files.  See here for supported requirement files:
     # https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-the-dependency-graph#supported-package-ecosystems
-    directory: ./
+    directory:
+      - "/"
+      - "/docs"
+      - "/examples"
+      - "/tests"
+      - "/.github/workflows"
     schedule:
-      interval: weekly
-    insecure-external-code-execution: deny
-    reviewers: [ andthum ]
+      interval: "weekly"
+    insecure-external-code-execution: "deny"
+    reviewers:
+      - "andthum"
 
-  - package-ecosystem: github-actions
+  - package-ecosystem: "github-actions"
     # Where to search for .github/workflows/
-    directory: ./
+    directory: "/"
     schedule:
-      interval: weekly
-    reviewers: [ andthum ]
+      interval: "weekly"
+    reviewers:
+      - "andthum"
