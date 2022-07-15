@@ -10,10 +10,10 @@ https://mdtools.readthedocs.io/en/latest/doc_pages/dev_guide/dev_guide.html
 
 ## Related Issue(s)
 
+<!-- Remove this section, if your PR is not related to an issue. -->
+
 Resolves issue #*Issue_Number* .  
 Related to issue #*Issue_Number*.
-
-Omit this section, if your PR is not related to an issue.
 
 ## Type of Change
 
@@ -30,16 +30,18 @@ Omit this section, if your PR is not related to an issue.
 
 ## Motivation and Context
 
+<!--
+If your PR resolves a distinct issue, you can remove this section or
+(better) give a brief summary of that issue.
+-->
+
 What is the motivation behind your PR?  
 What problem is your PR going to solve?  
 Which new feature is your PR going to add and why is it required?
 
-If your PR resolves a distinct issue, you can omit this section or
-(better) give a brief summary of that issue.
-
 ## Proposed Changes
 
-Concise summary of the most important changes.
+<!-- Give a concise summary of the most important changes. -->
 
 * Fix bug X.
 * Add new feature Y.
@@ -50,9 +52,9 @@ Concise summary of the most important changes.
 
 ## Requested Reviewers
 
-@andthum
+<!-- Request specific Reviewers here or remove this section. -->
 
-Can be omitted.
+@andthum
 
 ## PR Checklist
 
@@ -61,8 +63,7 @@ Please tick the check boxes accordingly.  Mark any check boxes that do
 not apply to your PR as [N/A].
 -->
 
-* [ ] I followed the guidelines in the
-  [developer's guide](https://mdtools.readthedocs.io/en/latest/doc_pages/dev_guide/dev_guide.html).
+* [ ] I followed the guidelines in the [Developer's guide](https://mdtools.readthedocs.io/en/latest/doc_pages/dev_guide/dev_guide.html).
 * [ ] New/changed code is properly tested.
 * [ ] New/changed code is properly documented.
 * [ ] New/changed features are tracked in CHANGELOG.rst.

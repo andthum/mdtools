@@ -1,4 +1,4 @@
-# GitHub issue from for bug reports.
+# GitHub issue form for bug reports.
 # See
 # https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#creating-issue-forms=
 
@@ -36,7 +36,10 @@ body:
     id: "os_version"
     attributes:
       label: "Operating system"
-      description: "Your operating system."
+      description: |
+        Your operating system.
+        On Linux you can check your OS version e.g. via
+        "cat /etc/os-release"
       placeholder: "Example: Ubuntu 20.04.2 LTS 64-bit"
     validations:
       required: true
