@@ -1,16 +1,13 @@
-*********************
-MDTools documentation
-*********************
+.. _build-docs-label:
 
-This directory contains the files for building the documentation of
-MDTools using Sphinx_.
+Building the Documentation
+==========================
 
-To build the documentation, MDTools itself and the dependencies in
-``docs/requirements-docs.txt`` must be installed:
+Follow these steps to build the docs:
 
 .. code-block:: bash
 
-    # Clone the project repository.
+    # If not already done, clone the project repository.
     git clone https://github.com/andthum/mdtools.git
     # Enter the docs directory of the project.
     cd mdtools/docs/
@@ -39,6 +36,3 @@ After installing all requirements, the documentation can be built via
     make doctest
     # Deactivate the virtual Python environment.
     deactivate
-
-
-.. _Sphinx: https://www.sphinx-doc.org/

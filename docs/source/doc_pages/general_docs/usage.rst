@@ -49,19 +49,17 @@ Usage without virtual environment
 
 If you have installed MDTools without creating a
 |virtual_Python_environment| (not recommended), you can run the scripts
-simply by:
+simply by typing
 
 .. code-block:: bash
 
     python3 path/to/script.py
 
-or
+or, if you have made the scripts executable (see above), by typing
 
 .. code-block:: bash
 
     path/to/script.py
-
-if you have made the scripts executable (see above).
 
 
 Examples

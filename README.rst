@@ -11,7 +11,7 @@ MDTools
 
 |MDTools_writing|
 
-.. contents:: Site Contents
+.. contents:: Site contents
     :depth: 2
     :local:
 

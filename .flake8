@@ -239,7 +239,6 @@ rst-substitutions =
     pip,
     virtual_Python_environment,
     venv,
-    Virtualenv,
     Black,
     isort,
     Flake8,
