@@ -1,4 +1,5 @@
-# Read the Docs configuration file.  See
+# Read the Docs configuration file.
+# See
 # https://docs.readthedocs.io/en/stable/config-file/v2.html
 
 # Version of the .readthedocs.yaml config file.
@@ -12,7 +13,7 @@ build:
 python:
   install:
     - requirements: "requirements.txt"
-    - requirements: "docs/requirements.txt"
+    - requirements: "docs/requirements-docs.txt"
     # Install the project itself.
     - method: "pip"
       path: "."
