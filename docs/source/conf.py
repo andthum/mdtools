@@ -48,6 +48,7 @@ import sys
 module_path = os.path.abspath("../../")
 sys.path.insert(1, module_path)
 try:
+    # First-party libraries
     import mdtools as mdt
 except ModuleNotFoundError:
     raise ModuleNotFoundError(
@@ -70,7 +71,7 @@ project = mdt.__title__
 author = mdt.__author__
 
 # A copyright statement in the style "2008, Author Name".
-copyright = mdt.__copyright__[14:]
+copyright = mdt.__copyright__[14:]  # noqa: A001
 
 # The short X.Y version
 version = mdt.__version__
@@ -183,8 +184,6 @@ rst_epilog = """
     :raw-html:`<a href="https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/">virtual Python environment</a>`
 .. |venv| replace::
     :raw-html:`<a href="https://docs.python.org/3/library/venv.html">venv</a>`
-.. |Virtualenv| replace::
-    :raw-html:`<a href="https://virtualenv.pypa.io/en/latest/">Virtualenv</a>`
 .. |Black| replace::
     :raw-html:`<a href="https://github.com/psf/black/">Black</a>`
 .. |isort| replace::
