@@ -1,6 +1,0 @@
-# Requirements to build MDTools' documentation.
-#
-# Additionally to these requirements, MDTools itself must be installed.
-
-sphinx >=3.0, <6.0
-sphinx-rtd-theme <2.0
