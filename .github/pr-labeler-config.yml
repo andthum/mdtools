@@ -1,0 +1,42 @@
+# Config file for issue-labeler (used for pull requests).
+# See https://github.com/github/issue-labeler
+#
+# The YAML key is the name of the label and the value is the regular
+# expression used to search the pull request message for matching
+# patterns.  If a matching pattern is found, the corresponding label is
+# assigned to the pull request.
+#
+# You can test regular expressions at https://regexr.com/
+# Regex to match multiple lines: https://stackoverflow.com/a/67434038
+#
+# Use single quoted YAML strings so that all characters (except ') will
+# be returned literally.  See https://www.yaml.info/learn/quote.html
+#
+# If pull requests are labelled systematically, release notes can be
+# generated automatically.  See
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+#
+# Sort keys (i.e. labels) alphabetically!
+
+breaking:
+  - '/(\*|-) \[x\] Breaking (\(no(n|t)(-| )backwards?(-| )compatible\) )?change\.?/i'
+bugfix:
+  - '/((\*|-) \[x\] Bug(-| )?fix\.?|\[Bug\])/i'
+dependencies:
+  - '/((\*|-) \[x\] Dependency update\.?|pre-commit autoupdate)/i'
+documentation:
+  - '/(\*|-) \[x\] Documentation update\.?/i'
+enhancement:
+  - '/((\*|-) \[x\] (New|Adds?) feature\.?|\[Feat\])/i'
+maintenance:
+  - '/(\*|-) \[x\] Maintenance\.?/i'
+major:
+  - '/(\*|-) \[x\] Breaking (\(no(n|t)(-| )backwards?(-| )compatible\) )?change\.?/i'
+minor:
+  - '/(\*|-) \[x\] (New|Adds?) feature\.?[\s\S]*?(\*|-) \[x\] Non-breaking (\(backwards?(-| )compatible\) )?change\.?/i'
+patch:
+  - '/(\*|-) \[x\] Bug(-| )?fix\.?[\s\S]*?(\*|-) \[x\] Non-breaking (\(backwards?(-| )compatible\) )?change\.?/i'
+refactoring:
+  - '/(\*|-) \[x\] (Code )?refactoring\.?/i'
+skip-changelog:
+  - '/(skip(-| )(changelog|release(-| )(drafter|notes))|pre-commit autoupdate)/i'
