@@ -17,6 +17,9 @@ updates:
     insecure-external-code-execution: "deny"
     reviewers:
       - "andthum"
+    labels:
+      - "dependencies"
+      - "patch"
 
   - package-ecosystem: "pip"
     # Where to search for requirements.txt files.
@@ -28,6 +31,9 @@ updates:
     insecure-external-code-execution: "deny"
     reviewers:
       - "andthum"
+    labels:
+      - "dependencies"
+      - "skip-changelog"
 
   - package-ecosystem: "pip"
     # Where to search for requirements.txt files.
@@ -39,6 +45,9 @@ updates:
     insecure-external-code-execution: "deny"
     reviewers:
       - "andthum"
+    labels:
+      - "dependencies"
+      - "skip-changelog"
 
   - package-ecosystem: "github-actions"
     # Where to search for .github/workflows/
@@ -47,3 +56,6 @@ updates:
       interval: "weekly"
     reviewers:
       - "andthum"
+    labels:
+      - "dependencies"
+      - "skip-changelog"
