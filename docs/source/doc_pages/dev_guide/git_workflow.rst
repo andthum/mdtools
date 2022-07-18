@@ -102,10 +102,12 @@ Topic branch naming conventions:
     * Use short and descriptive, lowercase names.
     * Do **not** name your topic branch simply ``main``, ``master``,
       ``develop``, ``devel``, ``dev``, ``stable``, ``stab``, ``wip``,
-      ``release``, ``rel``, ``fix``, ``hotfix``, ``bug``, ``feature``,
-      ``feat``, ``refactor``, ``ref``, ``documentation``, ``docs``,
-      ``doc``, because these are commonly used names for special
-      branches or branch groups.
+      ``release``, ``rel``, ``fix``, ``hotfix``, ``bug``, ``bugfix``,
+      ``feature``, ``feat``, ``refactor``, ``ref``, ``documentation``,
+      ``docs``, ``doc``, ``dependencies``, ``dependency``,
+      ``dependend``, ``dep``, ``chore``, ``maintenance``, because these
+      are (more or less) commonly used names for special branches or
+      branch groups.
     * Use slashes to sparate parts of your branch name.  However, be
       aware of the following limitation:  If a branch ``spam`` exists,
       no branch named ``spam/eggs`` can be created.  Likewise, if a
@@ -123,8 +125,12 @@ Topic branch naming conventions:
         - ``fix/<possible-sub-token>/<description>`` for bug fixes.
         - ``feat/<possible-sub-token>/<description>`` for new features.
         - ``ref/<possible-sub-token>/<description>`` for refactoring.
-        - ``doc/<possible-sub-token>/<description>`` for
-          documentation-only branches.
+        - ``dep/<possible-sub-token>/<description>`` for dependency
+          updates.
+        - ``docs/<possible-sub-token>/<description>`` for
+          documentation updates.
+        - ``chore/<possible-sub-token>/<description>`` for maintenance
+          work.
 
     * Use sub-tokens where applicable and meaningful.
     * If you adress a specific issue or feature request, reference this
