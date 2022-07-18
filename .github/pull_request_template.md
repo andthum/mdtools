@@ -8,14 +8,6 @@ at our developer's guide at
 https://mdtools.readthedocs.io/en/latest/doc_pages/dev_guide/dev_guide.html
 -->
 
-<!--
-Only for project maintainers, please do not remove!
-Regex version for issue-labeler.
-See https://github.com/github/issue-labeler
-
-issue_labeler_regex_version=0
--->
-
 ## Related Issue(s)
 
 <!-- Remove this section, if your PR is not related to an issue. -->
@@ -28,9 +20,7 @@ Related to issue #*Issue_Number*.
 * [ ] Bug fix.
 * [ ] New feature.
 * [ ] Code refactoring.
-* [ ] Dependency update.
 * [ ] Documentation update.
-* [ ] Maintenance.
 * [ ] Other: *Description*.
 
 <!-- Blank line -->
