@@ -10,6 +10,11 @@ on:
 
 jobs:
   triage:
+    permissions: "write-all"
+      # Read permissions required to read pull request notes?
+      # contents: read
+      # Write permissions required to add labels to pull requests?
+      # pull-requests: write
     runs-on: "ubuntu-latest"
     steps:
     - uses: "github/issue-labeler@v2.5"
