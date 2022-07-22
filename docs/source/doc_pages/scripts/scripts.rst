@@ -32,6 +32,7 @@ Scripts by Application
     discretization
     dynamics
     structure
+    other
 
 
 Scripts for Developers
