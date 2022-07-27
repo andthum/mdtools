@@ -99,11 +99,11 @@ class ProgressBar(ProgressBar):
         Parameters
         ----------
         args : list, optional
-            Non-keyword arguments.  See
+            Positional arguments.  See
             :class:`MDAnalysis.lib.log.ProgressBar` for possible
             choices.
         kwargs : dict, optional
-            Keynword arguments.  See
+            Keyword arguments.  See
             :class:`MDAnalysis.lib.log.ProgressBar` for possible
             choices.
         """
@@ -170,8 +170,8 @@ def mem_usage(proc=None, pid=None, unit="MiB"):
         the ID of the current process is used to create the new
         :class:`psutil.Process`.  If `proc` is not ``None``, `pid` is
         meaningless.
-    unit : {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "KB", "MB", "GB",\
-            "TB", "PB"}
+    unit : {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "KB", "MB", "GB", \
+"TB", "PB"}
         String determining the unit in which the memory usage should be
         returned.  Default is mebibytes (``"MiB"``).
 
@@ -305,7 +305,7 @@ def run_time_info_str(indent=0):
 
 def ag_info_str(ag, indent=0, max_names=10):
     """
-    Create a string containing information about a MDAnalysis
+    Create a string containing information about an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup`.
 
     The string can be printed directly to standard output using
