@@ -28,6 +28,9 @@ This module can be called from :mod:`mdtools` via the shortcut ``fh``::
 
 
 # Standard libraries
+import bz2
+import gzip
+import lzma
 import os
 import warnings
 from datetime import datetime
@@ -60,6 +63,140 @@ def cd_up(n, path=__file__):
     for _ in range(n):
         p = os.path.dirname(p)
     return p
+
+
+def xopen(fname, mode="rt", fformat=None, rename=True, **kwargs):
+    """
+    Open a (compressed) file and return a corresponding
+    |file-like_object|.
+
+    This function is a replacement for the built-in :func:`open`
+    function that can additionally read and write compressed files.
+    Supported compression formats:
+
+        * gzip (.gz)
+        * bzip2 (.bz2)
+        * XZ/LZMA2 (.xz)
+        * LZMA (.lzma)
+
+    Parameters
+    ----------
+    fname : str or bytes or os.PathLike
+        Name of the file to open.
+    mode : {'r', 'rt', 'rb', 'w', 'wt', 'wb', 'x', 'xt', 'xb', 'a', \
+'at', 'ab'}, optional
+        Opening mode.  See the built-in :func:`open` function for more
+        details.
+    fformat : {None, 'gz', 'bz2', 'xz', 'lzma', 'uncompressed'}, \
+optional
+        Explicitly specify the file format.  If ``None``, the file
+        format is guessed from the file name extension if present and
+        otherwise from the file signature.  If ``'uncompressed'``, the
+        file is treated as uncompressed file.
+    rename : bool, optional
+        If ``True`` and a file called `fname` already exists and the
+        file is opended in writing mode, rename the existing file to
+        ``'fname.bak_timestamp'``.  See
+        :func:`mdtools.file_handler.backup` for more details.
+    kwargs : dict, optional
+        Additional keyword arguments to parse to the function that is
+        used for opening the file.  See there for possible arguments and
+        their description.
+
+    Returns
+    -------
+    file : file-like object
+        The created |file-like_object|.
+
+    See Also
+    --------
+    :func:`open` :
+        Function used to open uncompressed files
+    :func:`gzip.open` :
+        Function used to open gzip-compressed files
+    :func:`bz2.open` :
+        Function used to open bzip2-compressed files
+    :func:`lzma.open` :
+        Function used to open XZ- and LZMA-compressed files
+
+    Notes
+    -----
+    When writing and `fformat` is ``None``, the compression algorithm is
+    chosen based on the extension of the given file:
+
+        * ``'.gz'`` uses gzip compression.
+        * ``'.bz2'`` uses bzip2 compression.
+        * ``'.xz'`` uses XZ/LZMA2 compression.
+        * ``'.lzma'`` uses legacy LZMA compression.
+        * otherwise, no compression is done.
+
+    When reading and `fformat` is ``None``, the file format is detected
+    from the file name extension if present.  If no extension is present
+    or the extension is unknown, the format is detected from the file
+    signature, i.e. the first few bytes of the file also known as
+    "`magic numbers
+    <https://www.garykessler.net/library/file_sigs.html>`__".
+
+    References
+    ----------
+    Inspired by `xopen <https://github.com/pycompression/xopen>`__ by
+    Marcel Martin, Ruben Vorderman et al.
+    """
+    fname = os.fspath(fname)
+    signatures = {
+        # https://datatracker.ietf.org/doc/html/rfc1952#page-6
+        "gz": b"\x1f\x8b",
+        # https://en.wikipedia.org/wiki/List_of_file_signatures
+        "bz2": b"\x42\x5a\x68",
+        # https://tukaani.org/xz/xz-file-format.txt
+        "xz": b"\xfd\x37\x7a\x58\x5a\x00",
+        # https://zenhax.com/viewtopic.php?t=27
+        "lzma": b"\x5d\x00",
+    }
+
+    if fformat not in [None, "uncompressed"] + list(signatures.keys()):
+        raise ValueError("Invalid value for 'fformat': {}".format(fformat))
+
+    # Use text mode by default, like the built-in `open` function, also
+    # when opening compressed files.
+    if mode in ("r", "w", "x", "a"):
+        mode += "t"
+
+    # Detect file format from extension.
+    if fformat is None:
+        for extension in signatures.keys():
+            if isinstance(fname, bytes):
+                if fname.endswith(b"." + extension.encode()):
+                    fformat = extension
+            else:
+                if fname.endswith("." + extension):
+                    fformat = extension
+
+    # Detect file format from file signature.
+    if fformat is None and "w" not in mode and "x" not in mode:
+        max_len = max(len(signature) for signature in signatures.values())
+        try:
+            with open(fname, "rb") as fh:
+                file_start = fh.read(max_len)
+        except OSError:
+            # File could not be opened.
+            file_start = False
+        if file_start:
+            for extension, signature in signatures.items():
+                if file_start.startswith(signature):
+                    fformat = extension
+                    break
+
+    if "w" in "mode" and rename:
+        mdt.fh.backup(fname)
+    if fformat == "gz":
+        return gzip.open(fname, mode, **kwargs)
+    elif fformat == "bz2":
+        return bz2.open(fname, mode, **kwargs)
+    elif fformat in ("xz", "lzma"):
+        return lzma.open(fname, mode, **kwargs)
+    elif fformat == "uncompressed" or fformat is None:
+        return open(fname, mode, **kwargs)
 
 
 def tail(fname, n):
