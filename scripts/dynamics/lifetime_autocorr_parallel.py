@@ -552,7 +552,7 @@ if __name__ == "__main__":  # noqa: C901
                 kww_unbound_sel,
             ]
         )
-    mdt.fh.savetxt(args.OUTFILE, data=data, header=header + columns)
+    mdt.fh.savetxt(args.OUTFILE, data, header=header + columns)
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))

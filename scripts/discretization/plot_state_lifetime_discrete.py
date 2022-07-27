@@ -385,7 +385,7 @@ if __name__ == "__main__":
             ]
         )
         outfile = args.OUTFILE + "_fit.txt"
-        mdt.fh.savetxt(outfile, data=data, header=header)
+        mdt.fh.savetxt(outfile, data, header=header)
         print("  Created {}".format(outfile))
 
     if args.XLIM[1] is None:

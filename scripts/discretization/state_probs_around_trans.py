@@ -304,7 +304,7 @@ probability
                 "prob_b_as_b", "prob_b_as_a",
                 "prob_a_as_a", "prob_a_as_b")
     )
-    mdt.fh.savetxt(fname=args.OUTFILE, data=data, header=header)
+    mdt.fh.savetxt(args.OUTFILE, data, header=header)
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"

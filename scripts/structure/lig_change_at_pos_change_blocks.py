@@ -659,7 +659,7 @@ if __name__ == "__main__":
                 len(bins), len(bins) - 1, args.DIRECTION, lbox_av
             )
         )
-        mdt.fh.savetxt(fname=args.OUTFILE_BINS, data=bins, header=header)
+        mdt.fh.savetxt(args.OUTFILE_BINS, bins, header=header)
         print("Created {}".format(args.OUTFILE_BINS))
     if args.OUTFILE_BINS is not None or args.OUTFILE_DTRJ is not None:
         print("Elapsed time:         {}".format(datetime.now() - timer))

@@ -954,14 +954,20 @@ if __name__ == '__main__':
                 tot_counts_exc
                 )
     )
-
-    mdt.fh.savetxt(fname=args.OUTFILE,
-                   data=np.column_stack([lag_times,
-                                         hist_any, msd_any,
-                                         hist_det, msd_det,
-                                         hist_att, msd_att,
-                                         hist_exc, msd_exc]),
-                   header=header)
+    data = np.column_stack(
+        [
+            lag_times,
+            hist_any,
+            msd_any,
+            hist_det,
+            msd_det,
+            hist_att,
+            msd_att,
+            hist_exc,
+            msd_exc
+        ]
+    )
+    mdt.fh.savetxt(args.OUTFILE, data, header=header)
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"

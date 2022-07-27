@@ -579,13 +579,13 @@ if __name__ == '__main__':
     # Save contact histograms:
     for m in range(len(hist_refatm_selatm)):
         if m == 0:
-            fname = args.OUTFILE + "_stay.txt"
+            outfile = args.OUTFILE + "_stay.txt"
         elif m == 1:
-            fname = args.OUTFILE + "_leave.txt"
+            outfile = args.OUTFILE + "_leave.txt"
         else:
             raise ValueError("'m' > 1. This should not have happened")
-        mdt.fh.write_header(fname)
-        with open(fname, 'a') as outfile:
+        mdt.fh.write_header(outfile)
+        with open(outfile, 'a') as outfile:
             outfile.write("# \n")
             outfile.write("# \n")
             outfile.write("# Reference: '{}'\n".format(' '.join(args.REF)))
@@ -714,13 +714,13 @@ if __name__ == '__main__':
                     outfile.write(" {:>16.9e}".format(np.sum(hist)))
             outfile.write("\n")
             outfile.flush()
-        print("Created {}".format(fname))
+        print("Created {}".format(outfile))
     # Save bin edges:
-    fname = args.OUTFILE + "_bins.txt"
+    outfile = args.OUTFILE + "_bins.txt"
     header = ("Bin edges in Angstrom\n"
               "Discretized dimension: {}\n".format(args.DIRECTION))
-    mdt.fh.savetxt(fname=fname, data=bins, header=header)
-    print("Created {}".format(fname))
+    mdt.fh.savetxt(outfile, bins, header=header)
+    print("Created {}".format(outfile))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20))

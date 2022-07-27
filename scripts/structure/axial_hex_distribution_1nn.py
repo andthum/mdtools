@@ -931,12 +931,8 @@ if __name__ == '__main__':
                 n_axes_col, n_axes_col, n_axes_row, n_axes_tot
                 )
     )
-
-    mdt.fh.savetxt(fname=args.OUTFILE,
-                   data=np.column_stack([bins[1:] - np.diff(bins) / 2,
-                                         hists.T,
-                                         hist_tot]),
-                   header=header)
+    data = np.column_stack([bins[1:] - np.diff(bins) / 2, hists.T, hist_tot])
+    mdt.fh.savetxt(args.OUTFILE, data, header=header)
 
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"

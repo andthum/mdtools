@@ -1018,9 +1018,7 @@ if __name__ == '__main__':
                 )
     )
 
-    mdt.fh.savetxt(fname=args.OUTFILE,
-                   data=data,
-                   header=header)
+    mdt.fh.savetxt(args.OUTFILE, data, header=header)
 
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"

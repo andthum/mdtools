@@ -332,7 +332,7 @@ if __name__ == "__main__":
                           args.DIRECTION,
                           lbox_av,
                           time_step))
-        mdt.fh.savetxt(fname=args.OUTFILE_BINS, data=bins, header=header)
+        mdt.fh.savetxt(args.OUTFILE_BINS, bins, header=header)
         print("Created {}".format(args.OUTFILE_BINS))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"

@@ -458,11 +458,8 @@ if __name__ == "__main__":
         "\n"
         "{:>14d} {:>16d} {:>16d} {:>16d} {:>16d}".format(1, 2, 3, 4, 5)
     )
-    mdt.fh.savetxt(
-        args.OUTFILE,
-        data=np.column_stack([times, rmsd_tot, rmsd]),
-        header=header,
-    )
+    data = np.column_stack([times, rmsd_tot, rmsd])
+    mdt.fh.savetxt(args.OUTFILE, data, header=header)
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
