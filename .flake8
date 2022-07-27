@@ -79,6 +79,11 @@ extend-ignore =
     # S603: subprocess call - check for execution of untrusted input
     S404,
     S603,
+    ### pep8-naming ###
+    # N806: variable in function should be lowercase
+    # N813: camelcase imported as lowercase
+    N806,
+    N813,
 extend-select =
     ### Compatibility with black ###
     # W504: line break after binary operator
