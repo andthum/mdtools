@@ -598,21 +598,23 @@ def header_str():
     return header
 
 
-def write_header(fname, rename=True):
+def write_header(fname, **kwargs):
     """
-    Create a file and write the standard MDTools header to it.
+    Write the standard MDTools header to file.
 
     See :func:`mdtools.file_handler.header_str` for further information
     about what is contained in the header.
 
     Parameters
     ----------
-    fname : str
-        The name of the file to create and to which to write the header.
-    rename : bool, optional
-        If ``True`` and a file called `fname` already exists, rename it
-        to ``'fname.bak_timestamp'``.  See
-        :func:`mdtools.file_handler.backup` for more details.
+    fname : str or bytes or os.PathLike
+        The name of the file to which to write the header.
+    kwargs : dict, optional
+        Additional keyword arguments to parse to
+        :func:`mdtools.file_handler.xopen`.  See there for possible
+        arguments and their description.  By default, `mode` is set to
+        ``'wt'`` (open file for writing in text mode, truncating the
+        file first).
 
     See Also
     --------
@@ -621,10 +623,9 @@ def write_header(fname, rename=True):
     :func:`mdtools.file_handler.backup` :
         Backup a file by renaming it
     """
-    if rename:
-        backup(fname)
-    with open(fname, "w") as outfile:
-        outfile.write(indent(text=header_str(), amount=1, char="# "))
+    kwargs.setdefault("mode", "wt")
+    with mdt.fh.xopen(fname, **kwargs) as outfile:
+        outfile.write(mdt.fh.indent(mdt.fh.header_str(), amount=1, char="# "))
 
 
 def savetxt(  # TODO: Replace arguments by *args, **kwargs
