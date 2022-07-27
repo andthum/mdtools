@@ -846,24 +846,26 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
     )
 
 
-def write_matrix_block(  # noqa: C901
+def write_matrix_block(
     fname,
     data,
     var1,
     var2,
     init_values1=None,
     init_values2=None,
-    upper_left=None,
-    data_name=None,
+    upper_left=0,
+    fmt=">16.9e",
+    data_name="z",
     data_unit=None,
-    var1_name=None,
+    var1_name="x",
+    var2_name="y",
     var1_unit=None,
-    var2_name=None,
     var2_unit=None,
     block_number=None,
+    **kwargs,
 ):
     """
-    Save a data matrix to a text file.
+    Save a data matrix as block to a text file.
 
     Write data that are a function of two independent variables, `var1`
     and `var2`, as a matrix to a text file.  The dependency of the data
@@ -872,34 +874,30 @@ def write_matrix_block(  # noqa: C901
 
     Parameters
     ----------
-    fname : str
-        The name of the file to write to.  The file is created if it
-        does not exist, otherwise it is appended.
+    fname : str or bytes or os.PathLike
+        Name of the file to write to.
     data : array_like
-        The data to write to file.  Must be of shape ``(n, m)``, where
-        ``n`` is the number of samples of the first independent variable
-        (depicted row wise) and ``m`` is the mumber of samples of the
-        second independent variable (depicted column wise).
-    var1 : array_like
-        Array of shape ``(n,)`` containing the values of the first
-        independent variable.
-    var2 : array_like
-        Array of shape ``(m,)`` containing the values of the second
-        independent variable.
-    init_values1 : array_like, optional
+        2-dimensional array of data to write to file.  Must be of shape
+        ``(n, m)``, where ``n`` is the number of samples of the first
+        independent variable (depicted row wise) and ``m`` is the mumber
+        of samples of the second independent variable (depicted column
+        wise).
+    var1, var2 : array_like
+        Array of shape ``(n,)`` (`var1`) or ``(m,)`` (`var2`) containing
+        the values of the first or second independent variable at which
+        the data were sampled.
+    init_values1, init_values2 : array_like, optional
         If supplied, the values stored in this array will be handled as
         special initial data values corresponding to the very first
-        value in `var1`.  Must be an array of shape ``(m,)``, whereas
-        `data` must then be of shape ``(n-1, m)``.
-    init_values2 : array_like, optional
-        If supplied, the values stored in this array will be handled as
-        special initial data values corresponding to the very first
-        value in `var2`.  Must be an array of shape ``(n,)``, whereas
-        `data` must then be of shape ``(n, m-1)``.
+        value in `var1` or `var2`.  Must be an array of shape ``(m,)``
+        (`init_values1`) or ``(n,)`` (`init_values2`).  If given, `data`
+        must be of shape ``(n-1, m)`` or ``(n, m-1)`` or ``(n-1, m-1)``
+        if both are given.
     upper_left : scalar, optional
-        Value to put in the upper left corner of the final matrix.  If
-        ``None`` (default), print `var1_name` and `var2_name` in the
-        upper left corner.
+        Value to put in the upper left corner of the final data matrix.
+        Usually, this value is meaningless and set to zero.
+    fmt : str, optional
+        |format_specifier|.
     data_name : str, optional
         The name of the data.  If supplied, it will be printed in the
         block header.
@@ -907,14 +905,20 @@ def write_matrix_block(  # noqa: C901
         The unit of the data.  If supplied, will be printed in the
         block header.
     var1_name, var2_name : str, optional
-        The name of the independent variables.  If supplied, it will be
-        printed in the block header.
+        The names of the independent variables.  If supplied, they will
+        be printed in the block header.
     var1_unit, var2_unit : str, optional
-        The unit of the independent variables.  If supplied, it will be
-        printed in the block header.
+        The units of the independent variables.  If supplied, they will
+        be printed in the block header.
     block_number : int, optional
         The number of the data block in `fname`.  If supplied, it will
         be printed in the block header.
+    kwargs : dict, optional
+        Additional keyword arguments to parse to
+        :func:`mdtools.file_handler.xopen`.  See there for possible
+        arguments and their description.  By default, `mode` is set to
+        ``'wt'`` (open file for writing in text mode, truncating the
+        file first).
 
     See Also
     --------
@@ -940,58 +944,55 @@ def write_matrix_block(  # noqa: C901
         mdt.check.array(init_values2, shape=var1.shape)
         mdt.check.array(data, shape=(len(var1) - 1, len(var2) - 1))
         if init_values2[0] != init_values1[0]:
-            warnings.warn(
-                "init_values2[0] ({}) is not the same as init_values1[0] ({})."
-                " Using init_values1[0] as value for the upper left"
-                " corner.".format(init_values2[0], init_values1[0]),
-                RuntimeWarning,
+            raise ValueError(
+                "init_values2[0] ({}) is not the same as init_values1[0]"
+                " ({})".format(init_values2[0], init_values1[0])
             )
 
-    with open(fname, "a") as outfile:
+    kwargs.setdefault("mode", "wt")
+    with mdt.fh.xopen(fname, **kwargs) as outfile:
         # Block header
         outfile.write("\n\n\n\n")
         if block_number is not None:
             outfile.write("# Block {}\n".format(block_number))
-        if data_name is not None:
-            outfile.write("# {}".format(data_name))
-            if data_unit is not None:
-                outfile.write(" in {}\n".format(data_unit))
-            else:
-                outfile.write("\n")
         if var1_name is not None:
-            outfile.write("# First column: {:<10}".format(var1_name))
+            outfile.write("# First column:    {}".format(var1_name))
             if var1_unit is not None:
-                outfile.write(" in {}\n".format(var1_unit))
-            else:
-                outfile.write("\n")
+                outfile.write(" in {}".format(var1_unit))
+            outfile.write("\n")
         if var2_name is not None:
-            outfile.write("# First row:    {:<10}".format(var2_name))
+            outfile.write("# First row:       {}".format(var2_name))
             if var2_unit is not None:
-                outfile.write(" in {}\n".format(var2_unit))
-            else:
-                outfile.write("\n")
+                outfile.write(" in {}".format(var2_unit))
+            outfile.write("\n")
+        if data_name is not None:
+            outfile.write("# Matrix elements: {}".format(data_name))
+            if data_unit is not None:
+                outfile.write(" in {}".format(data_unit))
+            outfile.write("\n")
         # Column numbers
         num_cols = len(var2)
+        fmt_int = len("{:{fmt}}".format(0, fmt=fmt))
+        fmt_int = ">" + str(fmt_int) + "d"
         outfile.write("# Column number:\n")
-        outfile.write("# {:>16}".format("1"))
+        outfile.write("# {:{fmt}}".format("1", fmt=fmt_int))
         for col_num in range(2, num_cols + 2):
-            outfile.write(" {:>16}".format(col_num))
+            outfile.write(" {:{fmt}}".format(col_num, fmt=fmt_int))
         outfile.write("\n")
         # The row after the row with the column numbers contains the
         # values of `var2`.
-        if upper_left is None:
-            outfile.write("{:>9}\\{:>8}".format(var1_name[:10], var2_name[:9]))
-        else:
-            outfile.write("{:>18}".format(upper_left))
+        outfile.write("  {:{fmt}}".format(upper_left, fmt=fmt))
         for col_num in range(num_cols):
-            outfile.write(" {:16.9e}".format(var2[col_num]))
+            outfile.write(" {:{fmt}}".format(var2[col_num], fmt=fmt))
         outfile.write("\n")
         # If there are any special initial values for the very first
         # value of `var1`, print them to the next row.
         if init_values1 is not None:
-            outfile.write("  {:16.9e}".format(var1[0]))
+            outfile.write("  {:{fmt}}".format(var1[0], fmt=fmt))
             for col_num in range(num_cols):
-                outfile.write(" {:16.9e}".format(init_values1[col_num]))
+                outfile.write(
+                    " {:{fmt}}".format(init_values1[col_num], fmt=fmt)
+                )
             outfile.write("\n")
             start_row = 1
         else:
@@ -1001,22 +1002,23 @@ def write_matrix_block(  # noqa: C901
         # data.
         num_rows = len(var1)
         for row_num in range(start_row, num_rows):
-            outfile.write("  {:16.9e}".format(var1[row_num]))
+            outfile.write("  {:{fmt}}".format(var1[row_num], fmt=fmt))
             # If there are any special initial values for the very first
             # value of `var2`, print them to the second column.
             if init_values2 is not None:
-                outfile.write(" {:16.9e}".format(init_values2[row_num]))
+                outfile.write(
+                    " {:{fmt}}".format(init_values2[row_num], fmt=fmt)
+                )
                 start_col = 1
             else:
                 start_col = 0
             for col_num in range(start_col, num_cols):
                 outfile.write(
-                    " {:16.9e}".format(
-                        data[row_num - start_row][col_num - start_col]
+                    " {:{fmt}}".format(
+                        data[row_num - start_row][col_num - start_col], fmt=fmt
                     )
                 )
             outfile.write("\n")
-        outfile.flush()
 
 
 def load_dtrj(fname, **kwargs):
