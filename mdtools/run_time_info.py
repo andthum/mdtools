@@ -28,18 +28,18 @@ This module can be called from :mod:`mdtools` via the shortcut ``rti``::
 
 
 # Standard libraries
-import sys
 import os
+import sys
 import warnings
 from datetime import datetime
 
-# Third party libraries
-import psutil
-import numpy as np
+# Third-party libraries
 import MDAnalysis as mda
+import numpy as np
+import psutil
 from MDAnalysis.lib.log import ProgressBar
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 
 
@@ -75,7 +75,8 @@ class ProgressBar(ProgressBar):
     See the MDAnalysis_ and tqdm_ documentations for further
     information.
 
-    .. _MDAnalysis: https://docs.mdanalysis.org/stable/documentation_pages/lib/log.html#MDAnalysis.lib.log.ProgressBar
+    .. _MDAnalysis:
+        https://docs.mdanalysis.org/stable/documentation_pages/lib/log.html#MDAnalysis.lib.log.ProgressBar
     .. _tqdm: https://tqdm.github.io/docs/tqdm/#__init__
 
     Example
@@ -89,7 +90,7 @@ class ProgressBar(ProgressBar):
 
         25%|#####1           | 25/100 [00:15<00:45,  1.67frames/s]
 
-    """  # noqa: E501,W505
+    """
 
     def __init__(self, *args, **kwargs):
         """
@@ -122,7 +123,7 @@ class ProgressBar(ProgressBar):
         super().__init__(*args, **kwargs)
 
 
-def get_num_CPUs():
+def get_num_CPUs():  # noqa: N802
     """
     Get the number of available CPUs.
 
@@ -276,7 +277,8 @@ def run_time_info_str(indent=0):
     :func:`mdtools.file_handler.header_str` :
         Create a string containing some run time information to be used
         as header for text files
-    :func:`mdtools.file_handler.indent` : Indent a text
+    :func:`mdtools.file_handler.indent` :
+        Indent a text
     """
     timestamp = datetime.now()
     script, command_line, cwd, exe, version, version_py = run_time_info()
@@ -552,7 +554,8 @@ def dtrj_trans_info_str(dtrj):
     :func:`mdtools.run_time_info.dtrj_trans_info` :
         Generate basic information about the state transitions in a
         discrete trajectory
-    :func:`mdtools.file_handler.indent` : Indent a text
+    :func:`mdtools.file_handler.indent` :
+        Indent a text
     """
     N_CMPS, N_FRAMES = dtrj.shape
     trans_info = dtrj_trans_info(dtrj)
