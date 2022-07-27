@@ -318,7 +318,7 @@ if __name__ == "__main__":
     print("Reading input", flush=True)
     timer = datetime.now()
 
-    with open(args.INFILE, 'r') as f:
+    with mdt.fh.xopen(args.INFILE, 'r') as f:
         headers = None
         for line in f:
             if line[0] != '#':

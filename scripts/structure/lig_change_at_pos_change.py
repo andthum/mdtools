@@ -647,7 +647,7 @@ their position at time t0.
     # Contact information:
     outfile = args.OUTFILE + "_contacts.txt"
     mdt.fh.write_header(outfile)
-    with open(outfile, 'a') as outfile:
+    with mdt.fh.xopen(outfile, 'a') as outfile:
         outfile.write("# \n")
         outfile.write("# \n")
         outfile.write("# Reference: '{}'\n".format(' '.join(args.REF)))

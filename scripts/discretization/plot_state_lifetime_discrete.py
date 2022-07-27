@@ -263,7 +263,7 @@ if __name__ == "__main__":
     if not args.REFIT:
         if args.COLS is None:
             args.COLS = np.arange(len(states) + 1)
-        with open(args.INFILE, "r") as f:
+        with mdt.fh.xopen(args.INFILE, "r") as f:
             header = []
             for line in f:
                 if line[0] == "#":

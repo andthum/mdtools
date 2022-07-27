@@ -881,7 +881,7 @@ if __name__ == '__main__':
     timer = datetime.now()
     # Contact statistics:
     mdt.fh.write_header(args.OUTFILE)
-    with open(args.OUTFILE, 'a') as outfile:
+    with mdt.fh.xopen(args.OUTFILE, 'a') as outfile:
         outfile.write("# \n")
         outfile.write("# \n")
         outfile.write("# Reference: '{}'\n".format(' '.join(args.REF)))

@@ -585,7 +585,7 @@ if __name__ == '__main__':
         else:
             raise ValueError("'m' > 1. This should not have happened")
         mdt.fh.write_header(outfile)
-        with open(outfile, 'a') as outfile:
+        with mdt.fh.xopen(outfile, 'a') as outfile:
             outfile.write("# \n")
             outfile.write("# \n")
             outfile.write("# Reference: '{}'\n".format(' '.join(args.REF)))
