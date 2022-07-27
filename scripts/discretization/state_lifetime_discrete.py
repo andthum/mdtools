@@ -571,11 +571,9 @@ if __name__ == '__main__':
         header += " {:>16.9e}".format(perr[i][1])
     header += "\n"
 
-    mdt.fh.savetxt_matrix(fname=args.OUTFILE,
-                          data=p,
-                          var1=lag_times,
-                          var2=states,
-                          header=header)
+    mdt.fh.savetxt_matrix(
+        args.OUTFILE, p, var1=lag_times, var2=states, header=header
+    )
 
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"
