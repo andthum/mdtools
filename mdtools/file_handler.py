@@ -199,16 +199,21 @@ optional
         return open(fname, mode, **kwargs)
 
 
-def tail(fname, n):
+def tail(fname, n, **kwargs):
     """
     Read the last n lines from a file.
 
     Parameters
     ----------
-    fname : str
+    fname : str or bytes or os.PathLike
         Name of the input file.
     n : int
         The number of lines to read from the end of the input file.
+    kwargs : dict, optional
+        Additional keyword arguments to parse to
+        :func:`mdtools.file_handler.xopen`.  See there for possible
+        arguments and their description.  By default, `mode` is set to
+        ``'rt'`` (open file for reading in text mode).
 
     Returns
     -------
@@ -223,7 +228,8 @@ def tail(fname, n):
     # emprically determined to give best performance and might be
     # further optimized).
     step_width = max(10 * n, 1)
-    with open(fname, "r") as file:
+    kwargs.setdefault("mode", "rt")
+    with mdt.fh.xopen(fname, **kwargs) as file:
         file.seek(0, 2)  # Set cursor to end of file.
         pos = file.tell()  # Get current cursor position.
         # Move cursor backwards until the n-th last line is reached.
