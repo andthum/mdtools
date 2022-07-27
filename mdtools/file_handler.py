@@ -628,49 +628,24 @@ def write_header(fname, **kwargs):
         outfile.write(mdt.fh.indent(mdt.fh.header_str(), amount=1, char="# "))
 
 
-def savetxt(  # TODO: Replace arguments by *args, **kwargs
-    fname,
-    data,
-    fmt="%16.9e",
-    delimiter=" ",
-    newline="\n",
-    header="",
-    footer="",
-    comments="# ",
-    encoding=None,
-    rename=True,
-):
+def savetxt(fname, data, rename=True, **kwargs):
     """
     Save an array to a text file.
 
     Parameters
     ----------
-    fname : str
+    fname : str or os.PathLike
         The name of the file to create.
     data : array_like
         1- or 2-dimensional array of data to be saved.
-    fmt : str or sequence of strs, optional
-        Format specifier.  See :func:`numpy.savetxt` for more details.
-    delimiter : str, optional
-        String or character separating columns.
-    newline : str, optional
-        String or character separating lines.
-    header : str, optional
-        String that will be written at the beginning of the file,
-        additional to the standard MDTools header.  See
-        :func:`mdtools.file_handler.header_str` for more details.
-    footer : str, optional
-        String that will be written at the end of the file.
-    comments : str, optional
-        String that will be prepended to the header and footer strings,
-        to mark them as comments.
-    encoding : {None, str}, optional
-        Encoding used to encode the outputfile.  Does not apply to
-        output streams.  See documentation of :func:`numpy.savetxt`.
     rename : bool, optional
         If ``True`` and a file called `fname` already exists, rename it
         to ``'fname.bak_timestamp'``.  See
         :func:`mdtools.file_handler.backup` for more details.
+    kwargs : dict, optional
+        Additional keyword arguments to parse to :func:`numpy.savetxt`.
+        See there for possible arguments and their description.  By
+        default, `fmt` is set to ``'%16.9e'``.
 
     See Also
     --------
@@ -690,22 +665,16 @@ def savetxt(  # TODO: Replace arguments by *args, **kwargs
     :func:`mdtools.file_handler.header_str` for further information
     about what is included in the header.
     """
-    head = header_str()
-    if header is not None and header != "":
-        head += "\n\n" + header
+    fname = os.fspath(fname)
+    kwargs.setdefault("fmt", "%16.9e")
+    header = kwargs.pop("header", None)
+    if header is None or header.strip() == "":
+        header = mdt.fh.header_str()
+    else:
+        header = mdt.fh.header_str() + "\n\n" + header
     if rename:
-        backup(fname)
-    np.savetxt(
-        fname=fname,
-        X=data,
-        fmt=fmt,
-        delimiter=delimiter,
-        newline=newline,
-        header=head,
-        footer=footer,
-        comments=comments,
-        encoding=encoding,
-    )
+        mdt.fh.backup(fname)
+    np.savetxt(fname, data, **kwargs)
 
 
 def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
