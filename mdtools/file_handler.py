@@ -115,8 +115,9 @@ def str2none_or_type(val, dtype, empty_none=False, case_sensitive=True):
         string.
     dtype : type
         The type to which `val` should be converted if ``str(val)`` is
-        not ``'None'``.  An error will be raised if the conversion
-        ``dtype(str(val))`` is not possible.
+        not ``'None'``.  An exception will be raised if the conversion
+        ``dtype(str(val))`` is not possible.  The exact exception
+        depends on `val` and `dtype`.
     empty_none : bool, optional
         If ``True``, also convert `val` to ``None`` if ``str(val)`` is
         the empty string ``''``.
@@ -140,13 +141,15 @@ def str2none_or_type(val, dtype, empty_none=False, case_sensitive=True):
     the command line.  By default, :mod:`argparse` reads command-line
     arguments as simple strings.  This makes it impossible to pass
     ``None`` to a script via the command line, because it will always
-    render as the string ``'None'``.  Pass
+    render it as the string ``'None'``.  Pass
     ``lambda val: mdt.fh.str2none_or_type(val, dtype=<dtype>)`` (where
-    ``<dtype>`` if e.g. ``float`` or ``str``) to the `type` keyword of
+    ``<dtype>`` is e.g. ``float`` or ``str``) to the `type` keyword of
     :meth:`argparse.ArgumentParser.add_argument` to convert the string
     ``'None'`` (and optionally the empty string ``''``) to the NoneType
     ``None``.
 
+    References
+    ----------
     This code was adapted from https://stackoverflow.com/a/55063765.
 
     Examples
@@ -155,6 +158,12 @@ def str2none_or_type(val, dtype, empty_none=False, case_sensitive=True):
     >>> mdt.fh.str2none_or_type(None, dtype=str)  # Returns None
     >>> mdt.fh.str2none_or_type('none', dtype=str)
     'none'
+    >>> mdt.fh.str2none_or_type('none', dtype=str, \
+case_sensitive=False)  # Returns None
+    >>> mdt.fh.str2none_or_type('', dtype=str)
+    ''
+    >>> mdt.fh.str2none_or_type('', dtype=str, empty_none=True)  \
+# Returns None
     >>> mdt.fh.str2none_or_type(2, dtype=str)
     '2'
 
@@ -249,6 +258,8 @@ def str2bool(val, accept_yes_no=True, accept_abbrev=True, accept_01=True):
     ``'true'`` and ``'false'`` to their corresponding boolean values
     ``True`` or ``False``.
 
+    References
+    ----------
     This code was adapted from https://stackoverflow.com/a/43357954.
 
     Examples
@@ -259,10 +270,18 @@ def str2bool(val, accept_yes_no=True, accept_abbrev=True, accept_01=True):
     True
     >>> mdt.fh.str2bool('false')
     False
+    >>> mdt.fh.str2bool('False')
+    False
+    >>> mdt.fh.str2bool('fAlSe')
+    False
 
     >>> mdt.fh.str2bool('yes', accept_yes_no=True)
     True
+    >>> mdt.fh.str2bool('no', accept_yes_no=True)
+    False
 
+    >>> mdt.fh.str2bool('y', accept_yes_no=True, accept_abbrev=True)
+    True
     >>> mdt.fh.str2bool('n', accept_yes_no=True, accept_abbrev=True)
     False
     >>> mdt.fh.str2bool('n', accept_yes_no=True, accept_abbrev=False)
@@ -274,6 +293,10 @@ def str2bool(val, accept_yes_no=True, accept_abbrev=True, accept_01=True):
     True
     >>> mdt.fh.str2bool('1', accept_01=True)
     True
+    >>> mdt.fh.str2bool(0, accept_01=True)
+    False
+    >>> mdt.fh.str2bool('0', accept_01=True)
+    False
 
     >>> import argparse
     >>> parser = argparse.ArgumentParser()
@@ -321,7 +344,7 @@ def backup(fname):
     Parameters
     ----------
     fname : str
-        The filename of the file to backup.
+        The name of the file to backup.
 
     Returns
     -------
@@ -518,8 +541,8 @@ def savetxt(  # TODO: Replace arguments by *args, **kwargs
 
     Notes
     -----
-    This function simply calls :func:`numpy.savetxt` and adds a
-    MDTools specific header to the output file.  See
+    This function simply calls :func:`numpy.savetxt` and adds a MDTools
+    specific header to the output file.  See
     :func:`mdtools.file_handler.header_str` for further information
     about what is included in the header.
     """
@@ -583,17 +606,17 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
     var2 : array_like
         Array of shape ``(m,)`` containing the values of the second
         independent variable at which the data were sampled.
-    init_values1 : array_like
+    init_values1 : array_like, optional
         If supplied, the values stored in this array will be handled as
         special initial data values corresponding to the very first
         value in `var1`.  Must be an array of shape ``(m,)``, whereas
         `data` must then be of shape ``(n-1, m)``.
-    init_values2 : array_like
+    init_values2 : array_like, optional
         If supplied, the values stored in this array will be handled as
         special initial data values corresponding to the very first
         value in `var2`.  Must be an array of shape ``(n,)``, whereas
         `data` must then be of shape ``(n, m-1)``.
-    upper_left : scalar
+    upper_left : scalar, optional
         Value to put in the upper left corner of the final data matrix.
         Usually, this value is meaningless and set to zero.
     fmt : str or sequence of strs, optional
@@ -703,9 +726,6 @@ def write_matrix_block(  # noqa: C901
     from `var1` is represented by the rows and the dependency from
     `var2` is represented by the columns.
 
-    If the file already exists, it is appended.  Otherwise is is
-    created.
-
     Parameters
     ----------
     fname : str
@@ -722,35 +742,33 @@ def write_matrix_block(  # noqa: C901
     var2 : array_like
         Array of shape ``(m,)`` containing the values of the second
         independent variable.
-    init_values1 : array_like
+    init_values1 : array_like, optional
         If supplied, the values stored in this array will be handled as
         special initial data values corresponding to the very first
         value in `var1`.  Must be an array of shape ``(m,)``, whereas
         `data` must then be of shape ``(n-1, m)``.
-    init_values2 : array_like
+    init_values2 : array_like, optional
         If supplied, the values stored in this array will be handled as
         special initial data values corresponding to the very first
         value in `var2`.  Must be an array of shape ``(n,)``, whereas
         `data` must then be of shape ``(n, m-1)``.
-    upper_left : scalar
+    upper_left : scalar, optional
         Value to put in the upper left corner of the final matrix.  If
         ``None`` (default), print `var1_name` and `var2_name` in the
         upper left corner.
-    data_name : str
+    data_name : str, optional
         The name of the data.  If supplied, it will be printed in the
         block header.
-    data_unit : str
+    data_unit : str, optional
         The unit of the data.  If supplied, will be printed in the
         block header.
-    var1_name : str
-        Same as `data_name` but for `var1`.
-    var1_unit : str
-        Same as `data_unit` but for `var1`.
-    var2_name : str
-        Same as `data_name` but for `var2`.
-    var2_unit : str
-        Same as `data_unit` but for `var2`.
-    block_number : int
+    var1_name, var2_name : str, optional
+        The name of the independent variables.  If supplied, it will be
+        printed in the block header.
+    var1_unit, var2_unit : str, optional
+        The unit of the independent variables.  If supplied, it will be
+        printed in the block header.
+    block_number : int, optional
         The number of the data block in `fname`.  If supplied, it will
         be printed in the block header.
 
@@ -875,7 +893,7 @@ def load_dtrj(fname, **kwargs):
         because, the elements of a discrete trajectory are interpreted
         as the indices of the states in which a given compound is at a
         given frame.
-    kwargs : dict
+    kwargs : dict, optional
         Additional keyword arguments to parse to :func:`numpy.load`.
 
     Returns
