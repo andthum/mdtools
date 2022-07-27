@@ -101,7 +101,7 @@ def tail(fname, n):
     return lines[-n:]
 
 
-def str2none_or_type(val, dtype, empty_as_None=False, case_sensitive=True):
+def str2none_or_type(val, dtype, empty_none=False, case_sensitive=True):
     """
     Convert a string to the NoneType ``None`` or to a given type.
 
@@ -117,7 +117,7 @@ def str2none_or_type(val, dtype, empty_as_None=False, case_sensitive=True):
         The type to which `val` should be converted if ``str(val)`` is
         not ``'None'``.  An error will be raised if the conversion
         ``dtype(str(val))`` is not possible.
-    empty_as_None : bool, optional
+    empty_none : bool, optional
         If ``True``, also convert `val` to ``None`` if ``str(val)`` is
         the empty string ``''``.
     case_sensitive : bool, optional
@@ -185,7 +185,7 @@ def str2none_or_type(val, dtype, empty_as_None=False, case_sensitive=True):
     if (
         (case_sensitive and val == "None")
         or (not case_sensitive and val.lower() == "none")
-        or (empty_as_None and val == "")
+        or (empty_none and val == "")
     ):
         return None
     else:
@@ -452,7 +452,8 @@ def write_header(fname, rename=True):
     --------
     :func:`mdtools.file_handler.header_str` :
         Create a standard header string for text files
-    :func:`mdtools.file_handler.backup` : Backup a file by renaming it
+    :func:`mdtools.file_handler.backup` :
+        Backup a file by renaming it
     """
     if rename:
         backup(fname)
@@ -506,12 +507,14 @@ def savetxt(  # TODO: Replace arguments by *args, **kwargs
 
     See Also
     --------
-    :func:`numpy.savetxt` : Save an array to a text file
+    :func:`numpy.savetxt` :
+        Save an array to a text file
     :func:`mdtools.file_handler.savetxt_matrix` :
         Save a data matrix to a text file
     :func:`mdtools.file_handler.header_str` :
         Create a standard header string for text files
-    :func:`mdtools.file_handler.backup` : Backup a file by renaming it
+    :func:`mdtools.file_handler.backup` :
+        Backup a file by renaming it
 
     Notes
     -----
@@ -620,10 +623,12 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
 
     See Also
     --------
-    :func:`mdtools.file_handler.savetxt` : Save an array to a text file
+    :func:`mdtools.file_handler.savetxt` :
+        Save an array to a text file
     :func:`mdtools.file_handler.write_matrix_block` :
         Save a data matrix to a text file by appending the file
-    :func:`mdtools.file_handler.backup` : Backup a file by renaming it
+    :func:`mdtools.file_handler.backup` :
+        Backup a file by renaming it
 
     Notes
     -----
