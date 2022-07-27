@@ -32,7 +32,6 @@ import bz2
 import gzip
 import lzma
 import os
-import warnings
 from datetime import datetime
 
 # Third-party libraries
@@ -677,7 +676,7 @@ def savetxt(fname, data, rename=True, **kwargs):
     np.savetxt(fname, data, **kwargs)
 
 
-def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
+def savetxt_matrix(
     fname,
     data,
     var1,
@@ -685,14 +684,7 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
     init_values1=None,
     init_values2=None,
     upper_left=0,
-    fmt="%16.9e",
-    delimiter=" ",
-    newline="\n",
-    header="",
-    footer="",
-    comments="# ",
-    encoding=None,
-    rename=True,
+    **kwargs,
 ):
     """
     Save a data matrix to a text file.
@@ -705,7 +697,7 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
 
     Parameters
     ----------
-    fname : str
+    fname : str or os.PathLike
         The name of the file to create.
     data : array_like
         2-dimensional array of data to be saved.  Must be of shape
@@ -713,63 +705,39 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
         independent variable (depicted row wise) and ``m`` is the mumber
         of samples of the second independent variable (depicted column
         wise).
-    var1 : array_like
-        Array of shape ``(n,)`` containing the values of the first
-        independent variable at which the data were sampled.
-    var2 : array_like
-        Array of shape ``(m,)`` containing the values of the second
-        independent variable at which the data were sampled.
-    init_values1 : array_like, optional
+    var1, var2 : array_like
+        Array of shape ``(n,)`` (`var1`) or ``(m,)`` (`var2`) containing
+        the values of the first or second independent variable at which
+        the data were sampled.
+    init_values1, init_values2 : array_like, optional
         If supplied, the values stored in this array will be handled as
         special initial data values corresponding to the very first
-        value in `var1`.  Must be an array of shape ``(m,)``, whereas
-        `data` must then be of shape ``(n-1, m)``.
-    init_values2 : array_like, optional
-        If supplied, the values stored in this array will be handled as
-        special initial data values corresponding to the very first
-        value in `var2`.  Must be an array of shape ``(n,)``, whereas
-        `data` must then be of shape ``(n, m-1)``.
+        value in `var1` or `var2`.  Must be an array of shape ``(m,)``
+        (`init_values1`) or ``(n,)`` (`init_values2`).  If given, `data`
+        must be of shape ``(n-1, m)`` or ``(n, m-1)`` or ``(n-1, m-1)``
+        if both are given.
     upper_left : scalar, optional
         Value to put in the upper left corner of the final data matrix.
         Usually, this value is meaningless and set to zero.
-    fmt : str or sequence of strs, optional
-        Format specifier.  See :func:`mdtools.file_handler.savetxt` for
-        more details.
-    delimiter : str, optional
-        String or character separating columns.
-    newline : str, optional
-        String or character separating lines.
-    header : str, optional
-        String that will be written at the beginning of the file,
-        additional to the standard MDTools header.  See
-        :func:`mdtools.file_handler.header_str` for more details.
-    footer : str, optional
-        String that will be written at the end of the file.
-    comments : str, optional
-        String that will be prepended to the header and footer strings,
-        to mark them as comments.
-    encoding : {None, str}, optional
-        Encoding used to encode the outputfile.  Does not apply to
-        output streams.  See :func:`mdtools.file_handler.savetxt` for
-        more details.
-    rename : bool, optional
-        If ``True`` and a file called `fname` already exists, rename it
-        to ``'fname.bak_timestamp'``.  See
-        :func:`mdtools.file_handler.backup` for more details.
+    kwargs : dict, optional
+        Additional keyword arguments to parse to
+        :func:`mdtools.file_handler.savetxt`.  See there for possible
+        arguments and their description.
 
     See Also
     --------
     :func:`mdtools.file_handler.savetxt` :
         Save an array to a text file
     :func:`mdtools.file_handler.write_matrix_block` :
-        Save a data matrix to a text file by appending the file
+        Save a data matrix as block to a text file
     :func:`mdtools.file_handler.backup` :
         Backup a file by renaming it
 
     Notes
     -----
     Internally, this function calls
-    :func:`mdtools.file_handler.savetxt`.
+    :func:`mdtools.file_handler.savetxt` which in turn calls
+    :func:`numpy.savetxt`.
     """
     var1 = np.asarray(var1)
     var2 = np.asarray(var2)
@@ -790,29 +758,16 @@ def savetxt_matrix(  # TODO: Replace arguments by *args, **kwargs
         mdt.check.array(init_values2, shape=var1.shape)
         mdt.check.array(data, shape=(len(var1) - 1, len(var2) - 1))
         if init_values2[0] != init_values1[0]:
-            warnings.warn(
-                "init_values2[0] ({}) is not the same as init_values1[0] ({})."
-                " Using init_values1[0] as value for the upper left"
-                " corner.".format(init_values2[0], init_values1[0]),
-                RuntimeWarning,
+            raise ValueError(
+                "init_values2[0] ({}) is not the same as init_values1[0]"
+                " ({})".format(init_values2[0], init_values1[0])
             )
         data = np.column_stack((init_values2[1:], data))
         data = np.vstack((init_values1, data))
     data = np.column_stack((var1, data))
     var2 = np.insert(var2, 0, upper_left)
     data = np.vstack((var2, data))
-    savetxt(
-        fname=fname,
-        data=data,
-        fmt=fmt,
-        delimiter=delimiter,
-        newline=newline,
-        header=header,
-        footer=footer,
-        comments=comments,
-        encoding=encoding,
-        rename=rename,
-    )
+    mdt.fh.savetxt(fname, data, **kwargs)
 
 
 def write_matrix_block(
