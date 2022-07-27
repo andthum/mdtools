@@ -107,11 +107,11 @@ class ProgressBar(ProgressBar):
             :class:`MDAnalysis.lib.log.ProgressBar` for possible
             choices.
         """
-        kwargs["ascii"] = kwargs.pop("ascii", True)
-        kwargs["unit"] = kwargs.pop("unit", "frames")
-        kwargs["mininterval"] = kwargs.pop("mininterval", 300)
-        kwargs["maxinterval"] = kwargs.pop("maxinterval", 3600)
-        kwargs["unit_scale"] = kwargs.pop("unit_scale", True)
+        kwargs.setdefault("ascii", True)
+        kwargs.setdefault("unit", "frames")
+        kwargs.setdefault("mininterval", 300)
+        kwargs.setdefault("maxinterval", 3600)
+        kwargs.setdefault("unit_scale", True)
         bar_format = (
             "{l_bar}{bar}|"
             " {n_fmt}/{total_fmt}"
@@ -119,7 +119,7 @@ class ProgressBar(ProgressBar):
             " {rate_noinv_fmt}"
             "{postfix}]"
         )
-        kwargs["bar_format"] = kwargs.pop("bar_format", bar_format)
+        kwargs.setdefault("bar_format", bar_format)
         super().__init__(*args, **kwargs)
 
 
