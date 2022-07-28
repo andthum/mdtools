@@ -32,6 +32,7 @@ import bz2
 import gzip
 import lzma
 import os
+import warnings
 from datetime import datetime
 
 # Third-party libraries
@@ -943,6 +944,58 @@ def write_matrix_block(
                     )
                 )
             outfile.write("\n")
+
+
+def save_dtrj(fname, dtrj):
+    """
+    Save a discrete trajectory to file.
+
+    Save a discrete trajectory as :class:`numpy.ndarray` to a compressed
+    NumPy |npz_archive|.
+
+    .. warning::
+
+        Creating a gzip-compressed :file:`.npz` archive does not work.
+        However bzip2-, xz- and lzma-compressed archives can be created.
+        Note that the created :file:`.npz` archive is already compressed
+        by :func:`numpy.savez_compressed`.  Therefore, further
+        compression is usually not reasonable.
+
+    Parameters
+    ----------
+    fname : str or bytes or os.PathLike
+        Name of the file to write to.
+    dtrj : array_like
+        The discrete trajectory to save.  Must meet the requirements
+        given in :func:`mdtools.check.dtrj`.  Note that the shape of
+        `dtrj` is expanded to ``(1, f)`` if it is only of shape
+        ``(f,)``.
+
+    See Also
+    --------
+    :func:`numpy.savez_compressed` :
+        Save one or multiple arrays in a compressed :file:`.npz` archive
+    :func:`mdtools.file_handler.load_dtrj` :
+        Load a discrete trajectory from file
+
+    Notes
+    -----
+    This function simply checks whether `dtrj` is a suitable discrete
+    trajectory and then saves it to file using
+    :func:`numpy.savez_compressed`.  Insise the created :file:`.npz`
+    archive, the discrete trajectory is stored in the file
+    :file:`dtrj.npy`.
+    """
+    try:
+        dtrj = mdt.check.dtrj(dtrj)
+    except ValueError as err:
+        warnings.warn(
+            "The given trajectory is not a suitable discrete trajectory:\n"
+            "{}".format(err),
+            UserWarning,
+        )
+    with mdt.fh.xopen(fname, "wb") as fh:
+        np.savez_compressed(fh, dtrj=dtrj)
 
 
 def load_dtrj(fname, **kwargs):
