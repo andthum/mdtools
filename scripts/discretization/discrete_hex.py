@@ -157,25 +157,25 @@ if __name__ == '__main__':
         dest='OUTFILE',
         type=str,
         required=True,
-        help="Output filename pattern. There will be created three"
-             " output files:"
-             " <OUTFILE>_lattice_faces.npy containing the xy-positions"
-             " of the lattice faces, i.e. the mid points of the hexagons,"
-             " in Angstrom stored as numpy.ndarray of shape (m, 2) in"
-             " the binary .npy format. m is the mumber of lattice faces;"
-             " <OUTFILE>_lattice_vertices.npy containing the"
-             " xy-positions of the lattice vertices in Angstrom stored"
-             " as numpy.ndarray of shape (2*m, 2) in the binary .npy"
-             " format;"
-             " <OUTFILE>_traj.npy containing a discretized trajectory"
-             " for each particle in the selection group stored as"
-             " numpy.ndarray of type numpy.int32 and shape (n, f) in the"
-             " binary .npy format. n is the number of particles and f is"
-             " the number of frames. The elements of the array are the"
-             " indices of the lattice faces at which a given particle"
-             " resides at a given time. If the particle is at a given"
-             " time not within the [ZMIN; ZMAX) interval, the index will"
-             " be set to -1."
+        help=(
+            "Output filename pattern. There will be created three output"
+            " files:"
+            "  <OUTFILE>_lattice_faces.npy containing the xy-positions of the"
+            " lattice faces, i.e. the mid points of the hexagons, in Angstrom"
+            " stored as numpy.ndarray of shape (m, 2) in the binary .npy"
+            " format.  m is the mumber of lattice faces;"
+            "  <OUTFILE>_lattice_vertices.npy containing the xy-positions of"
+            " the lattice vertices in Angstrom stored as numpy.ndarray of"
+            " shape (2*m, 2) in the binary .npy format;"
+            "  <OUTFILE>_traj.npy containing a discretized trajectory for each"
+            " particle in the selection group stored as numpy.ndarray of type"
+            " numpy.int32 and shape (n, f) as binary 'dtrj.npy' file in a"
+            " compressed .npz archive.  n is the number of particles and f is"
+            " the number of frames.  The elements of the array are the indices"
+            " of the lattice faces at which a given particle resides at a"
+            " given time.  If the particle is at a given time not within the"
+            " [ZMIN; ZMAX) interval, the index will be set to -1."
+        ),
     )
 
     parser.add_argument(
@@ -496,21 +496,20 @@ if __name__ == '__main__':
 
     # Hexagonal lattice faces
     mdt.fh.backup(args.OUTFILE + "_lattice_faces.npy")
-    np.save(args.OUTFILE + "_lattice_faces.npy",
-            lattice,
-            allow_pickle=False)
+    np.save(
+        args.OUTFILE + "_lattice_faces.npy", lattice, allow_pickle=False
+    )
     print("  Created " + args.OUTFILE + "_lattice_faces.npy", flush=True)
 
     # Hexagonal lattice vertices
     mdt.fh.backup(args.OUTFILE + "_lattice_vertices.npy")
-    np.save(args.OUTFILE + "_lattice_vertices.npy",
-            surf_pos,
-            allow_pickle=False)
+    np.save(
+        args.OUTFILE + "_lattice_vertices.npy", surf_pos, allow_pickle=False
+    )
     print("  Created " + args.OUTFILE + "_lattice_vertices.npy", flush=True)
 
     # Discrete trajectories
-    mdt.fh.backup(args.OUTFILE + "_traj.npy")
-    np.save(args.OUTFILE + "_traj.npy", dtrajs, allow_pickle=False)
+    mdt.fh.save_dtrj(args.OUTFILE + "_traj.npy", dtrajs)
     print("  Created " + args.OUTFILE + "_traj.npy", flush=True)
 
     print("Elapsed time:         {}"

@@ -560,13 +560,14 @@ if __name__ == '__main__':
         type=str,
         required=False,
         default=None,
-        help="Output filename of the coordination trajectory. If given,"
-             " additionally generate a discretized trajectory containing"
-             " for each single reference compound for each frame the"
-             " index of the selection compound that is continuously"
-             " bound the longest to the reference compound. The output"
-             " will be the same as given by discrete_coord.py. See there"
-             " for further details."
+        help=(
+            "Output filename of the coordination trajectory.  If given,"
+            " additionally generate a discretized trajectory containing for"
+            " each single reference compound for each frame the index of the"
+            " selection compound that is continuously bound the longest to the"
+            " reference compound.  The output will be the same as given by"
+            " discrete_coord.py.  See there for further details."
+        ),
     )
 
     parser.add_argument(
@@ -866,8 +867,7 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     if args.DTRJFILE is not None:
-        mdt.fh.backup(args.DTRJFILE)
-        np.save(args.DTRJFILE, dtrajs, allow_pickle=False)
+        mdt.fh.save_dtrj(args.DTRJFILE, dtrajs)
         print("  Created {}".format(args.DTRJFILE), flush=True)
 
     header = (
