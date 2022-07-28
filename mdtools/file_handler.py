@@ -578,7 +578,7 @@ def header_str():
     timestamp = datetime.now()
     script, command_line, cwd, exe, version, pversion = mdt.rti.run_time_info()
     header = "Created by {} on {}\n".format(
-        script, timestamp.strftime("%Y/%m/%d %H:%M")
+        script, timestamp.strftime("%Y/%m/%d %H:%M:%S")
     )
     header += "\n"
     header += mdt.__copyright_notice__ + "\n"
