@@ -447,7 +447,7 @@ if __name__ == '__main__':
     print("Reading input", flush=True)
     timer = datetime.now()
 
-    dtrajs = np.load(args.TRJFILE)
+    dtrajs = mdt.fh.load_dtrj(args.TRJFILE)
     if dtrajs.ndim == 1:
         dtrajs = np.expand_dims(dtrajs, axis=0)
     elif dtrajs.ndim > 2:
