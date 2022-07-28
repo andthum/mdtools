@@ -20,7 +20,7 @@ issue_labeler_regex_version=0
 
 <!-- Remove this section, if your PR is not related to an issue. -->
 
-Resolves issue #*Issue_Number* .  
+Resolves #*Issue_Number* .  
 Related to issue #*Issue_Number*.
 
 ## Type of Change
