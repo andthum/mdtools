@@ -49,9 +49,9 @@ def cd_up(n, path=__file__):
     ----------
     n : int
         Number of steps to go up in the directory tree.
-    path : str, optional
+    path : str or bytes or os.PathLike, optional
         Directory or file to use as start.  Default: Position of the
-        file from which this function is called (``__file__``)
+        file from which this function is called (``__file__``).
 
     Returns
     -------
@@ -485,7 +485,7 @@ def backup(fname):
 
     Parameters
     ----------
-    fname : str
+    fname : str or bytes or os.PathLike
         The name of the file to backup.
 
     Returns
