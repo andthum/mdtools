@@ -65,6 +65,38 @@ def cd_up(n, path=__file__):
     return p
 
 
+def backup(fname):
+    """
+    Backup a file by renaming it.
+
+    Check if a file with name `fname` already exists.  If so, rename it
+    to ``'fname.bak_timestamp'``, where ``'timestamp'`` is the time when
+    the renaming was done in YYYY-MM-DD_HH-MM-SS format.
+
+    Parameters
+    ----------
+    fname : str or bytes or os.PathLike
+        The name of the file to backup.
+
+    Returns
+    -------
+    renamed : bool
+        Returns ``True`` if a file called `fname` already existed and
+        was renamed.  ``False`` if no file called `fname` exists and no
+        backup was done.
+    """
+    if os.path.isfile(fname):
+        timestamp = datetime.now()
+        backup_name = (
+            fname + ".bak_" + str(timestamp.strftime("%Y-%m-%d_%H-%M-%S"))
+        )
+        os.rename(fname, backup_name)
+        print("Backuped {} to {}".format(fname, backup_name))
+        return True
+    else:
+        return False
+
+
 def xopen(fname, mode="rt", fformat=None, rename=True, **kwargs):
     """
     Open a (compressed) file and return a corresponding
@@ -242,270 +274,6 @@ def tail(fname, n, **kwargs):
             if pos == 0:  # Reached start of file.
                 break
     return lines[-n:]
-
-
-def str2none_or_type(val, dtype, empty_none=False, case_sensitive=True):
-    """
-    Convert a string to the NoneType ``None`` or to a given type.
-
-    If the input string is ``'None'``, convert it to the NoneType
-    ``None``, else convert it to the type given by `dtype`.
-
-    Parameters
-    ----------
-    val : str_like
-        The input value.  Can be anything that can be converted to a
-        string.
-    dtype : type
-        The type to which `val` should be converted if ``str(val)`` is
-        not ``'None'``.  An exception will be raised if the conversion
-        ``dtype(str(val))`` is not possible.  The exact exception
-        depends on `val` and `dtype`.
-    empty_none : bool, optional
-        If ``True``, also convert `val` to ``None`` if ``str(val)`` is
-        the empty string ``''``.
-    case_sensitive : bool, optional
-        If ``False``, also convert the lower case string ``'none'`` to
-        the NoneType ``None``.
-
-    Returns
-    -------
-    val : None or dtype
-        The input string, either converted to ``None`` or to `dtype`.
-
-    See Also
-    --------
-    :func:`mdtools.file_handler.str2bool` :
-        Convert a string to a boolean value
-
-    Notes
-    -----
-    This function was written to enable passing ``None`` to scripts via
-    the command line.  By default, :mod:`argparse` reads command-line
-    arguments as simple strings.  This makes it impossible to pass
-    ``None`` to a script via the command line, because it will always
-    render it as the string ``'None'``.  Pass
-    ``lambda val: mdt.fh.str2none_or_type(val, dtype=<dtype>)`` (where
-    ``<dtype>`` is e.g. ``float`` or ``str``) to the `type` keyword of
-    :meth:`argparse.ArgumentParser.add_argument` to convert the string
-    ``'None'`` (and optionally the empty string ``''``) to the NoneType
-    ``None``.
-
-    References
-    ----------
-    This code was adapted from https://stackoverflow.com/a/55063765.
-
-    Examples
-    --------
-    >>> mdt.fh.str2none_or_type('None', dtype=str)  # Returns None
-    >>> mdt.fh.str2none_or_type(None, dtype=str)  # Returns None
-    >>> mdt.fh.str2none_or_type('none', dtype=str)
-    'none'
-    >>> mdt.fh.str2none_or_type('none', dtype=str, \
-case_sensitive=False)  # Returns None
-    >>> mdt.fh.str2none_or_type('', dtype=str)
-    ''
-    >>> mdt.fh.str2none_or_type('', dtype=str, empty_none=True)  \
-# Returns None
-    >>> mdt.fh.str2none_or_type(2, dtype=str)
-    '2'
-
-    >>> mdt.fh.str2none_or_type('None', dtype=int)  # Returns None
-    >>> mdt.fh.str2none_or_type('2', dtype=int)
-    2
-    >>> mdt.fh.str2none_or_type(2, dtype=int)
-    2
-
-    >>> import argparse
-    >>> parser = argparse.ArgumentParser()
-    >>> parser.add_argument(
-    ...     '--spam',
-    ...     type=lambda val: mdt.fh.str2none_or_type(val, dtype=str)
-    ... )
-    _StoreAction(option_strings=['--spam'], dest='spam', ...)
-    >>> parser.add_argument('--eggs', type=str)
-    _StoreAction(option_strings=['--eggs'], dest='eggs', ...)
-    >>> args = parser.parse_args(['--spam', 'None', '--eggs', 'None'])
-    >>> args.spam is None
-    True
-    >>> args.eggs is None
-    False
-    >>> args.eggs == 'None'
-    True
-    """
-    val = str(val)
-    if (
-        (case_sensitive and val == "None")
-        or (not case_sensitive and val.lower() == "none")
-        or (empty_none and val == "")
-    ):
-        return None
-    else:
-        return dtype(val)
-
-
-def str2bool(val, accept_yes_no=True, accept_abbrev=True, accept_01=True):
-    """
-    Convert a string to a boolean value.
-
-    Convert the strings ``'true'`` and ``'false'`` to their
-    corresponding booleans ``True`` and ``False``.  This function is
-    case-insensitive!
-
-    Parameters
-    ----------
-    val : str_like
-        The input value.  Can be anything that can be converted to a
-        string.
-    accept_yes_no : bool, optional
-        If ``True``, also convert ``'yes'`` to ``True`` and ``'no'`` to
-        ``False``.
-    accept_abbrev : bool, optional
-        If ``True``, also convert the following abbreviations:
-
-            * ``'t'`` to ``True``.
-            * ``'y'`` to ``True``.
-            * ``'f'`` to ``False``.
-            * ``'n'`` to ``False``.
-
-    accept_01 : bool, optional
-        If ``True``, also convert ``'1'`` to ``True`` and ``'0'`` to
-        ``False``.
-
-    Returns
-    -------
-    val : bool
-        The input string converted to ``True`` or ``False``.
-
-    Raises
-    ------
-    ValueError :
-        If `val` is an unknown string that cannot be converted to a
-        boolean value.
-
-    See Also
-    --------
-    :func:`mdtools.file_handler.str2none_or_type` :
-        Convert a string to the NoneType ``None`` or to a given type
-
-    Notes
-    -----
-    This function was written to enable passing booleans to scripts via
-    the command line.  By default, :mod:`argparse` reads command-line
-    arguments as simple strings.  This makes it impossible to pass
-    booleans to a script via the command line in an intuitive way,
-    because the type conversion to bool will convert all non-empty
-    strings to ``True`` (including the string ``'false'``) .  Pass
-    ``str2bool(val)`` to the `type` keyword of
-    :meth:`argparse.ArgumentParser.add_argument` to convert the strings
-    ``'true'`` and ``'false'`` to their corresponding boolean values
-    ``True`` or ``False``.
-
-    References
-    ----------
-    This code was adapted from https://stackoverflow.com/a/43357954.
-
-    Examples
-    --------
-    >>> mdt.fh.str2bool('True')
-    True
-    >>> mdt.fh.str2bool('true')
-    True
-    >>> mdt.fh.str2bool('false')
-    False
-    >>> mdt.fh.str2bool('False')
-    False
-    >>> mdt.fh.str2bool('fAlSe')
-    False
-
-    >>> mdt.fh.str2bool('yes', accept_yes_no=True)
-    True
-    >>> mdt.fh.str2bool('no', accept_yes_no=True)
-    False
-
-    >>> mdt.fh.str2bool('y', accept_yes_no=True, accept_abbrev=True)
-    True
-    >>> mdt.fh.str2bool('n', accept_yes_no=True, accept_abbrev=True)
-    False
-    >>> mdt.fh.str2bool('n', accept_yes_no=True, accept_abbrev=False)
-    Traceback (most recent call last):
-    ...
-    ValueError: ...
-
-    >>> mdt.fh.str2bool(1, accept_01=True)
-    True
-    >>> mdt.fh.str2bool('1', accept_01=True)
-    True
-    >>> mdt.fh.str2bool(0, accept_01=True)
-    False
-    >>> mdt.fh.str2bool('0', accept_01=True)
-    False
-
-    >>> import argparse
-    >>> parser = argparse.ArgumentParser()
-    >>> parser.add_argument('--spam', type=mdt.fh.str2bool)
-    _StoreAction(option_strings=['--spam'], ...)
-    >>> parser.add_argument('--eggs', type=str)
-    _StoreAction(option_strings=['--eggs'], ...)
-    >>> args = parser.parse_args(['--spam', 'yes', '--eggs', 'no'])
-    >>> args.spam
-    True
-    >>> args.eggs
-    'no'
-    """
-    val = str(val).lower()
-    eval_true = ["true"]
-    eval_false = ["false"]
-    if accept_yes_no:
-        eval_true.append("yes")
-        eval_false.append("no")
-    if accept_abbrev:
-        eval_true += [s[0] for s in eval_true]
-        eval_false += [s[0] for s in eval_false]
-    if accept_01:
-        eval_true.append("1")
-        eval_false.append("0")
-    if val in eval_true:
-        return True
-    elif val in eval_false:
-        return False
-    else:
-        raise ValueError(
-            "Could not convert 'val' ({}) to bool. 'val' is neither in {} nor"
-            " in {}".format(val, eval_true, eval_false)
-        )
-
-
-def backup(fname):
-    """
-    Backup a file by renaming it.
-
-    Check if a file with name `fname` already exists.  If so, rename it
-    to ``'fname.bak_timestamp'``, where ``'timestamp'`` is the time when
-    the renaming was done in YYYY-MM-DD_HH-MM-SS format.
-
-    Parameters
-    ----------
-    fname : str or bytes or os.PathLike
-        The name of the file to backup.
-
-    Returns
-    -------
-    renamed : bool
-        Returns ``True`` if a file called `fname` already existed and
-        was renamed.  ``False`` if no file called `fname` exists and no
-        backup was done.
-    """
-    if os.path.isfile(fname):
-        timestamp = datetime.now()
-        backup_name = (
-            fname + ".bak_" + str(timestamp.strftime("%Y-%m-%d_%H-%M-%S"))
-        )
-        os.rename(fname, backup_name)
-        print("Backuped {} to {}".format(fname, backup_name))
-        return True
-    else:
-        return False
 
 
 def indent(text, amount, char=" "):
@@ -1061,3 +829,235 @@ def load_dtrj(fname, **kwargs):
         )
     fh.close()
     return mdt.check.dtrj(dtrj)
+
+
+def str2none_or_type(val, dtype, empty_none=False, case_sensitive=True):
+    """
+    Convert a string to the NoneType ``None`` or to a given type.
+
+    If the input string is ``'None'``, convert it to the NoneType
+    ``None``, else convert it to the type given by `dtype`.
+
+    Parameters
+    ----------
+    val : str_like
+        The input value.  Can be anything that can be converted to a
+        string.
+    dtype : type
+        The type to which `val` should be converted if ``str(val)`` is
+        not ``'None'``.  An exception will be raised if the conversion
+        ``dtype(str(val))`` is not possible.  The exact exception
+        depends on `val` and `dtype`.
+    empty_none : bool, optional
+        If ``True``, also convert `val` to ``None`` if ``str(val)`` is
+        the empty string ``''``.
+    case_sensitive : bool, optional
+        If ``False``, also convert the lower case string ``'none'`` to
+        the NoneType ``None``.
+
+    Returns
+    -------
+    val : None or dtype
+        The input string, either converted to ``None`` or to `dtype`.
+
+    See Also
+    --------
+    :func:`mdtools.file_handler.str2bool` :
+        Convert a string to a boolean value
+
+    Notes
+    -----
+    This function was written to enable passing ``None`` to scripts via
+    the command line.  By default, :mod:`argparse` reads command-line
+    arguments as simple strings.  This makes it impossible to pass
+    ``None`` to a script via the command line, because it will always
+    render it as the string ``'None'``.  Pass
+    ``lambda val: mdt.fh.str2none_or_type(val, dtype=<dtype>)`` (where
+    ``<dtype>`` is e.g. ``float`` or ``str``) to the `type` keyword of
+    :meth:`argparse.ArgumentParser.add_argument` to convert the string
+    ``'None'`` (and optionally the empty string ``''``) to the NoneType
+    ``None``.
+
+    References
+    ----------
+    This code was adapted from https://stackoverflow.com/a/55063765.
+
+    Examples
+    --------
+    >>> mdt.fh.str2none_or_type('None', dtype=str)  # Returns None
+    >>> mdt.fh.str2none_or_type(None, dtype=str)  # Returns None
+    >>> mdt.fh.str2none_or_type('none', dtype=str)
+    'none'
+    >>> mdt.fh.str2none_or_type('none', dtype=str, \
+case_sensitive=False)  # Returns None
+    >>> mdt.fh.str2none_or_type('', dtype=str)
+    ''
+    >>> mdt.fh.str2none_or_type('', dtype=str, empty_none=True)  \
+# Returns None
+    >>> mdt.fh.str2none_or_type(2, dtype=str)
+    '2'
+
+    >>> mdt.fh.str2none_or_type('None', dtype=int)  # Returns None
+    >>> mdt.fh.str2none_or_type('2', dtype=int)
+    2
+    >>> mdt.fh.str2none_or_type(2, dtype=int)
+    2
+
+    >>> import argparse
+    >>> parser = argparse.ArgumentParser()
+    >>> parser.add_argument(
+    ...     '--spam',
+    ...     type=lambda val: mdt.fh.str2none_or_type(val, dtype=str)
+    ... )
+    _StoreAction(option_strings=['--spam'], dest='spam', ...)
+    >>> parser.add_argument('--eggs', type=str)
+    _StoreAction(option_strings=['--eggs'], dest='eggs', ...)
+    >>> args = parser.parse_args(['--spam', 'None', '--eggs', 'None'])
+    >>> args.spam is None
+    True
+    >>> args.eggs is None
+    False
+    >>> args.eggs == 'None'
+    True
+    """
+    val = str(val)
+    if (
+        (case_sensitive and val == "None")
+        or (not case_sensitive and val.lower() == "none")
+        or (empty_none and val == "")
+    ):
+        return None
+    else:
+        return dtype(val)
+
+
+def str2bool(val, accept_yes_no=True, accept_abbrev=True, accept_01=True):
+    """
+    Convert a string to a boolean value.
+
+    Convert the strings ``'true'`` and ``'false'`` to their
+    corresponding booleans ``True`` and ``False``.  This function is
+    case-insensitive!
+
+    Parameters
+    ----------
+    val : str_like
+        The input value.  Can be anything that can be converted to a
+        string.
+    accept_yes_no : bool, optional
+        If ``True``, also convert ``'yes'`` to ``True`` and ``'no'`` to
+        ``False``.
+    accept_abbrev : bool, optional
+        If ``True``, also convert the following abbreviations:
+
+            * ``'t'`` to ``True``.
+            * ``'y'`` to ``True``.
+            * ``'f'`` to ``False``.
+            * ``'n'`` to ``False``.
+
+    accept_01 : bool, optional
+        If ``True``, also convert ``'1'`` to ``True`` and ``'0'`` to
+        ``False``.
+
+    Returns
+    -------
+    val : bool
+        The input string converted to ``True`` or ``False``.
+
+    Raises
+    ------
+    ValueError :
+        If `val` is an unknown string that cannot be converted to a
+        boolean value.
+
+    See Also
+    --------
+    :func:`mdtools.file_handler.str2none_or_type` :
+        Convert a string to the NoneType ``None`` or to a given type
+
+    Notes
+    -----
+    This function was written to enable passing booleans to scripts via
+    the command line.  By default, :mod:`argparse` reads command-line
+    arguments as simple strings.  This makes it impossible to pass
+    booleans to a script via the command line in an intuitive way,
+    because the type conversion to bool will convert all non-empty
+    strings to ``True`` (including the string ``'false'``) .  Pass
+    ``str2bool(val)`` to the `type` keyword of
+    :meth:`argparse.ArgumentParser.add_argument` to convert the strings
+    ``'true'`` and ``'false'`` to their corresponding boolean values
+    ``True`` or ``False``.
+
+    References
+    ----------
+    This code was adapted from https://stackoverflow.com/a/43357954.
+
+    Examples
+    --------
+    >>> mdt.fh.str2bool('True')
+    True
+    >>> mdt.fh.str2bool('true')
+    True
+    >>> mdt.fh.str2bool('false')
+    False
+    >>> mdt.fh.str2bool('False')
+    False
+    >>> mdt.fh.str2bool('fAlSe')
+    False
+
+    >>> mdt.fh.str2bool('yes', accept_yes_no=True)
+    True
+    >>> mdt.fh.str2bool('no', accept_yes_no=True)
+    False
+
+    >>> mdt.fh.str2bool('y', accept_yes_no=True, accept_abbrev=True)
+    True
+    >>> mdt.fh.str2bool('n', accept_yes_no=True, accept_abbrev=True)
+    False
+    >>> mdt.fh.str2bool('n', accept_yes_no=True, accept_abbrev=False)
+    Traceback (most recent call last):
+    ...
+    ValueError: ...
+
+    >>> mdt.fh.str2bool(1, accept_01=True)
+    True
+    >>> mdt.fh.str2bool('1', accept_01=True)
+    True
+    >>> mdt.fh.str2bool(0, accept_01=True)
+    False
+    >>> mdt.fh.str2bool('0', accept_01=True)
+    False
+
+    >>> import argparse
+    >>> parser = argparse.ArgumentParser()
+    >>> parser.add_argument('--spam', type=mdt.fh.str2bool)
+    _StoreAction(option_strings=['--spam'], ...)
+    >>> parser.add_argument('--eggs', type=str)
+    _StoreAction(option_strings=['--eggs'], ...)
+    >>> args = parser.parse_args(['--spam', 'yes', '--eggs', 'no'])
+    >>> args.spam
+    True
+    >>> args.eggs
+    'no'
+    """
+    val = str(val).lower()
+    eval_true = ["true"]
+    eval_false = ["false"]
+    if accept_yes_no:
+        eval_true.append("yes")
+        eval_false.append("no")
+    if accept_abbrev:
+        eval_true += [s[0] for s in eval_true]
+        eval_false += [s[0] for s in eval_false]
+    if accept_01:
+        eval_true.append("1")
+        eval_false.append("0")
+    if val in eval_true:
+        return True
+    elif val in eval_false:
+        return False
+    else:
+        raise ValueError(
+            "Could not convert 'val' ({}) to bool. 'val' is neither in {} nor"
+            " in {}".format(val, eval_true, eval_false)
+        )
