@@ -19,11 +19,8 @@
 
 
 r"""
-Archive/Extract one or multiple NumPy
-`.npy <https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html>`__
-files in/from one or multiple NumPy
-`.npz <https://numpy.org/doc/stable/reference/generated/numpy.savez_compressed.html>`_
-archives.
+Archive/Extract one or multiple NumPy |npy_file|\s in/from one or
+multiple NumPy |npz_archive|\s.
 
 This script can:
 
