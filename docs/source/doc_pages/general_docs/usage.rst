@@ -70,6 +70,32 @@ Examples
     Give one or more examples how to use the scripts.
 
 
+Compressed files
+----------------
+
+All MDTools scripts support reading or writing compressed files of the
+following formats:
+
+    * gzip (.gz)
+    * bzip2 (.bz2)
+    * XZ/LZMA2 (.xz)
+    * LZMA (.lzma)
+
+One exception is that discrete trajectories cannot be saved as
+gzip-compressed |npz_archive|\s.
+See :func:`mdtools.file_handler.save_dtrj`.
+
+Generally, the file format is determined from the file name extension.
+When reading files and the format could not be determined from the
+extension, the format is determined from the `file signature`_.  If the
+file format cannot be determined, it is assumed that the file is
+uncompressed.
+
+
+.. _file signature:
+    https://en.wikipedia.org/wiki/List_of_file_signatures
+
+
 Unbuffered output
 -----------------
 
