@@ -291,7 +291,7 @@ if __name__ == "__main__":
     timer = datetime.now()
 
     mdt.fh.write_header(args.OUTFILE + ".txt")
-    with open(args.OUTFILE + ".txt", 'a') as outfile:
+    with mdt.fh.xopen(args.OUTFILE + ".txt", 'a') as outfile:
         outfile.write("# Diffusion coefficient(s) D\n")
         outfile.write("# Fitted from Mean Square Displacement (MSD) via\n")
         outfile.write("#   MSD(t) = {}*D*t\n".format(2 * args.NDIM))

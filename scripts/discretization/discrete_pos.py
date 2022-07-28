@@ -39,13 +39,13 @@ Options
 -s          Topology file.  See |supported_topology_formats| of
             MDAnalysis.
 -o          Output filename for the discrete trajectory.  The discrete
-            trajectory is written to a binary :file:`.npy` file of the
-            given filename.  The discrete trajectory is stored as
-            :class:`numpy.ndarray` of dtype :attr:`numpy.uint32` and
-            shape ``(n, f)``, where ``n`` is the number of reference
-            compounds and ``f`` is the number of frames.  The elements
-            of the discrete trajectory are the states in which a given
-            compound resides at a given frame.
+            trajectory is written as binary :file:`dtrj.npy` file in a
+            a compressed |npz_archive| of the given filename.  The
+            discrete trajectory is stored as :class:`numpy.ndarray` of
+            dtype :attr:`numpy.uint32` and shape ``(n, f)``, where ``n``
+            is the number of reference compounds and ``f`` is the number
+            of frames.  The elements of the discrete trajectory are the
+            states in which a given compound resides at a given frame.
 --bins-out  Output filename for the bin edges (optional).  If provided,
             the (average) bin edges used for creating the discrete
             trajectory are written to a text file of the given filename.
@@ -315,9 +315,8 @@ if __name__ == "__main__":
     print("\n")
     print("Creating output...")
     timer = datetime.now()
-    # Discrete
-    mdt.fh.backup(args.OUTFILE)
-    np.save(args.OUTFILE, dtrj, allow_pickle=False)
+    # Discrete trajectory
+    mdt.fh.save_dtrj(args.OUTFILE, dtrj)
     print("Created {}".format(args.OUTFILE))
     # Bin edges
     if args.OUTFILE_BINS is not None:
@@ -332,7 +331,7 @@ if __name__ == "__main__":
                           args.DIRECTION,
                           lbox_av,
                           time_step))
-        mdt.fh.savetxt(fname=args.OUTFILE_BINS, data=bins, header=header)
+        mdt.fh.savetxt(args.OUTFILE_BINS, bins, header=header)
         print("Created {}".format(args.OUTFILE_BINS))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"

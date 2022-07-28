@@ -259,15 +259,17 @@ if __name__ == '__main__':
         dest='OUTFILE',
         type=str,
         required=True,
-        help="Output filename. The ouput will be a numpy.ndarray of"
-             " type numpy.int32 and shape (n, f) stored in the binary"
-             " .npy format. n is the number of reference compounds and"
-             " f is the number of frames. The elements of the array are"
-             " the indices of the selection compounds that are"
-             " continuously bound the longest to the given reference"
-             " compound. Indexing starts at zero. An index of -1"
-             " indicates that in the given frame no selection compound"
-             " was bound to the given reference compound."
+        help=(
+            "Output filename. The ouput will be a numpy.ndarray of type"
+            " numpy.int32 and shape (n, f) stored as binary 'dtrj.npy' file in"
+            " a compressed .npz archive.  n is the number of reference"
+            " compounds and f is the number of frames.  The elements of the"
+            " array are the indices of the selection compounds that are"
+            " continuously bound the longest to the given reference compound."
+            "  Indexing starts at zero.  An index of -1 indicates that in the"
+            " given frame no selection compound was bound to the given"
+            " reference compound."
+        ),
     )
 
     parser.add_argument(
@@ -508,10 +510,8 @@ if __name__ == '__main__':
     print("\n\n\n", flush=True)
     print("Extracting renewal events", flush=True)
     timer = datetime.now()
-
     dtrajs = discrete_coord(cms=cms, verbose=True, debug=args.DEBUG)
     del cms
-
     print(flush=True)
     print("Elapsed time:         {}"
           .format(datetime.now() - timer),
@@ -523,10 +523,7 @@ if __name__ == '__main__':
     print("\n\n\n", flush=True)
     print("Creating output", flush=True)
     timer = datetime.now()
-
-    mdt.fh.backup(args.OUTFILE)
-    np.save(args.OUTFILE, dtrajs, allow_pickle=False)
-
+    mdt.fh.save_dtrj(args.OUTFILE, dtrajs)
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"
           .format(datetime.now() - timer),

@@ -586,12 +586,14 @@ if __name__ == '__main__':
         .format(args.DIRECTION, args.DIRECTION, args.DIRECTION, args.DIRECTION)
     )
     suffix = "The remaining matrix elements contain the respective MSD values.\n"
-    mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_msd_layer.txt",
-                          data=msd_tot,
-                          var1=lag_times,
-                          var2=bins[1:],
-                          upper_left=bins[0],
-                          header=prefix + header + suffix)
+    mdt.fh.savetxt_matrix(
+        args.OUTFILE + "_msd_layer.txt",
+        msd_tot,
+        var1=lag_times,
+        var2=bins[1:],
+        upper_left=bins[0],
+        header=prefix + header + suffix
+    )
     print("  Created {}".format(args.OUTFILE + "_msd_layer.txt"))
     if args.NBLOCKS > 1:
         prefix = (
@@ -601,12 +603,14 @@ if __name__ == '__main__':
             .format(args.DIRECTION, args.DIRECTION, args.DIRECTION, args.DIRECTION)
         )
         suffix = "The remaining matrix elements contain the respective MSD values.\n"
-        mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_msd_layer_sd.txt",
-                              data=msd_tot_sd,
-                              var1=lag_times,
-                              var2=bins[1:],
-                              upper_left=bins[0],
-                              header=prefix + header + suffix)
+        mdt.fh.savetxt_matrix(
+            args.OUTFILE + "_msd_layer_sd.txt",
+            msd_tot_sd,
+            var1=lag_times,
+            var2=bins[1:],
+            upper_left=bins[0],
+            header=prefix + header + suffix
+        )
         print("  Created {}".format(args.OUTFILE + "_msd_layer_sd.txt"))
 
     for i, x in enumerate(['x', 'y', 'z']):
@@ -617,12 +621,14 @@ if __name__ == '__main__':
             .format(x, args.DIRECTION, x, args.DIRECTION, x, x, args.DIRECTION, args.DIRECTION)
         )
         suffix = "The remaining matrix elements contain the respective MSD values.\n"
-        mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_msd" + x + "_layer.txt",
-                              data=msd[:, :, i],
-                              var1=lag_times,
-                              var2=bins[1:],
-                              upper_left=bins[0],
-                              header=prefix + header + suffix)
+        mdt.fh.savetxt_matrix(
+            args.OUTFILE + "_msd" + x + "_layer.txt",
+            msd[:, :, i],
+            var1=lag_times,
+            var2=bins[1:],
+            upper_left=bins[0],
+            header=prefix + header + suffix
+        )
         print("  Created {}".format(args.OUTFILE + "_msd" + x + "_layer.txt"))
         if args.NBLOCKS > 1:
             prefix = (
@@ -633,12 +639,14 @@ if __name__ == '__main__':
                 .format(x, args.DIRECTION, x, args.DIRECTION, x, x, args.DIRECTION, args.DIRECTION)
             )
             suffix = "The remaining matrix elements contain the respective MSD values.\n"
-            mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_msd" + x + "_layer_sd.txt",
-                                  data=msd_sd[:, :, i],
-                                  var1=lag_times,
-                                  var2=bins[1:],
-                                  upper_left=bins[0],
-                                  header=prefix + header + suffix)
+            mdt.fh.savetxt_matrix(
+                args.OUTFILE + "_msd" + x + "_layer_sd.txt",
+                msd_sd[:, :, i],
+                var1=lag_times,
+                var2=bins[1:],
+                upper_left=bins[0],
+                header=prefix + header + suffix
+            )
             print("  Created {}".format(args.OUTFILE + "_msd" + x + "_layer_sd.txt"))
 
     # MDs
@@ -650,12 +658,14 @@ if __name__ == '__main__':
             .format(x, args.DIRECTION, x, args.DIRECTION, x, x, args.DIRECTION, args.DIRECTION)
         )
         suffix = "The remaining matrix elements contain the respective MD values.\n"
-        mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_md" + x + "_layer.txt",
-                              data=md[:, :, i],
-                              var1=lag_times,
-                              var2=bins[1:],
-                              upper_left=bins[0],
-                              header=prefix + header + suffix)
+        mdt.fh.savetxt_matrix(
+            args.OUTFILE + "_md" + x + "_layer.txt",
+            md[:, :, i],
+            var1=lag_times,
+            var2=bins[1:],
+            upper_left=bins[0],
+            header=prefix + header + suffix
+        )
         print("  Created {}".format(args.OUTFILE + "_md" + x + "_layer.txt"))
         if args.NBLOCKS > 1:
             prefix = (
@@ -666,12 +676,14 @@ if __name__ == '__main__':
                 .format(x, args.DIRECTION, x, args.DIRECTION, x, x, args.DIRECTION, args.DIRECTION)
             )
             suffix = "The remaining matrix elements contain the respective MD values.\n"
-            mdt.fh.savetxt_matrix(fname=args.OUTFILE + "_md" + x + "_layer_sd.txt",
-                                  data=md_sd[:, :, i],
-                                  var1=lag_times,
-                                  var2=bins[1:],
-                                  upper_left=bins[0],
-                                  header=prefix + header + suffix)
+            mdt.fh.savetxt_matrix(
+                args.OUTFILE + "_md" + x + "_layer_sd.txt",
+                md_sd[:, :, i],
+                var1=lag_times,
+                var2=bins[1:],
+                upper_left=bins[0],
+                header=prefix + header + suffix
+            )
             print("  Created {}".format(args.OUTFILE + "_md" + x + "_layer_sd.txt"))
 
     print("Elapsed time:         {}"

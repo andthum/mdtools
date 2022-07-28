@@ -385,16 +385,10 @@ if __name__ == '__main__':
     print("Reading input", flush=True)
     timer = datetime.now()
 
-    dtrajs1 = np.load(args.TRJFILE1)
-    dtrajs2 = np.load(args.TRJFILE2)
+    dtrajs1 = mdt.fh.load_dtrj(args.TRJFILE1)
+    dtrajs2 = mdt.fh.load_dtrj(args.TRJFILE2)
     if dtrajs1.shape != dtrajs2.shape:
         raise ValueError("Both trajectories must have the same shape")
-    if dtrajs1.ndim == 1:
-        dtrajs1 = np.expand_dims(dtrajs1, axis=0)
-        dtrajs2 = np.expand_dims(dtrajs2, axis=0)
-    elif dtrajs1.ndim > 2:
-        raise ValueError("The discrete trajectories must have one or two"
-                         " dimensions")
     dtrajs1 = np.asarray(dtrajs1.T, order='C')
     dtrajs2 = np.asarray(dtrajs2.T, order='C')
     n_frames = dtrajs1.shape[0]
@@ -571,11 +565,9 @@ if __name__ == '__main__':
         header += " {:>16.9e}".format(perr[i][1])
     header += "\n"
 
-    mdt.fh.savetxt_matrix(fname=args.OUTFILE,
-                          data=p,
-                          var1=lag_times,
-                          var2=states,
-                          header=header)
+    mdt.fh.savetxt_matrix(
+        args.OUTFILE, p, var1=lag_times, var2=states, header=header
+    )
 
     print("  Created {}".format(args.OUTFILE), flush=True)
     print("Elapsed time:         {}"

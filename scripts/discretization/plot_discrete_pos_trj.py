@@ -165,15 +165,8 @@ if __name__ == "__main__":
     timer = datetime.now()
     # TODO: Make dtrj compliant with MDTools discrete trajectories (see
     # :func:`mdtools.check.dtrj`)
-    dtrj = np.load(args.TRJFILE)
-    if dtrj.ndim == 1:
-        n_compounds = 1
-    elif dtrj.ndim == 2:
-        n_compounds = dtrj.shape[0]
-    else:
-        raise ValueError(
-            "dtrj has more than two dimensions ({})".format(dtrj.ndim)
-        )
+    dtrj = mdt.fh.load_dtrj(args.TRJFILE)
+    n_compounds = dtrj.shape[0]
     if args.TRJ_IX is None:
         TRJ_IX = np.arange(n_compounds)
     else:

@@ -645,9 +645,9 @@ their position at time t0.
     else:
         N_SELCMPS = len(natms_per_selcmp)
     # Contact information:
-    fname = args.OUTFILE + "_contacts.txt"
-    mdt.fh.write_header(fname)
-    with open(fname, 'a') as outfile:
+    outfile = args.OUTFILE + "_contacts.txt"
+    mdt.fh.write_header(outfile)
+    with mdt.fh.xopen(outfile, 'a') as outfile:
         outfile.write("# \n")
         outfile.write("# \n")
         outfile.write("# Reference: '{}'\n".format(' '.join(args.REF)))
@@ -731,9 +731,9 @@ their position at time t0.
                 for i, diff in enumerate(selix_diff[s][v]):
                     outfile.write(" {:>16.9e}".format(diff))
                 outfile.write("\n")
-    print("Created {}".format(fname))
+    print("Created {}".format(outfile))
     # Bin edges:
-    fname = args.OUTFILE + "_bins.txt"
+    outfile = args.OUTFILE + "_bins.txt"
     lbox_av = np.mean([ts.dimensions[ixd]
                        for ts in u.trajectory[BEGIN:END:EVERY]])
     header = ("Bin edges in Angstrom\n"
@@ -745,8 +745,8 @@ their position at time t0.
                       len(bins) - 1,
                       args.DIRECTION,
                       lbox_av))
-    mdt.fh.savetxt(fname=fname, data=bins, header=header)
-    print("Created {}".format(fname))
+    mdt.fh.savetxt(outfile, bins, header=header)
+    print("Created {}".format(outfile))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20))

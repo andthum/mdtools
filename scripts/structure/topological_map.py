@@ -327,7 +327,7 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     mdt.fh.write_header(args.OUTFILE)
-    with open(args.OUTFILE, 'a') as outfile:
+    with mdt.fh.xopen(args.OUTFILE, 'a') as outfile:
         outfile.write("# Topological map\n")
         outfile.write("# Cutoff (Angstrom): {}\n".format(args.CUTOFF))
         outfile.write("#\n")

@@ -176,6 +176,8 @@ rst_epilog = """
 
 .. |Python| replace::
     :raw-html:`<a href="https://www.python.org/">Python</a>`
+.. |format_specifier| replace::
+    :raw-html:`<a href="https://docs.python.org/3/library/string.html#format-specification-mini-language">format specifier</a>`
 .. |PyPI| replace::
     :raw-html:`<a href="https://pypi.org/">PyPI</a>`
 .. |pip| replace::
@@ -202,6 +204,13 @@ rst_epilog = """
     :raw-html:`<a href="https://www.mdanalysis.org/">MDAnalysis</a>`
 .. |MDA_user_guide| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/index.html">MDAnalysis user guide</a>`
+
+.. |file-like_object| replace::
+    :raw-html:`<a href="https://docs.python.org/3/glossary.html#term-file-like-object">file-like object</a>`
+.. |npy_file| replace::
+    :raw-html:`<a href="https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html">.npy file</a>`
+.. |npz_archive| replace::
+    :raw-html:`<a href="https://numpy.org/doc/stable/reference/generated/numpy.savez.html">.npz archive</a>`
 
 .. |RTD| replace::
     :raw-html:`<a href="https://readthedocs.org/">Read the Docs</a>`

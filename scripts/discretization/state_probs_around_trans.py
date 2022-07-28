@@ -170,16 +170,11 @@ probability
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    # TODO: Revise script (backup already done: state_probs_around_trans.py.bak_2021-04-30)
+    # TODO: Revise script
     print("\n")
     print("Loading trajectory...")
     timer = datetime.now()
-    dtrj = np.load(args.TRJFILE)
-    if dtrj.ndim == 1:
-        dtrj = np.expand_dims(dtrj, axis=0)
-    elif dtrj.ndim > 2:
-        raise ValueError("The discrete trajectory must have one or two"
-                         " dimensions")
+    dtrj = mdt.fh.load_dtrj(args.TRJFILE)
     N_CMPS, N_FRAMES_TOT = dtrj.shape
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
         start=args.BEGIN,
@@ -304,7 +299,7 @@ probability
                 "prob_b_as_b", "prob_b_as_a",
                 "prob_a_as_a", "prob_a_as_b")
     )
-    mdt.fh.savetxt(fname=args.OUTFILE, data=data, header=header)
+    mdt.fh.savetxt(args.OUTFILE, data, header=header)
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB"

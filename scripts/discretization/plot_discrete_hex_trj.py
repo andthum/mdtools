@@ -218,7 +218,7 @@ if __name__ == "__main__":
     print("\n")
     print("Reading input files...")
     timer = datetime.now()
-    dtrj = np.load(args.TRJFILE)
+    dtrj = mdt.fh.load_dtrj(args.TRJFILE)
     latfaces = np.load(args.LATFACE)
     latverts = np.load(args.LATVERT)
     latfaces *= args.LCONV

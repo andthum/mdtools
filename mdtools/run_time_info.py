@@ -1,6 +1,6 @@
 # This file is part of MDTools.
-# Copyright (C) 2021  The MDTools Development Team and all contributors
-# listed in the file AUTHORS.rst
+# Copyright (C) 2021, 2022  The MDTools Development Team and all
+# contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -28,18 +28,18 @@ This module can be called from :mod:`mdtools` via the shortcut ``rti``::
 
 
 # Standard libraries
-import sys
 import os
+import sys
 import warnings
 from datetime import datetime
 
-# Third party libraries
-import psutil
-import numpy as np
+# Third-party libraries
 import MDAnalysis as mda
+import numpy as np
+import psutil
 from MDAnalysis.lib.log import ProgressBar
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 
 
@@ -75,7 +75,8 @@ class ProgressBar(ProgressBar):
     See the MDAnalysis_ and tqdm_ documentations for further
     information.
 
-    .. _MDAnalysis: https://docs.mdanalysis.org/stable/documentation_pages/lib/log.html#MDAnalysis.lib.log.ProgressBar
+    .. _MDAnalysis:
+        https://docs.mdanalysis.org/stable/documentation_pages/lib/log.html#MDAnalysis.lib.log.ProgressBar
     .. _tqdm: https://tqdm.github.io/docs/tqdm/#__init__
 
     Example
@@ -89,7 +90,7 @@ class ProgressBar(ProgressBar):
 
         25%|#####1           | 25/100 [00:15<00:45,  1.67frames/s]
 
-    """  # noqa: E501,W505
+    """
 
     def __init__(self, *args, **kwargs):
         """
@@ -98,19 +99,19 @@ class ProgressBar(ProgressBar):
         Parameters
         ----------
         args : list, optional
-            Non-keyword arguments.  See
+            Positional arguments.  See
             :class:`MDAnalysis.lib.log.ProgressBar` for possible
             choices.
         kwargs : dict, optional
-            Keynword arguments.  See
+            Keyword arguments.  See
             :class:`MDAnalysis.lib.log.ProgressBar` for possible
             choices.
         """
-        kwargs["ascii"] = kwargs.pop("ascii", True)
-        kwargs["unit"] = kwargs.pop("unit", "frames")
-        kwargs["mininterval"] = kwargs.pop("mininterval", 300)
-        kwargs["maxinterval"] = kwargs.pop("maxinterval", 3600)
-        kwargs["unit_scale"] = kwargs.pop("unit_scale", True)
+        kwargs.setdefault("ascii", True)
+        kwargs.setdefault("unit", "frames")
+        kwargs.setdefault("mininterval", 300)
+        kwargs.setdefault("maxinterval", 3600)
+        kwargs.setdefault("unit_scale", True)
         bar_format = (
             "{l_bar}{bar}|"
             " {n_fmt}/{total_fmt}"
@@ -118,11 +119,11 @@ class ProgressBar(ProgressBar):
             " {rate_noinv_fmt}"
             "{postfix}]"
         )
-        kwargs["bar_format"] = kwargs.pop("bar_format", bar_format)
+        kwargs.setdefault("bar_format", bar_format)
         super().__init__(*args, **kwargs)
 
 
-def get_num_CPUs():
+def get_num_CPUs():  # noqa: N802
     """
     Get the number of available CPUs.
 
@@ -169,8 +170,8 @@ def mem_usage(proc=None, pid=None, unit="MiB"):
         the ID of the current process is used to create the new
         :class:`psutil.Process`.  If `proc` is not ``None``, `pid` is
         meaningless.
-    unit : {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "KB", "MB", "GB",\
-            "TB", "PB"}
+    unit : {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "KB", "MB", "GB", \
+"TB", "PB"}
         String determining the unit in which the memory usage should be
         returned.  Default is mebibytes (``"MiB"``).
 
@@ -276,7 +277,8 @@ def run_time_info_str(indent=0):
     :func:`mdtools.file_handler.header_str` :
         Create a string containing some run time information to be used
         as header for text files
-    :func:`mdtools.file_handler.indent` : Indent a text
+    :func:`mdtools.file_handler.indent` :
+        Indent a text
     """
     timestamp = datetime.now()
     script, command_line, cwd, exe, version, version_py = run_time_info()
@@ -303,7 +305,7 @@ def run_time_info_str(indent=0):
 
 def ag_info_str(ag, indent=0, max_names=10):
     """
-    Create a string containing information about a MDAnalysis
+    Create a string containing information about an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup`.
 
     The string can be printed directly to standard output using
@@ -552,7 +554,8 @@ def dtrj_trans_info_str(dtrj):
     :func:`mdtools.run_time_info.dtrj_trans_info` :
         Generate basic information about the state transitions in a
         discrete trajectory
-    :func:`mdtools.file_handler.indent` : Indent a text
+    :func:`mdtools.file_handler.indent` :
+        Indent a text
     """
     N_CMPS, N_FRAMES = dtrj.shape
     trans_info = dtrj_trans_info(dtrj)

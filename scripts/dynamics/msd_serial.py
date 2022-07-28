@@ -531,9 +531,7 @@ if __name__ == '__main__':
                                 msd[:, 2],
                                 msd_sd[:, 2]])
 
-    mdt.fh.savetxt(fname=args.OUTFILE,
-                   data=data,
-                   header=header + columns)
+    mdt.fh.savetxt(args.OUTFILE, data, header=header + columns)
 
     print("  Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}"

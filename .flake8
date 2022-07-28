@@ -29,17 +29,7 @@ extend-exclude =
     *.egg-info/,
     .eggs/,
     eggs/,
-    .env/,
-    .env.bak/,
-    env/,
-    env.bak/,
-    .ENV/,
-    .ENV.bak/,
-    ENV/,
-    ENV.bak/,
     .git,
-    .github,
-    .gitlab,
     .hypothesis/,
     .installed.cfg,
     lib/,
@@ -53,15 +43,12 @@ extend-exclude =
     .pytype/,
     sdist/,
     .tox,
-    .venv/,
-    .venv.bak/,
-    venv/,
-    venv.bak/,
-    .VENV/,
-    .VENV.bak/,
-    VENV/,
-    VENV.bak/,
     wheels/,
+    # Virtual Python environments
+    *env*/,
+    *venv*/,
+    *ENV*/,
+    *VENV*/,
 extend-ignore =
     ### Allow for docstring summaries that are longer than one line ###
     # D205: 1 blank line required between summary line and description
@@ -79,6 +66,11 @@ extend-ignore =
     # S603: subprocess call - check for execution of untrusted input
     S404,
     S603,
+    ### pep8-naming ###
+    # N806: variable in function should be lowercase
+    # N813: camelcase imported as lowercase
+    N806,
+    N813,
 extend-select =
     ### Compatibility with black ###
     # W504: line break after binary operator
@@ -235,6 +227,7 @@ rst-substitutions =
     Lmod,
     Gromacs,
     Python,
+    format_specifier,
     PyPI,
     pip,
     virtual_Python_environment,
@@ -247,7 +240,10 @@ rst-substitutions =
     SciPy,
     matplotlib,
     MDAnalysis,
-    MDA_user_guide
+    MDA_user_guide,
+    file-like_object,
+    npy_file,
+    npz_archive,
     RTD,
     Sphinx,
     RST,

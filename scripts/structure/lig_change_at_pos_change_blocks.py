@@ -48,13 +48,14 @@ Options
             the statistics about the coordination environment of the
             reference compounds before and after the position change.
 --dtrj-out  Output filename for the discrete trajectory (optional).  If
-            provided, the discrete trajectory is written to a binary
-            :file:`.npy` file of the given filename.  The discrete
-            trajectory is stored as :class:`numpy.ndarray` of dtype
-            :attr:`numpy.uint32` and shape ``(n, f)``, where ``n`` is
-            the number of reference compounds and ``f`` is the number of
-            frames.  The elements of the discrete trajectory are the
-            states in which a given compound resides at a given frame.
+            provided, the discrete trajectory is written as binary
+            :file:`dtrj.npy` file in a compressed |npz_archive| of the
+            given filename.  The discrete trajectory is stored as
+            :class:`numpy.ndarray` of dtype :attr:`numpy.uint32` and
+            shape ``(n, f)``, where ``n`` is the number of reference
+            compounds and ``f`` is the number of frames.  The elements
+            of the discrete trajectory are the states in which a given
+            compound resides at a given frame.
 --bins-out  Output filename for the bin edges (optional).  If provided,
             the (average) bin edges used for creating the discrete
             trajectory are written to a text file of the given filename.
@@ -645,8 +646,7 @@ if __name__ == "__main__":
         timer = datetime.now()
     if args.OUTFILE_DTRJ is not None:
         # Output discrete trajectory
-        mdt.fh.backup(args.OUTFILE_DTRJ)
-        np.save(args.OUTFILE_DTRJ, dtrj, allow_pickle=False)
+        mdt.fh.save_dtrj(args.OUTFILE_DTRJ, dtrj)
         print("Created {}".format(args.OUTFILE_DTRJ))
     if args.OUTFILE_BINS is not None:
         # Output bin edges:
@@ -659,7 +659,7 @@ if __name__ == "__main__":
                 len(bins), len(bins) - 1, args.DIRECTION, lbox_av
             )
         )
-        mdt.fh.savetxt(fname=args.OUTFILE_BINS, data=bins, header=header)
+        mdt.fh.savetxt(args.OUTFILE_BINS, bins, header=header)
         print("Created {}".format(args.OUTFILE_BINS))
     if args.OUTFILE_BINS is not None or args.OUTFILE_DTRJ is not None:
         print("Elapsed time:         {}".format(datetime.now() - timer))
@@ -973,7 +973,7 @@ if __name__ == "__main__":
     timer = datetime.now()
     # Contact statistics:
     mdt.fh.write_header(args.OUTFILE)
-    with open(args.OUTFILE, "a") as outfile:
+    with mdt.fh.xopen(args.OUTFILE, "a") as outfile:
         # fmt: off
         outfile.write("# \n")
         outfile.write("# \n")
