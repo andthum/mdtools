@@ -947,40 +947,64 @@ def write_matrix_block(
 
 def load_dtrj(fname, **kwargs):
     """
+    Load a discrete trajectory from file.
+
     Load a discrete trajectory stored as :class:`numpy.ndarray` from a
-    binary :file:`.npy` file.
+    binary NumPy |npy_file| or from a (compressed) NumPy |npz_archive|.
 
     Parameters
     ----------
-    fname : str
+    fname : str or bytes or os.PathLike
         Name of the file containing the discrete trajectory.  The
-        discrete trajectory must be stored as :class:`numpy.ndarray` in
-        the binary :file:`.npy` format.  The array must be of shape
-        ``(n, f)``, where ``n`` is the number of compounds and ``f`` is
-        the number of frames.  The shape can also be ``(f,)``, in which
-        case the array is expanded to shape ``(1, f)``.  The array must
-        only contain integers or floats whose fractional part is zero,
-        because, the elements of a discrete trajectory are interpreted
-        as the indices of the states in which a given compound is at a
-        given frame.
+        discrete trajectory must be stored as :class:`numpy.ndarray`
+        either in a binary NumPy |npy_file| or in a (compressed) NumPy
+        |npz_archive|.  If loading from an :file:`.npz` archive, it is
+        first tried to read the discrete trajectory from the file
+        "dtrj.npy".  If this file is not present in the archive, the
+        discrete trajectory is read from the first file in the archive.
+        The discrete trajectory must be of shape ``(n, f)``, where ``n``
+        is the number of compounds and ``f`` is the number of frames.
+        The shape can also be ``(f,)``, in which case the array is
+        expanded to shape ``(1, f)``.  The array must only contain
+        integers or floats whose fractional part is zero, because, the
+        elements of a discrete trajectory are interpreted as the indices
+        of the states in which a given compound is at a given frame.
     kwargs : dict, optional
         Additional keyword arguments to parse to :func:`numpy.load`.
+        See there for posible arguments and their description.  By
+        default, `allow_pickle` is set to ``False``.
 
     Returns
     -------
     dtrj : numpy.ndarray
-        The discrete trajectory loaded from file.
+        The discrete trajectory loaded from the given file.
 
     See Also
     --------
     :func:`numpy.load` :
         Load arrays or pickled objects from :file:`.npy`, :file:`.npz`
         or pickled files
+    :func:`mdtools.file_handler.save_dtrj` :
+        Save a discrete trajectory to file
 
     Notes
     -----
     This function simply calls :func:`numpy.load` and checks whether
     the loaded :class:`numpy.ndarray` is a suitable discrete trajectory.
     """
-    dtrj = np.load(fname, **kwargs)
+    fh = mdt.fh.xopen(fname, "rb")
+    kwargs.setdefault("allow_pickle", False)
+    dtrj_loaded = np.load(fh, **kwargs)
+    if isinstance(dtrj_loaded, np.lib.npyio.NpzFile):
+        dtrj = dtrj_loaded.get("dtrj", None)
+        if dtrj is None:
+            dtrj = list(dtrj_loaded.values())[0]
+        dtrj_loaded.close()
+    elif isinstance(dtrj_loaded, np.ndarray):
+        dtrj = dtrj_loaded
+    else:
+        raise TypeError(
+            "Unkown type of the loaded data: {}".format(type(dtrj_loaded))
+        )
+    fh.close()
     return mdt.check.dtrj(dtrj)
