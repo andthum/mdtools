@@ -160,13 +160,15 @@ if __name__ == '__main__':
         help=(
             "Output filename pattern. There will be created three output"
             " files:"
-            "  <OUTFILE>_lattice_faces.npy containing the xy-positions of the"
+            "  <OUTFILE>_lattice_faces.npz containing the xy-positions of the"
             " lattice faces, i.e. the mid points of the hexagons, in Angstrom"
-            " stored as numpy.ndarray of shape (m, 2) in the binary .npy"
-            " format.  m is the mumber of lattice faces;"
-            "  <OUTFILE>_lattice_vertices.npy containing the xy-positions of"
+            " stored as numpy.ndarray of shape (m, 2) as binary"
+            " 'lattice_faces.npy' file in a compressed .npz archive.  m is the"
+            " mumber of lattice faces;"
+            "  <OUTFILE>_lattice_vertices.npz containing the xy-positions of"
             " the lattice vertices in Angstrom stored as numpy.ndarray of"
-            " shape (2*m, 2) in the binary .npy format;"
+            " shape (2*m, 2) as binary 'lattice_vertice.npy' file in a"
+            " compressed .npz archive;"
             "  <OUTFILE>_dtrj.npz containing a discretized trajectory for each"
             " particle in the selection group stored as numpy.ndarray of type"
             " numpy.int32 and shape (n, f) as binary 'dtrj.npy' file in a"
@@ -495,18 +497,18 @@ if __name__ == '__main__':
     timer = datetime.now()
 
     # Hexagonal lattice faces
-    mdt.fh.backup(args.OUTFILE + "_lattice_faces.npy")
-    np.save(
-        args.OUTFILE + "_lattice_faces.npy", lattice, allow_pickle=False
+    mdt.fh.backup(args.OUTFILE + "_lattice_faces.npz")
+    np.savez_compressed(
+        args.OUTFILE + "_lattice_faces.npz", lattice_faces=lattice
     )
-    print("  Created " + args.OUTFILE + "_lattice_faces.npy", flush=True)
+    print("  Created " + args.OUTFILE + "_lattice_faces.npz", flush=True)
 
     # Hexagonal lattice vertices
-    mdt.fh.backup(args.OUTFILE + "_lattice_vertices.npy")
-    np.save(
-        args.OUTFILE + "_lattice_vertices.npy", surf_pos, allow_pickle=False
+    mdt.fh.backup(args.OUTFILE + "_lattice_vertices.npz")
+    np.savez_compressed(
+        args.OUTFILE + "_lattice_vertices.npz", lattice_vertices=surf_pos
     )
-    print("  Created " + args.OUTFILE + "_lattice_vertices.npy", flush=True)
+    print("  Created " + args.OUTFILE + "_lattice_vertices.npz", flush=True)
 
     # Discrete trajectories
     mdt.fh.save_dtrj(args.OUTFILE + "_dtrj.npz", dtrajs)
