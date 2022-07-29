@@ -167,7 +167,7 @@ if __name__ == '__main__':
             "  <OUTFILE>_lattice_vertices.npy containing the xy-positions of"
             " the lattice vertices in Angstrom stored as numpy.ndarray of"
             " shape (2*m, 2) in the binary .npy format;"
-            "  <OUTFILE>_traj.npy containing a discretized trajectory for each"
+            "  <OUTFILE>_dtrj.npz containing a discretized trajectory for each"
             " particle in the selection group stored as numpy.ndarray of type"
             " numpy.int32 and shape (n, f) as binary 'dtrj.npy' file in a"
             " compressed .npz archive.  n is the number of particles and f is"
@@ -509,8 +509,8 @@ if __name__ == '__main__':
     print("  Created " + args.OUTFILE + "_lattice_vertices.npy", flush=True)
 
     # Discrete trajectories
-    mdt.fh.save_dtrj(args.OUTFILE + "_traj.npy", dtrajs)
-    print("  Created " + args.OUTFILE + "_traj.npy", flush=True)
+    mdt.fh.save_dtrj(args.OUTFILE + "_dtrj.npz", dtrajs)
+    print("  Created " + args.OUTFILE + "_dtrj.npz", flush=True)
 
     print("Elapsed time:         {}"
           .format(datetime.now() - timer),
