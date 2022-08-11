@@ -17,7 +17,7 @@ Formatters and linters automatically enforce a specific code style and
 quality.  They help you to focus on your actual task - the coding -
 without having to think about the code style.
 
-When writting Python code for this project, please
+When writing Python code for this project, please
 
     * Format your code with |Black| (automatically enforces Python code
       style guide :pep:`8`).
@@ -45,7 +45,7 @@ When writting Python code for this project, please
 
     The listed formatters and linters offer plugins for many popular
     text editors and integrated development environments (IDEs).  When
-    using these plugins, your code is formatted and lintted on the fly,
+    using these plugins, your code is formatted and linted on the fly,
     so you don't have to run the commands yourself.
 
 .. note::
@@ -154,7 +154,7 @@ Code guidelines for MDTools scripts
       But generally try to avoid importing objects from other scripts.
       Better move the object you want to import from another script into
       the core package.
-    * When writting a script, use :mod:`argparse` as command-line
+    * When writing a script, use :mod:`argparse` as command-line
       interface.
     * When dealing with a lot of data like MD trajectories, performance
       (speed and memory usage) counts.  Make a good compromise between
