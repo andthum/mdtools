@@ -50,8 +50,8 @@ Running tests
 -------------
 
 Tests are automatically run as `GitHub Actions`_ when pushing changes
-to the upstream repository.  However, sometimes it is also usefull to
-run them locally.
+to the upstream repository.  However, sometimes it is also useful to run
+them locally.
 
 
 Doctests

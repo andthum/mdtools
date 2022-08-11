@@ -44,7 +44,7 @@ of the project:
     # Upgrade pip, setuptools and wheel.
     python3 -m pip install --upgrade pip setuptools wheel
 
-Everytime you start working on the project, you should first activate
+Every time you start working on the project, you should first activate
 the virtual environment.  After you have finished working on the
 project, you can deactivate the virtual environment by typing
 :bash:`deactivate`.
@@ -108,7 +108,7 @@ You can check if pre-commit works properly by running
 (It's ok if not all tests pass as long as pre-commit itself runs without
 error.)
 
-Note that all pre-commit hooks are also run automatically everytime you
+Note that all pre-commit hooks are also run automatically every time you
 push to the upstream repository as part of our Continuous Integration
 (CI) workflow which includes `pre-commit.ci`_.  Your changes might not
 be accepted before not all tests that are affected by your changes are
@@ -118,7 +118,7 @@ passing.
 Uninstall
 ---------
 
-To unistall the project, just remove the project directory:
+To uninstall the project, just remove the project directory:
 
 .. code-block:: bash
 

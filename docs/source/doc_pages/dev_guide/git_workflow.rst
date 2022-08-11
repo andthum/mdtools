@@ -118,7 +118,7 @@ Topic branch naming conventions:
       round.  This means, once you started branch naming without a
       sub-token, you cannot add a sub-token later.  This is the reason
       why you should never name your branches simply ``fix``, ``feat``,
-      ``ref`` or ``doc``.
+      ``ref``, ``dep``, ``docs`` or ``chore``.
     * Use hyphens to separate words.
     * Use group tokens at the beginning of your branch names:
 
@@ -215,7 +215,7 @@ Commit message conventions:
       characters.  It should be capitalized and written in imperative
       present tense.  It should not end with a period.
     * Start the summary line with "[File]: Change", e.g.
-      "[msd_serial.py]: Fix typo".  In this way other developers and
+      "[msd_serial.py]: Fix Typo".  In this way other developers and
       maintainers immediatly know which file has been changed.  If you
       have a complex commit affecting several files, break it down into
       smaller commits (see above).  If the file name is too long to
