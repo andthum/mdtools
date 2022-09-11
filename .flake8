@@ -105,6 +105,18 @@ require-plugins =
 rst-directives =
     autosummary,
     moduleauthor,
+    # reStructuredText admonitions from
+    # https://docutils.sourceforge.io/docs/ref/rst/directives.html
+    attention,
+    caution,
+    danger,
+    error,
+    hint,
+    important,
+    note,
+    tip,
+    todo,
+    warning
     # Spinx-specific directives from
     # https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html
     centered,
