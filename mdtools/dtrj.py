@@ -214,8 +214,7 @@ def trans_ix(
     max_state=None,
 ):
     """
-    Get the frames indices of state transitions in a discrete
-    trajectory.
+    Get the frame indices of state transitions in a discrete trajectory.
 
     Parameters
     ----------
@@ -226,7 +225,8 @@ def trans_ix(
         See :func:`mdtools.dtrj.locate_trans`.
     pin : {"end", "start", "both"}
         See :func:`mdtools.dtrj.locate_trans`.
-    trans_type : {None, "higher", "lower", "both"}, optional
+    trans_type : {None, "higher", "lower", "both"} or int or \
+iterable of ints, optional
         See :func:`mdtools.dtrj.locate_trans`.
     wrap : bool, optional
         See :func:`mdtools.dtrj.locate_trans`.
@@ -262,8 +262,9 @@ def trans_ix(
 
     Notes
     -----
-    This function only applies :func:`numpy.nonzero` to the output of
-    :func:`mdtools.dtrj.locate_trans`.
+    This function only checks if the input array is a discrete
+    trajectory using :func:`mdtools.check.dtrj` and then calls
+    :func:`mdtools.numpy_helper_functions.item_change_ix`.
 
     Examples
     --------
@@ -277,24 +278,30 @@ def trans_ix(
     >>> end
     (array([0, 0, 1, 1, 2, 2, 3, 3]), array([1, 3, 2, 5, 3, 4, 1, 4]))
     """
-    trans = mdt.dtrj.locate_trans(
-        dtrj=dtrj,
+    dtrj = mdt.check.dtrj(dtrj)
+    if pin not in ("end", "start", "both"):
+        raise ValueError(
+            "'pin' must be either 'end', 'start' or 'both', but you gave"
+            " {}".format(pin)
+        )
+    if pin == "end":
+        pin = "after"
+    elif pin == "start":
+        pin = "before"
+    return mdt.nph.item_change_ix(
+        a=dtrj,
         axis=axis,
         pin=pin,
-        trans_type=trans_type,
+        change_type=trans_type,
+        rtol=0,
+        atol=0,
         wrap=wrap,
-        tfft=tfft,
-        tlft=tlft,
+        tfic=tfft,
+        tlic=tlft,
         mic=mic,
-        min_state=min_state,
-        max_state=max_state,
+        amin=min_state,
+        amax=max_state,
     )
-    if pin == "both" and trans_type == "both":
-        return tuple(tuple(np.nonzero(tr) for tr in trns) for trns in trans)
-    elif pin == "both" or trans_type == "both":
-        return tuple(np.nonzero(tr) for tr in trans)
-    else:  # pin != "both" and trans_type != "both"
-        return np.nonzero(trans)
 
 
 def trans_per_state(
