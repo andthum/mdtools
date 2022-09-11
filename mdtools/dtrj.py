@@ -25,10 +25,10 @@ discrete trajectory must meet the requirements listed in
 """
 
 
-# Third party libraries
+# Third-party libraries
 import numpy as np
 
-# First party libraries
+# First-party libraries
 import mdtools as mdt
 
 
@@ -62,12 +62,13 @@ def locate_trans(
         transposed discrete trajectory of shape ``(f, n)``, set `axis`
         to ``0``.
     pin : {"end", "start", "both"}
-        Whether to return the start (last frame where a given compound
-        is in the previous state) or end (first frame where a given
-        compound is in the next state) of the state transitions.  If set
-        to ``"both"``, two output arrays will be returned, one for
-        ``"start"`` and one for ``"end"``.
-    trans_type : {None, "higher", "lower", "both"}, optional
+        Whether to return the ``"start"`` (last frame where a given
+        compound is in the previous state) or ``"end"`` (first frame
+        where a given compound is in the next state) of the state
+        transitions.  If set to ``"both"``, two output arrays will be
+        returned, one for ``"start"`` and one for ``"end"``.
+    trans_type : {None, "higher", "lower", "both"} or int or \
+iterable of ints, optional
         Whether to locate all state transitions without discriminating
         between different transition types (``None``) or whether to
         locate only state transitions into higher states (``"higher"``)
@@ -75,7 +76,11 @@ def locate_trans(
         output arrays will be returned, one for ``"higher"`` and one for
         ``"lower"``.  If `pin` is set to ``"both"``, too, a 2x2 tuple
         will be returned.  The first index addresses `pin`, the second
-        index addresses `trans_type`.
+        index addresses `trans_type`.  If `trans_type` is an integer,
+        locate only state transitions where the difference between the
+        final and first state is equal to the given integer value.  If
+        `trans_type` is an iterable of integers, one output array for
+        each given integer will be returned.
     wrap : bool, optional
         If ``True``, `dtrj` is assumed to be continued after the last
         frame by `dtrj` itself, like when using periodic boundary
@@ -103,7 +108,8 @@ def locate_trans(
         because the states are position bins along a box dimension with
         periodic boundary conditions.  In this case, the states should
         result from an equidistant binning, otherwise the MIC algorithm
-        will give wrong results.
+        will give wrong results, because it only considers the state
+        indices.
     min_state, max_state : scalar or array_like, optional
         The lower and upper bound(s) for the minimum image convention.
         Has no effect if `mic` is ``False`` or `trans_type` is ``None``.
@@ -136,7 +142,7 @@ def locate_trans(
     :func:`mdtools.numpy_helper_functions.locate_item_change`:
         Locate the positions of item changes in arbitrary arrays
     :func:`mdtools.dtrj.trans_ix` :
-        Get the frames indices of state transitions in a discrete
+        Get the frame indices of state transitions in a discrete
         trajectory
 
     Notes
@@ -170,11 +176,22 @@ def locate_trans(
            [False,  True, False, False,  True, False]])
     """
     dtrj = mdt.check.dtrj(dtrj)
+    if pin not in ("end", "start", "both"):
+        raise ValueError(
+            "'pin' must be either 'end', 'start' or 'both', but you gave"
+            " {}".format(pin)
+        )
+    if pin == "end":
+        pin = "after"
+    elif pin == "start":
+        pin = "before"
     return mdt.nph.locate_item_change(
         a=dtrj,
         axis=axis,
         pin=pin,
         change_type=trans_type,
+        rtol=0,
+        atol=0,
         wrap=wrap,
         tfic=tfft,
         tlic=tlft,
