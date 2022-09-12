@@ -685,19 +685,7 @@ def _histogram(a, bins):
     return np.histogram(a, bins)[0]
 
 
-def trans_per_state_vs_time(
-    dtrj,
-    time_axis=1,
-    cmp_axis=0,
-    pin="end",
-    trans_type=None,
-    wrap=False,
-    tfft=False,
-    tlft=False,
-    mic=None,
-    min_state=None,
-    max_state=None,
-):
+def trans_per_state_vs_time(dtrj, time_axis=-1, cmp_axis=0, **kwargs):
     """
     Count the number of transitions leading into or out of a state for
     each frame in a discrete trajectory.
@@ -705,89 +693,50 @@ def trans_per_state_vs_time(
     Parameters
     ----------
     dtrj : array_like
-        Array containing the discrete trajectory.  All elements of the
-        array must be integers or floats whose fractional part is zero,
-        because they are interpreted as the indices of the states in
-        which a given compound is at a given frame.  However, unlike
-        ordinary discrete trajectory in MDTools, `dtrj` can have an
-        arbitrary shape.
-    axis : int
-        The axis along which to search for state transitions.  For
+        Array containing the discrete trajectory.
+    time_axis : int
+        The axis of `dtrj` that holds the trajectory frames.  This is
+        the axis along which to search for state transitions.  For
         ordinary discrete trajectories with shape ``(n, f)`` or
         ``(f,)``, where ``n`` is the number of compounds and ``f`` is
-        the number of frames, set `axis` to ``-1``.  If you parse a
-        transposed discrete trajectory of shape ``(f, n)``, set `axis`
-        to ``0``.
-    pin : {"end", "start", "both"}
-        Whether to count the starts (last frame where a given compound
-        is in the previous state) or ends (first frame where a given
-        compound is in the next state) of the state transitions.  If set
-        to ``"both"``, two output arrays will be returned, one for
-        ``"start"`` and one for ``"end"``.
-    trans_type : {None, "higher", "lower", "both"}, optional
-        Whether to count all state transitions without discriminating
-        between different transition types (``None``) or whether to
-        count only state transitions into higher states (``"higher"``)
-        or into lower states (``"lower"``).  If set to ``"both"``, two
-        output arrays will be returned, one for ``"higher"`` and one for
-        ``"lower"``.  If `pin` is set to ``"both"``, too, a 2x2 tuple
-        will be returned.  The first index addresses `pin`, the second
-        index addresses `trans_type`.
-    wrap : bool, optional
-        If ``True``, `dtrj` is assumed to be continued after the last
-        frame by `dtrj` itself, like when using periodic boundary
-        conditions.  Consequently, if the first and last state in the
-        trajectory do not match, this is interpreted as state
-        transition.  The start of this transition is the last frame of
-        the trajectory and the end is the first frame.
-    tfft : bool, optional
-        Treat First Frame as Transition.  If ``True``, treat the first
-        frame as the end of a state transition.  Must not be used
-        together with `trans_type`, `wrap` or `mic`.
-    tlft : bool, optional
-        Treat Last Frame as Transition.  If ``True``, treat the last
-        frame as the start of a state transition.  Must not be used
-        together with `trans_type`, `wrap` or `mic`.
-    mic : bool, optional
-        If ``True``, respect the Minimum Image Convention when
-        evaluating the transition type, i.e. when evaluating whether the
-        transition was in positive direction (to a higher state) or in
-        negative direction (to a lower state).  Has no effect if
-        `trans_type` is ``None``.  This option could be usefull, when
-        the states have periodic boundary conditions, for instance
-        because the states are position bins along a box dimension with
-        periodic boundary conditions.  In this case, the states should
-        result from an equidistant binning, otherwise the MIC algorithm
-        will give wrong results.
-    min_state, max_state : scalar, optional
-        The lower and upper bound for the minimum image convention.  Has
-        no effect if `mic` is ``False`` or `trans_type` is ``None``.  If
-        ``None``, the minium and maximum value of `dtrj` is taken,
-        respectively.  `min_state` must be smaller than `max_state`.  If
-        the transition between two states is larger than
-        ``0.5 * (max_state - min_state)``, it is wrapped back to lie
-        within that range.  See also
-        :func:`mdtools.numpy_helper_functions.diff_mic`.
+        the number of frames, set `time_axis` to ``-1``.  If you parse a
+        transposed discrete trajectory of shape ``(f, n)``, set
+        `time_axis` to ``0``.
+    cmp_axis : int
+        The axis of `dtrj` that holds the compounds.  This is the axis
+        along which the histograms will be computed.  For ordinary
+        discrete trajectories, set `cmp_axis` to ``0``.  For transposed
+        discrete trajectory, set `cmp_axis` to ``-1``.
+    kwargs : dict, optional
+        Additional keyword arguments to parse to
+        :func:`mdtools.dtrj.locate_trans`.  See there for possible
+        choices.  This function sets the following default values:
+
+            * ``pin = "end"``
+            * ``trans_type = None``
+            * ``min_state = None``
+            * ``max_state = None``
 
     Returns
     -------
     hist_start : numpy.ndarray or tuple
-        2d array or tuple of two 2d arrays (if `trans_type` is
-        ``'both'``) containing one histogram for each frame in dtrj.
-        The histograms count how many state transitions started from a
-        given state, i.e. how many transitons led out of a given state.
-        Is not returned if `pin` is ``"end"``.
+        2d array or tuple of 2d arrays (if `trans_type` is ``'both'`` or
+        an iterable of ints) containing one histogram for each frame in
+        dtrj.  The histograms count how many state transitions started
+        from a given state, i.e. how many transitons led out of a given
+        state.  Is not returned if `pin` is ``"end"``.
     hist_end : numpy.ndarray
-        2d array or tuple of two 2d arrays (if `trans_type` is
-        ``'both'``) containing one histogram for each frame in dtrj.
-        The histograms count how many state transitions ended in a given
-        state, i.e. how many transitions led into a given state.  Is not
-        returned if `pin` is ``"start"``.
+        2d array or tuple of 2d arrays (if `trans_type` is ``'both'`` or
+        an iterable of ints) containing one histogram for each frame in
+        dtrj.  The histograms count how many state transitions ended in
+        a given state, i.e. how many transitions led into a given state.
+        Is not returned if `pin` is ``"start"``.
 
     See Also
     --------
     :func:`mdtools.dtrj.trans_per_state` :
         Count the number of transitions leading into or out of a state
+        for the entire trajectory (not frame-wise).
     :func:`mdtools.dtrj.locate_trans` :
         Locate the frames of state transitions inside a discrete
         trajectory
@@ -870,34 +819,45 @@ mdt.dtrj.trans_per_state_vs_time(
            [0, 0, 0, 0, 0, 0]])
     >>> np.array_equal(np.sum(hist_end_type, axis=0), hist_end)
     True
+    >>> # Number of transitions starting from the 1st, 2nd or 3rd \
+state where the difference
+    >>> # between the final and initial state is plus or minus one
+    >>> hist_plus_one, hist_minus_one = \
+mdt.dtrj.trans_per_state_vs_time(
+    ...     dtrj, pin="start", trans_type=(1, -1), wrap=True
+    ... )
+    >>> hist_plus_one
+    array([[1, 0, 0, 1, 0, 1],
+           [0, 1, 1, 0, 0, 1],
+           [0, 0, 0, 0, 0, 0]])
+    >>> hist_minus_one
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 1],
+           [0, 0, 0, 1, 0, 0]])
     """
+    pin = kwargs.setdefault("pin", "end")
+    trans_type = kwargs.setdefault("trans_type", None)
+    min_state = kwargs.setdefault("min_state", None)
+    max_state = kwargs.setdefault("max_state", None)
     dtrj = np.asarray(dtrj)
-    if np.any(np.modf(dtrj)[0] != 0):
-        raise ValueError("At least one element of 'dtrj' is not an integer")
-    trans = mdt.nph.locate_item_change(
-        dtrj,
-        axis=time_axis,
-        pin=pin,
-        change_type=trans_type,
-        wrap=wrap,
-        tfic=tfft,
-        tlic=tlft,
-        mic=mic,
-        amin=min_state,
-        amax=max_state,
-    )
+    trans = mdt.dtrj.locate_trans(dtrj, axis=time_axis, **kwargs)
 
     min_state = np.min(dtrj) if min_state is None else min_state
     max_state = np.max(dtrj) if max_state is None else max_state
     if max_state <= min_state:
         raise ValueError(
-            "'max_state' ({}) must be less than 'min_state'"
+            "'max_state' ({}) must be greater than 'min_state'"
             " ({})".format(max_state, min_state)
         )
     bins = np.arange(min_state, max_state + 2)
 
     dtrj_copy = dtrj.copy()
-    if pin == "both" and trans_type == "both":
+    try:
+        (i for i in trans_type)
+        trans_type_is_iterable = True
+    except TypeError:  # change_type is not iterable
+        trans_type_is_iterable = False
+    if pin == "both" and (trans_type == "both" or trans_type_is_iterable):
         hist = [[None for tr in trns] for trns in trans]
         for i, trns in enumerate(trans):
             for j, tr in enumerate(trns):
@@ -911,7 +871,7 @@ mdt.dtrj.trans_per_state_vs_time(
                 )
             hist[i] = tuple(hist[i])
         return tuple(hist)
-    elif pin == "both" or trans_type == "both":
+    elif pin == "both" or trans_type == "both" or trans_type_is_iterable:
         hist = [None for tr in trans]
         for i, tr in enumerate(trans):
             dtrj_copy[:] = dtrj
@@ -923,7 +883,7 @@ mdt.dtrj.trans_per_state_vs_time(
                 bins=bins,
             )
         return tuple(hist)
-    else:  # pin != "both" and trans_type != "both":
+    else:  # pin != "both" and trans_type != "both" and not iterable:
         # Prevent states where no transitions occurred from being
         # counted in the histogram.
         dtrj_copy[~trans] = bins[0] - 1
