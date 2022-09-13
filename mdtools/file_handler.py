@@ -440,6 +440,7 @@ def savetxt(fname, data, rename=True, **kwargs):
         header = mdt.fh.header_str()
     else:
         header = mdt.fh.header_str() + "\n\n" + header
+    kwargs["header"] = header
     if rename:
         mdt.fh.backup(fname)
     np.savetxt(fname, data, **kwargs)
