@@ -2640,6 +2640,11 @@ array([], shape=(2, 0), dtype=bool))
                 lambda x, _, ct=ct: np.isclose(x, ct, rtol, atol)
                 for ct in change_type
             )
+            if len(operators) == 0:
+                raise IndexError(
+                    "'change_type' ({}) must not be an empty"
+                    " iterable".format(change_type)
+                )
         except TypeError:  # change_type is not iterable
             operators = (lambda x, _: np.isclose(x, change_type, rtol, atol),)
     items_changed = tuple(op(item_diffs, 0) for op in operators)
