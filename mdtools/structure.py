@@ -30,12 +30,14 @@ This module can be called from :mod:`mdtools` via the shortcut ``strc``::
 # Standard libraries
 import warnings
 from datetime import datetime, timedelta
-# Third party libraries
-import psutil
-import numpy as np
-from scipy import sparse
+
+# Third-party libraries
 import MDAnalysis.lib.distances as mdadist
-# Local application/library specific imports
+import numpy as np
+import psutil
+from scipy import sparse
+
+# First-party libraries
 import mdtools as mdt
 
 
@@ -4150,16 +4152,15 @@ def rmsd(
     rmsd = mdt.box.vdist(selpos, refpos, box=box)
     rmsd **= 2
     # The dimension of position arrays and thus of `rmsd` can be either
-    # 1, 2 or 3 (see `mdtools.check.pos_array`).  If `component` is
-    # ``True`` and `ndim` is
+    # 1, 2 or 3 (see `mdtools.check.pos_array`).  If `xyz` is ``True``
+    # and `ndim` is
     #     * 1 (single particle), the RMSD is simply the distance between
     #       the reference and candidate particle.
     #     * 2 (multiple particles), the RMSD is the sum over all
     #       reference-candidate distances (``axis=0``).
     #     * 3 (multiple frames), the RMSD is the sum over all
     #       reference-candidate distances in each frame (``axis=1``).
-    # If `component` is ``False``, the x, y and z component must be
-    # summed up.
+    # If `xyz` is ``False``, the x, y and z component must be summed up.
     if weights is not None and rmsd.ndim > 1:
         rmsd *= np.expand_dims(weights, axis=1)
     if rmsd.ndim == 1:
