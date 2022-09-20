@@ -62,7 +62,7 @@ Which new feature is your PR going to add and why is it required?
 
 ## Requested Reviewers
 
-<!-- Request specific Reviewers here or remove this section. -->
+<!-- Request specific reviewers here or remove this section. -->
 
 @andthum
 
@@ -70,7 +70,7 @@ Which new feature is your PR going to add and why is it required?
 
 <!--
 Please tick the check boxes accordingly.  Mark any check boxes that do
-not apply to your PR as [N/A].
+not apply to your PR as [~].
 -->
 
 * [ ] I followed the guidelines in the [Developer's guide](https://mdtools.readthedocs.io/en/latest/doc_pages/dev_guide/dev_guide.html).
