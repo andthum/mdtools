@@ -101,7 +101,7 @@ repos:
       - id: "check-pre-commit-ci-config"
 
   - repo: "https://github.com/python-jsonschema/check-jsonschema"
-    rev: "0.16.2"
+    rev: "0.18.3"
     hooks:
       # Validate GitHub Actions against the schema provided by
       # SchemaStore.
@@ -159,7 +159,7 @@ repos:
     # to XX but somehow the pre-commit hook has version YY when
     # specifying the hook version without the prefix.  See
     # https://github.com/psf/black/issues/2493#issuecomment-1081987650
-    rev: "refs/tags/22.6.0:refs/tags/22.6.0"
+    rev: "refs/tags/22.8.0:refs/tags/22.8.0"
     hooks:
       # Format Python code with black.
       - id: "black"
@@ -172,7 +172,7 @@ repos:
           - "--color"
 
   - repo: "https://github.com/PyCQA/flake8"
-    rev: "4.0.1"
+    rev: "5.0.4"
     hooks:
       # Lint Python code with Flake8.
       - id: "flake8"
@@ -182,15 +182,14 @@ repos:
         additional_dependencies:
           # Required Flake8 plugins.
           # Keep in sync with `requirements-dev.txt` and `.flake8`!
-          - "flake8-bandit >=3.0,<4.0"
-          - "flake8-bugbear >=22.0,<23.0"
+          - "flake8-bandit >=4.0, <5.0"
+          - "flake8-bugbear >=22.0, <23.0"
           - "flake8-builtins >=1.0, <2.0"
           - "flake8-comprehensions >=3.0, <4.0"
           - "flake8-docstrings >=1.0, <2.0"
           - "flake8-isort >=4.0, <5.0"
           - "flake8-logging-format >=0.1, <1.0"
           - "flake8-pytest-style >=1.0, <2.0"
-          - "flake8-rst >=0.1, <1.0"
           - "flake8-rst-docstrings >=0.2.6, <1.0"
           - "pep8-naming >=0.1, <1.0"
 
