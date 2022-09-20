@@ -97,7 +97,6 @@ require-plugins =
     flake8-isort,
     flake8-logging-format,
     flake8-pytest-style,
-    flake8-rst,
     flake8-rst-docstrings,
     pep8-naming,
 # Allowed reStructuredText directives.
