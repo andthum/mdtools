@@ -1,4 +1,4 @@
-# Descriptive Caption
+# Descriptive caption
 
 <!--
 Thank you for your contribution!
@@ -16,14 +16,14 @@ See https://github.com/github/issue-labeler
 issue_labeler_regex_version=0
 -->
 
-## Related Issue(s)
+## Related issue(s)
 
 <!-- Remove this section, if your PR is not related to an issue. -->
 
 Resolves #*Issue_Number* .  
 Related to issue #*Issue_Number*.
 
-## Type of Change
+## Type of change
 
 * [ ] Bug fix.
 * [ ] New feature.
@@ -38,7 +38,7 @@ Related to issue #*Issue_Number*.
 * [ ] Non-breaking (backward-compatible) change.
 * [ ] Breaking (non-backward-compatible) change.
 
-## Motivation and Context
+## Motivation and context
 
 <!--
 If your PR resolves a distinct issue, you can remove this section or
@@ -49,7 +49,7 @@ What is the motivation behind your PR?
 What problem is your PR going to solve?  
 Which new feature is your PR going to add and why is it required?
 
-## Proposed Changes
+## Proposed changes
 
 <!-- Give a concise summary of the most important changes. -->
 
@@ -60,13 +60,13 @@ Which new feature is your PR going to add and why is it required?
 * Clarify documentation of BAZ.
 * ...
 
-## Requested Reviewers
+## Requested reviewers
 
 <!-- Request specific reviewers here or remove this section. -->
 
 @andthum
 
-## PR Checklist
+## PR checklist
 
 <!--
 Please tick the check boxes accordingly.  Mark any check boxes that do
