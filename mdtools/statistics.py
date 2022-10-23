@@ -991,50 +991,141 @@ def gaussian(x, mu=0, sigma=1):
     return np.exp(-((x - mu) ** 2) / s2) / np.sqrt(np.pi * s2)
 
 
-def non_gaussian_parameter(x, d=1, is_squared=False, axis=None):
-    """
-    Non-Gaussian parameter as first introduced by Rahman, Singwi, and
-    Sjölander in Phys. Rev., 1962, 126 to test if the distribution of
-    particle displacements is Gaussian (test for Gaussian diffusion).
-
-    The definition used here is taken from Song et al., PNAS, 2019, 116,
-    12733-12742:
-
-    .. math::
-        A_{n,d}(t) = \frac{\langle x^{2n}(t) \rangle}{(1+\frac{2}{d}) \cdot \langle x^2 \rangle^n} - 1
-
-    where :math:`d` is the number of spatial dimensions and :math:`t` is
-    the time. If the distribution of :math:`x` is Gaussian,
-    :math:`A_{n,d}(t)` is zero.
+def ngp(x, axis=None, d=1, center=False, is_squared=False):
+    r"""
+    Compute the non-Gaussian parameter of a distribution of random
+    variables.
 
     Parameters
     ----------
     x : array_like
-        Array of data for which to calculate the non-Gaussian parameter.
-    d : int, optional
-        The number of spatial dimensions of the data.
-    is_squared : bool, optional
-        If ``True``, `x` is assumed to be already squared. If ``False``,
-        `x` will be squared before calculating the moments.
+        Input array.
     axis : None or int or tuple of ints, optional
-        Axis or axes along which the means are computed. The default
-        (``None``) is to compute the mean of the flattened array. If
-        `axis` is a tuple of ints, a the non-Gaussian parameter is
-        calculated over multiple axes.
+        Axis or axes of `x` along which to compute the NGP.  By default,
+        the flattened input array is used.
+    d : int, optional
+        Dimensionality of the random variables (this is *not* the
+        dimensionality of the input array).  Originally, this option is
+        provided to compute the NGP of a distribution of particle
+        displacements :math:`\Delta\mathbf{r}` that were calculated in
+        one, two or three dimensional euclidean space.
+    center : bool, optional
+        If ``True``, center the input distribution around its mean, i.e.
+        use central moments :math:`\langle (X - \bar{X})^n \rangle` for
+        computing the NGP (with :math:`\bar{X} = \sum_{i=1}^N X_i` being
+        the sample mean).  If ``False``, use simple moments
+        :math:`\langle X^n \rangle` without subtracting the sample mean.
+        `center` must not be used together with `is_squared`, because we
+        cannot estimate the orginal sample mean if `x` is already
+        squared.
+    is_squared : bool, optional
+        If ``True``, `x` is assumed to be already squared.  If ``False``
+        (default), `x` will be squared before calculating the moments.
+        Setting `is_squared` to ``True`` is for example useful if `x`
+        is the distribution of squared particle displacements
+        :math:`\Delta\mathbf{r}^2(\tau)` of an ensemble of particles at
+        a given lag time :math:`\tau`.  `is_squared` must not be used
+        together with `center`.
 
     Returns
     -------
     a : scalar
-        The non-Gaussian parameter :math:`A_{n,d}(t)`.
-    """
+        The non-Gaussian parameter :math:`\alpha_{2,d}`.
 
-    if is_squared:
-        x2 = x
-    else:
-        x2 = x**2
-    x4 = np.mean(x2**2, axis=axis)
-    x2 = np.mean(x2, axis=axis)
-    return x4 / ((1 + 2 / d) * x2**2) - 1
+    Notes
+    -----
+    The non-Gaussian parameter (NGP) was first introduced by Rahman,
+    Singwi, and Sjölander. [#]_:sup:`,` [#]_  Since then it has become a
+    standard test to check for Gaussian diffusion, i.e. whether the
+    particle displacements :math:`\Delta\mathbf{r}(\tau)` follow a
+    Gaussian distribution.  For a Gaussian distribution the NGP is zero.
+
+    This function uses the defition of the NGP in :math:`d`-dimensional
+    euclidean space given in the text on page 12735 of Reference: [#]_
+
+    .. math::
+
+        \alpha_{2,d} = \frac{1}{1+\frac{2}{d}} \frac{\langle X^4 \rangle}{\langle X^2 \rangle^2} - 1
+
+    A more general definition of the NGP :math:`\alpha_{n,d}` in
+    :math:`d`-dimensional euclidean space was given by Huang, Wang and
+    Yu in Equation (14) of Reference: [#]_
+
+    .. math::
+
+        \alpha_{n,d} = \frac{(d-2)!! d^n}{(2n + d - 2)!!} \frac{\langle X^{2n} \rangle}{\langle X^2 \rangle^n} - 1
+
+    References
+    ----------
+    .. [#] A. Rahman, K. S. Singwi, A. Sjölander, `Theory of Slow
+        Neutron Scattering by Liquids. I
+        <https://doi.org/10.1103/PhysRev.126.986>`_, Physical Review,
+        1962, 126, 986.
+
+    .. [#] A. Rahman, `Correlations in the Motion of Atoms in Liquid
+        Argon <https://doi.org/10.1103/PhysRev.136.A405>`_, Physical
+        Review, 1964, 136, A405.
+
+    .. [#] Sanggeun Song, Seong Jun Park, Minjung Kim, Jun Soo Kim,
+        Bong June Sung, Sangyoub Lee, Ji-Hyun Kim, Jaeyoung Sung,
+        `Transport dynamics of complex fluids
+        <https://doi.org/10.1073/pnas.1900239116>`_, Proceedings of the
+        National Academy of Sciences, 2019, 116, 26, 12733-12742
+
+    .. [#] Zihan Huang, Gaoming Wang, Zhao Yu, `Non-Gaussian Parameter
+        in k-Dimensional Euclidean Space
+        <https://doi.org/10.48550/arXiv.1511.06672>`_, arXiv preprint
+        arXiv:1511.06672v1, 2015.
+
+    Examples
+    --------
+    >>> mdt.stats.ngp(np.array([-2, -1, -1,  0,  0,  0,  1,  1,  2]))
+    -0.25
+    >>> a = mdt.stats.gaussian(np.linspace(-5, 5, 11))
+    >>> mdt.stats.ngp(a)
+    0.48352183005980653
+    >>> a = np.arange(24).reshape(2,3,4)
+    >>> mdt.stats.ngp(a)
+    -0.3876040703052728
+    >>> mdt.stats.ngp(a, center=True)
+    -0.401391304347826
+    >>> mdt.stats.ngp(a, axis=0)
+    array([[-0.33333333, -0.34113033, -0.35946667, -0.382643  ],
+           [-0.4071511 , -0.43103845, -0.45333333, -0.47363871],
+           [-0.49187475, -0.50812525, -0.52254957, -0.53533412]])
+    >>> mdt.stats.ngp(a, axis=0, center=True)
+    array([[-0.66666667, -0.66666667, -0.66666667, -0.66666667],
+           [-0.66666667, -0.66666667, -0.66666667, -0.66666667],
+           [-0.66666667, -0.66666667, -0.66666667, -0.66666667]])
+    >>> mdt.stats.ngp(a, axis=1)
+    array([[-0.32      , -0.37225959, -0.42285714, -0.46559096],
+           [-0.6152    , -0.62068471, -0.62535515, -0.62936154]])
+    >>> mdt.stats.ngp(a, axis=1, center=True)
+    array([[-0.5, -0.5, -0.5, -0.5],
+           [-0.5, -0.5, -0.5, -0.5]])
+    >>> mdt.stats.ngp(a, axis=2)
+    array([[-0.33333333, -0.61552028, -0.64866075],
+           [-0.65763599, -0.66126512, -0.66307898]])
+    >>> mdt.stats.ngp(a, axis=2, center=True)
+    array([[-0.45333333, -0.45333333, -0.45333333],
+           [-0.45333333, -0.45333333, -0.45333333]])
+    """  # noqa: E501, W505
+    if is_squared and center:
+        raise ValueError(
+            "'center' must not be used together with 'is_squared'"
+        )
+
+    x2 = np.array(x, dtype=np.float64, copy=not is_squared)
+    if not is_squared:
+        if center:
+            x2 = mdt.stats.center(
+                x2, axis=axis, dtype=np.float64, inplace=True
+            )
+        x2 **= 2
+
+    x4_mean = np.mean(x2**2, axis=axis, dtype=np.float64)
+    x2_mean = np.mean(x2, axis=axis, dtype=np.float64)
+    return x4_mean / ((1 + 2 / d) * x2_mean**2) - 1
 
 
 def exp_dist(x, rate=1):
