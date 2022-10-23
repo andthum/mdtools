@@ -947,29 +947,48 @@ def standardize(x, axis=None, dtype=None, inplace=False, ddof=0):
 
 
 def gaussian(x, mu=0, sigma=1):
-    """
-    Gaussian distribution:
+    r"""
+    Gaussian distribution.
 
     .. math::
+
         f(x) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}
 
     Parameters
     ----------
     x : scalar or array_like
         Array of :math:`x` values for wich to evaluate :math:`f(x)`.
-    mu : scalar, optional
-        Mean of the distribution.
-    sigma : scalar, optional
-        Standard deviation of the distribution.
+    mu : scalar or array_like, optional
+        Mean of the distribution.  If an array of means is given, it
+        must be broadcastable to a common shape with `x`.
+    sigma : scalar or array_like, optional
+        Standard deviation of the distribution.  If an array of standard
+        deviations is given, it must be broadcastable to a common shape
+        with `x`.
 
     Returns
     -------
     f : scalar or array_like
-        :math:`f(x)`.
-    """
+        The function values :math:`f(x)` at the given :math:`x` values.
 
+    See Also
+    --------
+    :obj:`scipy.stats.norm`
+        Normal continuous random variable.
+
+    Examples
+    --------
+    >>> from scipy.stats import norm
+    >>> x = np.linspace(-1, 3, 5)
+    >>> y1 = mdt.stats.gaussian(x, mu=1, sigma=1)
+    >>> y2 = norm.pdf(x, loc=1, scale=1)
+    >>> np.allclose(y1, y2, rtol=0)
+    True
+    >>> y1
+    array([0.05399097, 0.24197072, 0.39894228, 0.24197072, 0.05399097])
+    """  # noqa: E501, W505
     s2 = 2 * sigma**2
-    return np.exp(-(x - mu)**2 / s2) / np.sqrt(np.pi * s2)
+    return np.exp(-((x - mu) ** 2) / s2) / np.sqrt(np.pi * s2)
 
 
 def non_gaussian_parameter(x, d=1, is_squared=False, axis=None):
