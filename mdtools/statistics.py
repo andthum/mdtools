@@ -53,6 +53,8 @@ def center(x, axis=None, dtype=None, inplace=False):
     --------
     :func:`numpy.mean`
         Compute the arithmetic mean along the specified axis
+    :func:`mdtools.statistics.standardize`
+        Standardize a distribution
 
     Examples
     --------
@@ -110,6 +112,111 @@ def center(x, axis=None, dtype=None, inplace=False):
         x -= mean
     else:
         x = x - mean
+    return x
+
+
+def standardize(x, axis=None, dtype=None, inplace=False, ddof=0):
+    """
+    Standardize a distribution.
+
+    Standardize a distribution such that its mean is zero and its
+    standard deviation is one.
+
+    Parameters
+    ----------
+    x : array_like
+        Input array.
+    axis : int or None, optional
+        The axis along which to compute the sample mean and standard
+        deviation.  By default, the flattened input array is used.
+    dtype : data-type, optional
+        The dtype of the output array.  This dtype is also used to
+        compute the mean and standard deviation.  Note that computing
+        means and standard deviations can be inaccurate when using the
+        floating-point dtype ``numpy.float32`` or less.  See
+        :func:`numpy.mean` for more details.
+    inplace : bool, optional
+        If ``True``, change the input array inplace if possible (the
+        given dtype must be castable to the dtype of `x` and `x` must
+        already be a :class:`numpy.ndarray`).
+    ddof : int, optional
+        Delta Degrees of Freedom.  When calculating the standard
+        deviation, the used divisor is ``N - ddof``, where ``N``
+        represents the number of elements.  See :func:`numpy.std` for
+        more details.
+
+    Returns
+    -------
+    x_standardized : numpy.ndarray
+        The standardized input distribution:
+        ``(x - np.mean(x)) / np.std(x)``.
+
+    See Also
+    --------
+    :func:`numpy.mean`
+        Compute the arithmetic mean along the specified axis
+    :func:`numpy.std`
+        Compute the standard deviation along the specified axis
+    :func:`mdtools.statistics.center`
+        Center a distribution around its sample mean
+
+    Examples
+    --------
+    >>> a = np.arange(24).reshape(2,3,4)
+    >>> mdt.stats.standardize(a)
+    array([[[-1.66132477, -1.51686175, -1.37239873, -1.2279357 ],
+            [-1.08347268, -0.93900965, -0.79454663, -0.65008361],
+            [-0.50562058, -0.36115756, -0.21669454, -0.07223151]],
+    <BLANKLINE>
+           [[ 0.07223151,  0.21669454,  0.36115756,  0.50562058],
+            [ 0.65008361,  0.79454663,  0.93900965,  1.08347268],
+            [ 1.2279357 ,  1.37239873,  1.51686175,  1.66132477]]])
+    >>> mdt.stats.standardize(a, axis=0)
+    array([[[-1., -1., -1., -1.],
+            [-1., -1., -1., -1.],
+            [-1., -1., -1., -1.]],
+    <BLANKLINE>
+           [[ 1.,  1.,  1.,  1.],
+            [ 1.,  1.,  1.,  1.],
+            [ 1.,  1.,  1.,  1.]]])
+    >>> mdt.stats.standardize(a, axis=1)
+    array([[[-1.22474487, -1.22474487, -1.22474487, -1.22474487],
+            [ 0.        ,  0.        ,  0.        ,  0.        ],
+            [ 1.22474487,  1.22474487,  1.22474487,  1.22474487]],
+    <BLANKLINE>
+           [[-1.22474487, -1.22474487, -1.22474487, -1.22474487],
+            [ 0.        ,  0.        ,  0.        ,  0.        ],
+            [ 1.22474487,  1.22474487,  1.22474487,  1.22474487]]])
+    >>> mdt.stats.standardize(a, axis=2)
+    array([[[-1.34164079, -0.4472136 ,  0.4472136 ,  1.34164079],
+            [-1.34164079, -0.4472136 ,  0.4472136 ,  1.34164079],
+            [-1.34164079, -0.4472136 ,  0.4472136 ,  1.34164079]],
+    <BLANKLINE>
+           [[-1.34164079, -0.4472136 ,  0.4472136 ,  1.34164079],
+            [-1.34164079, -0.4472136 ,  0.4472136 ,  1.34164079],
+            [-1.34164079, -0.4472136 ,  0.4472136 ,  1.34164079]]])
+
+    >>> a = np.arange(3, dtype=np.float64)
+    >>> a
+    array([0., 1., 2.])
+    >>> b = mdt.stats.standardize(a, inplace=True)
+    >>> b
+    array([-1.22474487,  0.        ,  1.22474487])
+    >>> b is a
+    True
+    >>> b[0] = 1
+    >>> a
+    array([1.        , 0.        , 1.22474487])
+    """
+    x = np.asarray(x, dtype=dtype)
+    x = mdt.stats.center(x, axis=axis, dtype=dtype, inplace=inplace)
+    std = np.std(x, axis=axis, dtype=dtype, ddof=ddof)
+    if axis is not None:
+        std = np.expand_dims(std, axis=axis)
+    if inplace:
+        x /= std
+    else:
+        x = x / std
     return x
 
 
