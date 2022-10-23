@@ -171,14 +171,10 @@ if __name__ == '__main__':
 
     mean = np.mean(displ, axis=0)
     std = np.std(displ, axis=0)
-    non_gaus = mdt.stats.non_gaussian_parameter(displ,
-                                                d=1,
-                                                is_squared=False,
-                                                axis=0)
-    non_gaus_tot = mdt.stats.non_gaussian_parameter(
-        np.sum(displ**2, axis=1),
-        d=3,
-        is_squared=True)
+    non_gaus = mdt.stats.ngp(displ, d=1, is_squared=False, axis=0)
+    non_gaus_tot = mdt.stats.ngp(
+        np.sum(displ**2, axis=1), d=3, is_squared=True
+    )
 
     if args.START is None:
         args.START = np.min(displ)

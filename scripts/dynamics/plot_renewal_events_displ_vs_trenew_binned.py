@@ -294,11 +294,9 @@ if __name__ == '__main__':
             displ_mean[i] = np.mean(displ[mask], axis=0)
             displ_std[i] = np.std(displ[mask], axis=0)
             msd_mean[i] = np.mean(displ[mask]**2, axis=0)
-            non_gaus[i] = mdt.stats.non_gaussian_parameter(
-                displ[mask],
-                d=1,
-                is_squared=False,
-                axis=0)
+            non_gaus[i] = mdt.stats.ngp(
+                displ[mask], d=1, is_squared=False, axis=0
+            )
     if not np.isnan(nevents[0]):
         raise ValueError("The first element of nevents is not NaN. This"
                          " should not have happened")
