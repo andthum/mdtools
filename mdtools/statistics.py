@@ -23,6 +23,96 @@
 import numpy as np
 
 
+def center(x, axis=None, dtype=None, inplace=False):
+    """
+    Center a distribution around its sample mean.
+
+    Parameters
+    ----------
+    x : array_like
+        Input array.
+    axis : int or None, optional
+        The axis along which to compute the sample mean.  By default,
+        the flattened input array is used.
+    dtype : data-type, optional
+        The dtype of the output array.  This dtype is also used to
+        compute the mean.  Note that computing means can be inaccurate
+        when using the floating-point dtype ``numpy.float32`` or less.
+        See :func:`numpy.mean` for more details.
+    inplace : bool, optional
+        If ``True``, change the input array inplace if possible (the
+        given dtype must be castable to the dtype of `x` and `x` must
+        already be a :class:`numpy.ndarray`).
+
+    Returns
+    -------
+    x_centered : numpy.ndarray
+        The centered input distribution: ``x - np.mean(x)``.
+
+    See Also
+    --------
+    :func:`numpy.mean`
+        Compute the arithmetic mean along the specified axis
+
+    Examples
+    --------
+    >>> a = np.arange(24).reshape(2,3,4)
+    >>> mdt.stats.center(a)
+    array([[[-11.5, -10.5,  -9.5,  -8.5],
+            [ -7.5,  -6.5,  -5.5,  -4.5],
+            [ -3.5,  -2.5,  -1.5,  -0.5]],
+    <BLANKLINE>
+           [[  0.5,   1.5,   2.5,   3.5],
+            [  4.5,   5.5,   6.5,   7.5],
+            [  8.5,   9.5,  10.5,  11.5]]])
+    >>> mdt.stats.center(a, axis=0)
+    array([[[-6., -6., -6., -6.],
+            [-6., -6., -6., -6.],
+            [-6., -6., -6., -6.]],
+    <BLANKLINE>
+           [[ 6.,  6.,  6.,  6.],
+            [ 6.,  6.,  6.,  6.],
+            [ 6.,  6.,  6.,  6.]]])
+    >>> mdt.stats.center(a, axis=1)
+    array([[[-4., -4., -4., -4.],
+            [ 0.,  0.,  0.,  0.],
+            [ 4.,  4.,  4.,  4.]],
+    <BLANKLINE>
+           [[-4., -4., -4., -4.],
+            [ 0.,  0.,  0.,  0.],
+            [ 4.,  4.,  4.,  4.]]])
+    >>> mdt.stats.center(a, axis=2)
+    array([[[-1.5, -0.5,  0.5,  1.5],
+            [-1.5, -0.5,  0.5,  1.5],
+            [-1.5, -0.5,  0.5,  1.5]],
+    <BLANKLINE>
+           [[-1.5, -0.5,  0.5,  1.5],
+            [-1.5, -0.5,  0.5,  1.5],
+            [-1.5, -0.5,  0.5,  1.5]]])
+
+    >>> a = np.ones(3, dtype=np.float64)
+    >>> a
+    array([1., 1., 1.])
+    >>> b = mdt.stats.center(a, inplace=True)
+    >>> b
+    array([0., 0., 0.])
+    >>> b is a
+    True
+    >>> b[0] = 1
+    >>> a
+    array([1., 0., 0.])
+    """
+    x = np.asarray(x, dtype=dtype)
+    mean = np.mean(x, axis=axis, dtype=dtype)
+    if axis is not None:
+        mean = np.expand_dims(mean, axis=axis)
+    if inplace:
+        x -= mean
+    else:
+        x = x - mean
+    return x
+
+
 def gaussian(x, mu=0, sigma=1):
     """
     Gaussian distribution:
