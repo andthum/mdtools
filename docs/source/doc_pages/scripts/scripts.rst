@@ -31,6 +31,7 @@ Scripts by Application
 
     discretization
     dynamics
+    gmx
     structure
     other
 
