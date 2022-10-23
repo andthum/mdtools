@@ -41,5 +41,6 @@ Modules
     run_time_info
     scipy_helper_functions
     select
+    statistics
     structure
     version

@@ -269,16 +269,12 @@ if __name__ == '__main__':
             msd_std[i] = np.std(msd[mask], axis=0) / np.sqrt(nevents[i])
             msd_tot_mean[i] = np.mean(msd_tot[mask])
             msd_tot_std[i] = np.std(msd_tot[mask]) / np.sqrt(nevents[i])
-            msd_non_gaus[i] = mdt.stats.non_gaussian_parameter(
-                msd[mask],
-                d=1,
-                is_squared=True,
-                axis=0)
-            msd_tot_non_gaus[i] = mdt.stats.non_gaussian_parameter(
-                msd_tot[mask],
-                d=3,
-                is_squared=True,
-                axis=0)
+            msd_non_gaus[i] = mdt.stats.ngp(
+                msd[mask], d=1, is_squared=True, axis=0
+            )
+            msd_tot_non_gaus[i] = mdt.stats.ngp(
+                msd_tot[mask], d=3, is_squared=True, axis=0
+            )
     if not np.isnan(nevents[0]):
         raise ValueError("The first element of nevents is not NaN. This"
                          " should not have happened")
