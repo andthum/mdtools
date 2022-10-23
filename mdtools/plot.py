@@ -65,11 +65,14 @@ create plots with the desired style.
 import os
 import warnings
 
-# Third party libraries
+# Third-party libraries
 import matplotlib
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
+
+# First-party libraries
+import mdtools as mdt
 
 
 # Load custom matplotlib style sheet.  See
@@ -621,6 +624,104 @@ def hist(
         )
 
     return img
+
+
+def correlogram(ax, data, lags=None, siglev=0.05, kwargs_acf=None, **kwargs):
+    r"""
+    Create a correlogram and plot it to the given
+    :class:`matplotlib.axes.Axes`.
+
+    Create a correlogram for the given data similar to the one shown in
+    the Wikipedia article `Correlogram § Statistical inference with
+    correlograms
+    <https://en.wikipedia.org/wiki/Correlogram#Statistical_inference_with_correlograms>`_
+    by calculating the autocorelation function (ACF) and its confidence
+    intervals for the given data and plotting it to the given
+    :class:`matplotlib.axes.Axes`.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes to draw to.
+    data : array_like
+        1-dimensional array containing the data for which to calculate
+        and plot the ACF.
+    lags : array_like or scalar or None, optional
+        1-dimensional array of lag times with the same shape as `data`
+        or the difference between the lag times or None.  If ``None``,
+        `lags` is set to ``np.arange(len(data))``.  If a scalar, `lags`
+        is set to ``np.arange(0, lags * len(data), lags)``.
+    siglev : scalar, optional
+        The significance level of the confidence intervals, usually
+        denoted as :math:`\alpha`.  See
+        :func:`mdtools.statistics.acf_confint` for more details.
+    kwargs_acf : dict or None, optional
+        Dictionary of keyword arguments to parse to
+        :func:`mdtools.statistics.acf_np`.  See there for possible
+        keyword arguments.
+    kwargs : dict, optional
+        Keyword arguments to parse to :meth:`matplotlib.axes.Axes.plot`
+        and :meth:`matplotlib.axes.Axes.fill_between` to change the
+        appearance of the ACF.  See there for possible keyword
+        arguments.
+
+    Returns
+    -------
+    img : tuple
+        A tuple of :class:`matplotlib.lines.Line2D` and
+        :class:`matplotlib.collections.PolyCollection` objects
+        containing the plotted data.  The first element of `img` is a
+        :class:`matplotlib.lines.Line2D` object representing the ACF.
+        The second element is a
+        :class:`matplotlib.collections.PolyCollection` containing the
+        confidence intervals around the ACF.  The third and fourth
+        element of `img` are :class:`matplotlib.lines.Line2D` objects
+        representing the upper and lower bound of the confidence
+        intervals around zero, respectively.
+
+    See Also
+    --------
+    :func:`mdtools.statistics.acf_np`
+        Calculate the autocorrelation function of a 1-dimensional array
+    :func:`mdtools.statistics.acf_confint`
+        Calculate the confidence intervals of an autocorrelation
+        function
+    """
+    if lags is None:
+        lags = np.arange(len(data))
+    elif np.ndim(lags) == 0:
+        lags = np.arange(0, lags * len(data), lags)
+    if kwargs_acf is None:
+        kwargs_acf = {}
+    acf = mdt.stats.acf_np(data, **kwargs_acf)
+    confint = mdt.stats.acf_confint(acf, alpha=siglev)
+
+    confint_label = "{:.1f}% CI".format((1 - siglev) * 100)
+    kwargs.setdefault("label", "ACF with " + confint_label)
+    lines_acf = ax.plot(lags, acf, **kwargs)
+
+    kwargs.pop("label", None)
+    kwargs["color"] = kwargs.pop("color", lines_acf[0].get_color())
+    kwargs["alpha"] = kwargs.pop("alpha", 1) * 2 / 3
+    polycollection = ax.fill_between(
+        lags, acf + confint, acf - confint, **kwargs
+    )
+
+    lines_confint_upper = ax.plot(
+        lags,
+        confint,
+        linestyle="--",
+        color="red",
+        label=confint_label + " around 0",
+    )
+    lines_confint_lower = ax.plot(
+        lags,
+        -confint,
+        linestyle=lines_confint_upper[0].get_linestyle(),
+        color=lines_confint_upper[0].get_color(),
+    )
+
+    return lines_acf, polycollection, lines_confint_upper, lines_confint_lower
 
 
 def hlines(
