@@ -16,6 +16,10 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+"""Functions for the statistical analysis of data."""
+
+
+# Third-party libraries
 import numpy as np
 
 
