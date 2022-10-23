@@ -236,7 +236,8 @@ def ix_along_axis_to_global_ix(ix, axis):
     --------
     :func:`numpy.unravel_index` :
         Similar function for indices of a flattened version of `a`
-    :func:`numpy.take` : Take elements from an array along an axis
+    :func:`numpy.take` :
+        Take elements from an array along an axis
     :func:`numpy.take_along_axis` :
         Take values from an array by matching 1d index and data slices
 
@@ -1019,7 +1020,8 @@ def subtract_mic(x1, x2, amin=None, amax=None, **kwargs):
 
     See Also
     --------
-    :func:`numpy.subtract` : Subtract two arrays element-wise
+    :func:`numpy.subtract` :
+        Subtract two arrays element-wise
     :func:`mdtools.numpy_helper_functions.diff_mic` :
         Calculate the difference between array elements respecting the
         minimum image convention.
@@ -1379,7 +1381,7 @@ def diff_mic(a, amin=None, amax=None, **kwargs):
     return diff
 
 
-def locate_item_change(
+def locate_item_change(  # noqa: C901
     a,
     axis=-1,
     pin="after",
@@ -3978,7 +3980,7 @@ def ceil_divide(x1, x2, **kwargs):
         Denominator.  If ``x1.shape != x2.shape``, they must be
         broadcastable to a common shape (which becomes the shape of the
         output).
-    **kwargs : dict, optional
+    kwargs : dict, optional
         Additional keyword arguments to parse to :func:`numpy.multiply`
         and :func:`numpy.floor_divide`.  See there for possible choices.
 
@@ -4565,7 +4567,7 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean="arithmetic"):
     return cross_sec
 
 
-def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):
+def trapz2d(z, x=None, y=None, dx=1, dy=1, xlim=None, ylim=None):  # noqa: C901
     """
     Integrate `z(x,y)` within the given limits using ``numpy.trapz``
     twice, first in `y` and then in `x` direction.
