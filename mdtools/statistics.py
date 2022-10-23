@@ -88,6 +88,8 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
     :func:`mdtools.statistics.acf_np` :
         Different implementation of the ACF using
         :func:`numpy.correlate`
+    :func:`mdtools.statistics.acf_se`
+        Calculate the standard errors of an autocorrelation function
 
     Notes
     -----
@@ -391,6 +393,8 @@ def acf_np(x, center=True, unbiased=False):
     --------
     :func:`mdtools.statistics.acf` :
         Different tmplementation of the ACF using using a for loop
+    :func:`mdtools.statistics.acf_se`
+        Calculate the standard errors of an autocorrelation function
 
     Notes
     -----
@@ -440,6 +444,144 @@ def acf_np(x, center=True, unbiased=False):
             " = {}".format(np.min(ac), np.max(ac))
         )
     return ac
+
+
+def acf_se(x, axis=None, n=None):
+    r"""
+    Calculate the standard errors of an autocorrelation function.
+
+    Parameters
+    ----------
+    x : array_like
+        The values of the ACF.  Intermediate lag times must not be
+        missing.  That means if you used e.g.
+        :func:`mdtools.statistics.acf` to compute the ACF, the argument
+        `dtau` must have been ``1``.
+    axis : int or None, optional
+        The axis along which to calculate the SE.  By default, the
+        flattened input array is used.
+    n : int, optional
+        Sample size (i.e. number of recoreded time points) of the
+        underlying time series.  By default, `n` is set to the number of
+        lag times :math:`\tau` in the given ACF.  This is valid for ACFs
+        that were computed at all possible lag times from the underlying
+        time series.  That means if you used e.g.
+        :func:`mdtools.statistics.acf` to compute the ACF, the argument
+        `dtau` must have been ``1`` and `tau_max` must have been
+        ``None`` or the length of `x` along the given axis..
+
+    Returns
+    -------
+    se : numpy.ndarray
+        Array of the same shape as `x` containing the standard error of
+        the ACF at each lag time.
+
+    See Also
+    --------
+    :func:`mdtools.statistics.acf` :
+        Calculate the autocorrelation function of an array
+
+    Notes
+    -----
+    The standard error (SE) of the autocorrelation function (ACF)
+    :math:`C_\tau` at lag time :math:`\tau` is estimated according to
+    Bartlett's formula for MA(l) processes: [#]_:sup:`,` [#]_
+
+    .. math::
+
+        SE(C_\tau) = \sqrt{\frac{1 + 2 \sum_{\tau^{'} = 1}^{\tau - 1} C_{\tau^{'}}}{N}}
+
+    for :math:`\tau \gt 1`.  For :math:`\tau = 1` the standard error is
+    estimated by :math:`SE(C_1) = \frac{1}{\sqrt{N}}` and for
+    :math:`\tau = 0` the standard error is :math:`SE(C_0) = 0`.
+
+    References
+    ----------
+    .. [#] Wikipedia `Correlogram
+        <https://en.wikipedia.org/wiki/Correlogram#Statistical_inference_with_correlograms>`_
+
+    .. [#] Wikipedia `Autoregressive–moving-average model
+        <https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model#Moving-average_model>`_
+
+    Examples
+    --------
+    >>> mdt.stats.acf_se([3])
+    array([0.])
+    >>> a = np.arange(4)
+    >>> mdt.stats.acf_se(a)
+    array([0.       , 0.5      , 0.8660254, 1.6583124])
+    >>> b = np.column_stack([a, a])
+    >>> mdt.stats.acf_se(b, axis=0)
+    array([[0.       , 0.       ],
+           [0.5      , 0.5      ],
+           [0.8660254, 0.8660254],
+           [1.6583124, 1.6583124]])
+    >>> b = np.row_stack([a, a])
+    >>> mdt.stats.acf_se(b, axis=1)
+    array([[0.       , 0.5      , 0.8660254, 1.6583124],
+           [0.       , 0.5      , 0.8660254, 1.6583124]])
+    >>> c = np.array([b, b])
+    >>> mdt.stats.acf_se(c, axis=2)
+    array([[[0.       , 0.5      , 0.8660254, 1.6583124],
+            [0.       , 0.5      , 0.8660254, 1.6583124]],
+    <BLANKLINE>
+           [[0.       , 0.5      , 0.8660254, 1.6583124],
+            [0.       , 0.5      , 0.8660254, 1.6583124]]])
+    """  # noqa: E501, W505
+    x = np.asarray(x)
+    if n is None and axis is None:
+        n = x.size
+    elif n is None:  # and axis is not None
+        if abs(axis) >= x.ndim:
+            raise np.AxisError(axis=axis, ndim=x.ndim)
+        n = x.shape[axis]
+    elif n <= 0:
+        raise ValueError("'n' ({}) must be a positive integer".format(n))
+
+    # SE(lag) = \sqrt{1 + 2 * \sum_{i=1}^{lag-1} ACF(i) / N}.
+    # Sum starts at lag=1.
+    acf = mdt.nph.take(x, start=1, axis=axis)
+    se = np.cumsum(acf**2, axis=axis, dtype=np.float64)
+    # The sum must only run until lag-1 but now runs until lag => Shift
+    # the array by 1 to the right.
+    se = np.roll(se, shift=1, axis=axis)
+    se *= 2
+    se += 1
+    se /= n
+    # SE(lag=1) = 1/\sqrt{N}.
+    se1 = mdt.nph.take(se, start=0, stop=1, axis=axis)
+    se1[:] = 1 / n
+    se = np.sqrt(se, out=se)
+    # SE(lag=0) = 0 because ACF(lag=0) is always 1 and has zero error.
+    se = np.insert(se, 0, 0, axis=axis)
+
+    # Consistency check
+    if se.shape != x.shape:
+        raise ValueError(
+            "'se' has shape {} but shoud have shape {}.  This should not have"
+            " happened".format(se.shape, x.shape)
+        )
+    if np.any(mdt.nph.take(se, start=0, stop=1, axis=axis) != 0):
+        raise ValueError(
+            "The first element of the standard error of the ACF is not zero"
+            " but {}.  This shoud not have"
+            " happened".format(mdt.nph.take(se, start=0, stop=1, axis=axis))
+        )
+    if not np.allclose(
+        mdt.nph.take(se, start=1, stop=2, axis=axis), 1 / np.sqrt(n), rtol=0
+    ):
+        raise ValueError(
+            "The second element of the standard error of the ACF is not"
+            " 1/sqrt(n) = {} but {}.  This shoud not have happened".format(
+                1 / np.sqrt(n),
+                mdt.nph.take(se, start=1, stop=2, axis=axis),
+            )
+        )
+    if (axis is None and np.any(np.diff(se) < 0)) or (
+        axis is not None and np.any(np.diff(se, axis=axis) < 0)
+    ):
+        raise ValueError("'se' is not monotonically increasing")
+    return se
 
 
 def center(x, axis=None, dtype=None, inplace=False):
