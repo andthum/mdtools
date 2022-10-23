@@ -212,6 +212,132 @@ def trailing_digits(n, digit=0):
     return len(s) - len(s.rstrip(str(digit)))
 
 
+def take(a, start=None, stop=None, step=None, axis=None):
+    """
+    Take a slice from an array along an axis.
+
+    For example, ``take(a, axis=2, start, stop, step)`` is equivalent to
+    ``a[:,:,start:stop:step,...]``.
+
+    Parameters
+    ----------
+    a : array_like
+        The input array.
+    start, stop, step : int or None, optional
+        Start, stop and step of the slice.  See the built-in function
+        :func:`slice` for more details.
+    axis : int or None, optional
+        The axis over which to select values.  By default, the flattened
+        input array is used.
+
+    Returns
+    -------
+    a_slice : numpy.ndarray
+        A view of the requested slice along the requested axis.
+
+    See Also
+    --------
+    :func:`numpy.take` :
+        Similar function but supports fancy indexing and therefore
+        always returns a copy instead of a view.
+
+    Notes
+    -----
+    This function is similar to :func:`numpy.take`.  The difference is
+    that this function only supports slicing and not fancy indexing but
+    therefore always returns a view instead of a copy.
+
+    References
+    ----------
+    Inspired by Leland Hepworth (https://stackoverflow.com/a/64436208)
+
+    Examples
+    --------
+    >>> a = np.arange(6).reshape(2,3)
+    >>> x = mdt.nph.take(a)
+    >>> y = np.take(a, indices=np.arange(a.size))
+    >>> np.array_equal(x, y)
+    True
+    >>> x
+    array([0, 1, 2, 3, 4, 5])
+    >>> x[0] = 6  # x is a view of a, i.e. changing x changes a.
+    >>> x
+    array([6, 1, 2, 3, 4, 5])
+    >>> a
+    array([[6, 1, 2],
+           [3, 4, 5]])
+    >>> y[0] = 7  # y is a copy of a, i.e. changing y does not affect a.
+    >>> y
+    array([7, 1, 2, 3, 4, 5])
+    >>> a
+    array([[6, 1, 2],
+           [3, 4, 5]])
+    >>> x = mdt.nph.take(a, axis=0)
+    >>> y = np.take(a, indices=np.arange(a.shape[0]), axis=0)
+    >>> np.array_equal(x, y)
+    True
+    >>> x
+    array([[6, 1, 2],
+           [3, 4, 5]])
+
+    >>> a = np.arange(24).reshape(2,3,4)
+    >>> mdt.nph.take(a, axis=0)
+    array([[[ 0,  1,  2,  3],
+            [ 4,  5,  6,  7],
+            [ 8,  9, 10, 11]],
+    <BLANKLINE>
+           [[12, 13, 14, 15],
+            [16, 17, 18, 19],
+            [20, 21, 22, 23]]])
+    >>> mdt.nph.take(a, start=1, axis=1)
+    array([[[ 4,  5,  6,  7],
+            [ 8,  9, 10, 11]],
+    <BLANKLINE>
+           [[16, 17, 18, 19],
+            [20, 21, 22, 23]]])
+    >>> mdt.nph.take(a, stop=3, axis=2)
+    array([[[ 0,  1,  2],
+            [ 4,  5,  6],
+            [ 8,  9, 10]],
+    <BLANKLINE>
+           [[12, 13, 14],
+            [16, 17, 18],
+            [20, 21, 22]]])
+    >>> np.array_equal(
+    ...     mdt.nph.take(a, stop=3, axis=2),
+    ...     mdt.nph.take(a, stop=-1, axis=2)
+    ... )
+    True
+    >>> np.array_equal(
+    ...     mdt.nph.take(a, stop=3, axis=2),
+    ...     mdt.nph.take(a, stop=3, axis=-1)
+    ... )
+    True
+    >>> np.array_equal(
+    ...     mdt.nph.take(a, axis=2, stop=3),
+    ...     np.take(a, indices=np.arange(a.shape[2] - 1), axis=2)
+    ... )
+    True
+    >>> mdt.nph.take(a, step=2, axis=2)
+    array([[[ 0,  2],
+            [ 4,  6],
+            [ 8, 10]],
+    <BLANKLINE>
+           [[12, 14],
+            [16, 18],
+            [20, 22]]])
+    """
+    a = np.asarray(a)
+    if axis is None:
+        return a.reshape(-1)[start:stop:step]
+    else:
+        if abs(axis) >= a.ndim:
+            raise np.AxisError(axis=axis, ndim=a.ndim)
+        # The modulo operator % ensures proper handling of negative axes
+        sl = (slice(None),) * (axis % a.ndim) + (slice(start, stop, step),)
+        return a[sl]
+
+
 def ix_along_axis_to_global_ix(ix, axis):
     """
     Construnct a tuple of index arrays suitable to directly index an
@@ -240,6 +366,9 @@ def ix_along_axis_to_global_ix(ix, axis):
         Take elements from an array along an axis
     :func:`numpy.take_along_axis` :
         Take values from an array by matching 1d index and data slices
+    :func:`mdtools.numpy_helper_functions.take` :
+        Take a slice from an array along an axis
+
 
     Notes
     -----
