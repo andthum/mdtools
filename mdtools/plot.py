@@ -1399,7 +1399,7 @@ def pcolormesh_new(*args, ax, cbar=True, cax=None, **kwargs):
 
     Parameters
     ----------
-    *args : iterable, optional
+    args : iterable, optional
         Positional arguments to parse to
         :meth:`matplotlib.axes.Axes.pcolormesh`.
     ax : matplotlib.axes.Axes
@@ -1412,7 +1412,7 @@ def pcolormesh_new(*args, ax, cbar=True, cax=None, **kwargs):
         If given, the colorbar is placed in this
         :class:`matplotlib.axes.Axes`.  Is ignored if `cbar` is
         ``False``.
-    **kwargs : dict, optional
+    kwargs : dict, optional
         Keyword arguments to parse to
         :meth:`matplotlib.axes.Axes.pcolormesh`.
 
@@ -1572,7 +1572,7 @@ def imshow_new(*args, ax, cbar=True, cax=None, **kwargs):
 
     Parameters
     ----------
-    *args : iterable, optional
+    args : iterable, optional
         Positional arguments to parse to
         :meth:`matplotlib.axes.Axes.imshow`.
     ax : matplotlib.axes.Axes
@@ -1584,7 +1584,7 @@ def imshow_new(*args, ax, cbar=True, cax=None, **kwargs):
         If given, the colorbar is placed in this
         :class:`matplotlib.axes.Axes`.  Is ignored if `cbar` is
         ``False``.
-    **kwargs : dict, optional
+    kwargs : dict, optional
         Keyword arguments to parse to
         :meth:`matplotlib.axes.Axes.imshow`.
 
@@ -1725,7 +1725,7 @@ def matshow_new(*args, ax, cbar=True, cax=None, **kwargs):
 
     Parameters
     ----------
-    *args : iterable, optional
+    args : iterable, optional
         Positional arguments to parse to
         :meth:`matplotlib.axes.Axes.matshow`.
     ax : matplotlib.axes.Axes
@@ -1737,7 +1737,7 @@ def matshow_new(*args, ax, cbar=True, cax=None, **kwargs):
         If given, the colorbar is placed in this
         :class:`matplotlib.axes.Axes`.  Is ignored if `cbar` is
         ``False``.
-    **kwargs : dict, optional
+    kwargs : dict, optional
         Keyword arguments to parse to
         :meth:`matplotlib.axes.Axes.matshow`.
 
@@ -1777,7 +1777,7 @@ def annotate_heatmap(
     xpos=None,
     ypos=None,
     fmt="{x:.1f}",
-    textcolors=["black", "white"],
+    textcolors=("black", "white"),
     threshold=None,
     **kwargs,
 ):
@@ -1812,7 +1812,7 @@ def annotate_heatmap(
         Value in data units according to which the colors from
         `textcolors` are applied.  If ``None`` (the default) uses the
         middle of the colormap as separation.
-    **kwargs : dict, optional
+    kwargs : dict, optional
         Keyword arguments to pass to
         :func:`matplotlib.image.AxesImage.axes.text()`.  See there for
         possible keyword arguments.
@@ -1837,7 +1837,7 @@ def annotate_heatmap(
 
     # Set default alignment to center, but allow it to be overwritten by
     # kwargs.
-    kw = dict(horizontalalignment="center", verticalalignment="center")
+    kw = {"horizontalalignment": "center", "verticalalignment": "center"}
     kw.update(kwargs)
 
     # Get the formatter in case a string is supplied
