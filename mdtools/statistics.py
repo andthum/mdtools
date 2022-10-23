@@ -1278,28 +1278,28 @@ def running_average(a, axis=None, out=None):
 
 def block_average(data, axis=0, ddof=0, dtype=np.float64):
     """
-    Calculate the arithmetic mean values and their standard deviations
-    over multiple series of measurement.
+    Calculate the sample means and their standard deviations over
+    multiple series of measurement.
 
     Parameters
     ----------
     data : array_like
-        The array that holds the measured values. Must have at least two
-        dimensions, one dimension containing the different series of
-        measurement and at least one other dimension containing the
+        The array that holds the measured values.  Must have at least
+        two dimensions, one dimension containing the different series
+        of measurement and at least one other dimension containing the
         measured values per series.
     axis : int, optional
         Axis along which the means and their standard deviations are
         computed.
     ddof : int, optional
-        Means Delta Degrees of Freedom. The divisor used in calculating
-        the standard deviation is ``N-ddof``, where ``N`` is the number
-        of measurements.
+        Delta Degrees of Freedom.  The divisor used in calculating the
+        standard deviation is ``N-ddof``, where ``N`` is the number of
+        measurements.
     dtpye : type, optional
         The data type of the output arrays and the data type to use in
-        computing the means and standard deviations. Note: Computing
-        means and standard deviation using ``numpy.float32`` can be
-        inaccurate.
+        computing the means and standard deviations.  Note: Computing
+        means and standard deviation using ``numpy.float32`` or lower
+        can be inaccurate.  See :func:`numpy.mean` for more details.
 
     Returns
     -------
@@ -1307,15 +1307,20 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
         The mean values of the measurements.
     sd : numpy.ndarray
         The standard deviations of the mean values.
-    """
 
+    See Also
+    --------
+    :func:`numpy.mean`
+        Compute the arithmetic mean along the specified axis
+    :func:`numpy.std`
+        Compute the standard deviation along the specified axis
+    """
     data = np.asarray(data)
     num_measurments = data.shape[axis]
     mean = np.mean(data, axis=axis, dtype=dtype)
     sd = np.std(data, axis=axis, ddof=ddof, dtype=dtype)
-    # Standard deviation of the mean value after n series of measurement:
-    # sd_n = sd / sqrt(n)
-    # The mean value remains always the same inside the error region.
+    # Standard deviation of the mean value after n series of
+    # measurement: sd_n = sd / sqrt(n).  The mean value remains always
+    # the same inside the error region.
     np.divide(sd, np.sqrt(num_measurments), out=sd, dtype=dtype)
-
     return mean, sd
