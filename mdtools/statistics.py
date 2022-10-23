@@ -1120,116 +1120,155 @@ def exp_dist_log(x, rate):
     return np.log(rate) - rate * x
 
 
-def var_weighted(a, weights=None, axis=None, return_average=True):
-    """
-    Compute a weighted variance along the specified axis according to
-
-    .. math::
-        \sigma^2 = \sum_i (a_i - \mu)**2 \cdot p(a_i)
-
-    with
-
-    .. math::
-        p(a_i) = \frac{\sum_i a_i * weight_i}{\sum_j weight_j}
-
-    and
-
-    .. math::
-        \mu = \sum_i a_i \cdot p(a_i)
+def var_weighted(a, weights=None, axis=None, return_mean=False):
+    r"""
+    Compute the weighted variance along a given axis.
 
     Parameters
     ----------
     a : array_like
-        Array containing numbers whose variance is desired.
-    weights : array_like, optional
+        Input array.
+    weights : array_like or None, optional
         An array of weights associated with the values in `a`. Each
         value in `a` contributes to the variance according to its
-        associated weight. The weights array can either be 1-D (in which
-        case its length must be the size of `a` along the given axis) or
-        of the same shape as `a`. If `weights=None`, then all data in
-        `a` are assumed to have a weight equal to one. The only
-        constraint on `weights` is that `sum(weights)` must not be 0.
+        associated weight.  The weights array can either be
+        1-dimensional (in which case its length must be the size of `a`
+        along the given axis) or of the same shape as `a`.  If `weights`
+        is ``None``, then all data in `a` are assumed to have a weight
+        equal to one.  The only constraint on `weights` is that
+        ``np.sum(weights)`` must not be 0 along the given axis.
     axis : None or int or tuple of ints, optional
-        Axis or axes along which the variance is computed. The default
-        is to compute the variance of the flattened array. If `axis` is
-        a tuple of ints, a variance is performed over multiple axes.
-    return_average : bool, optional
-        If ``True`` (default), also return the weighted average
-        (:math:`\mu`) used to calculate the weighted variance.
+        Axis or axes along which the variance is computed.  The default
+        is to compute the variance of the flattened array.
+    return_mean : bool, optional
+        If ``True``, also return the weighted sample mean
+        :math:`\bar{X}` used to calculate the weighted variance.
 
     Returns
     -------
-    average : scalar
-        Weighted average.
     var : scalar
         Weighted variance.
+    mean : scalar
+        Weighted sample mean.  Only returned if `return_mean` is
+        ``True``.
+
+    See Also
+    --------
+    :func:`numpy.average`
+        Compute the weighted average along the specified axis
+    :func:`numpy.var`
+        Compute the variance along the specified axis
+    :func:`mdtools.statistics.std_weighted`
+        Compute the weighted standard deviation along a given axis
+
+    Notes
+    -----
+    The weighted variance is given by
+
+    .. math::
+
+        \sigma^2 = \sum_{i=1}^N (X_i - \bar{X})^2 \cdot p(X_i)
+
+    with the weighted sample mean
+
+    .. math::
+
+        \bar{X} = \sum_{i=1}^N X_i \cdot p(X_i)
+
+    the probability of element :math:`X_i`
+
+    .. math::
+
+        p(X_i) = \frac{\sum_{i=1}^N X_i w_i}{\sum_{j=1}^N w_j}
+
+    and the weight :math:`w_i` of the :math:`i`-th element.
     """
+    mean = np.average(a, axis=axis, weights=weights)
+    var = np.average(np.abs(a - mean) ** 2, axis=axis, weights=weights)
+    if return_mean:
+        return var, mean
+    else:
+        return var
 
-    average = np.average(a, axis=axis, weights=weights)
-    var = np.average(np.abs(a - average)**2, axis=axis, weights=weights)
-    return average, var
 
-
-def std_weighted(a, weights=None, axis=None, return_average=True):
-    """
-    Compute a weighted standard deviation along the specified axis
-    according to
-
-    .. math::
-        \sigma = \sqrt{\sum_i (a_i - \mu)**2 \cdot p(a_i)}
-
-    with
-
-    .. math::
-        p(a_i) = \frac{\sum_i a_i * weight_i}{\sum_j weight_j}
-
-    and
-
-    .. math::
-        \mu = \sum_i a_i \cdot p(a_i)
+def std_weighted(a, weights=None, axis=None, return_mean=False):
+    r"""
+    Compute the weighted standard deviation along a given axis.
 
     Parameters
     ----------
     a : array_like
-        Array containing numbers whose standard deviation is desired.
-    weights : array_like, optional
-        An array of weights associated with the values in `a`. Each
+        Input array.
+    weights : array_like or None, optional
+        An array of weights associated with the values in `a`.  Each
         value in `a` contributes to the standard deviation according to
-        its associated weight. The weights array can either be 1-D (in
-        which case its length must be the size of `a` along the given
-        axis) or of the same shape as `a`. If `weights=None`, then all
-        data in `a` are assumed to have a weight equal to one. The only
-        constraint on `weights` is that `sum(weights)` must not be 0.
+        its associated weight.  The weights array can either be
+        1-dimensional (in which case its length must be the size of `a`
+        along the given axis) or of the same shape as `a`.  If `weights`
+        is ``None``, then all data in `a` are assumed to have a weight
+        equal to one.  The only constraint on `weights` is that
+        ``np.sum(weights)`` must not be 0 along the given axis.
     axis : None or int or tuple of ints, optional
-        Axis or axes along which the standard deviation is computed. The
-        default is to compute the standard deviation of the flattened
-        array. If `axis` is a tuple of ints, a standard deviation is
-        performed over multiple axes.
-    return_average : bool, optional
-        If ``True`` (default), also return the weighted average
-        (:math:`\mu`) used to calculate the weighted standard deviation.
+        Axis or axes along which the standard deviation is computed.
+        The default is to compute the standard deviation of the
+        flattened array.
+    return_mean : bool, optional
+        If ``True``, also return the weighted sample mean
+        :math:`\bar{X}` used to calculate the weighted standard
+        deviation.
 
     Returns
     -------
-    average : scalar
-        Weighted average.
     std : scalar
         Weighted standard deviation.
-    """
+    mean : scalar
+        Weighted sample mean.  Only returned if `return_mean` is
+        ``True``.
 
-    average = np.average(a, axis=axis, weights=weights)
-    std = np.sqrt(np.average(np.abs(a - average)**2,
-                             axis=axis,
-                             weights=weights))
-    return average, std
+    See Also
+    --------
+    :func:`numpy.average`
+        Compute the weighted average along the specified axis
+    :func:`numpy.std`
+        Compute the standard deviation along the specified axis
+    :func:`mdtools.statistics.var_weighted`
+        Compute the weighted variance along a given axis
+
+    Notes
+    -----
+    The weighted standard deviation is given by
+
+    .. math::
+
+        \sigma = \sqrt{\sum_{i=1}^N (X_i - \bar{X})^2 \cdot p(X_i)}
+
+    with the weighted sample mean
+
+    .. math::
+
+        \bar{X} = \sum_{i=1}^N X_i \cdot p(X_i)
+
+    the probability of element :math:`X_i`
+
+    .. math::
+
+        p(X_i) = \frac{\sum_{i=1}^N X_i w_i}{\sum_{j=1}^N w_j}
+
+    and the weight :math:`w_i` of the :math:`i`-th element.
+    """
+    var, mean = mdt.stats.var_weighted(
+        a, weights=weights, axis=axis, return_mean=True
+    )
+    std = np.sqrt(var)
+    if return_mean:
+        return std, mean
+    else:
+        return std
 
 
 def running_average(a, axis=None, out=None):
-    """
-    Calculate the running average
-
-    .. math::
-        \mu_n = \frac{1}{n} \sum_{i=1}^{n} a_i
+    r"""
+    Calculate the running average.
 
     Parameters
     ----------
