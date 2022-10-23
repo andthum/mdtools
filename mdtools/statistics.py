@@ -83,6 +83,12 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
         If the first element of `ac` is not unity or one or more
         elements of `ac` fall outside the interval [-1, 1].
 
+    See Also
+    --------
+    :func:`mdtools.statistics.acf_np` :
+        Different implementation of the ACF using
+        :func:`numpy.correlate`
+
     Notes
     -----
     This function computes the autocorrelation function (ACF) of the
@@ -335,6 +341,97 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
             "The first element of the ACF is not unity but {}.  This should"
             " not have"
             " happened".format(mdt.nph.take(ac, start=0, stop=1, axis=axis))
+        )
+    if np.any(np.abs(ac) > 1):
+        raise ValueError(
+            "At least one element of the ACF is absolutely seen greater than"
+            " unity.  This should not have happened.  min(ACF) = {}.  max(ACF)"
+            " = {}".format(np.min(ac), np.max(ac))
+        )
+    return ac
+
+
+def acf_np(x, center=True, unbiased=False):
+    r"""
+    Calculate the autocorrelation function of a 1-dimensional array.
+
+    Parameters
+    ----------
+    x : array_like
+        1-dimensional input array.
+    center : bool, optional
+        If ``True``, center the input array around its mean, i.e.
+        subtract the sample mean :math:`\bar{X}` when calculating the
+        variance and covariance.
+    unbiased : bool, optional
+        If ``True``, the covariance
+        :math:`\text{Cov}[X_{t_0}, X_{t_0 + \tau}]` is normed by the
+        acutal number of sample points :math:`t_0` (which depends on the
+        lag time :math:`\tau`).  If ``False``, the covariance is for all
+        lag times normed by the number of sampling points at
+        :math:`t_0 = 0` (which is equal to the length of the input array
+        `x`).  Note that setting `unbiased` to ``True`` might result in
+        values of the ACF that lie outside the interval [-1, 1],
+        especially for lag times larger than ``len(x) // 2`` if `center`
+        is ``True``.
+
+    Returns
+    -------
+    ac : numpy.ndarray
+        Array of the same shape as `x` containing the autocorrelation
+        function of `x`.
+
+    Raises
+    ------
+    ValueError :
+        If the first element of `ac` is not unity or one or more
+        elements of `ac` fall outside the interval [-1, 1].
+
+    See Also
+    --------
+    :func:`mdtools.statistics.acf` :
+        Different tmplementation of the ACF using using a for loop
+
+    Notes
+    -----
+    See :func:`mdtools.statistics.acf` for the mathematical details of
+    computing the autocorrelation function (ACF).
+
+    This function uses :func:`numpy.correlate` to calculate the
+    autocorrelation function whereas :func:`mdtools.statistics.acf` uses
+    an explicit for loop.  Therefore, :func:`mdtools.statistics.acf`
+    can handle arbitrarily shaped input arrays and offers more options.
+
+    Examples
+    --------
+    >>> a = np.random.normal(loc=3, scale=7, size=11)
+    >>> np.allclose(mdt.stats.acf_np(a), mdt.stats.acf(a), rtol=0)
+    True
+    >>> np.allclose(
+    ...     mdt.stats.acf_np(a, center=False),
+    ...     mdt.stats.acf(a, center=False),
+    ...     rtol=0
+    ... )
+    True
+    """
+    x = np.array(x, dtype=np.float64, copy=center)
+    if x.ndim != 1:
+        raise ValueError(
+            "'x' must be 1-dimensional but is {}-dimensional".format(x.ndim)
+        )
+
+    if center:
+        x -= np.mean(x, dtype=np.float64)
+    ac = np.correlate(x, x, mode="full")
+    ac = ac[-len(x) :]
+    if unbiased:
+        ac /= np.arange(len(ac), 0, -1)
+    ac /= ac[0]
+
+    if not np.isclose(ac[0], 1, rtol=0):
+        raise ValueError(
+            "The first element of the ACF is not unity but {}.  This should"
+            " not have happened".format(ac[0])
         )
     if np.any(np.abs(ac) > 1):
         raise ValueError(
