@@ -21,6 +21,7 @@
 
 # Third-party libraries
 import numpy as np
+from scipy.stats import norm
 
 # First-party libraries
 import mdtools as mdt
@@ -90,6 +91,9 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
         :func:`numpy.correlate`
     :func:`mdtools.statistics.acf_se`
         Calculate the standard errors of an autocorrelation function
+    :func:`mdtools.statistics.acf_confint`
+        Calculate the confidence intervals of an autocorrelation
+        function
 
     Notes
     -----
@@ -395,6 +399,9 @@ def acf_np(x, center=True, unbiased=False):
         Different tmplementation of the ACF using using a for loop
     :func:`mdtools.statistics.acf_se`
         Calculate the standard errors of an autocorrelation function
+    :func:`mdtools.statistics.acf_confint`
+        Calculate the confidence intervals of an autocorrelation
+        function
 
     Notes
     -----
@@ -480,6 +487,9 @@ def acf_se(x, axis=None, n=None):
     --------
     :func:`mdtools.statistics.acf` :
         Calculate the autocorrelation function of an array
+    :func:`mdtools.statistics.acf_confint`
+        Calculate the confidence intervals of an autocorrelation
+        function
 
     Notes
     -----
@@ -582,6 +592,161 @@ def acf_se(x, axis=None, n=None):
     ):
         raise ValueError("'se' is not monotonically increasing")
     return se
+
+
+def acf_confint(x, axis=None, alpha=0.05, n=None):
+    r"""
+    Calculate the confidence intervals of an autocorrelation function.
+
+    Parameters
+    ----------
+    x : array_like
+        The values of the ACF.  Intermediate lag times must not be
+        missing.  That means if you used e.g.
+        :func:`mdtools.statistics.acf` to compute the ACF, the argument
+        `dtau` must have been ``1``.
+    axis : int or None, optional
+        The axis along which to calculate the confidence interval.  By
+        default, the flattened input array is used.
+    alpha : scalar, optional
+        The significance level (also known as probability of error).
+        The significance leve is the maximum probability for rejecting
+        the null hypothesis although its true (Type 1 error).  Here, the
+        null hypothesis is that the underlying time series has no
+        autcorrelation.  Typical values for the significance level are
+        0.01 or 0.05.  The smaller the significance level (probability
+        for Type 1 error), the higher the probability of a Type 2 error
+        (i.e. the null hypothesis is not rejected although it is wrong).
+    n : int, optional
+        Sample size (i.e. number of recoreded time points) of the
+        underlying time series.  By default, `n` is set to the number of
+        lag times :math:`\tau` in the given ACF.  This is valid for ACFs
+        that were computed at all possible lag times from the underlying
+        time series.  That means if you used e.g.
+        :func:`mdtools.statistics.acf` to compute the ACF, the argument
+        `dtau` must have been ``1`` and `tau_max` must have been
+        ``None`` or the length of `x` along the given axis..
+
+    Returns
+    -------
+    confint : numpy.ndarray
+        Array of the same shape as `x` containing the upper limit of the
+        confidence interval of the ACF at each lag time.  The lower
+        limit is simply given by ``-confint``.  The confidence interval
+        is centered at zero.  To get the confidence interval around the
+        actual ACF values compute ``x + confint`` and ``x - confint``.
+
+    See Also
+    --------
+    :func:`mdtools.statistics.acf` :
+        Calculate the autocorrelation function of an array
+    :func:`mdtools.statistics.acf_se`
+        Calculate the standard errors of an autocorrelation function
+
+    Notes
+    -----
+    The confidence interval of the autcorrelation function (ACF)
+    :math:`C_\tau` at lag time :math:`\tau` is estimated according to:
+    [1]_
+
+    .. math::
+
+        B(C_\tau) = z_{1-\alpha/2} SE(C_\tau)
+
+    with the significance level :math:`\alpha`, the quantile function
+    :math:`z_p` of the *standard* normal distribution
+    (:math:`\sigma = 1`) and the standard error :math:`SE(C_\tau)`.
+
+    The quantile function :math:`z_p` is also known as the inverse
+    cumulative distribution function :math:`F^{-1}(p)`.  The cumulative
+    distribution function :math:`F(X)` returns the probability
+    :math:`p` to gain a value below or equal to :math:`X`.  Hence, the
+    inverse cumulative distribution function :math:`F^{-1}(p)` returns
+    the value :math:`X` such that the probability of gaining a value
+    below or equal to :math:`X` is given by :math:`p`.  Thus, the
+    probability for gaining a value higher than :math:`X` is
+    :math:`1-p`.
+
+    A normal random variable :math:`X` will exceed the value
+    :math:`\mu + z_p \sigma` with probability :math:`1-p` and will lie
+    outside the interval :math:`\mu \pm z_p \sigma` with probability
+    :math:`2(1-p)` (for :math:`p \ge 0.5` or :math:`2p` for
+    :math:`p \le 0.5`).  In particular, the quantile :math:`z_{0.975}`
+    is :math:`1.96`.  Therefore, a normal random variable will lie
+    outside the interval :math:`\mu \pm 1.96\sigma` in only 5% of cases.
+    [2]_  Here :math:`\mu` is the mean of the random variable and
+    :math:`\sigma` is its standard deviation.  Note that for the normal
+    distribution :math:`z_p - \mu = -(z_{1-p} - \mu)` holds, because it
+    is symmetric around the mean.
+
+    The standard error of the ACF is estimated according to Bartlett's
+    formula for MA(l) processes: [1]_:sup:`,` [3]_
+
+    .. math::
+
+        SE(C_\tau) = \sqrt{\frac{1 + 2 \sum_{\tau^{'} = 1}^{\tau - 1} C_{\tau^{'}}}{N}}
+
+    for :math:`\tau \gt 1`.  For :math:`\tau = 1` the standard error is
+    estimated by :math:`SE(C_1) = \frac{1}{\sqrt{N}}` and for
+    :math:`\tau = 0` the standard error is :math:`SE(C_0) = 0`.
+
+    If the ACF :math:`C_\tau` is zero within the confidence interval,
+    the null hypothesis that there is no autocorrelation at the given
+    lag time :math:`\tau` is rejected with a significance level of
+    :math:`\alpha`.  This is an approximate test that assumes that the
+    underlying time series is normal distributed. [1]_
+
+    References
+    ----------
+    .. [1] Wikipedia `Correlogram
+        <https://en.wikipedia.org/wiki/Correlogram#Statistical_inference_with_correlograms>`_
+
+    .. [2] Wikipedia `Normal distribution
+        <https://en.wikipedia.org/wiki/Normal_distribution#Quantile_function>`_
+
+    .. [3] Wikipedia `Autoregressive-moving-average model
+        <https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model#Moving-average_model>`_
+
+    Examples
+    --------
+    >>> mdt.stats.acf_confint([3])
+    array([0.])
+    >>> a = np.arange(4)
+    >>> se = mdt.stats.acf_se(a)
+    >>> ci = mdt.stats.acf_confint(a)
+    >>> ci
+    array([0.        , 0.97998199, 1.6973786 , 3.25023257])
+    >>> np.allclose(ci, 1.959960*se, rtol=0, atol=1e-5)
+    True
+    >>> ci = mdt.stats.acf_confint(a, alpha=0.01)
+    >>> ci
+    array([0.        , 1.28791465, 2.23073361, 4.27152966])
+    >>> np.allclose(ci, 2.575830*se, rtol=0, atol=1e-5)
+    True
+
+    >>> b = np.column_stack([a, a])
+    >>> mdt.stats.acf_confint(b, axis=0)
+    array([[0.        , 0.        ],
+           [0.97998199, 0.97998199],
+           [1.6973786 , 1.6973786 ],
+           [3.25023257, 3.25023257]])
+    >>> b = np.row_stack([a, a])
+    >>> mdt.stats.acf_confint(b, axis=1)
+    array([[0.        , 0.97998199, 1.6973786 , 3.25023257],
+           [0.        , 0.97998199, 1.6973786 , 3.25023257]])
+    >>> c = np.array([b, b])
+    >>> mdt.stats.acf_confint(c, axis=2)
+    array([[[0.        , 0.97998199, 1.6973786 , 3.25023257],
+            [0.        , 0.97998199, 1.6973786 , 3.25023257]],
+    <BLANKLINE>
+           [[0.        , 0.97998199, 1.6973786 , 3.25023257],
+            [0.        , 0.97998199, 1.6973786 , 3.25023257]]])
+    """  # noqa: E501, W505
+    rv = norm(loc=0, scale=1)
+    quantile = rv.ppf(1 - alpha / 2)
+    confint = mdt.stats.acf_se(x, axis=axis, n=n)
+    confint *= quantile
+    return confint
 
 
 def center(x, axis=None, dtype=None, inplace=False):
