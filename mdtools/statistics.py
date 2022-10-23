@@ -22,6 +22,328 @@
 # Third-party libraries
 import numpy as np
 
+# First-party libraries
+import mdtools as mdt
+
+
+def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
+    r"""
+    Calculate the autocorrelation function of an array.
+
+    Parameters
+    ----------
+    x : array_like
+        The input array.
+    axis : int or None, optional
+        The axis along which to calculate the ACF.  By default, the
+        flattened input array is used.
+    dt : int or None, optional
+        Distance between restarting times (actually restarting indices)
+        :math:`t_0`.  If ``None`` is given, `dt` is set to the current
+        lag time :math:`\tau` which results in independent sampling
+        windows.
+    dtau : int, optional
+        Distance between evaluated lag times (actually lag indices)
+        :math:`\tau`.
+    tau_max : int or None, optional
+        Maximum lag time :math:`\tau` upon which to compute the ACF.
+        Because the first lag time is 0, the last evaluated lag time is
+        actually ``tau_max - 1``.  By default, `tau_max` is set to
+        ``x.size`` is `axis` is ``None`` and to ``x.shape[axis]``
+        otherwise.  `tau_max` must lie within the interval
+        ``[0, len(x)]``.
+    center : bool, optional
+        If ``True``, center the input array around its mean, i.e.
+        subtract the sample mean :math:`\bar{X}` when calculating the
+        variance and covariance.
+    unbiased : bool, optional
+        If ``True``, the covariance
+        :math:`\text{Cov}[X_{t_0}, X_{t_0 + \tau}]` is normed by the
+        acutal number of sample points :math:`t_0` (which depends on the
+        lag time :math:`\tau`).  If ``False``, the covariance is for all
+        lag times normed by the number of sampling points at
+        :math:`t_0 = 0` (which is equal to the length of the input array
+        `x`).  Note that setting `unbiased` to ``True`` might result in
+        values of the ACF that lie outside the interval [-1, 1],
+        especially for lag times larger than ``len(x) // 2`` if `center`
+        is ``True``.
+
+    Returns
+    -------
+    ac : numpy.ndarray
+        Autocorrelation function of `x`.  If `axis` is ``None``, the
+        output array has shape ``(n,)`` where ``n`` is
+        ``int(np.ceil(tau_max / dtau))``.  If a specific axis is given,
+        `ac` has the same shape as `x` except along the given axis where
+        the length is given by ``n``.
+
+    Raises
+    ------
+    ValueError :
+        If the first element of `ac` is not unity or one or more
+        elements of `ac` fall outside the interval [-1, 1].
+
+    Notes
+    -----
+    This function computes the autocorrelation function (ACF) of the
+    input array `x` assuming that `x` describes a `weakly stationary
+    stochastic process`_.  That means, the mean does not vary with time,
+    the variance is finite for all times and the autocovariance does not
+    depend on the starting time :math:`t_0` but only on the lag time
+    :math:`\tau`.  In this case the ACF is given by: [1]_:sup:`,` [2]_
+
+    .. math::
+
+        C(\tau) = \frac{\text{Cov}[X_{t_0}, X_{t_0 + \tau}]}{\text{Var}[X]}
+        = \frac{\langle (X_{t_0} - \mu) \cdot (X_{t_0 + \tau} - \mu) \rangle}{\langle (X - \mu)^2 \rangle}
+
+    The ACF strictly fulfills
+    :math:`C(\tau) \in [-1, 1] \text{ } \forall \text{ } \tau \in
+    \mathbb{R}`.  Numerically, the ACF is calculated using the following
+    formula: [3]_:sup:`,` [4]_
+
+    .. math::
+
+        C_\tau = \frac{\frac{1}{T^*} \sum_{t_0=0}^{T-\tau} (X_{t_0} - \bar{X}) (X_{t_0 + \tau} - \bar{X})}{\frac{1}{T} \sum_{t_0=0}^T (X_{t_0} - \bar{X})^2}
+        = \frac{\frac{1}{T^*} \sum_{t_0=0}^{T-\tau} (X_{t_0} - \bar{X}) (X_{t_0 + \tau} - \bar{X})}{C_0}
+
+    The increment of the sums in the formula of :math:`C_\tau` is given
+    by `dt`.  :math:`\bar{X} = \frac{1}{T} \sum_{t=1}^T X_t` is the
+    sample mean.  For the sample mean, the increment of the sum is
+    always 1, independent of the choice of `dt`.  Note that **the sample
+    mean is only subtracted when** `center` **is** ``True``.  `T` is
+    always the length of the input array `x`, independent of the choice
+    of `tau_max`.  :math:`T^*` is either :math:`T - \tau` if `unbiased`
+    is ``True`` or simply :math:`T` if `unbiased` is ``False``.
+
+    For the sake of completness, the ACF of a non-stationary
+    stochasitic process is given by: [1]_:sup:`,` [2]_
+
+    .. math::
+
+        C(t_1, t_2) = \frac{\text{Cov}[X_{t_1}, X_{t_2}]}{\sqrt{\text{Var}[X_{t_1}]} \cdot \sqrt{\text{Var}[X_{t_2}]}}
+        = \frac{\langle (X_{t_1} - \mu_{t_1}) \cdot (X_{t_2} - \mu_{t_2}) \rangle}{\sqrt{\langle (X_{t_1} - \mu_{t_1})^2 \rangle} \cdot \sqrt{\langle (X_{t_2} - \mu_{t_2})^2 \rangle}}
+
+    .. _weakly stationary stochastic process:
+        https://en.wikipedia.org/wiki/Stationary_process#Weak_or_wide-sense_stationarity
+
+    References
+    ----------
+    .. [1] Wikipedia `Autocorrelation
+        <https://en.wikipedia.org/wiki/Autocorrelation#Normalization>`_
+
+    .. [2] Kun Il Park, `Fundamentals of Probability and Stochastic
+        Processes with Applications to Communications
+        <https://doi.org/10.1007/978-3-319-68075-0>`_, Springer, 2018,
+        p. 169, Holmdel, New Jersey, USA, ISBN 978-3-319-68074-3
+
+    .. [3] Julius O. Smith, `Unbiased Cross-Correlation
+        <https://www.dsprelated.com/freebooks/mdft/Unbiased_Cross_Correlation.html>`_.
+        In Mathematics of the Discrete Fourier Transform (DFT), 2002,
+        p. 189, Stanford, California, USA
+
+    .. [4] Wikipedia `Correlogram
+        <https://en.wikipedia.org/wiki/Correlogram#Estimation_of_autocorrelations>`_
+
+    Examples
+    --------
+    >>> a = np.array([-2,  2, -2,  2, -2])
+    >>> mdt.stats.acf(a)
+    array([ 1.        , -0.8       ,  0.56666667, -0.4       ,  0.13333333])
+    >>> mdt.stats.acf(a, dt=None)
+    array([ 1.        , -0.8       ,  0.26666667, -0.2       ,  0.13333333])
+    >>> mdt.stats.acf(a, unbiased=True)
+    array([ 1.        , -1.        ,  0.94444444, -1.        ,  0.66666667])
+    >>> mdt.stats.acf(a, unbiased=True, dt=None)
+    array([ 1.        , -1.        ,  0.66666667, -1.        ,  0.66666667])
+    >>> mdt.stats.acf(a, center=False)
+    array([ 1. , -0.8,  0.6, -0.4,  0.2])
+    >>> mdt.stats.acf(a, center=False, dtau=2)
+    array([1. , 0.6, 0.2])
+    >>> mdt.stats.acf(a, center=False, tau_max=len(a)//2)
+    array([ 1. , -0.8])
+    >>> mdt.stats.acf(a, center=False, dt=None)
+    array([ 1. , -0.8,  0.4, -0.2,  0.2])
+    >>> mdt.stats.acf(a, center=False, unbiased=True)
+    array([ 1., -1.,  1., -1.,  1.])
+    >>> mdt.stats.acf(a, center=False, unbiased=True, dt=None)
+    array([ 1., -1.,  1., -1.,  1.])
+
+    >>> a = np.array([-2, -2, -2,  2,  2])
+    >>> mdt.stats.acf(a)
+    array([ 1.        ,  0.36666667, -0.26666667, -0.4       , -0.2       ])
+    >>> mdt.stats.acf(a, dt=None)
+    array([ 1.        ,  0.36666667, -0.06666667, -0.2       , -0.2       ])
+    >>> mdt.stats.acf(a, unbiased=True)
+    array([ 1.        ,  0.45833333, -0.44444444, -1.        , -1.        ])
+    >>> mdt.stats.acf(a, unbiased=True, dt=None)
+    array([ 1.        ,  0.45833333, -0.16666667, -1.        , -1.        ])
+    >>> mdt.stats.acf(a, center=False)
+    array([ 1. ,  0.4, -0.2, -0.4, -0.2])
+    >>> mdt.stats.acf(a, center=False, dt=None)
+    array([ 1. ,  0.4,  0. , -0.2, -0.2])
+    >>> mdt.stats.acf(a, center=False, unbiased=True)
+    array([ 1.        ,  0.5       , -0.33333333, -1.        , -1.        ])
+    >>> mdt.stats.acf(a, center=False, unbiased=True, dt=None)
+    array([ 1. ,  0.5,  0. , -1. , -1. ])
+
+    >>> a = np.array([[-2,  2, -2,  2, -2],
+    ...               [-2,  2, -2,  2, -2],
+    ...               [-2, -2, -2,  2,  2],
+    ...               [-2, -2, -2,  2,  2]])
+    >>> mdt.stats.acf(a, center=False)
+    array([ 1.  , -0.15,  0.  , -0.25, -0.2 ,  0.55,  0.  ,  0.15, -0.1 ,
+           -0.25,  0.1 ,  0.05,  0.1 ,  0.05, -0.2 ,  0.05,  0.  ,  0.05,
+            0.  , -0.05])
+    >>> mdt.stats.acf(a, center=False, axis=0)
+    array([[ 1.  ,  1.  ,  1.  ,  1.  ,  1.  ],
+           [ 0.75,  0.25,  0.75,  0.75,  0.25],
+           [ 0.5 , -0.5 ,  0.5 ,  0.5 , -0.5 ],
+           [ 0.25, -0.25,  0.25,  0.25, -0.25]])
+    >>> mdt.stats.acf(a, center=False, axis=0, unbiased=True)
+    array([[ 1.        ,  1.        ,  1.        ,  1.        ,  1.        ],
+           [ 1.        ,  0.33333333,  1.        ,  1.        ,  0.33333333],
+           [ 1.        , -1.        ,  1.        ,  1.        , -1.        ],
+           [ 1.        , -1.        ,  1.        ,  1.        , -1.        ]])
+    >>> mdt.stats.acf(a, center=False, axis=1)
+    array([[ 1. , -0.8,  0.6, -0.4,  0.2],
+           [ 1. , -0.8,  0.6, -0.4,  0.2],
+           [ 1. ,  0.4, -0.2, -0.4, -0.2],
+           [ 1. ,  0.4, -0.2, -0.4, -0.2]])
+    >>> mdt.stats.acf(a, center=False, axis=1, unbiased=True)
+    array([[ 1.        , -1.        ,  1.        , -1.        ,  1.        ],
+           [ 1.        , -1.        ,  1.        , -1.        ,  1.        ],
+           [ 1.        ,  0.5       , -0.33333333, -1.        , -1.        ],
+           [ 1.        ,  0.5       , -0.33333333, -1.        , -1.        ]])
+
+    >>> a = np.array([[[-2,  2, -2,  2, -2],
+    ...                [-2,  2, -2,  2, -2]],
+    ...
+    ...               [[-2, -2, -2,  2,  2],
+    ...                [-2, -2, -2,  2,  2]]])
+    >>> mdt.stats.acf(a, center=False)
+    array([ 1.  , -0.15,  0.  , -0.25, -0.2 ,  0.55,  0.  ,  0.15, -0.1 ,
+           -0.25,  0.1 ,  0.05,  0.1 ,  0.05, -0.2 ,  0.05,  0.  ,  0.05,
+            0.  , -0.05])
+    >>> mdt.stats.acf(a, center=False, axis=0)
+    array([[[ 1. ,  1. ,  1. ,  1. ,  1. ],
+            [ 1. ,  1. ,  1. ,  1. ,  1. ]],
+    <BLANKLINE>
+           [[ 0.5, -0.5,  0.5,  0.5, -0.5],
+            [ 0.5, -0.5,  0.5,  0.5, -0.5]]])
+    >>> mdt.stats.acf(a, center=False, axis=0, unbiased=True)
+    array([[[ 1.,  1.,  1.,  1.,  1.],
+            [ 1.,  1.,  1.,  1.,  1.]],
+    <BLANKLINE>
+           [[ 1., -1.,  1.,  1., -1.],
+            [ 1., -1.,  1.,  1., -1.]]])
+
+    >>> mdt.stats.acf(a, center=False, axis=1)
+    array([[[1. , 1. , 1. , 1. , 1. ],
+            [0.5, 0.5, 0.5, 0.5, 0.5]],
+    <BLANKLINE>
+           [[1. , 1. , 1. , 1. , 1. ],
+            [0.5, 0.5, 0.5, 0.5, 0.5]]])
+    >>> mdt.stats.acf(a, center=False, axis=1, unbiased=True)
+    array([[[1., 1., 1., 1., 1.],
+            [1., 1., 1., 1., 1.]],
+    <BLANKLINE>
+           [[1., 1., 1., 1., 1.],
+            [1., 1., 1., 1., 1.]]])
+    >>> mdt.stats.acf(a, center=False, axis=2)
+    array([[[ 1. , -0.8,  0.6, -0.4,  0.2],
+            [ 1. , -0.8,  0.6, -0.4,  0.2]],
+    <BLANKLINE>
+           [[ 1. ,  0.4, -0.2, -0.4, -0.2],
+            [ 1. ,  0.4, -0.2, -0.4, -0.2]]])
+    >>> mdt.stats.acf(a, center=False, axis=2, unbiased=True)
+    array([[[ 1.        , -1.        ,  1.        , -1.        ,
+              1.        ],
+            [ 1.        , -1.        ,  1.        , -1.        ,
+              1.        ]],
+    <BLANKLINE>
+           [[ 1.        ,  0.5       , -0.33333333, -1.        ,
+             -1.        ],
+            [ 1.        ,  0.5       , -0.33333333, -1.        ,
+             -1.        ]]])
+    """  # noqa: E501, W505
+    x = np.array(x, dtype=np.float64, copy=center)
+    if center:
+        x = mdt.stats.center(x, axis=axis, dtype=np.float64, inplace=True)
+    # Maximum possible tau value.
+    if axis is None:
+        tau_max_real = x.size
+    else:
+        if abs(axis) >= x.ndim:
+            raise np.AxisError(axis=axis, ndim=x.ndim)
+        tau_max_real = x.shape[axis]
+
+    if dt is not None and dt < 1:
+        raise ValueError(
+            "'dt' ({}) must be a positive integer or None".format(dt)
+        )
+    if dtau < 1:
+        raise ValueError(
+            "'dtau' ({}) must be a positive integer or None".format(dtau)
+        )
+    if tau_max is None:
+        tau_max = tau_max_real
+    elif tau_max < 0 or tau_max > len(x):
+        raise ValueError(
+            "'tau_max' ({}) must lie within the interval"
+            " [0, {}]".format(tau_max, len(x))
+        )
+
+    ac = []
+    for tau in range(0, tau_max, dtau):
+        if dt is None:
+            t_step = max(1, tau)  # Slice step cannot be zero
+        else:
+            t_step = dt
+        t0_max = tau_max_real - tau
+        cov = np.copy(mdt.nph.take(x, stop=t0_max, step=t_step, axis=axis))
+        cov *= mdt.nph.take(x, start=tau, step=t_step, axis=axis)
+        ac.append(np.sum(cov, axis=axis))
+        if unbiased:
+            if axis is None:
+                ac[-1] /= cov.size
+            else:
+                ac[-1] /= cov.shape[axis]
+    if axis is None:
+        ac = np.concatenate(ac, axis=axis)
+    else:
+        ac = np.stack(ac, axis=axis)
+    ac0 = mdt.nph.take(ac, start=0, stop=1, axis=axis)
+    ac /= ac0
+
+    # Consistency check.
+    if axis is None:
+        shape = (int(np.ceil(tau_max / dtau)),)
+    else:
+        shape = list(x.shape)
+        shape[axis] = int(np.ceil(tau_max / dtau))
+        shape = tuple(shape)
+    if ac.shape != shape:
+        raise ValueError(
+            "'ac' has shape {} but should have shape {}.  This should not have"
+            " happened".format(ac.shape, shape)
+        )
+    if not np.allclose(
+        mdt.nph.take(ac, start=0, stop=1, axis=axis), 1, rtol=0
+    ):
+        raise ValueError(
+            "The first element of the ACF is not unity but {}.  This should"
+            " not have"
+            " happened".format(mdt.nph.take(ac, start=0, stop=1, axis=axis))
+        )
+    if np.any(np.abs(ac) > 1):
+        raise ValueError(
+            "At least one element of the ACF is absolutely seen greater than"
+            " unity.  This should not have happened.  min(ACF) = {}.  max(ACF)"
+            " = {}".format(np.min(ac), np.max(ac))
+        )
+    return ac
+
 
 def center(x, axis=None, dtype=None, inplace=False):
     """
