@@ -1038,27 +1038,46 @@ def non_gaussian_parameter(x, d=1, is_squared=False, axis=None):
 
 
 def exp_dist(x, rate=1):
-    """
-    Exponential distribution:
+    r"""
+    Exponential distribution.
 
     .. math::
+
         f(x) = \lambda e^{-\lambda x}
 
-    The mean and standard deviation are given by :math:`1/\lambda`.
+    The mean and standard deviation of an exponential distribution are
+    given by :math:`1/\lambda`.
 
     Parameters
     ----------
     x : scalar or array_like
         Array of :math:`x` values for wich to evaluate :math:`f(x)`.
-    rate : scalar, optional
-        The value for :math:`lambda`.
+    rate : scalar or array_like, optional
+        The value(s) for :math:`\lambda`.  If an array is provided, it
+        must be broadcastable to a common shape with `x`.
 
     Returns
     -------
     f : scalar or array_like
-        :math:`f(x)`.
-    """
+        The function values :math:`f(x)` at the given :math:`x` values.
 
+    See Also
+    --------
+    :obj:`scipy.stats.expon`
+        Exponential continuous random variable
+
+    Examples
+    --------
+    >>> from scipy.stats import expon
+    >>> x = np.linspace(0, 4, 5)
+    >>> y1 = mdt.stats.exp_dist(x, rate=2)
+    >>> y2 = expon.pdf(x, loc=0, scale=1/2)
+    >>> np.allclose(y1, y2, rtol=0)
+    True
+    >>> y1
+    array([2.00000000e+00, 2.70670566e-01, 3.66312778e-02, 4.95750435e-03,
+           6.70925256e-04])
+    """  # noqa: W505
     return rate * np.exp(-rate * x)
 
 
