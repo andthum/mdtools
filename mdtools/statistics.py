@@ -1236,22 +1236,34 @@ def running_average(a, axis=None, out=None):
     a : array_like
         Array of values for which to calculate the running average.
     axis : None or int, optional
-        Axis along which the running average is computed. The default
-        (``None``) is to compute the running average over the flattened
-        array
+        Axis along which the running average is computed.  The default
+        is to compute the running average of the flattened array.
     out : array_like
-        Alternative output array in which to place the result. It must
+        Alternative output array in which to place the result.  It must
         have the same shape and buffer length as the expected output but
-        the type will be cast if necessary.
+        the type will be cast if necessary.  See :func:`numpy.cumsum`
+        for more details.
 
     Returns
     -------
     rav : numpy.ndarray
-        The running average along the specified axis. The result has the
-        same size as `a`, and also the same shape as `a` if `axis` is
-        not ``None`` or `a` is a 1-d array.
-    """
+        The running average along the specified axis.  The result has
+        the same size as `a`, and also the same shape as `a` if `axis`
+        is not ``None`` or `a` is a 1-d array.
 
+    See Also
+    --------
+    :func:`numpy.cumsum`
+        Return the cumulative sum of the elements along a given axis
+
+    Notes
+    -----
+    The running average at the :math:`n`-position is given by
+
+    .. math::
+
+        \mu_n = \frac{1}{n} \sum_{i=1}^{n} a_i
+    """
     a = np.asarray(a)
     rav = np.cumsum(a, axis=axis, out=out)
     if axis is None:
