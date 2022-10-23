@@ -1082,25 +1082,41 @@ def exp_dist(x, rate=1):
 
 
 def exp_dist_log(x, rate):
-    """
-    Logarithm of the exponential distribution (see also :func:`exp_dist`):
+    r"""
+    Logarithm of the exponential distribution.
 
     .. math::
+
         f(x) = \ln(\lambda) - \lambda x
 
     Parameters
     ----------
     x : scalar or array_like
         Array of :math:`x` values for wich to evaluate :math:`f(x)`.
-    rate : scalar, optional
-        The value for :math:`lambda`.
+    rate : scalar or array_like, optional
+        The value(s) for :math:`\lambda`.  If an array is provided, it
+        must be broadcastable to a common shape with `x`.
 
     Returns
     -------
     f : scalar or array_like
-        :math:`f(x)`.
-    """
+        The function values :math:`f(x)` at the given :math:`x` values.
 
+    See Also
+    --------
+    :func:`exp_dist`
+        Exponential distribution
+
+    Examples
+    --------
+    >>> x = np.linspace(0, 4, 5)
+    >>> y1 = mdt.stats.exp_dist_log(x, rate=2)
+    >>> y2 = mdt.stats.exp_dist(x, rate=2)
+    >>> np.allclose(y1, np.log(y2), rtol=0)
+    True
+    >>> y1
+    array([ 0.69314718, -1.30685282, -3.30685282, -5.30685282, -7.30685282])
+    """  # noqa: W505
     return np.log(rate) - rate * x
 
 
