@@ -38,6 +38,8 @@ Options
 -------
 -f
     The name of the .edr file to read.
+-o
+    Output file name.
 -b
     First frame to use from the .edr file.  Frame numbering starts at
     zero.  Default: ``0``.
@@ -49,14 +51,14 @@ Options
     Use every n-th frame from the .edr file.  Default: ``1``.
 --gzipped
     If given, the input file is assumed to be compressed with gzip and
-    will be args.GZIPPEDed before processing.  Afterwards, the
-    args.GZIPPEDed file is removed.
--o
-    Output file name.
+    will be decompressed before processing.  Afterwards, the
+    decompressed file is removed.
 --observables
     A space separated list of energy terms to select.  The energy terms
-    must be present in the .edr file.  ``'Time'`` is not allowed.
-    Default: ``[Potential, Kinetic En., Pressure]``
+    must be present in the .edr file.  If an energy term contains a
+    space, like 'Kinetic En.', put it in quotes.  ``'Time'`` is not
+    allowed as selection.  Default:
+    ``["Potential", "Kinetic En.", "Pressure"]``
 --print-obs
     Only print all energy terms contained in the .edr file and exit.
 --alpha
@@ -121,7 +123,7 @@ import mdtools.plot as mdtplt
 if __name__ == "__main__":
     timer_tot = datetime.now()
     proc = psutil.Process()
-    proc.cpu_percent()  # Initiate monitoring of CPU usage
+    proc.cpu_percent()  # Initiate monitoring of CPU usage.
     parser = argparse.ArgumentParser(
         description=(
             "Plot statistics about the distribution of energy terms contained"
@@ -135,6 +137,13 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Gromacs energy file (.edr).",
+    )
+    parser.add_argument(
+        "-o",
+        dest="OUTFILE",
+        type=str,
+        required=True,
+        help="Output filename.",
     )
     parser.add_argument(
         "-b",
@@ -173,13 +182,6 @@ if __name__ == "__main__":
         default=False,
         action="store_true",
         help="Input file is compressed with gzip.",
-    )
-    parser.add_argument(
-        "-o",
-        dest="OUTFILE",
-        type=str,
-        required=True,
-        help="Output filename.",
     )
     parser.add_argument(
         "--observables",
