@@ -56,9 +56,13 @@ Options
     :func:`scipy.stats.normaltest`) and for the confidence intervals of
     the ACF (see :func:`mdtools.statistics.acf_confint`).  The K-squared
     test requires a sample size of more than 20 data points.  Typical
-    values for :math:`\alpha` are 0.01 or 0.05.  For more details about
-    this parameter see :func:`mdtools.statistics.acf_confint`.  Default:
-    ``0.05``
+    values for :math:`\alpha` are 0.01 or 0.05.  In some cases it is set
+    to 0.1 to reduce the probability of a Type 2 error, i.e. the null
+    hypothesis is not rejected although it is wrong.  Here, the null
+    hypothesis is that the data are normally distributed (in case of the
+    K-squared test) or have no autocorrelation (in case of the ACF).
+    For more details about the significance level see
+    :func:`mdtools.statistics.acf_confint`.  Default: ``0.1``
 --num-points
     Use only the last `NUM_POINTS` data points when ploting the energy
     terms vs. time.  Must not be negative.  If `NUM_POINTS` is greater
@@ -165,7 +169,7 @@ if __name__ == "__main__":
         dest="ALPHA",
         type=float,
         required=False,
-        default=0.05,
+        default=0.1,
         help=(
             "Significance level for statistical tests and confidence"
             " intervals.  Default: %(default)s."
@@ -290,8 +294,8 @@ if __name__ == "__main__":
                     non_gaussian_observables.append(key)
                     warnings.warn(
                         "The null hypothesis that the {} is normally"
-                        " distributed is rejected with a significance level of"
-                        " {}".format(key, args.ALPHA),
+                        " distributed is rejected (p-value: {}, significance"
+                        " level: {})".format(key, pval, args.ALPHA),
                         UserWarning,
                     )
             else:
