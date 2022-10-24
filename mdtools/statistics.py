@@ -694,7 +694,7 @@ def acf_confint(x, axis=None, alpha=0.05, n=None):
     the null hypothesis that there is no autocorrelation at the given
     lag time :math:`\tau` is rejected with a significance level of
     :math:`\alpha`.  This is an approximate test that assumes that the
-    underlying time series is normal distributed. [1]_
+    underlying time series is normally distributed. [1]_
 
     References
     ----------

@@ -31,22 +31,34 @@ are created:
     * A histogram showing the distribution of the energy values.
     * The autocorrelation function (ACF) of the energy term with
       confidence intervals given by :math:`1 - \alpha`.
-    * The discrete Fourier transform (DFT) of the energy term.
+    * The power spectrum of the energy term, i.e. the absolute square of
+      its discrete Fourier transform.
 
 Options
 -------
 -f
     The name of the .edr file to read.
---gzipped
-    If given, the input file is assumed to be compressed with gzip and
-    will be args.GZIPPEDed before processing.  Afterwards, the
-    args.GZIPPEDed file is removed.
 -o
     Output file name.
+-b
+    First frame to use from the .edr file.  Frame numbering starts at
+    zero.  Default: ``0``.
+-e
+    Last frame to use from the .edr file.  This is exclusive, i.e. the
+    last frame read is actually ``END - 1``.  A value of ``-1`` means to
+    use the very last frame.  Default: ``-1``.
+--every
+    Use every n-th frame from the .edr file.  Default: ``1``.
+--gzipped
+    If given, the input file is assumed to be compressed with gzip and
+    will be decompressed before processing.  Afterwards, the
+    decompressed file is removed.
 --observables
     A space separated list of energy terms to select.  The energy terms
-    must be present in the .edr file.  ``'Time'`` is not allowed.
-    Default: ``[Potential, Kinetic En., Pressure]``
+    must be present in the .edr file.  If an energy term contains a
+    space, like 'Kinetic En.', put it in quotes.  ``'Time'`` is not
+    allowed as selection.  Default:
+    ``["Potential", "Kinetic En.", "Pressure"]``
 --print-obs
     Only print all energy terms contained in the .edr file and exit.
 --alpha
@@ -55,15 +67,19 @@ Options
     :func:`scipy.stats.normaltest`) and for the confidence intervals of
     the ACF (see :func:`mdtools.statistics.acf_confint`).  The K-squared
     test requires a sample size of more than 20 data points.  Typical
-    values for :math:`\alpha` are 0.01 or 0.05.  For more details about
-    this parameter see :func:`mdtools.statistics.acf_confint`.  Default:
-    ``0.05``
+    values for :math:`\alpha` are 0.01 or 0.05.  In some cases it is set
+    to 0.1 to reduce the probability of a Type 2 error, i.e. the null
+    hypothesis is not rejected although it is wrong.  Here, the null
+    hypothesis is that the data are normally distributed (in case of the
+    K-squared test) or have no autocorrelation (in case of the ACF).
+    For more details about the significance level see
+    :func:`mdtools.statistics.acf_confint`.  Default: ``0.1``
 --num-points
     Use only the last `NUM_POINTS` data points when ploting the energy
-    terms vs. time and use only the first `NUM_POINTS` data points when
-    plotting the ACF.  Must not be negative.  If `NUM_POINTS` is greater
-    then the actual number of available data points, it is set to the
-    maximum number of available data points.  Default: 500
+    terms vs. time.  Must not be negative.  If `NUM_POINTS` is greater
+    then the actual number of available data points or ``None``, it is
+    set to the maximum number of available data points.  Default:
+    ``None``
 
 See Also
 --------
@@ -107,7 +123,7 @@ import mdtools.plot as mdtplt
 if __name__ == "__main__":
     timer_tot = datetime.now()
     proc = psutil.Process()
-    proc.cpu_percent()  # Initiate monitoring of CPU usage
+    proc.cpu_percent()  # Initiate monitoring of CPU usage.
     parser = argparse.ArgumentParser(
         description=(
             "Plot statistics about the distribution of energy terms contained"
@@ -123,19 +139,49 @@ if __name__ == "__main__":
         help="Gromacs energy file (.edr).",
     )
     parser.add_argument(
+        "-o",
+        dest="OUTFILE",
+        type=str,
+        required=True,
+        help="Output filename.",
+    )
+    parser.add_argument(
+        "-b",
+        dest="BEGIN",
+        type=int,
+        required=False,
+        default=0,
+        help=(
+            "First frame to use from the .edr file.  Frame numbering starts"
+            " at zero.  Default: %(default)s."
+        ),
+    )
+    parser.add_argument(
+        "-e",
+        dest="END",
+        type=int,
+        required=False,
+        default=-1,
+        help=(
+            "Last frame to use from the .edr file (exclusive).  Default:"
+            " %(default)s."
+        ),
+    )
+    parser.add_argument(
+        "--every",
+        dest="EVERY",
+        type=int,
+        required=False,
+        default=1,
+        help="Use every n-th frame from the .edr file.  Default: %(default)s.",
+    )
+    parser.add_argument(
         "--gzipped",
         dest="GZIPPED",
         required=False,
         default=False,
         action="store_true",
         help="Input file is compressed with gzip.",
-    )
-    parser.add_argument(
-        "-o",
-        dest="OUTFILE",
-        type=str,
-        required=True,
-        help="Output filename.",
     )
     parser.add_argument(
         "--observables",
@@ -164,7 +210,7 @@ if __name__ == "__main__":
         dest="ALPHA",
         type=float,
         required=False,
-        default=0.05,
+        default=0.1,
         help=(
             "Significance level for statistical tests and confidence"
             " intervals.  Default: %(default)s."
@@ -175,11 +221,10 @@ if __name__ == "__main__":
         dest="NUM_POINTS",
         type=int,
         required=False,
-        default=500,
+        default=None,
         help=(
             "Use only the last `NUM_POINTS` data points when ploting the"
-            " energy terms vs. time and use only the first `NUM_POINTS` data"
-            " points when plotting the ACF.  Default: %(default)s."
+            " energy terms vs. time.  Default: %(default)s."
         ),
     )
     args = parser.parse_args()
@@ -189,8 +234,14 @@ if __name__ == "__main__":
     print("Reading input file...")
     timer = datetime.now()
     if args.GZIPPED:
+        timestamp = datetime.now()
         file_decompressed = (
-            args.EDRFILE[:-7] + "_uuid_" + str(uuid.uuid4()) + ".edr"
+            args.EDRFILE[:-7]
+            + "_uuid_"
+            + str(uuid.uuid4())
+            + "_date_"
+            + str(timestamp.strftime("%Y-%m-%d_%H-%M-%S"))
+            + ".edr"
         )
         with gzip.open(args.EDRFILE, "rb") as file_in:
             with open(file_decompressed, "wb") as file_out:
@@ -225,10 +276,24 @@ if __name__ == "__main__":
     timer = datetime.now()
     times = data.pop("Time")
     time_unit = units.pop("Time")
+    BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=len(times),
+    )
+    print("Total number of frames: {:>8d}".format(len(times)))
+    print("Frames to use:          {:>8d}".format(N_FRAMES))
+    print("First frame to use:     {:>8d}".format(BEGIN))
+    print("Last frame to use:      {:>8d}".format(END - 1))
+    print("Use every n-th frame:   {:>8d}".format(EVERY))
+    times = times[BEGIN:END:EVERY]
     for key in tuple(data.keys()):
         if key not in args.OBSERVABLES:
             data.pop(key)
             units.pop(key)
+        else:
+            data[key] = data[key][BEGIN:END:EVERY]
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
@@ -246,10 +311,12 @@ if __name__ == "__main__":
             "--num-points ({}) must be positive'".format(args.NUM_POINTS)
         )
     args.NUM_POINTS = min(args.NUM_POINTS, len(times))
-    if args.NUM_POINTS > 5000:
+    if args.NUM_POINTS > 1000:
         # Force rasterized (bitmap) drawing for vector graphics output.
         # This leads to smaller files for plots with many data points.
         rasterized = True
+    else:
+        rasterized = False
 
     print("\n")
     print("Processing data and creating plots...")
@@ -288,8 +355,8 @@ if __name__ == "__main__":
                     non_gaussian_observables.append(key)
                     warnings.warn(
                         "The null hypothesis that the {} is normally"
-                        " distributed is rejected with a significance level of"
-                        " {}".format(key, args.ALPHA),
+                        " distributed is rejected (p-value: {}, significance"
+                        " level: {})".format(key, pval, args.ALPHA),
                         UserWarning,
                     )
             else:
@@ -304,7 +371,9 @@ if __name__ == "__main__":
             rv = stats.norm(loc=mean_fit, scale=std_fit)
             # Plot figure.
             fig, ax = plt.subplots(clear=True)
-            hist, bin_edges, patches = ax.hist(val, bins="auto", density=True)
+            hist, bin_edges, patches = ax.hist(
+                val, bins="auto", density=True, rasterized=True
+            )
             bin_mids = bin_edges[1:] - np.diff(bin_edges)
             ax.plot(bin_mids, rv.pdf(bin_mids), label="Gauss Fit")
             ax.set(
@@ -344,33 +413,36 @@ if __name__ == "__main__":
                 val,
                 lag_times,
                 siglev=args.ALPHA,
-                rasterized=rasterized,
+                rasterized=True,
             )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set(
                 xlabel="Lag Time / " + time_unit,
                 ylabel="ACF of " + key,
-                xlim=(lag_times[0], lag_times[args.NUM_POINTS]),
+                xlim=(lag_times[1], lag_times[-1]),
                 ylim=(None, 1),
             )
             ax.legend(loc="upper right")
             pdf.savefig()
             plt.close()
 
-            print("Plotting DFT of {}...".format(key))
+            print("Plotting Power Spectrum of {}...".format(key))
             # The zero-frequence term is the sum of the signal => Remove
             # the mean to get a zero-frequence term that is zero.
-            amplitudes = np.abs(np.fft.rfft(val - mean))
+            amplitudes = np.abs(np.fft.rfft(val - mean)) ** 2
             frequencies = np.fft.rfftfreq(len(val), time_diff)
             fig, ax = plt.subplots(clear=True)
             ax.plot(frequencies, amplitudes, rasterized=True)
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set(
                 xlabel="Frequency / 1/" + time_unit,
-                ylabel="DFT of " + key,
-                xlim=(frequencies[0], frequencies[-1]),
+                ylabel="Pow. Spec. of " + key,
+                xlim=(frequencies[1], frequencies[-1]),
                 ylim=(0, None),
             )
             pdf.savefig()
             plt.close()
+    print()
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
