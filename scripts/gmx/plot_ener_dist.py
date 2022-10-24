@@ -250,6 +250,8 @@ if __name__ == "__main__":
         # Force rasterized (bitmap) drawing for vector graphics output.
         # This leads to smaller files for plots with many data points.
         rasterized = True
+    else:
+        rasterized = False
 
     print("\n")
     print("Processing data and creating plots...")
@@ -371,6 +373,7 @@ if __name__ == "__main__":
             )
             pdf.savefig()
             plt.close()
+    print()
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
