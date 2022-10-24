@@ -246,7 +246,7 @@ if __name__ == "__main__":
             "--num-points ({}) must be positive'".format(args.NUM_POINTS)
         )
     args.NUM_POINTS = min(args.NUM_POINTS, len(times))
-    if args.NUM_POINTS > 5000:
+    if args.NUM_POINTS > 1000:
         # Force rasterized (bitmap) drawing for vector graphics output.
         # This leads to smaller files for plots with many data points.
         rasterized = True
@@ -306,7 +306,9 @@ if __name__ == "__main__":
             rv = stats.norm(loc=mean_fit, scale=std_fit)
             # Plot figure.
             fig, ax = plt.subplots(clear=True)
-            hist, bin_edges, patches = ax.hist(val, bins="auto", density=True)
+            hist, bin_edges, patches = ax.hist(
+                val, bins="auto", density=True, rasterized=True
+            )
             bin_mids = bin_edges[1:] - np.diff(bin_edges)
             ax.plot(bin_mids, rv.pdf(bin_mids), label="Gauss Fit")
             ax.set(
