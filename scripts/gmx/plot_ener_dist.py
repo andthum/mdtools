@@ -60,8 +60,7 @@ Options
     ``0.05``
 --num-points
     Use only the last `NUM_POINTS` data points when ploting the energy
-    terms vs. time and use only the first `NUM_POINTS` data points when
-    plotting the ACF.  Must not be negative.  If `NUM_POINTS` is greater
+    terms vs. time.  Must not be negative.  If `NUM_POINTS` is greater
     then the actual number of available data points or ``None``, it is
     set to the maximum number of available data points.  Default:
     ``None``
@@ -179,8 +178,7 @@ if __name__ == "__main__":
         default=None,
         help=(
             "Use only the last `NUM_POINTS` data points when ploting the"
-            " energy terms vs. time and use only the first `NUM_POINTS` data"
-            " points when plotting the ACF.  Default: %(default)s."
+            " energy terms vs. time.  Default: %(default)s."
         ),
     )
     args = parser.parse_args()
@@ -349,12 +347,13 @@ if __name__ == "__main__":
                 val,
                 lag_times,
                 siglev=args.ALPHA,
-                rasterized=rasterized,
+                rasterized=True,
             )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set(
                 xlabel="Lag Time / " + time_unit,
                 ylabel="ACF of " + key,
-                xlim=(lag_times[0], lag_times[args.NUM_POINTS]),
+                xlim=(lag_times[1], lag_times[-1]),
                 ylim=(None, 1),
             )
             ax.legend(loc="upper right")
@@ -368,10 +367,11 @@ if __name__ == "__main__":
             frequencies = np.fft.rfftfreq(len(val), time_diff)
             fig, ax = plt.subplots(clear=True)
             ax.plot(frequencies, amplitudes, rasterized=True)
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set(
                 xlabel="Frequency / 1/" + time_unit,
                 ylabel="DFT of " + key,
-                xlim=(frequencies[0], frequencies[-1]),
+                xlim=(frequencies[1], frequencies[-1]),
                 ylim=(0, None),
             )
             pdf.savefig()
