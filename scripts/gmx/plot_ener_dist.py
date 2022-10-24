@@ -31,7 +31,8 @@ are created:
     * A histogram showing the distribution of the energy values.
     * The autocorrelation function (ACF) of the energy term with
       confidence intervals given by :math:`1 - \alpha`.
-    * The discrete Fourier transform (DFT) of the energy term.
+    * The power spectrum of the energy term, i.e. the absolute square of
+      its discrete Fourier transform.
 
 Options
 -------
@@ -360,17 +361,17 @@ if __name__ == "__main__":
             pdf.savefig()
             plt.close()
 
-            print("Plotting DFT of {}...".format(key))
+            print("Plotting Power Spectrum of {}...".format(key))
             # The zero-frequence term is the sum of the signal => Remove
             # the mean to get a zero-frequence term that is zero.
-            amplitudes = np.abs(np.fft.rfft(val - mean))
+            amplitudes = np.abs(np.fft.rfft(val - mean)) ** 2
             frequencies = np.fft.rfftfreq(len(val), time_diff)
             fig, ax = plt.subplots(clear=True)
             ax.plot(frequencies, amplitudes, rasterized=True)
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set(
                 xlabel="Frequency / 1/" + time_unit,
-                ylabel="DFT of " + key,
+                ylabel="Pow. Spec. of " + key,
                 xlim=(frequencies[1], frequencies[-1]),
                 ylim=(0, None),
             )
