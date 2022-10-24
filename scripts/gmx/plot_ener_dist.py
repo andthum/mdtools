@@ -62,8 +62,9 @@ Options
     Use only the last `NUM_POINTS` data points when ploting the energy
     terms vs. time and use only the first `NUM_POINTS` data points when
     plotting the ACF.  Must not be negative.  If `NUM_POINTS` is greater
-    then the actual number of available data points, it is set to the
-    maximum number of available data points.  Default: 500
+    then the actual number of available data points or ``None``, it is
+    set to the maximum number of available data points.  Default:
+    ``None``
 
 See Also
 --------
@@ -175,7 +176,7 @@ if __name__ == "__main__":
         dest="NUM_POINTS",
         type=int,
         required=False,
-        default=500,
+        default=None,
         help=(
             "Use only the last `NUM_POINTS` data points when ploting the"
             " energy terms vs. time and use only the first `NUM_POINTS` data"
