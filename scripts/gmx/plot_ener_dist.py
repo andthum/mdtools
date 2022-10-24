@@ -38,6 +38,15 @@ Options
 -------
 -f
     The name of the .edr file to read.
+-b
+    First frame to use from the .edr file.  Frame numbering starts at
+    zero.  Default: ``0``.
+-e
+    Last frame to use from the .edr file.  This is exclusive, i.e. the
+    last frame read is actually ``END - 1``.  A value of ``-1`` means to
+    use the very last frame.  Default: ``-1``.
+--every
+    Use every n-th frame from the .edr file.  Default: ``1``.
 --gzipped
     If given, the input file is assumed to be compressed with gzip and
     will be args.GZIPPEDed before processing.  Afterwards, the
@@ -126,6 +135,36 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Gromacs energy file (.edr).",
+    )
+    parser.add_argument(
+        "-b",
+        dest="BEGIN",
+        type=int,
+        required=False,
+        default=0,
+        help=(
+            "First frame to use from the .edr file.  Frame numbering starts"
+            " at zero.  Default: %(default)s."
+        ),
+    )
+    parser.add_argument(
+        "-e",
+        dest="END",
+        type=int,
+        required=False,
+        default=-1,
+        help=(
+            "Last frame to use from the .edr file (exclusive).  Default:"
+            " %(default)s."
+        ),
+    )
+    parser.add_argument(
+        "--every",
+        dest="EVERY",
+        type=int,
+        required=False,
+        default=1,
+        help="Use every n-th frame from the .edr file.  Default: %(default)s.",
     )
     parser.add_argument(
         "--gzipped",
@@ -235,10 +274,24 @@ if __name__ == "__main__":
     timer = datetime.now()
     times = data.pop("Time")
     time_unit = units.pop("Time")
+    BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
+        start=args.BEGIN,
+        stop=args.END,
+        step=args.EVERY,
+        n_frames_tot=len(times),
+    )
+    print("Total number of frames: {:>8d}".format(len(times)))
+    print("Frames to use:          {:>8d}".format(N_FRAMES))
+    print("First frame to use:     {:>8d}".format(BEGIN))
+    print("Last frame to use:      {:>8d}".format(END - 1))
+    print("Use every n-th frame:   {:>8d}".format(EVERY))
+    times = times[BEGIN:END:EVERY]
     for key in tuple(data.keys()):
         if key not in args.OBSERVABLES:
             data.pop(key)
             units.pop(key)
+        else:
+            data[key] = data[key][BEGIN:END:EVERY]
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
