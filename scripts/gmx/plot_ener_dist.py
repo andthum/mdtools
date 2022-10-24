@@ -193,8 +193,14 @@ if __name__ == "__main__":
     print("Reading input file...")
     timer = datetime.now()
     if args.GZIPPED:
+        timestamp = datetime.now()
         file_decompressed = (
-            args.EDRFILE[:-7] + "_uuid_" + str(uuid.uuid4()) + ".edr"
+            args.EDRFILE[:-7]
+            + "_uuid_"
+            + str(uuid.uuid4())
+            + "_date_"
+            + str(timestamp.strftime("%Y-%m-%d_%H-%M-%S"))
+            + ".edr"
         )
         with gzip.open(args.EDRFILE, "rb") as file_in:
             with open(file_decompressed, "wb") as file_out:
