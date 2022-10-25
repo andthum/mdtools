@@ -430,7 +430,7 @@ if __name__ == "__main__":  # noqa: C901
                     + "Skew.: {:.3f}\n".format(skewness)
                     + "Kurt.: {:.3f}\n".format(kurtosis)
                     + "NGP: {:.3f}\n".format(ngp)
-                    + "p-value: {:.3f}\n".format(pval)
+                    + "p-value: {:.3f}".format(pval)
                 ),
                 loc="upper left",
                 prop={
