@@ -61,6 +61,9 @@ Options
     ``["Potential", "Kinetic En.", "Pressure"]``
 --print-obs
     Only print all energy terms contained in the .edr file and exit.
+--diff
+    Use the difference between consecutive values of the energy term for
+    the analysis rather than the energy term itself.
 --alpha
     Significance level for D'Agostino's and Pearson's K-squared test for
     normality of the distribution of energy values (see
@@ -83,6 +86,14 @@ Options
 
 See Also
 --------
+:func:`scipy.stats.skew` :
+    Compute the sample skewness of a data set
+:func:`scipy.stats.kurtosis` :
+    Compute the kurtosis of a dataset
+:func:`scipy.stats.normaltest` :
+    Test whether a sample differs from a normal distribution
+:func:`mdtools.statistics.ngp` :
+    Compute the non-Gaussian parameter of a data set
 :func:`mdtools.plot.correlogram`
     Create and plot a correlogram for a given data set
 
@@ -120,7 +131,7 @@ import mdtools as mdt
 import mdtools.plot as mdtplt
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # noqa: C901
     timer_tot = datetime.now()
     proc = psutil.Process()
     proc.cpu_percent()  # Initiate monitoring of CPU usage.
@@ -206,6 +217,17 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--diff",
+        dest="DIFF",
+        required=False,
+        default=False,
+        action="store_true",
+        help=(
+            "Use the difference between consecutive values of the energy term"
+            " for the analysis rather than the energy term itself."
+        ),
+    )
+    parser.add_argument(
         "--alpha",
         dest="ALPHA",
         type=float,
@@ -229,6 +251,13 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
+    if "Time" in args.OBSERVABLES:
+        raise ValueError("Illegal value for option --observables: 'Time'")
+    if args.ALPHA < 0 or args.ALPHA > 1:
+        raise ValueError(
+            "Illegal value for option --alpha: {}.  Give a value between 0 and"
+            " 1".format(args.ALPHA)
+        )
 
     print("\n")
     print("Reading input file...")
@@ -275,7 +304,6 @@ if __name__ == "__main__":
     print("Extracting observables...")
     timer = datetime.now()
     times = data.pop("Time")
-    time_unit = units.pop("Time")
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
@@ -288,10 +316,15 @@ if __name__ == "__main__":
     print("Last frame to use:      {:>8d}".format(END - 1))
     print("Use every n-th frame:   {:>8d}".format(EVERY))
     times = times[BEGIN:END:EVERY]
+    if args.DIFF:
+        times = times[1:]
+    time_unit = units.pop("Time")
     for key in tuple(data.keys()):
         if key not in args.OBSERVABLES:
             data.pop(key)
             units.pop(key)
+        elif args.DIFF:
+            data[key] = np.diff(data[key][BEGIN:END:EVERY])
         else:
             data[key] = data[key][BEGIN:END:EVERY]
     print("Elapsed time:         {}".format(datetime.now() - timer))
@@ -321,6 +354,10 @@ if __name__ == "__main__":
     print("\n")
     print("Processing data and creating plots...")
     timer = datetime.now()
+    if args.DIFF:
+        key_prefix = r"$\Delta$"
+    else:
+        key_prefix = ""
     n_gauss_warnings = 0
     non_gaussian_observables = []
     mdt.fh.backup(args.OUTFILE)
@@ -332,7 +369,7 @@ if __name__ == "__main__":
             ax.plot(times, val, rasterized=rasterized)
             ax.set(
                 xlabel="Time / " + time_unit,
-                ylabel=key + " / " + units[key],
+                ylabel=key_prefix + key + " / " + units[key],
                 xlim=(times[len(times) - args.NUM_POINTS], times[-1]),
             )
             pdf.savefig()
@@ -345,6 +382,7 @@ if __name__ == "__main__":
             )
             std = np.sqrt(var)
             median = np.median(val)
+            ngp = mdt.stats.ngp(val, center=True)
             if len(val) > 20:
                 # D'Agostino's and Pearson's K-squared test for
                 # normality.  The test is only valid for sample sizes
@@ -375,34 +413,51 @@ if __name__ == "__main__":
                 val, bins="auto", density=True, rasterized=True
             )
             bin_mids = bin_edges[1:] - np.diff(bin_edges)
-            ax.plot(bin_mids, rv.pdf(bin_mids), label="Gauss Fit")
+            lines = ax.plot(bin_mids, rv.pdf(bin_mids))
             ax.set(
-                xlabel=key + " / " + units[key],
+                xlabel=key_prefix + key + " / " + units[key],
                 ylabel="Probability",
                 ylim=(0, None),
             )
-            ax.legend(loc="upper left", **mdtplt.LEGEND_KWARGS_XSMALL)
-            at = AnchoredText(
+            at_data = AnchoredText(
                 (
-                    "Data (n = {})\n".format(len(val))
+                    "Data (n = {})\n".format(nobs)
                     + "Mean: {:.3f}\n".format(mean)
                     + "Median: {:.3f}\n".format(median)
+                    + "Min: {:.3f}\n".format(minmax[0])
+                    + "Max: {:.3f}\n".format(minmax[1])
                     + "StD: {:.3f}\n".format(std)
                     + "Skew.: {:.3f}\n".format(skewness)
                     + "Kurt.: {:.3f}\n".format(kurtosis)
+                    + "NGP: {:.3f}\n".format(ngp)
                     + "p-value: {:.3f}\n".format(pval)
-                    + "\n"
-                    + "Gauss Fit\n"
+                ),
+                loc="upper left",
+                prop={
+                    "fontsize": "xx-small",
+                    "color": patches[0].get_facecolor(),
+                },  # Text properties
+            )
+            at_data.patch.set(alpha=0.75, edgecolor="lightgrey")
+            ax.add_artist(at_data)
+            at_fit = AnchoredText(
+                (
+                    "Gaussian Fit\n"
                     + "Mean: {:.3f}\n".format(mean_fit)
-                    + "Median = Mean\n"
+                    + "Median = Mean \n"
                     + "StD: {:.3f}\n".format(std_fit)
-                    + "Skew. = Kurt. = 0"
+                    + "Skew.: 0\n"
+                    + "Kurt.: 0\n"
+                    + "NGP: 0"
                 ),
                 loc="upper right",
-                prop={"fontsize": "xx-small"},  # Text properties
-                alpha=0.75,
+                prop={
+                    "fontsize": "xx-small",
+                    "color": lines[0].get_color(),
+                },  # Text properties
             )
-            ax.add_artist(at)
+            at_fit.patch.set(alpha=0.75, edgecolor="lightgrey")
+            ax.add_artist(at_fit)
             pdf.savefig()
             plt.close()
 
@@ -418,7 +473,7 @@ if __name__ == "__main__":
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set(
                 xlabel="Lag Time / " + time_unit,
-                ylabel="ACF of " + key,
+                ylabel="ACF of " + key_prefix + key,
                 xlim=(lag_times[1], lag_times[-1]),
                 ylim=(None, 1),
             )
@@ -436,7 +491,7 @@ if __name__ == "__main__":
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set(
                 xlabel="Frequency / 1/" + time_unit,
-                ylabel="Pow. Spec. of " + key,
+                ylabel="Pow. Spec. of " + key_prefix + key,
                 xlim=(frequencies[1], frequencies[-1]),
                 ylim=(0, None),
             )
