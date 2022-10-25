@@ -86,6 +86,14 @@ Options
 
 See Also
 --------
+:func:`scipy.stats.skew` :
+    Compute the sample skewness of a data set
+:func:`scipy.stats.kurtosis` :
+    Compute the kurtosis of a dataset
+:func:`scipy.stats.normaltest` :
+    Test whether a sample differs from a normal distribution
+:func:`mdtools.statistics.ngp` :
+    Compute the non-Gaussian parameter of a data set
 :func:`mdtools.plot.correlogram`
     Create and plot a correlogram for a given data set
 
@@ -374,6 +382,7 @@ if __name__ == "__main__":  # noqa: C901
             )
             std = np.sqrt(var)
             median = np.median(val)
+            ngp = mdt.stats.ngp(val, center=True)
             if len(val) > 20:
                 # D'Agostino's and Pearson's K-squared test for
                 # normality.  The test is only valid for sample sizes
@@ -404,34 +413,51 @@ if __name__ == "__main__":  # noqa: C901
                 val, bins="auto", density=True, rasterized=True
             )
             bin_mids = bin_edges[1:] - np.diff(bin_edges)
-            ax.plot(bin_mids, rv.pdf(bin_mids), label="Gauss Fit")
+            lines = ax.plot(bin_mids, rv.pdf(bin_mids))
             ax.set(
                 xlabel=key_prefix + key + " / " + units[key],
                 ylabel="Probability",
                 ylim=(0, None),
             )
-            ax.legend(loc="upper left", **mdtplt.LEGEND_KWARGS_XSMALL)
-            at = AnchoredText(
+            at_data = AnchoredText(
                 (
-                    "Data (n = {})\n".format(len(val))
+                    "Data (n = {})\n".format(nobs)
                     + "Mean: {:.3f}\n".format(mean)
                     + "Median: {:.3f}\n".format(median)
+                    + "Min: {:.3f}\n".format(minmax[0])
+                    + "Max: {:.3f}\n".format(minmax[1])
                     + "StD: {:.3f}\n".format(std)
                     + "Skew.: {:.3f}\n".format(skewness)
                     + "Kurt.: {:.3f}\n".format(kurtosis)
+                    + "NGP: {:.3f}\n".format(ngp)
                     + "p-value: {:.3f}\n".format(pval)
-                    + "\n"
-                    + "Gauss Fit\n"
+                ),
+                loc="upper left",
+                prop={
+                    "fontsize": "xx-small",
+                    "color": patches[0].get_facecolor(),
+                },  # Text properties
+            )
+            at_data.patch.set(alpha=0.75, edgecolor="lightgrey")
+            ax.add_artist(at_data)
+            at_fit = AnchoredText(
+                (
+                    "Gaussian Fit\n"
                     + "Mean: {:.3f}\n".format(mean_fit)
-                    + "Median = Mean\n"
+                    + "Median = Mean \n"
                     + "StD: {:.3f}\n".format(std_fit)
-                    + "Skew. = Kurt. = 0"
+                    + "Skew.: 0\n"
+                    + "Kurt.: 0\n"
+                    + "NGP: 0"
                 ),
                 loc="upper right",
-                prop={"fontsize": "xx-small"},  # Text properties
-                alpha=0.75,
+                prop={
+                    "fontsize": "xx-small",
+                    "color": lines[0].get_color(),
+                },  # Text properties
             )
-            ax.add_artist(at)
+            at_fit.patch.set(alpha=0.75, edgecolor="lightgrey")
+            ax.add_artist(at_fit)
             pdf.savefig()
             plt.close()
 
