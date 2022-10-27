@@ -235,6 +235,7 @@ rst-roles =
 # See https://github.com/peterjc/flake8-rst-docstrings/pull/62
 rst-substitutions =
     # Self-defined substitutions:
+    dev_guide,
     GNU_GPLv3,
     Git,
     Git_Book,
@@ -275,6 +276,11 @@ rst-substitutions =
     selection_syntax,
     explanation_of_these_terms,
     MDA_always_guesses_atom_masses,
+    shfmt,
+    shfmt-py,
+    shellcheck,
+    shellcheck-py,
+    markdownlint,
 # Print the source code generating the error/warning in question.
 show-source = true
 # Count the number of occurrences of each error/warning.
