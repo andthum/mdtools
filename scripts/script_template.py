@@ -23,6 +23,7 @@ r"""
 Script template for scripts that process MD trajectories.
 
 .. deprecated:: 1.6.0
+
     **Example deprication warning**.  :mod:`scripts.script_template`
     will be removed in MDTools 2.0.0.  It is replaced by
     :mod:`scripts.script_template_new`, because the latter has
@@ -53,48 +54,51 @@ section) when implementing the command-line interface with
 
 Options
 -------
-A |RST_option_list| listing all options with which the script can/must
+An |RST_option_list| listing all options with which the script can/must
 be called and their meaning.
 
--f          Trajectory file.  See |supported_coordinate_formats| of
-            MDAnalysis.
--s          Topology file.  See |supported_topology_formats| of
-            MDAnalysis.
--o          Output filename.
--b          First frame to read from the trajectory.  Frame numbering
-            starts at zero.  Default: ``0``.
--e          Last frame to read from the trajectory.  This is exclusive,
-            i.e. the last frame read is actually ``END - 1``.  A value
-            of ``-1`` means to read the very last frame.  Default:
-            ``-1``.
---every     Read every n-th frame from the trajectory.  Default: ``1``.
---sel       Selection string to select a group of atoms for the
-            analysis.  See MDAnalysis' |selection_syntax| for possible
-            choices.
---cmp       {'group', 'segments', 'residues', 'molecules', \
-            'fragments', 'atoms'}
+-f
+    Trajectory file.  See |supported_coordinate_formats| of MDAnalysis.
+-s
+    Topology file.  See |supported_topology_formats| of MDAnalysis.
+-o
+    Output filename.
+-b
+    First frame to read from the trajectory.  Frame numbering starts at
+    zero.  Default: ``0``.
+-e
+    Last frame to read from the trajectory.  This is exclusive, i.e. the
+    last frame read is actually ``END - 1``.  A value of ``-1`` means to
+    read the very last frame.  Default: ``-1``.
+--every
+    Read every n-th frame from the trajectory.  Default: ``1``.
+--sel
+    Selection string to select a group of atoms for the analysis.  See
+    MDAnalysis' |selection_syntax| for possible choices.
+--cmp
+    {'group', 'segments', 'residues', 'molecules', 'fragments', 'atoms'}
 
-            The compounds of the selection group to use for the
-            analysis.  Compounds can be 'group' (the entire selection
-            group), 'segments', 'residues', 'molecules', 'fragments', or
-            'atoms'.  Refer to the MDAnalysis' user guide for an
-            |explanation_of_these_terms|.  Note that in any case, even
-            if ``CMP`` is e.g. 'residues', only the atoms belonging to
-            the selection group are taken into account, even if the
-            compound might comprise additional atoms that are not
-            contained in the selection group.  Default: ``'atoms'``.
---center    {'cog', 'com', 'coc'}
+    The compounds of the selection group to use for the analysis.
+    Compounds can be 'group' (the entire selection group), 'segments',
+    'residues', 'molecules', 'fragments', or 'atoms'.  Refer to the
+    MDAnalysis' user guide for an |explanation_of_these_terms|.  Note
+    that in any case, even if ``CMP`` is e.g. 'residues', only the atoms
+    belonging to the selection group are taken into account, even if the
+    compound might comprise additional atoms that are not contained in
+    the selection group.  Default: ``'atoms'``.
+--center
+    {'cog', 'com', 'coc'}
 
-            The center of the compounds to use for the analysis.
+    The center of the compounds to use for the analysis.
 
-                * ``'cog'``: Center of geometry
-                * ``'com'``: Center of mass
-                * ``'coc'``: Center of charge
+        * ``'cog'``: Center of geometry
+        * ``'com'``: Center of mass
+        * ``'coc'``: Center of charge
 
-            Note that |MDA_always_guesses_atom_masses| from the atom
-            types, even if the input file contains the masses.  Default:
-            ``'cog'``.
---debug     Run in :ref:`debug mode <debug-mode-label>`.
+    Note that |MDA_always_guesses_atom_masses| from the atom types, even
+    if the input file contains the masses.  Default: ``'cog'``.
+--debug
+    Run in :ref:`debug mode <debug-mode-label>`.
 
 Output
 ------
@@ -103,18 +107,21 @@ created by the script.
 
 Outfile1 (-o) : .txt
     A text file containing abc.
-Outfile2 (\--dtrj-out): .npy
-    A binary NumPy :file:`.npy` containing a discrete trajectory as
-    :class:`numpy.ndarray` of dtype :attr:`numpy.uint32` and shape
-    ``(n, f)``, where ``n`` is the number of reference compounds
-    and ``f`` is the number of frames.  The elements of the discrete
-    trajectory are the states in which a given compound resides at a
-    given frame.
+Outfile2 (\--dtrj-out): .npz
+    A compressed |npz_archive| containing a binary NumPy |npy_file|
+    called :file:`dtrj.npy` that holds the discrete trajectory.  The
+    discrete trajectory is stored as :class:`numpy.ndarray` of dtype
+    :attr:`numpy.uint32` and shape ``(n, f)``, where ``n`` is the number
+    of reference compounds and ``f`` is the number of frames.  The
+    elements of the discrete trajectory are the states in which a given
+    compound resides at a given frame.
 
 See Also
 --------
 :mod:`scripts.script_template_dtrj` :
     Script template for scripts that process discrete trajectories
+:mod:`scripts.script_template_plot` :
+    Script template for scripts that create plots
 :func:`some_function` :
     A function that is not defined in this script, but which helps
     understanding the script's output or what the script does
@@ -123,11 +130,11 @@ Notes
 -----
 Implementation details and background theory, i.e. a detailed
 description of the scientific problem which is solved by the script and
-particularly how it is solved.
+particularly how it is solved. [#]_
 
 References
 ----------
-Cited references.
+.. [#] Cited references.
 
 Examples
 --------
@@ -142,30 +149,29 @@ demonstrating how the generated data can be visualized.
 __author__ = "Andreas Thum"
 
 
-# TODO: Import (only!) the libraries you need
 # Standard libraries
-import sys
-import os
 import argparse
+import os
+import sys
 from datetime import datetime, timedelta
 
-# Third party libraries
+# Third-party libraries
 import psutil
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 
 
-# TODO: Put your function, class or other object definitions here.
-# If your object is very generic and might be used in other contexts as
-# well, consider adding it to the MDTools core package instead of
-# putting it here in this specific script.
+# Your function and class definitions go here.  If your function/class
+# is very generic and might be used in other contexts as well, consider
+# adding it to the MDTools core package instead of putting it here in
+# this specific script.
 
 
 if __name__ == "__main__":
     timer_tot = datetime.now()
     proc = psutil.Process()
-    proc.cpu_percent()  # Initiate monitoring of CPU usage
+    proc.cpu_percent()  # Initiate monitoring of CPU usage.
     # TODO: Implement command line interface.
     parser = argparse.ArgumentParser(
         # The description should only contain the short summary from the
@@ -180,21 +186,21 @@ if __name__ == "__main__":
         dest="TRJFILE",
         type=str,
         required=True,
-        help=("Trajectory file."),
+        help="Trajectory file.",
     )
     parser.add_argument(
         "-s",
         dest="TOPFILE",
         type=str,
         required=True,
-        help=("Topology file."),
+        help="Topology file.",
     )
     parser.add_argument(
         "-o",
         dest="OUTFILE",
         type=str,
         required=True,
-        help=("Output filename."),
+        help="Output filename.",
     )
     parser.add_argument(
         "-b",
@@ -234,7 +240,7 @@ if __name__ == "__main__":
         type=str,
         nargs="+",
         required=True,
-        help=("Selection string."),
+        help="Selection string.",
     )
     parser.add_argument(
         "--cmp",
@@ -273,11 +279,11 @@ if __name__ == "__main__":
         required=False,
         default=False,
         action="store_true",
-        help=("Run in debug mode."),
+        help="Run in debug mode.",
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    # TODO: Check parsed input arguments if necessary
+    # TODO: Check parsed input arguments if necessary.
 
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
@@ -306,8 +312,9 @@ if __name__ == "__main__":
     print("Time step last frame:   {:>12.3f} ps".format(last_frame_read.dt))
     timer = datetime.now()
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
-    for ts in trj:
-        # TODO: Put your computations here (preferably as function)
+    for _ts in trj:
+        # TODO: Put your computations here (preferably as function).
+        #
         # Example for calculating different centers of compounds of an
         # MDAnalysis AtomGroup:
         pos = mdt.strc.center(
@@ -318,7 +325,7 @@ if __name__ == "__main__":
             make_whole=True,
             debug=args.DEBUG,
         )
-        # ProgressBar update:
+        # ProgressBar update.
         trj.set_postfix_str(
             "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
         )
@@ -329,9 +336,9 @@ if __name__ == "__main__":
     print("\n")
     print("Creating output...")
     timer = datetime.now()
-    # TODO: Create your output file(s).  When creating text files, use
-    # mdtools.file_handler.savetxt or
-    # mdtools.file_handler.savetxt_matrix
+    # TODO: Create your output file(s).
+    # When creating text files, use mdtools.file_handler.savetxt or
+    # mdtools.file_handler.savetxt_matrix.
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))

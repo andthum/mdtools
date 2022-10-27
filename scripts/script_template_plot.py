@@ -23,6 +23,7 @@ r"""
 Script template for plotting scripts.
 
 .. deprecated:: 1.6.0
+
     **Example deprication warning**.
     :mod:`scripts.script_template_plot` will be removed in MDTools
     2.0.0.  It is replaced by :mod:`scripts.script_template_plot_new`,
@@ -60,31 +61,40 @@ section) when implementing the command-line interface with
 
 Options
 -------
-A |RST_option_list| listing all options with which the script can/must
+An |RST_option_list| listing all options with which the script can/must
 be called and their meaning.
 
--f          Input filename.  The input file must be a text file with at
-            least two columns of data.
--o          Output filename.
---cols      The columns of the input file that should be plotted.  The
-            first given column is treated as x data, all other given
-            columns are treated as y data.  Column numbering starts at
-            zero.  Default: ``None`` (this means read all columns).
---labels    A label for each set of y data.  The labels will be shown in
-            the legend of the plot.  If provided, you must give one
-            label for each set of y data.  Labels are assigned to the
-            sets of y data by their input order.  If you do not want to
-            label a specific set of y data, pass ``None`` for this set.
-            Default: ``None``.
---xylabel   x- and y-axis label.  Default: ``[r'$x$', r'$y$']``.
---xlim      Left and right limit of the x-axis in data coordinates.
-            Pass 'None' to adjust the limit(s) automatically.  Default:
-            ``[None, None]``.
---ylim      Lower and upper limit of the y-axis in data coordinates.
-            Pass 'None' to adjust the limit(s) automatically.  Default:
-            ``[None, None]``.
---log       Whether to use a logarithmic scale for the x- and/or y-axis.
-            Default:  ``[False, False]``.
+-f
+    Input filename.  The input file must be a text file with at least
+    two columns of data.
+-o
+    Output filename.  The image file format is inferred from the
+    extension.  The extension .pdf is recommended and will usually
+    result in scalable vector graphics.
+--cols
+    The columns of the input file that should be plotted.  The first
+    given column is treated as x data, all other given columns are
+    treated as y data.  Column numbering starts at zero.  Default:
+    ``None`` (this means read all columns).
+--labels
+    A label for each set of y data.  The labels will be shown in the
+    legend of the plot.  If provided, you must give one label for each
+    set of y data.  Labels are assigned to the sets of y data by their
+    input order.  If you do not want to label a specific set of y data,
+    parse ``None`` for this set.  Default: ``None``.
+--xylabel
+    x- and y-axis label.  Default: ``[r'$x$', r'$y$']``.
+--xlim
+    Left and right limit of the x-axis in data coordinates.  Parse
+    ``None`` to adjust the limit(s) automatically.  Default:
+    ``[None, None]``.
+--ylim
+    Lower and upper limit of the y-axis in data coordinates.  Parse
+    ``None`` to adjust the limit(s) automatically.  Default:
+    ``[None, None]``.
+--log
+    Whether to use a logarithmic scale for the x- and/or y-axis.
+    Default:  ``[False, False]``.
 
 Output
 ------
@@ -99,17 +109,19 @@ See Also
 --------
 :mod:`scripts.script_template` :
     Script template for scripts that process MD trajectories
+:mod:`scripts.script_template_dtrj` :
+    Script template for scripts that process discrete trajectories
 :func:`some_function` :
     A function that is not defined in this script, but which helps
     understanding the script's output or what the script does
 
 Notes
 -----
-Implementation details and background theory.
+Implementation details and background theory. [#]_
 
 References
 ----------
-Cited references.
+.. [#] Cited references.
 
 Examples
 --------
@@ -124,33 +136,32 @@ demonstrating how the plots that are produced by this script look like.
 __author__ = "Andreas Thum"
 
 
-# TODO: Import (only!) the libraries you need
 # Standard libraries
-import sys
-import os
 import argparse
+import os
+import sys
 from datetime import datetime, timedelta
 
-# Third party libraries
-import psutil
-import numpy as np
+# Third-party libraries
 import matplotlib.pyplot as plt
+import numpy as np
+import psutil
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 import mdtools.plot as mdtplt  # noqa: F401; Import MDTools plot style
 
 
-# TODO: Put your function, class or other object definitions here.
-# If your object is very generic and might be used in other contexts as
-# well, consider adding it to the MDTools core package instead of
-# putting it here in this specific script.
+# Your function and class definitions go here.  If your function/class
+# is very generic and might be used in other contexts as well, consider
+# adding it to the MDTools core package instead of putting it here in
+# this specific script.
 
 
 if __name__ == "__main__":
     timer_tot = datetime.now()
     proc = psutil.Process()
-    proc.cpu_percent()  # Initiate monitoring of CPU usage
+    proc.cpu_percent()  # Initiate monitoring of CPU usage.
     # TODO: Implement command line interface.
     parser = argparse.ArgumentParser(
         # The description should only contain the short summary from the
@@ -165,14 +176,14 @@ if __name__ == "__main__":
         dest="INFILE",
         type=str,
         required=True,
-        help=("Input filename."),
+        help="Input filename.",
     )
     parser.add_argument(
         "-o",
         dest="OUTFILE",
         type=str,
         required=True,
-        help=("Output filename."),
+        help="Output filename.",
     )
     parser.add_argument(
         "--cols",
@@ -193,7 +204,7 @@ if __name__ == "__main__":
         nargs="+",
         required=False,
         default=None,
-        help=("A label for each set of y data.  Default: %(default)s"),
+        help="A label for each set of y data.  Default: %(default)s",
     )
     parser.add_argument(
         "--xylabel",
@@ -202,7 +213,7 @@ if __name__ == "__main__":
         nargs=2,
         required=False,
         default=[r"$x$", r"$y$"],
-        help=("x- and y-axis label.  Default: %(default)s"),
+        help="x- and y-axis label.  Default: %(default)s",
     )
     parser.add_argument(
         "--xlim",
@@ -242,7 +253,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    # TODO: Check parsed input arguments if necessary
+    # TODO: Check parsed input arguments if necessary.
+    if args.COLS is not None and len(args.COLS) < 2:
+        raise ValueError(
+            "Invalid input for option --cols: {}.  You must give either none"
+            " or at least two columns".format(args.COLS)
+        )
 
     print("\n")
     print("Reading input file...")
@@ -262,6 +278,9 @@ if __name__ == "__main__":
     print("\n")
     print("Creating plot...")
     timer = datetime.now()
+    # When creating multiple plots, use
+    # matplotlib.backends.backend_pdf.PdfPages to save all plots to one
+    # PDF file.
     fig, ax = plt.subplots(clear=True)
     ax.plot(xdata, ydata, label=args.LABELS)
     if args.LOG[0]:
