@@ -4153,6 +4153,7 @@ def ceil_divide(x1, x2, **kwargs):
     """
     if kwargs:
         y = np.multiply(x1, -1, **kwargs)
+        kwargs.setdefault("out", y)
         y = np.floor_divide(y, x2, **kwargs)
         y = np.multiply(y, -1, **kwargs)
     else:
