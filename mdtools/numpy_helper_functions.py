@@ -4163,6 +4163,204 @@ def ceil_divide(x1, x2, **kwargs):
     return y
 
 
+def digitize_dd(
+    sample,
+    bins,
+    right=False,
+    expand_binnumbers=False,
+    raise_if_less=False,
+    raise_if_greater=False,
+):
+    """
+    Return the indices of the multi-dimensional bins to which each value
+    in the input array belongs.
+
+    This function extends :func:`numpy.digitize` to multi-dimensional
+    data.
+
+    If values in `sample` are beyond the bounds of `bins`, ``0`` or
+    ``len(bins)`` is returned as appropriate.
+
+    Parameters
+    ----------
+    sample : array_like
+        Data to be digitized.  Either a sequence of ``N`` arrays each of
+        length ``D`` or a 2-dimensional array of shape ``(N, D)``.  Each
+        of the ``N`` arrays/rows is interpreted as a set of coordinates
+        in ``D``-dimensional space.  If `sample` has less than 2
+        dimensions, simply ``np.digitize(sample, bins, right=right)`` is
+        returned.
+    bins : array_like or sequence of array_likes
+        Array of bin edges to use for each of the ``D`` dimensions.
+        Must be either a sequence of ``D`` monotonic arrays (one for
+        each dimension) or a single monotonic array that is used for all
+        dimensions.  If `sample` has less than 2 dimensions, `bins` must
+        be a 1-dimensional, monotonic array.
+    right : bool, optional
+        Indicating whether the bin intervals include the right or the
+        left bin edge.  If ``True``, the bin intervals include the right
+        bin edge, i.e. the bin intervals are left-open and right-closed:
+        (a, b] -> a < x <= b.  If ``False``, the bin intervals include
+        the left bin edge, i.e. the bin intervals are left-closed and
+        right-open: [a, b) -> a <= x < b.  See :func:`numpy.digitize`
+        for more details.
+    expand_binnumbers : bool, optional
+        If ``True``, the returned index array is unravled into an array
+        of shape ``(D, N)`` where each row gives the bin numbers
+        of the elements of `sample` along the corresponding dimension.
+        If ``False``, the returned index array has shape ``(N,)`` and
+        maps each element of `sample` to its corresponding linearized
+        bin number (using row-major ordering).  Note that the returned
+        linearized bin indices index into an array containing two extra
+        bins at the outer bin edges to capture values outside of the
+        defined bin bounds.  See also
+        :func:`scipy.stats.binned_statistic_dd`.
+    raise_if_less, raise_if_greater : bool, optional
+        If ``True``, raise an :exc:`ValueError` if a value of `sample`
+        lies below/above the first/last bin.  Otherwise, if values in
+        `sample` lie below or above the bounds of `bins`, ``0`` or
+        ``len(bins)`` is returned, respectively.
+
+    Returns
+    -------
+    bin_ix : numpy.ndarray
+        Array of indices.  This array assigns to each element of
+        `sample` an integer that represents the bin number to which this
+        element belongs.  The representation depends on the
+        `expand_binnumbers` argument.
+
+    See Also
+    --------
+    :func:`numpy.digitize` :
+        Return the indices of the 1-dimensional bins to which each value
+        of the input array belongs
+    :func:`scipy.stats.binned_statistic_dd` :
+        Compute a multi-dimensional binned statistic for a set of data
+    :func:`numpy.unravel_index` :
+        Convert an array of flat indices into a tuple of coordinate
+        arrays
+
+    Examples
+    --------
+    >>> mdt.nph.digitize_dd(0.5, [0, 1])
+    1
+    >>> mdt.nph.digitize_dd([-1, 0, 1], [0, 1])
+    array([0, 1, 2])
+    >>> mdt.nph.digitize_dd([-1, 0, 1], [0, 1], right=True)
+    array([0, 0, 1])
+
+    >>> a = np.array([[-1, 0.5],
+    ...               [ 0, 1.5],
+    ...               [ 1, 2.5]])
+    >>> bins_x = np.arange(-1, 2)
+    >>> bins_y = np.arange(1, 4)
+    >>> mdt.nph.digitize_dd(a, [bins_x, bins_y])
+    array([ 4,  9, 14])
+    >>> mdt.nph.digitize_dd(a, [bins_x, bins_y], expand_binnumbers=True)
+    array([[1, 2, 3],
+           [0, 1, 2]])
+
+    >>> from scipy.stats import binned_statistic_dd
+    >>> a = np.random.rand(4,3) * 5
+    >>> bins_x = np.arange(5)
+    >>> bins_y = np.arange(-1, 5.1, 2)
+    >>> bins_z = np.arange(0, 6.1, 2)
+    >>> bins = (bins_x, bins_y, bins_z)
+    >>> bin_ix = mdt.nph.digitize_dd(a, bins)
+    >>> ret = binned_statistic_dd(a, values=a.T, bins=bins)
+    >>> np.array_equal(bin_ix, ret.binnumber)
+    True
+    >>> bin_ix = mdt.nph.digitize_dd(a, bins, expand_binnumbers=True)
+    >>> ret = binned_statistic_dd(
+    ...    a, values=a.T, bins=bins, expand_binnumbers=True
+    ... )
+    >>> np.array_equal(bin_ix, ret.binnumber)
+    True
+    """
+    sample = np.asarray(sample)
+    if sample.ndim <= 1:
+        bin_ix = np.digitize(sample, bins, right=right)
+        if raise_if_less and bin_ix <= 0:
+            raise ValueError("A value lies below the first bin")
+        if raise_if_greater and bin_ix >= len(bins):
+            raise ValueError("A value lies above the last bin")
+        return bin_ix
+    elif sample.ndim == 2:
+        ndims = sample.shape[1]
+        try:
+            len(bins)
+        except TypeError:
+            # `bins` is not a sequence.
+            # https://docs.python.org/3/glossary.html#term-sequence
+            raise TypeError(
+                "'bins' must be either a 1-dimensional array or a sequence of"
+                " {} 1-dimensional arrays".format(ndims)
+            )
+        try:
+            len(bins[0])
+        except TypeError:
+            # `bins` is a 1-dimensional sequence.  Make it to a sequence
+            # of `ndims` 1-dimensional arrays.
+            bins = (bins,) * ndims
+        else:
+            # `bins` is a sequence of sequences.
+            try:
+                len(bins[0][0])
+            except TypeError:
+                # `bins` is a sequence of 1-dimensional sequences.
+                if len(bins) != ndims:
+                    raise TypeError(
+                        "'bins' must be either a 1-dimensional array or a"
+                        " sequence of {} 1-dimensional arrays".format(ndims)
+                    )
+            else:
+                # `bins` is a sequence of sequences of sequences.
+                raise TypeError(
+                    "'bins' must be either a 1-dimensional array or a sequence"
+                    " of {} 1-dimensional arrays".format(ndims)
+                )
+
+        sample = sample.T
+        nbins_nd, bin_ix_nd = [], []
+        for i, arr in enumerate(sample):
+            nbins_nd.append(len(bins[i]) + 1)
+            bin_ix = np.digitize(arr, bins[i], right=right)
+            bin_ix_nd.append(bin_ix)
+            if raise_if_less and bin_ix <= 0:
+                raise ValueError(
+                    "A value in the {}-th dimension lies below the first"
+                    " bin".format(i)
+                )
+            if raise_if_greater and bin_ix >= len(bins):
+                raise ValueError(
+                    "A value in the {}-th dimension lies above the last"
+                    " bin".format(i)
+                )
+        del bin_ix
+        if expand_binnumbers:
+            bin_ix_nd = np.asarray(bin_ix_nd)
+            if bin_ix_nd.shape != sample.shape:
+                raise ValueError(
+                    "'bin_ix' must have shape {} but has shape {}.  This"
+                    " should not have"
+                    " happened".format(sample.shape, bin_ix_nd.shape)
+                )
+        else:
+            bin_ix_nd = np.ravel_multi_index(bin_ix_nd, nbins_nd)
+            if bin_ix_nd.shape != (sample.shape[1],):
+                raise ValueError(
+                    "'bin_ix' must have shape {} but has shape {}.  This"
+                    " should not have"
+                    " happened".format((sample.shape[1],), bin_ix_nd.shape)
+                )
+        return bin_ix_nd
+    else:
+        raise ValueError(
+            "The number of dimensions of 'sample' must be less than 3 but is"
+            " {}".format(sample.ndim)
+        )
+
+
 def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
     """
     Split an array into its subarrays of consecutive numbers.
