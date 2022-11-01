@@ -83,7 +83,7 @@ jobs:
       # formatted with black.  But as long as this is not the case, only
       # check those files that are already formatted.
       run: |
-        python -m black ./ --line-length 79 --check --diff --color \
+        python -m black ./ --check --diff --color \
         --include \
         **/*template*.py \
         docs/source/conf.py \
@@ -95,15 +95,19 @@ jobs:
         mdtools/numpy_helper_functions.py \
         mdtools/plot.py \
         mdtools/run_time_info.py \
+        mdtools/scipy_helper_functions.py \
         mdtools/select.py \
+        mdtools/statistics.py \
         mdtools/version.py \
         scripts/discretization/plot_*.py \
         scripts/dynamics/lifetime_autocorr* \
         scripts/dynamics/plot_msd_layer*.py \
+        scripts/gmx/*.py \
         scripts/other/*.py \
         scripts/structure/lig_change_at_pos_change_blocks.py \
         scripts/structure/plot_gmx_densmap.py \
         scripts/structure/rmsd_vs_time.py \
+        scripts/*.py \
         setup.py
     - name: Lint code and docstrings with flake8
       # Use setup.cfg to configure flake8
