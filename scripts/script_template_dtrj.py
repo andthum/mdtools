@@ -23,6 +23,7 @@ r"""
 Script template for scripts that process discrete trajectories.
 
 .. deprecated:: 1.6.0
+
     **Example deprication warning**.
     :mod:`scripts.script_template_dtrj` will be removed in MDTools
     2.0.0.  It is replaced by :mod:`scripts.cript_template_dtrj_new`,
@@ -57,27 +58,28 @@ section) when implementing the command-line interface with
 
 Options
 -------
-A |RST_option_list| listing all options with which the script can/must
+An |RST_option_list| listing all options with which the script can/must
 be called and their meaning.
 
--f          Trajectory file.  File containing the discrete trajectory
-            stored as :class:`numpy.ndarray` in the binary :file:`.npy`
-            format.  The array must be of shape ``(n, f)``, where ``n``
-            is the number of compounds and ``f`` is the number of
-            frames.  The shape can also be ``(f,)``, in which case the
-            array is expanded to shape ``(1, f)``.  All elements of the
-            array must be integers or floats whose fractional part is
-            zero, because they are interpreted as the indices of the
-            states in which a given compound is at a given frame.
--o          Output filename.
--b          First frame to read from the trajectory.  Frame numbering
-            starts at zero.  Default: ``0``.
--e          Last frame to read from the trajectory.  This is exclusive,
-            i.e. the last frame read is actually ``END - 1``.  A value
-            of ``-1`` means to read the very last frame.  Default:
-            ``-1``.
---every     Read every n-th frame from the trajectory.  Default: ``1``.
---debug     Run in :ref:`debug mode <debug-mode-label>`.
+-f
+    Name of the file containing the discrete trajectory.  The discrete
+    trajectory must be stored as :class:`numpy.ndarray` either in a
+    binary NumPy |npy_file| or in a (compressed) NumPy |npz_archive|.
+    See :func:`mdtools.file_handler.load_dtrj` for more information
+    about the requirements for the input file.
+-o
+    Output filename.
+-b
+    First frame to read from the discrete trajectory.  Frame numbering
+    starts at zero.  Default: ``0``.
+-e
+    Last frame to read from the discrete trajectory.  This is exclusive,
+    i.e. the last frame read is actually ``END - 1``.  A value of ``-1``
+    means to read the very last frame.  Default: ``-1``.
+--every
+    Read every n-th frame from the discrete trajectory.  Default: ``1``.
+--debug
+    Run in :ref:`debug mode <debug-mode-label>`.
 
 Output
 ------
@@ -87,17 +89,20 @@ created by the script.
 Outfile1 (-o) : .txt
     A text file containing abc.
 Outfile2 (\--dtrj-out): .npy
-    A binary NumPy :file:`.npy` containing a discrete trajectory as
-    :class:`numpy.ndarray` of dtype :attr:`numpy.uint32` and shape
-    ``(n, f)``, where ``n`` is the number of reference compounds
-    and ``f`` is the number of frames.  The elements of the discrete
-    trajectory are the states in which a given compound resides at a
-    given frame.
+    A compressed |npz_archive| containing a binary NumPy |npy_file|
+    called :file:`dtrj.npy` that holds the discrete trajectory.  The
+    discrete trajectory is stored as :class:`numpy.ndarray` of dtype
+    :attr:`numpy.uint32` and shape ``(n, f)``, where ``n`` is the number
+    of reference compounds and ``f`` is the number of frames.  The
+    elements of the discrete trajectory are the states in which a given
+    compound resides at a given frame.
 
 See Also
 --------
 :mod:`scripts.script_template` :
     Script template for scripts that process MD trajectories
+:mod:`scripts.script_template_plot` :
+    Script template for scripts that create plots
 :func:`some_function` :
     A function that is not defined in this script, but which helps
     understanding the script's output or what the script does
@@ -106,11 +111,11 @@ Notes
 -----
 Implementation details and background theory, i.e. a detailed
 description of the scientific problem which is solved by the script and
-particularly how it is solved.
+particularly how it is solved. [#]_
 
 References
 ----------
-Cited references.
+.. [#] Cited references.
 
 Examples
 --------
@@ -125,30 +130,29 @@ demonstrating how the generated data can be visualized.
 __author__ = "Andreas Thum"
 
 
-# TODO: Import (only!) the libraries you need
 # Standard libraries
-import sys
-import os
 import argparse
+import os
+import sys
 from datetime import datetime, timedelta
 
-# Third party libraries
+# Third-party libraries
 import psutil
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 
 
-# TODO: Put your function, class or other object definitions here.
-# If your object is very generic and might be used in other contexts as
-# well, consider adding it to the MDTools core package instead of
-# putting it here in this specific script.
+# Your function and class definitions go here.  If your function/class
+# is very generic and might be used in other contexts as well, consider
+# adding it to the MDTools core package instead of putting it here in
+# this specific script.
 
 
 if __name__ == "__main__":
     timer_tot = datetime.now()
     proc = psutil.Process()
-    proc.cpu_percent()  # Initiate monitoring of CPU usage
+    proc.cpu_percent()  # Initiate monitoring of CPU usage.
     # TODO: Implement command line interface.
     parser = argparse.ArgumentParser(
         # The description should only contain the short summary from the
@@ -165,7 +169,7 @@ if __name__ == "__main__":
         required=True,
         help=(
             "File containing the discrete trajectory stored as numpy.ndarray"
-            " in the binary .npy format."
+            " in the binary .npy format or as .npz archive."
         ),
     )
     parser.add_argument(
@@ -173,7 +177,7 @@ if __name__ == "__main__":
         dest="OUTFILE",
         type=str,
         required=True,
-        help=("Output filename."),
+        help="Output filename.",
     )
     parser.add_argument(
         "-b",
@@ -213,11 +217,11 @@ if __name__ == "__main__":
         required=False,
         default=False,
         action="store_true",
-        help=("Run in debug mode."),
+        help="Run in debug mode.",
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    # TODO: Check parsed input arguments if necessary
+    # TODO: Check parsed input arguments if necessary.
 
     print("\n")
     print("Loading trajectory...")
@@ -245,9 +249,10 @@ if __name__ == "__main__":
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     timer = datetime.now()
     dtrj = mdt.rti.ProgressBar(dtrj, unit="compounds")
-    for cmp_trj in dtrj:
-        # TODO: Put your computations here (preferably as function)
-        # ProgressBar update:
+    for _cmp_trj in dtrj:
+        # TODO: Put your computations here (preferably as function).
+        # <computations>
+        # ProgressBar update.
         dtrj.set_postfix_str(
             "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
         )
@@ -258,9 +263,9 @@ if __name__ == "__main__":
     print("\n")
     print("Creating output...")
     timer = datetime.now()
-    # TODO: Create your output file(s).  When creating text files, use
-    # mdtools.file_handler.savetxt or
-    # mdtools.file_handler.savetxt_matrix
+    # TODO: Create your output file(s).
+    # When creating text files, use mdtools.file_handler.savetxt or
+    # mdtools.file_handler.savetxt_matrix.
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
