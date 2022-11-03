@@ -4442,14 +4442,60 @@ def extend(a, length, axis=-1, fill_value=0):
         `fill_value` in such a wax that it has the desired length. If
         the given axis already had the desired length or is even longer,
         just the input array is returned.
+
+    Examples
+    --------
+    >>> a = np.arange(3)
+    >>> mdt.nph.extend(a, 2)
+    array([0, 1, 2])
+    >>> mdt.nph.extend(a, 5)
+    array([0, 1, 2, 0, 0])
+    >>> mdt.nph.extend(a, 5, fill_value=9)
+    array([0, 1, 2, 9, 9])
+
+    >>> a = np.arange(6).reshape(2, 3)
+    >>> mdt.nph.extend(a, 5)
+    array([[0, 1, 2, 0, 0],
+           [3, 4, 5, 0, 0]])
+    >>> mdt.nph.extend(a, 4, axis=0)
+    array([[0, 1, 2],
+           [3, 4, 5],
+           [0, 0, 0],
+           [0, 0, 0]])
+
+    >>> a = np.arange(12).reshape(2, 2, 3)
+    >>> mdt.nph.extend(a, 5)
+    array([[[ 0,  1,  2,  0,  0],
+            [ 3,  4,  5,  0,  0]],
+    <BLANKLINE>
+           [[ 6,  7,  8,  0,  0],
+            [ 9, 10, 11,  0,  0]]])
+    >>> mdt.nph.extend(a, 3, axis=0)
+    array([[[ 0,  1,  2],
+            [ 3,  4,  5]],
+    <BLANKLINE>
+           [[ 6,  7,  8],
+            [ 9, 10, 11]],
+    <BLANKLINE>
+           [[ 0,  0,  0],
+            [ 0,  0,  0]]])
+    >>> mdt.nph.extend(a, 3, axis=1)
+    array([[[ 0,  1,  2],
+            [ 3,  4,  5],
+            [ 0,  0,  0]],
+    <BLANKLINE>
+           [[ 6,  7,  8],
+            [ 9, 10, 11],
+            [ 0,  0,  0]]])
     """
     a = np.asarray(a)
-    if a.shape[axis] >= length:
-        return a
-
+    try:
+        if a.shape[axis] >= length:
+            return a
+    except IndexError:
+        raise np.AxisError(axis, ndim=a.ndim)
     pad_width = [[0, 0] for i in range(a.ndim)]
     pad_width[axis][1] = length - a.shape[axis]
-
     return np.pad(a, pad_width, mode="constant", constant_values=fill_value)
 
 
