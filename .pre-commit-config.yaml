@@ -78,8 +78,12 @@ repos:
       ### json ###
       # Check json files for parseable syntax.
       - id: "check-json"
+        # VSCode supports comments in its json config files.
+        exclude: '\.vscode/.*\.json'
       # Set a standard for formatting json files.
       - id: "pretty-format-json"
+        # VSCode supports comments in its json config files.
+        exclude: '\.vscode/.*\.json'
       ### Python ###
       # Check whether the files parse as valid Python.
       - id: "check-ast"
