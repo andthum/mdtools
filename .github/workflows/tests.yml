@@ -105,6 +105,7 @@ jobs:
         scripts/gmx/*.py \
         scripts/other/*.py \
         scripts/structure/lig_change_at_pos_change_blocks.py \
+        scripts/structure/subvolume_charge.py \
         scripts/structure/plot_gmx_densmap.py \
         scripts/structure/rmsd_vs_time.py \
         scripts/*.py \
