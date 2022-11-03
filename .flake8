@@ -50,14 +50,10 @@ extend-exclude =
     *ENV*/,
     *VENV*/,
 extend-ignore =
-    # F821: undefined name name
-    #       F821 gives false positives in doctests, because it does not
-    #       recognize `doctest_global_setup` in the Sphinx configuration
-    #       file `conf.py`.
+    ### Allow assert statements for consitency checks ###
     # S101: Use of assert detected
-    F821,
     S101,
-    ### Allow for docstring summaries that are longer than one line ###
+    ### Allow docstring summaries that are longer than one line ###
     # D205: 1 blank line required between summary line and description
     # D400: First line should end with a period
     D205,

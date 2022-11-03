@@ -1,6 +1,6 @@
 # This file is part of MDTools.
-# Copyright (C) 2021, The MDTools Development Team and all contributors
-# listed in the file AUTHORS.rst
+# Copyright (C) 2021, 2022  The MDTools Development Team and all
+# contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -19,7 +19,8 @@
 """
 Functions to calculate structural properties.
 
-This module can be called from :mod:`mdtools` via the shortcut ``strc``::
+This module can be called from :mod:`mdtools` via the shortcut
+``strc``::
 
     import mdtools as mdt
     mdt.strc  # insetad of mdt.structure
@@ -1312,6 +1313,353 @@ def discrete_pos_trj(
         output = np.array([bins, lbox_av, time_step], dtype=object)
         output = output[[return_bins, return_lbox, return_dt]].tolist()
         return tuple([dtrj, ] + output)
+
+
+def assign_atoms_to_grid(  # noqa: C901
+    ag,
+    nbins=None,
+    binwidth=None,
+    bins=None,
+    discard_below=False,
+    discard_above=False,
+    expand_binnumbers=False,
+    box=None,
+    assume_wrapped=False,
+    return_bins=False,
+    return_ag=False,
+):
+    """
+    Assign :class:`Atoms <MDAnalysis.core.groups.Atom>` to grid points.
+
+    Divide the simulation box into given subvolumes and assign each atom
+    of the given MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup`
+    to its corresponding grid point based on its spatial position.  Be
+    aware of the ambiguous nomenclature: Actually, the atoms are not
+    assigned to the points/nodes of the grid but to the subvolumes that
+    are spanned by the grid.
+
+    The grid spacing can be specified by either `nbins`, `binwidth` or
+    `bins`.  You must provide exactly one of the three arguments.
+
+        * If `nbins` is given, each spatial dimension will be divided
+          into the given number of equidistant bins ranging from 0 to
+          the corresponding box length.
+        * If `binwidth` is given, each spatial dimension will be divided
+          into equidistant bins of the given width ranging from 0 to the
+          corresponding box length.  If `binwidth` is not a multiple of
+          the corresponding box length, there will be a thin box region
+          (thinner than `binwidth`) that is beyond the bounds of the
+          created bins.
+        * With `bins` you can provide arbitray bin edges for each
+          spatial dimension with the only limitation that the bin edges
+          must lie within the simulation box.  The given bin edges will
+          be sorted in increasing order and duplicate entries will be
+          removed.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` or,
+        :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` whose
+        :class:`Atoms <MDAnalysis.core.groups.Atom>` should be assigned
+        to the given grid points.
+    nbins : int or sequence of ints or None, optional
+        Number of bins (not bin edges!) to use in each spatial
+        dimension.  You can provide either one integer for each spatial
+        dimension or a single integer that is used for all spatial
+        dimensions.  Must not be used together with `binwidth` or
+        `bins`.
+    binwidth : scalar or sequence of scalars or None, optional
+        The bin width to use in each spatial dimension.  You can provide
+        either one bin width for each spatial dimension or a single bin
+        width that is used for all spatial dimensions.  Must not be used
+        together with `nbins` or `bins`.
+    bins : array_like or sequence of array_likes or None, optional
+        Array of bin edges to use in each spatial dimension.  You can
+        provide either one array of bin edges for each spatial dimension
+        or a single array that is used for all spatial dimension.  Must
+        not be used together with `nbins` or `binwidth`.
+    discard_below, discard_above : bool, optional
+        If ``True``, discard atoms that lie below/above the first/last
+        bin edge in each dimension.  If ``False``, an extra, infinite
+        bin is created below/above the first/last bin edge in each
+        dimension to capture atoms that lie beyond these bin edges.
+        That means if both, `discard_below` and `discard_above`, are
+        ``False``, the number of bins in a given dimension is
+        ``len(bins) + 1`` (here, `bins` is the returned array of bin
+        edges for a given dimension).  If one of them is ``True``, the
+        number of bins is ``len(bins)``.  If both are ``True``, the
+        number of bins is ``len(bins) - 1``.  In all cases, bin
+        numbering starts at 0.
+
+        Generally, atoms that lie beyond the first/last bin edge are
+        assigned to bin number ``0``/``len(bins)`` for the corresponding
+        dimension (see
+        :func:`mdtools.numpy_helper_functions.digitize_dd`).  If
+        `discard_below`/`discard_above` is ``True`` all atoms that got
+        assigned such a bin number are discarded and these bin numbers
+        are deleted from the output array `bin_ix`.  Note that in the
+        case of `discard_below`, `bin_ix` gets subsequently subtracted
+        by 1 so that bin numbering starts again at 0 (but now 0 is the
+        first valid bin with bin edges [``bins[0]``, ``bins[1]``) in the
+        corresponding dimension).
+    expand_binnumbers : bool, optional
+        If ``True``, the returned index array is unravled into an array
+        of shape ``(D, N)`` where each row gives the bin numbers of all
+        ``N`` atoms along the corresponding dimension ``D``.  If
+        ``False``, the returned index array has shape ``(N,)`` and maps
+        each atom to its corresponding linearized bin number (using
+        row-major ordering).  Whether the linearized bin indices index
+        into an array containing the extra, infinite bins at the outer
+        bin edges depends on the value of `discard_below` and
+        `discard_above`.  See also
+        :func:`mdtools.numpy_helper_functions.digitize_dd`.
+    box : array_like, optional
+        The unit cell dimensions of the system, which must be provided
+        in the same format as returned by
+        :attr:`MDAnalysis.coordinates.timestep.Timestep.dimensions`:
+        ``[lx, ly, lz, alpha, beta, gamma]``.  If ``None``, the
+        :attr:`~MDAnalysis.coordinates.base.Timestep.dimensions` of the
+        current :class:`~MDAnalysis.coordinates.base.Timestep` are used.
+        This function can only handle orthogonal simulation boxes.
+    assume_wrapped : bool, optional
+        If ``True``, the :class:`Atoms <MDAnalysis.core.groups.Atom>` of
+        the input :class:`~MDAnalysis.core.groups.AtomGroup` are assumed
+        to be already wrapped into the primary unit cell.  If ``False``
+        this will be done before assigning them to their grid points.
+    return_bins : bool, optional
+        If ``True``, return the used bin edges for each dimension.
+    return_ag : bool, optional
+        If ``True``, return an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup` containing the
+        "valid" :class:`Atoms <MDAnalysis.core.groups.Atom>`.  An atom
+        is "invalid" if it lies below/above the last bin edge and
+        `discard_below`/`discard_above` is ``True``.  If both,
+        `discard_below`/`discard_above`, are ``False``, there are no
+        "invalid" atoms.
+
+    Returns
+    -------
+    bin_ix : numpy.ndarray
+        Array of indices.  This array assigns to each "valid"
+        :class:`~MDAnalysis.core.groups.Atom>` of the input
+        :class:`~MDAnalysis.core.groups.AtomGroup` an integer that
+        represents the bin number to which this atom belongs.  The
+        representation depends on the `expand_binnumbers` argument.
+        Atoms are "invalid" if they lie below/above the last bin edge
+        and `discard_below`/`discard_above` is ``True``.
+    bins : tuple of numpy.ndarrays
+        Tuple of 1-dimensional arrays containing the bin edges used for
+        each dimension.  Only returned if `return_bins` is ``True``.
+    atoms : MDAnalysis.core.groups.AtomGroup
+        MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` containing
+        the "valid" :class:`Atoms <MDAnalysis.core.groups.Atom>`.  If
+        both, `discard_below` and `discard_above`, are ``False``, this
+        is the same as the input
+        :class:`~MDAnalysis.core.groups.AtomGroup`.  Only returned if
+        `return_ag` is ``True``.
+
+    See Also
+    --------
+    :func:`mdtools.numpy_helper_functions.digitize_dd` :
+        Underlying function used for assingning the atoms to their grid
+        subvolumes.
+    """
+    if box is None:
+        box = ag.dimensions.asdtype(np.float64)
+    mdt.check.box(box, with_angles=True, orthorhombic=True, dim=1)
+    if assume_wrapped:
+        pos = ag.positions
+    else:
+        pos = ag.wrap(compound="atoms", box=box, inplace=True)
+    ndims = pos.shape[1]  # Number of spatial dimensions.
+
+    # Check `nbins`, `binwidth` and `bins`.
+    provided_args = [arg is not None for arg in (nbins, binwidth, bins)]
+    if np.count_nonzero(provided_args) != 1:
+        raise ValueError(
+            "Provide exactly one of the arguments 'nbins', 'binwidth' or"
+            " 'bins'"
+        )
+    if bins is None:
+        if np.ndim(nbins) == 0:
+            nbins = (nbins,) * ndims
+        elif np.shape(nbins) == (1,):
+            nbins = (nbins[0],) * ndims
+        elif np.shape(nbins) != (ndims,):
+            raise TypeError(
+                "'nbins' must either be a scalar, a sequence of shape (1,) or"
+                " a sequence of shape ({},)".format(ndims)
+            )
+        if np.ndim(binwidth) == 0:
+            binwidth = (binwidth,) * ndims
+        elif np.shape(binwidth) == (1,):
+            binwidth = (binwidth[0],) * ndims
+        elif np.shape(binwidth) != (ndims,):
+            raise TypeError(
+                "'binwidth' must either be a scalar, a sequence of shape (1,)"
+                " or a sequence of shape ({},)".format(ndims)
+            )
+        bins = []
+        for i in range(ndims):
+            start, stop, step, num = mdt.check.bins(
+                start=0,
+                stop=box[i],
+                step=binwidth[i],
+                num=nbins[i],
+                amin=0,
+                amax=box[i],
+                verbose=False,
+            )
+            if nbins[i] is not None and not np.isclose(num, nbins[i], rtol=0):
+                warnings.warn(
+                    "The number of bins for the {}-th dimension was changed"
+                    " from {} to {}".format(i, nbins[i], num),
+                    RuntimeWarning
+                )
+            if binwidth[i] is not None and not np.isclose(
+                step, binwidth[i], rtol=0
+            ):
+                warnings.warn(
+                    "The bin width for the {}-th dimension was changed from {}"
+                    " to {}".format(i, binwidth[i], step),
+                    RuntimeWarning
+                )
+            if ((stop - start) / step).is_integer():
+                # `numpy.arange` generates values within the half-open
+                # interval `[start, stop)`, i.e. `stop` is not included.
+                # To include `stop` in the case it falls within the
+                # value spacing given by `step`, increase it a bit.
+                #
+                # The modulo operator suffers from floating point error.
+                # E.g. 3.5 % 0.1 is 0.09999999999999981, which is much
+                # closer to 0.1 than to the correct value of 0.0.
+                # Therefore we use `((stop - start)/step).is_integer()`
+                # instead of `np.isclose((stop - start) % step, 0)`.
+                stop += step / 2
+            bins.append(np.arange(start, stop, step, dtype=np.float64))
+    else:
+        try:
+            len(bins)
+        except TypeError:
+            # `bins` is not a sequence.
+            # https://docs.python.org/3/glossary.html#term-sequence
+            raise TypeError(
+                "'bins' must be either a 1-dimensional array or a sequence of"
+                " {} 1-dimensional arrays".format(ndims)
+            )
+        try:
+            len(bins[0])
+        except TypeError:
+            # `bins` is a 1-dimensional sequence.  Make it to a sequence
+            # of `ndims` 1-dimensional arrays.
+            bins = np.unique(bins)
+            if bins[0] < 0 or bins[-1] > np.min(box[:ndims]):
+                raise ValueError(
+                    "Some bin edges lie outside the simulation box [0, {}]."
+                    "  First/Last bin edge: {} /"
+                    " {}".format(np.min(box[:ndims]), bins[0], bins[-1])
+                )
+            bins = (bins,) * ndims
+        else:
+            # `bins` is a sequence of sequences.
+            try:
+                len(bins[0][0])
+            except TypeError:
+                # `bins` is a sequence of 1-dimensional sequences.
+                if len(bins) != ndims:
+                    raise TypeError(
+                        "'bins' must be either a 1-dimensional array or a"
+                        " sequence of {} 1-dimensional arrays".format(ndims)
+                    )
+                bins = list(bins)  # `bins` must be mutable.
+                for i, bns in enumerate(bins):
+                    bns = np.unique(bns)
+                    bins[i] = bns
+                    if bns[0] < 0 or bns[-1] > box[i]:
+                        raise ValueError(
+                            "Some bin edges for the {}-th dimension lie"
+                            " outside the simulation box [0, {}].  First/Last"
+                            " bin edge: {} /"
+                            " {}".format(i, box[i], bns[0], bns[-1])
+                        )
+            else:
+                # `bins` is a sequence of sequences of sequences.
+                raise TypeError(
+                    "'bins' must be either a 1-dimensional array or a sequence"
+                    " of {} 1-dimensional arrays".format(ndims)
+                )
+    for i, bns in enumerate(bins):
+        # When using `numpy.digitize`, bin intervals are right-open.  In
+        # order to properly bin atoms that are located exactly at the
+        # maximum box length, the last bin edge must be slightly
+        # extended.
+        tol = 1e-08
+        if np.isclose(bns[-1], box[i], rtol=0, atol=tol):
+            bns[-1] = box[i] + tol
+    bins = tuple(bins)
+
+    # Get for each atom the index of the subvolume to which it belongs.
+    # If an atoms lies below/above the first/last bin edge `0` or
+    # `len(bins[i])` is returned, respectively.
+    bin_ix = mdt.nph.digitize_dd(pos, bins, expand_binnumbers=True)
+    for i, bix in enumerate(bin_ix):
+        if (bins[i][0] <= 0 and np.any(bix <= 0)) or (
+            bins[i][-1] > box[i] and np.any(bix >= len(bin[i]))
+        ):
+            err_msg = "An atom lies outside the primary unit cell."
+            if not assume_wrapped:
+                err_msg += "  This should not have happened."
+            else:
+                err_msg += "  Try again with 'assume_wrapped' set to False"
+            raise ValueError(err_msg)
+
+    # The Number of bins in each spatial dimension is given by the
+    # number of bin edges plus 1.
+    n_bins = [len(bns) + 1 for bns in bins]
+    if discard_above:
+        # Atoms above the last bin edge are discarded for each
+        # dimension.
+        n_bins = [nb - 1 for nb in n_bins]
+        valid = [bix < len(bins[i]) for i, bix in enumerate(bin_ix)]
+        # `numpy.bitwise_and` is faster than `numpy.all`
+        valid = np.bitwise_and.reduce(valid, axis=0)
+        bin_ix = np.compress(valid, bin_ix, axis=1)
+        ag = ag[valid]
+    if discard_below:
+        # Atoms below the first bin edge are discarded for each
+        # dimension.
+        n_bins = [nb - 1 for nb in n_bins]
+        valid = bin_ix > 0
+        valid = np.bitwise_and.reduce(valid, axis=0)
+        bin_ix = np.compress(valid, bin_ix, axis=1)
+        # Shift bin indices such that indexing starts again at 0.
+        bin_ix -= 1
+        ag = ag[valid]
+
+    if expand_binnumbers:
+        if bin_ix.shape != (ndims, ag.n_atoms):
+            raise ValueError(
+                "'bin_ix' must have shape {} but has shape {}.  This should"
+                " not have happened".format((ndims, ag.n_atoms), bin_ix.shape)
+            )
+    else:
+        # Flatten multi-dimensional index array.
+        bin_ix = np.ravel_multi_index(bin_ix, n_bins)
+        if bin_ix.shape != (ag.n_atoms,):
+            raise ValueError(
+                "'bin_ix' must have shape {} but has shape {}.  This should"
+                " not have happened".format((ag.n_atoms,), bin_ix.shape)
+            )
+
+    ret = (bin_ix,)
+    if return_bins:
+        ret += (bins,)
+    if return_ag:
+        ret += (ag,)
+    if len(ret) == 1:
+        ret = ret[0]
+    return ret
 
 
 def natms_per_cmp(

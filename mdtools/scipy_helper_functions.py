@@ -1,6 +1,6 @@
 # This file is part of MDTools.
-# Copyright (C) 2021, The MDTools Development Team and all contributors
-# listed in the file AUTHORS.rst
+# Copyright (C) 2021, 2022  The MDTools Development Team and all
+# contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -50,7 +50,7 @@ def multiple_multiply(*args):
         If :func:`mdtools.scipy_helper_functions.multiple_multiply` is
         called without arguments.
     AttributeError or TypeError
-        If the input ojects do ont have a :meth:`.mutiply` method.
+        If the input ojects don't have a :meth:`.mutiply` method.
 
     Notes
     -----

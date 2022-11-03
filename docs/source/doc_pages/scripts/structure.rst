@@ -25,6 +25,7 @@ Scripts
     lig_change_at_pos_change_blocks
     lig_change_at_pos_change_blocks_hist
     rmsd_vs_time
+    subvolume_charge
 
 
 Plot scripts

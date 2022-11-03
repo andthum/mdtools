@@ -4,6 +4,10 @@
 # You might need to install a plugin for your editor in order to make
 # your editor aware of this file.
 #
+# Note that this file affects the settings of your editor!  If your
+# editor does not function as expected it might be caused by this file
+# (see e.g. https://stackoverflow.com/a/51398290).
+#
 # Sort all entries alphabetically!
 
 root = true
@@ -21,3 +25,6 @@ trim_trailing_whitespace = true
 # Markdown uses two or more spaces at the end of a line to signify a
 # line break
 trim_trailing_whitespace = false
+
+[*.{yaml,yml}]
+indent_size = 2
