@@ -21,12 +21,17 @@ Functions for debugging and checking user input or arguments parsed to
 other functions, clases, etc.
 """
 
+
 # Standard libraries
-import warnings
-from datetime import datetime
 # Third party libraries
 import decimal as dec
+import warnings
+from datetime import datetime
+
+# Third-party libraries
 import numpy as np
+
+# First-party libraries
 # Local application/library specific imports
 import mdtools as mdt
 
@@ -765,20 +770,19 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
                              " ({})".format(stop, start))
         if verbose:
             print("'mdtools.check.bins()' set 'stop' to {}".format(stop))
-    if step is not None:
-        if step > stop - start or step <= 0:
-            if num is not None:
-                step = (stop - start) / num
-            else:
-                step = stop - start
+    if step is not None and step > stop - start or step <= 0:
+        if num is not None:
+            step = (stop - start) / num
+        else:
+            step = stop - start
         if verbose:
             print("'mdtools.check.bins()' set 'step' to {}".format(step))
-    else:
+    elif step is None:
         step = (stop - start) / num
         if verbose:
             print("'mdtools.check.bins()' set 'step' to {}".format(step))
     if num is None or num != (stop - start) / step:
-        num = int(np.around((stop - start) / step))
+        num = round((stop - start) / step)
         if verbose:
             print("'mdtools.check.bins()' set 'num' to {}".format(num))
     return float(start), float(stop), float(step), int(num)
