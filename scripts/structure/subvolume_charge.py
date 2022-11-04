@@ -46,6 +46,12 @@ Options
     Selection string to select a group of atoms for the analysis.  See
     MDAnalysis' |selection_syntax| for possible choices.  Default:
     ``'all'``.
+--updating-sel
+    Use an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` for the
+    analysis.  Selection expressions of UpdatingAtomGroups are
+    re-evaluated every :attr:`time step
+    <MDAnalysis.coordinates.base.Timestep.dt>`.  This is e.g. useful for
+    position-based selections like ``'type Li and prop z <= 2.0'``.
 --bin-start
     First cube length to use (in Angstrom).  If set to ``None``,
     \--bin-start is set to \--bin-step.  Default: ``None``.
@@ -125,16 +131,20 @@ def net_charge_of_cubes(ag, cube_lengths, box=None, mean=True):
         the value of `mean`) of the squared net charges of the cubic
         subvolumes for all considered cube lengths.
     cube_nums : numpy.ndarray
-        1-dimensional array containing the number of cubic subvolumes
-        into which the simulation box was divided for each considered
-        cube length.
+        1-dimensional array of dtype ``numpy.uint64`` containing the
+        number of cubic subvolumes into which the simulation box was
+        divided for each considered cube length.
+    atm_nums : numpy.ndarray
+        1-dimensional array of dtype ``numpy.uint64`` containing the sum
+        of the number of atoms in all cubic subvolumes for each
+        considered cube length.
     """
     if box is None:
         box = ag.dimensions.asdtype(np.float64)
     mdt.check.box(box, with_angles=True, orthorhombic=True, dim=1)
 
     ag.wrap(compound="atoms", box=box, inplace=True)
-    charge_sums, charge_sums_squared, cube_nums = [], [], []
+    charge_sums, charge_sums_squared, cube_nums, atm_nums = [], [], [], []
     for cube_length in cube_lengths:
         bin_ix, bins, ag_valid = mdt.strc.assign_atoms_to_grid(
             ag,
@@ -146,10 +156,12 @@ def net_charge_of_cubes(ag, cube_lengths, box=None, mean=True):
             return_bins=True,
             return_ag=True,
         )
+        # Total number of atoms in all cubes.
+        atm_nums.append(ag_valid.n_atoms)
         # Number of bins/cubes in each spatial direction.
         n_bins = [len(bns) - 1 for bns in bins]
         # Total number of cubes in the simulation box.
-        n_cubes = np.prod(n_bins)
+        n_cubes = np.prod(n_bins, dtype=np.uint64)
         cube_nums.append(n_cubes)
         # Calculate the net charge of each cube.
         cube_q = np.zeros(n_cubes, dtype=np.float64)
@@ -159,11 +171,16 @@ def net_charge_of_cubes(ag, cube_lengths, box=None, mean=True):
     del bin_ix, bins, cube_q
     charge_sums = np.asarray(charge_sums)
     charge_sums_squared = np.asarray(charge_sums_squared)
-    cube_nums = np.asarray(cube_nums).astype(int, casting="safe", copy=False)
+    cube_nums = np.asarray(cube_nums, dtype=np.uint64)
+    if np.any(cube_nums < 0):
+        raise RuntimeError("Overflow encountered in 'cube_nums'")
+    atm_nums = np.asarray(atm_nums, dtype=np.uint64)
+    if np.any(atm_nums < 0):
+        raise RuntimeError("Overflow encountered in 'atm_nums'")
     if mean:
         charge_sums /= cube_nums
         charge_sums_squared /= cube_nums
-    return charge_sums, charge_sums_squared, cube_nums
+    return charge_sums, charge_sums_squared, cube_nums, atm_nums
 
 
 if __name__ == "__main__":
@@ -239,6 +256,14 @@ if __name__ == "__main__":
         help="Selection string.  Default: %(default)s",
     )
     parser.add_argument(
+        "--updating-sel",
+        dest="UPDATING_SEL",
+        required=False,
+        default=False,
+        action="store_true",
+        help="Use an UpdatingAtomGroup for the analysis.",
+    )
+    parser.add_argument(
         "--bin-start",
         dest="BIN_START",
         type=float,
@@ -278,7 +303,9 @@ if __name__ == "__main__":
     print("\n")
     u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
     print("\n")
-    sel = mdt.select.atoms(ag=u, sel=" ".join(args.SEL))
+    sel = mdt.select.atoms(
+        ag=u, sel=" ".join(args.SEL), updating=args.UPDATING_SEL
+    )
     print("\n")
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
         start=args.BEGIN,
@@ -310,12 +337,15 @@ if __name__ == "__main__":
     # than in the first frame.
     n_bins_max_guess = num
     n_bins_max_true = 0
+    # Net charges of the subvolumes.
     charge_sums = np.zeros(n_bins_max_guess, dtype=np.float64)
     charge_sums_squared = np.zeros_like(charge_sums)
-    subvol_nums = np.zeros_like(charge_sums_squared, dtype=int)
-    # Net charge of the entire simulation box
+    subvol_nums = np.zeros_like(charge_sums_squared, dtype=np.uint64)
+    atm_nums = np.zeros_like(subvol_nums)
+    # Net charge of the entire simulation box.
     box_charge_sum = 0
     box_charge_sum_squared = 0
+    box_atm_num = 0
 
     print("\n")
     print("Reading trajectory...")
@@ -334,6 +364,7 @@ if __name__ == "__main__":
         box_net_charge = np.sum(sel.charges.astype(np.float64))
         box_charge_sum += box_net_charge
         box_charge_sum_squared += box_net_charge**2
+        box_atm_num += sel.n_atoms
         box = ts.dimensions.astype(np.float64)
         lbox_min = np.min(box[:3])
         if args.BIN_STOP is None:
@@ -363,7 +394,7 @@ if __name__ == "__main__":
         # Raise exception if `mdtools.structure.assign_atoms_to_grid`
         # changes the bin width.
         warnings.simplefilter("error", RuntimeWarning)
-        charges, charges_squared, n_subvols = net_charge_of_cubes(
+        charges, charges_squared, n_subvols, n_atms = net_charge_of_cubes(
             sel, cube_lengths=cube_lengths, box=box, mean=False
         )
         # Reset warnings filter.
@@ -377,9 +408,11 @@ if __name__ == "__main__":
                 charge_sums_squared, n_bins_frame
             )
             subvol_nums = mdt.nph.extend(subvol_nums, n_bins_frame)
+            atm_nums = mdt.nph.extend(atm_nums, n_bins_frame)
         charge_sums[:n_bins_frame] += charges
         charge_sums_squared[:n_bins_frame] += charges_squared
         subvol_nums[:n_bins_frame] += n_subvols
+        atm_nums[:n_bins_frame] += n_atms
         # ProgressBar update.
         trj.set_postfix_str(
             "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
@@ -388,25 +421,27 @@ if __name__ == "__main__":
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
+    atm_nums = atm_nums[:n_bins_max_true]
+    if np.any(atm_nums < 0):
+        raise RuntimeError("Overflow encountered in 'atm_nums'")
+    if np.any(atm_nums > box_atm_num):
+        raise ValueError(
+            "Any 'atm_nums' (max: {}) is greater than 'box_atm_num' ({})."
+            "  This should not have"
+            " happened".format(np.max(atm_nums), box_atm_num)
+        )
     subvol_nums = subvol_nums[:n_bins_max_true]
+    if np.any(subvol_nums < 0):
+        raise RuntimeError("Overflow encountered in 'subvol_nums'")
     # Calculate averages.  (From now on, the suffixe "_sum" is
     # missleading and should actually be "_mean".  But to save memory,
-    # we re-use the array).
+    # and speed up the calculation, we re-use the array).
     charge_sums = charge_sums[:n_bins_max_true]
     charge_sums /= subvol_nums
     charge_sums_squared = charge_sums_squared[:n_bins_max_true]
     charge_sums_squared /= subvol_nums
-    # Standard error of the mean
-    charge_ses = charge_sums_squared - charge_sums**2
-    charge_ses /= subvol_nums
-    charge_ses = np.sqrt(charge_ses, out=charge_ses)
-    del charge_sums_squared
-
     box_charge_sum /= N_FRAMES
     box_charge_sum_squared /= N_FRAMES
-    box_charge_sum_ses = box_charge_sum_squared - box_charge_sum**2
-    box_charge_sum_ses /= N_FRAMES
-    box_charge_sum_ses = np.sqrt(box_charge_sum_ses)
 
     stop = start + (n_bins_max_true + 0.5) * step
     cube_lengths = np.arange(start, stop, step)
@@ -418,36 +453,42 @@ if __name__ == "__main__":
     print("\n")
     print("Creating output...")
     timer = datetime.now()
+    data = np.column_stack(
+        (cube_lengths, charge_sums, charge_sums_squared, subvol_nums, atm_nums)
+    )
     header = (
-        "Net charge of cubic subvolumes of the simulation box as\n"
-        "function of the subvolume size.\n"
+        "Mean net charge <q> of cubic subvolumes of the simulation\n"
+        "box as function of the subvolume size.\n"
         "\n"
     )
     header += "Selection:\n"
     header += mdt.rti.ag_info_str(sel, indent=2)
     header += (
         "\n\n"
-        "Number of frames read: {:d}\n"
-        "Average net charge of the whole simulation box: {:>16.9e}\n"
-        "Standard error of the mean net charge:          {:>16.9e}\n"
-        "\n".format(N_FRAMES, box_charge_sum, box_charge_sum_ses)
+        "Mean         net charge <q>   of the whole box: {:>16.9e}\n"
+        "Mean squared net charge <q^2> of the whole box: {:>16.9e}\n"
+        "Number of frames read: {:>15d}\n"
+        "Total number of atoms: {:>15d}\n"
+        "\n".format(
+            box_charge_sum, box_charge_sum_squared, N_FRAMES, box_atm_num
+        )
     )
     header += (
         "The columns contain:\n"
         "  1 Cube lengths in Angstrom\n"
-        "  2 Average net charges\n"
-        "  3 Standard error of the mean net charges\n"
+        "  2 Mean         net charge <q>\n"
+        "  3 Mean squared net charge <q^2>\n"
         "  4 Total number of cubic subvolumes used for averaging\n"
+        "  5 Total number of atoms in all subvolumes\n"
         "\n"
         "{:>14d}".format(1)
     )
-    for col_num in range(2, 5):
+    for col_num in range(2, data.shape[1] + 1 - 2):
         header += " {:>16d}".format(col_num)
-    mdt.fh.savetxt(
-        args.OUTFILE,
-        np.column_stack([cube_lengths, charge_sums, charge_ses, subvol_nums]),
-        header=header,
-    )
+    for col_num in range(data.shape[1] + 1 - 2, data.shape[1] + 1):
+        header += " {:>22d}".format(col_num)
+    fmt = ("%16.9e",) * (data.shape[1] - 2) + ("%22.15e",) * 2
+    mdt.fh.savetxt(args.OUTFILE, data, header=header, fmt=fmt)
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
