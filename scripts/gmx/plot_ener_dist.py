@@ -360,8 +360,6 @@ if __name__ == "__main__":  # noqa: C901
         key_prefix = r"$\Delta$"
     else:
         key_prefix = ""
-    n_gauss_warnings = 0
-    non_gaussian_observables = []
     mdt.fh.backup(args.OUTFILE)
     with PdfPages(args.OUTFILE) as pdf:
         for key, val in data.items():
@@ -390,18 +388,8 @@ if __name__ == "__main__":  # noqa: C901
                 # normality.  The test is only valid for sample sizes
                 # > 20.
                 _, pval = stats.normaltest(val)
-                if pval < args.ALPHA:
-                    n_gauss_warnings += 1
-                    non_gaussian_observables.append(key)
-                    warnings.warn(
-                        "The null hypothesis that the {} is normally"
-                        " distributed is rejected (p-value: {}, significance"
-                        " level: {})".format(key, pval, args.ALPHA),
-                        UserWarning,
-                    )
             else:
                 pval = np.nan
-                n_gauss_warnings += 1
                 warnings.warn(
                     "Could not perform the normality test the {}, because the"
                     " number of samples is less than 20".format(key),
@@ -499,16 +487,6 @@ if __name__ == "__main__":  # noqa: C901
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
-
-    if n_gauss_warnings > 0:
-        print("\n")
-        print("!" * 72)
-        print(
-            "{} observable(s) follow(s) a non-Gaussian"
-            " distribution:".format(n_gauss_warnings)
-        )
-        print("{}".format(", ".join(non_gaussian_observables)))
-        print("!" * 72)
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
