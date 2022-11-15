@@ -255,8 +255,7 @@ if __name__ == "__main__":  # noqa: C901
         raise ValueError("Illegal value for option --observables: 'Time'")
     if args.ALPHA < 0 or args.ALPHA > 1:
         raise ValueError(
-            "Illegal value for option --alpha: {}.  Give a value between 0 and"
-            " 1".format(args.ALPHA)
+            "--alpha ({}) must lie between 0 and 1".format(args.ALPHA)
         )
 
     print("\n")
@@ -265,7 +264,8 @@ if __name__ == "__main__":  # noqa: C901
     if args.GZIPPED:
         timestamp = datetime.now()
         file_decompressed = (
-            args.EDRFILE[:-7]
+            "."
+            + args.EDRFILE[:-7]
             + "_uuid_"
             + str(uuid.uuid4())
             + "_date_"
@@ -330,11 +330,13 @@ if __name__ == "__main__":  # noqa: C901
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
-    if not np.allclose(times, np.sort(times), rtol=0):
+    time_diffs = np.diff(times)
+    time_diff = time_diffs[0]
+    if not np.all(time_diffs >= 0):
         raise ValueError("The times in the .edr file are not sorted")
-    time_diff = times[1] - times[0]
-    if not np.allclose(np.diff(times), time_diff, rtol=0):
+    if not np.allclose(time_diffs, time_diff, rtol=0):
         raise ValueError("The times in the .edr file are not evenly spaced")
+    del time_diffs
     lag_times = np.arange(0, time_diff * len(times), time_diff)
 
     if args.NUM_POINTS is None:
@@ -464,11 +466,7 @@ if __name__ == "__main__":  # noqa: C901
             print("Plotting ACF of {}...".format(key))
             fig, ax = plt.subplots(clear=True)
             mdtplt.correlogram(
-                ax,
-                val,
-                lag_times,
-                siglev=args.ALPHA,
-                rasterized=True,
+                ax, val, lag_times, siglev=args.ALPHA, rasterized=True
             )
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set(
