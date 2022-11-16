@@ -1013,8 +1013,14 @@ def ngp(x, axis=None, d=1, center=False, is_squared=False):
         If ``True``, center the input distribution around its mean, i.e.
         use central moments :math:`\langle (X - \bar{X})^n \rangle` for
         computing the NGP (with :math:`\bar{X} = \sum_{i=1}^N X_i` being
-        the sample mean).  If ``False``, use simple moments
+        the sample mean).  If ``False``, use the raw moments
         :math:`\langle X^n \rangle` without subtracting the sample mean.
+        Note that the central moments of the sample are biased
+        estimators for the central moments of the population, whereas
+        the raw moments of the sample are always equal to the raw
+        moments of the population.  See Wikipedia
+        `Moment (mathematics) § Sample moments
+        <https://en.wikipedia.org/wiki/Moment_(mathematics)#Sample_moments>`_
         `center` must not be used together with `is_squared`, because we
         cannot estimate the orginal sample mean if `x` is already
         squared.
