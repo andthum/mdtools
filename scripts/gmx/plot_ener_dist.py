@@ -34,12 +34,29 @@ are created:
     * The power spectrum of the energy term, i.e. the absolute square of
       its discrete Fourier transform.
 
+Additionally, the following characteristics of the distributions of the
+selected energy terms are written to file:
+
+    * Number of data points.
+    * Sample mean.
+    * Median of the sample.
+    * Unbiased sample variance.
+    * Minumum value of the sample.
+    * Maximum value of the sample.
+    * Unbiased sample skewness (Fisher-Pearson).
+    * Unbiased excess sample kurtorsis (Fisher).
+    * Biased non-Gaussian parameter.
+    * p-value from D'Agostino's and Pearson's test for normality.
+
 Options
 -------
 -f
     The name of the .edr file to read.
--o
-    Output file name.
+--plot-out
+    Output file name for the file that contains the plot.
+--stats-out
+    Output file name for the file that contains the characteristics of
+    the distributions of the selected energy terms.
 -b
     First frame to use from the .edr file.  Frame numbering starts at
     zero.  Default: ``0``.
@@ -99,8 +116,9 @@ See Also
 
 Notes
 -----
-The produced plots can be used to judge wether the distribution of
-energy terms is reasonable for the simulated ensemble.
+The produced plots and distribution characteristics can be used to judge
+wether the distribution of energy terms is reasonable for the simulated
+ensemble.
 """
 
 
@@ -150,11 +168,21 @@ if __name__ == "__main__":  # noqa: C901
         help="Gromacs energy file (.edr).",
     )
     parser.add_argument(
-        "-o",
-        dest="OUTFILE",
+        "--plot-out",
+        dest="PLOT_OUT",
         type=str,
         required=True,
-        help="Output filename.",
+        help="Output filename for the file that contains the plot.",
+    )
+    parser.add_argument(
+        "--stats-out",
+        dest="STATS_OUT",
+        type=str,
+        required=True,
+        help=(
+            "Output filename for the file that contains the characteristics of"
+            " the distributions of the selected energy terms."
+        ),
     )
     parser.add_argument(
         "-b",
@@ -354,14 +382,56 @@ if __name__ == "__main__":  # noqa: C901
         rasterized = False
 
     print("\n")
-    print("Processing data and creating plots...")
+    print("Calculating characteristics of the distributions...")
+    timer = datetime.now()
+    dist_props = {}
+    for key, val in data.items():
+        nobs, minmax, mean, var, skew, kurt = stats.describe(
+            val, ddof=1, bias=False
+        )
+        median = np.median(val)
+        ngp = mdt.stats.ngp(val, center=True)
+        if len(val) > 20:
+            # D'Agostino's and Pearson's K-squared test for
+            # normality.  The test tests the null hypothesis that
+            # the data are distributed normally.  If the returned
+            # p-value is less than the chosen significance level
+            # alpha (given by --alpha), the null hypothesis must be
+            # rejected.  The test is only valid for sample sizes
+            # >20.
+            _, pval = stats.normaltest(val)
+        else:
+            pval = np.nan
+            warnings.warn(
+                "Could not perform D'Agostino's and Pearson's K-squared"
+                " normality test for {}, because the number of samples is less"
+                " than 20".format(key),
+                UserWarning,
+            )
+        dist_props[key] = {
+            "N": nobs,  # Number of data points.
+            "Mean": mean,  # Sample mean.
+            "Median": median,  # Median of the sample.
+            "Var": var,  # Unbiased sample variance.
+            "Min": minmax[0],  # Minimum value of the sample.
+            "Max": minmax[1],  # Maximum value of the sample.
+            "Skewness": skew,  # Unbiased sample skewness.
+            "Kurtosis": kurt,  # Unbiased excess sample kurtosis.
+            "NGP": ngp,  # Biased non-Gaussian parameter.
+            "p-value": pval,  # p-value of the normality test.
+        }
+    print("Elapsed time:         {}".format(datetime.now() - timer))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
+
+    print("\n")
+    print("Creating plots...")
     timer = datetime.now()
     if args.DIFF:
         key_prefix = r"$\Delta$"
     else:
         key_prefix = ""
-    mdt.fh.backup(args.OUTFILE)
-    with PdfPages(args.OUTFILE) as pdf:
+    mdt.fh.backup(args.PLOT_OUT)
+    with PdfPages(args.PLOT_OUT) as pdf:
         for key, val in data.items():
             print()
             print("Plotting {} vs. Time...".format(key))
@@ -375,29 +445,13 @@ if __name__ == "__main__":  # noqa: C901
             pdf.savefig()
             plt.close()
 
-            print("Plotting histogram of {}...".format(key))
-            # Statistical analysis.
-            nobs, minmax, mean, var, skewness, kurtosis = stats.describe(
-                val, ddof=1, bias=False
+            print("Plotting Histogram of {}...".format(key))
+            mean_fit, std_fit = stats.norm.fit(
+                val,
+                loc=dist_props[key]["Mean"],
+                scale=np.sqrt(dist_props[key]["Var"]),
             )
-            std = np.sqrt(var)
-            median = np.median(val)
-            ngp = mdt.stats.ngp(val, center=True)
-            if len(val) > 20:
-                # D'Agostino's and Pearson's K-squared test for
-                # normality.  The test is only valid for sample sizes
-                # > 20.
-                _, pval = stats.normaltest(val)
-            else:
-                pval = np.nan
-                warnings.warn(
-                    "Could not perform the normality test the {}, because the"
-                    " number of samples is less than 20".format(key),
-                    UserWarning,
-                )
-            mean_fit, std_fit = stats.norm.fit(val, loc=mean, scale=std)
             rv = stats.norm(loc=mean_fit, scale=std_fit)
-            # Plot figure.
             fig, ax = plt.subplots(clear=True)
             hist, bin_edges, patches = ax.hist(
                 val, bins="auto", density=True, rasterized=True
@@ -411,16 +465,16 @@ if __name__ == "__main__":  # noqa: C901
             )
             at_data = AnchoredText(
                 (
-                    "Data (n = {})\n".format(nobs)
-                    + "Mean: {:.3f}\n".format(mean)
-                    + "Median: {:.3f}\n".format(median)
-                    + "Min: {:.3f}\n".format(minmax[0])
-                    + "Max: {:.3f}\n".format(minmax[1])
-                    + "StD: {:.3f}\n".format(std)
-                    + "Skew.: {:.3f}\n".format(skewness)
-                    + "Kurt.: {:.3f}\n".format(kurtosis)
-                    + "NGP: {:.3f}\n".format(ngp)
-                    + "p-value: {:.3f}".format(pval)
+                    "Data (n = {})\n".format(dist_props[key]["N"])
+                    + "Mean: {:.3f}\n".format(dist_props[key]["Mean"])
+                    + "Median: {:.3f}\n".format(dist_props[key]["Median"])
+                    + "Var: {:.3f}\n".format(dist_props[key]["Var"])
+                    + "Min: {:.3f}\n".format(dist_props[key]["Min"])
+                    + "Max: {:.3f}\n".format(dist_props[key]["Max"])
+                    + "Skew.: {:.3f}\n".format(dist_props[key]["Skewness"])
+                    + "Kurt.: {:.3f}\n".format(dist_props[key]["Kurtosis"])
+                    + "NGP: {:.3f}\n".format(dist_props[key]["NGP"])
+                    + "p-value: {:.3f}".format(dist_props[key]["p-value"])
                 ),
                 loc="upper left",
                 prop={
@@ -435,7 +489,7 @@ if __name__ == "__main__":  # noqa: C901
                     "Gaussian Fit\n"
                     + "Mean: {:.3f}\n".format(mean_fit)
                     + "Median = Mean \n"
-                    + "StD: {:.3f}\n".format(std_fit)
+                    + "Var: {:.3f}\n".format(std_fit**2)
                     + "Skew.: 0\n"
                     + "Kurt.: 0\n"
                     + "NGP: 0"
@@ -470,7 +524,8 @@ if __name__ == "__main__":  # noqa: C901
             print("Plotting Power Spectrum of {}...".format(key))
             # The zero-frequence term is the sum of the signal => Remove
             # the mean to get a zero-frequence term that is zero.
-            amplitudes = np.abs(np.fft.rfft(val - mean)) ** 2
+            amplitudes = np.abs(np.fft.rfft(val - dist_props[key]["Mean"]))
+            amplitudes **= 2
             frequencies = np.fft.rfftfreq(len(val), time_diff)
             fig, ax = plt.subplots(clear=True)
             ax.plot(frequencies, amplitudes, rasterized=True)
@@ -484,7 +539,59 @@ if __name__ == "__main__":  # noqa: C901
             pdf.savefig()
             plt.close()
     print()
-    print("Created {}".format(args.OUTFILE))
+    print("Created {}".format(args.PLOT_OUT))
+    print("Elapsed time:         {}".format(datetime.now() - timer))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
+
+    print("\n")
+    print("Creating output...")
+    timer = datetime.now()
+    labels = list(list(dist_props.values())[0].keys())
+    data = [list(sub_dct.values()) for sub_dct in dist_props.values()]
+    data = np.array([labels] + data, dtype=object)
+    data = np.column_stack(data)
+    fmt = ("%-12s",) + ("%16.9e",) * (data.shape[1] - 1)
+    header = (
+        "N: Number of data points.\n"
+        + "Mean: Sample mean.\n"
+        + "  1/N sum_{i=1}^N x_i\n"
+        + "Median: Median of the sample.\n"
+        + "  For normally distributed data, mean and median are the same.\n"
+        + "Var: Unbiased sample variance.\n"
+        + "  s^2 = 1/(N-1) sum_{i=1}^N (x_i - mean)^2\n"
+        + "Min: Minumum value of the sample.\n"
+        + "Max: Maximum value of the sample.\n"
+        + "Skewness: Unbiased sample skewness (Fisher-Pearson).\n"
+        + "  G_1 = sqrt{N*(N-1)}/(N-2) * m_3 / m_2^(3/2)\n"
+        + "      = N/[(N-1)(N-2)] sum_{i=1}^N [(x_i - mean)/s]^3\n"
+        + "  with the k-th biased central moment\n"
+        + "  m_k = 1/N sum_{i=1}^N (x_i - mean)^k\n"
+        + "  For normally distributed data, the skewness is zero.\n"
+        + "Kurtosis: Unbiased excess sample kurtorsis (Fisher).\n"
+        + "  G_2 = (N-1)/[(N-2)(N-3)] [(N+1) m_4/m_2^2 - 3 (N-1)]\n"
+        + "      = N(N+1)/[(N-1)(N-2)(N-3)] sum_{i=1}^N [(x_i - mean)/s]^4 - 3 (N-1)^2/[(N-2)(N-3)]\n"  # noqa: E501
+        + "  For normally distributed data, the Kurtosis is zero.\n"
+        + "NGP: Biased non-Gaussian parameter.\n"
+        + "  a = 1/3 m_4/m_2^2 - 1\n"
+        + "  For normally distributed data, the NGP is zero.\n"
+        + "p-value: p-value from D'Agostino's and Pearson's test for\n"
+        + "  normality.  If the p-value is below the chosen significance\n"
+        + "  level (--alpha), the null hypothesis the data are distributed\n"
+        + "  normally must be rejected.\n"
+        + "\n"
+    )
+    if args.DIFF:
+        header += (
+            "\n"
+            "The given values are calculated from the difference between\n"
+            "consecutive values of the given observables (--diff).\n"
+        )
+    col_names = ["{:>16s}".format(key) for key in dist_props.keys()]
+    col_units = ["{:>16s}".format(val) for val in units.values()]
+    header += "\n" + "{:<11s}".format("Observable") + " ".join(col_names)
+    header += "\n" + "{:<11s}".format("Unit") + " ".join(col_units)
+    mdt.fh.savetxt(args.STATS_OUT, data, fmt=fmt, header=header)
+    print("Created {}".format(args.STATS_OUT))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
