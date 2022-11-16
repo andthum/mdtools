@@ -402,7 +402,7 @@ if __name__ == "__main__":  # noqa: C901
             hist, bin_edges, patches = ax.hist(
                 val, bins="auto", density=True, rasterized=True
             )
-            bin_mids = bin_edges[1:] - np.diff(bin_edges)
+            bin_mids = bin_edges[1:] - np.diff(bin_edges) / 2
             lines = ax.plot(bin_mids, rv.pdf(bin_mids))
             ax.set(
                 xlabel=key_prefix + key + " / " + units[key],
