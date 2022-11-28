@@ -176,7 +176,7 @@ repos:
           - "--color"
 
   - repo: "https://github.com/PyCQA/flake8"
-    rev: "5.0.4"
+    rev: "6.0.0"
     hooks:
       # Lint Python code with Flake8.
       - id: "flake8"
