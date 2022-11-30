@@ -514,7 +514,7 @@ def acf_se(x, axis=None, n=None):
     .. [#] Wikipedia `Correlogram
         <https://en.wikipedia.org/wiki/Correlogram#Statistical_inference_with_correlograms>`_
 
-    .. [#] Wikipedia `Autoregressive–moving-average model
+    .. [#] Wikipedia `Autoregressive-moving-average model
         <https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model#Moving-average_model>`_
 
     Examples
