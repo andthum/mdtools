@@ -21,4 +21,4 @@ Scripts
     :recursive:
     :nosignatures:
 
-    plot_ener_dist
+    plot_energy_dist
