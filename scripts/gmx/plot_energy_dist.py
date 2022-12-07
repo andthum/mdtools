@@ -332,13 +332,14 @@ if __name__ == "__main__":  # noqa: C901
     print("Extracting observables...")
     timer = datetime.now()
     times = data.pop("Time")
+    N_FRAMES_TOT = len(times)
     BEGIN, END, EVERY, N_FRAMES = mdt.check.frame_slicing(
         start=args.BEGIN,
         stop=args.END,
         step=args.EVERY,
-        n_frames_tot=len(times),
+        n_frames_tot=N_FRAMES_TOT,
     )
-    print("Total number of frames: {:>8d}".format(len(times)))
+    print("Total number of frames: {:>8d}".format(N_FRAMES_TOT))
     print("Frames to use:          {:>8d}".format(N_FRAMES))
     print("First frame to use:     {:>8d}".format(BEGIN))
     print("Last frame to use:      {:>8d}".format(END - 1))
@@ -552,7 +553,13 @@ if __name__ == "__main__":  # noqa: C901
     data = np.column_stack(data)
     fmt = ("%-12s",) + ("%16.9e",) * (data.shape[1] - 1)
     header = (
-        "N: Number of data points.\n"
+        "Total number of frames: {:>8d}\n".format(N_FRAMES_TOT)
+        + "Used frames:            {:>8d}\n".format(N_FRAMES)
+        + "First used frame:       {:>8d}\n".format(BEGIN)
+        + "Last used frame:        {:>8d}\n".format(END - 1)
+        + "Used every n-th frame:  {:>8d}\n".format(EVERY)
+        + "\n"
+        + "N: Number of data points.\n"
         + "Mean: Sample mean.\n"
         + "  1/N sum_{i=1}^N x_i\n"
         + "Median: Median of the sample.\n"
