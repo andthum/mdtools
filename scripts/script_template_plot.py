@@ -194,7 +194,7 @@ if __name__ == "__main__":
         default=None,
         help=(
             "The columns of the input file that should be plotted.  Column"
-            " numbering starts at zero.  Default: %(default)s"
+            " numbering starts at zero.  Default: %(default)s."
         ),
     )
     parser.add_argument(
@@ -204,7 +204,7 @@ if __name__ == "__main__":
         nargs="+",
         required=False,
         default=None,
-        help="A label for each set of y data.  Default: %(default)s",
+        help="A label for each set of y data.  Default: %(default)s.",
     )
     parser.add_argument(
         "--xylabel",
@@ -213,7 +213,7 @@ if __name__ == "__main__":
         nargs=2,
         required=False,
         default=[r"$x$", r"$y$"],
-        help="x- and y-axis label.  Default: %(default)s",
+        help="x- and y-axis label.  Default: %(default)s.",
     )
     parser.add_argument(
         "--xlim",
@@ -224,7 +224,7 @@ if __name__ == "__main__":
         default=[None, None],
         help=(
             "Left and right limit of the x-axis in data coordinates.  Default:"
-            " %(default)s"
+            " %(default)s."
         ),
     )
     parser.add_argument(
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         default=[None, None],
         help=(
             "Lower and upper limit of the y-axis in data coordinates."
-            "  Default: %(default)s"
+            "  Default: %(default)s."
         ),
     )
     parser.add_argument(
@@ -248,7 +248,7 @@ if __name__ == "__main__":
         default=[False, False],
         help=(
             "Whether to use a logarithmic scale for the x- and/or y-axis."
-            "  Default: %(default)s"
+            "  Default: %(default)s."
         ),
     )
     args = parser.parse_args()
