@@ -14,7 +14,7 @@
 minimum_pre_commit_version: "2.0"
 
 default_language_version:
-  python: "python3.9"
+  python: "python3"
 
 # Run pre-commit as CI workflow.
 # See https://pre-commit.ci/
@@ -264,6 +264,9 @@ repos:
 ########################################################################
 
   - repo: "https://github.com/markdownlint/markdownlint"
+    # v0.12.0 requires ruby2.7, however openSUSE Leap 15.4 officially
+    # only provides ruby2.5 which is also required for texlive
+    # => stay at v0.11.0
     rev: "v0.11.0"
     hooks:
       # Lint Markdown files with markdownlint.
