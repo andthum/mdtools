@@ -1787,6 +1787,403 @@ def natms_per_cmp(
         return natms_per_cmp
 
 
+def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
+    """
+    Get attributes of an MDAnalysis
+    :class:`~MDAnalysis.core.groups.AtomGroup` compound-wise.
+
+    Get arbitrary attributes (e.g.
+    :attr:`~MDAnalysis.core.groups.AtomGroup.masses` or
+    :attr:`~MDAnalysis.core.groups.AtomGroup.charges`) that are defined
+    for :class:`Atoms <MDAnalysis.core.groups.AtomGroup>` of an
+    MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for each
+    individual compound contained in the
+    :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    A compound is usually a chemically meaningful subgroup of an
+    :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
+    :class:`~MDAnalysis.core.groups.Segment`,
+    :class:`~MDAnalysis.core.groups.Residue`,
+    :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>` or
+    a single :class:`~MDAnalysis.core.groups.Atom`.
+    Refer to the MDAnalysis' user guide for an
+    |explanation_of_these_terms|.  Note that in any case, only
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the input
+    :class:`~MDAnalysis.core.groups.AtomGroup` are taken into account,
+    even if the compound might comprise additional
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
+    in the input :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
+        which to get the compound-wise attribute.
+    attr : str
+        The attribute to get.  In principle, this can be any attribute
+        of the input :class:`~MDAnalysis.core.groups.AtomGroup`.  See
+        the MDAnalysis documentation and the examples below for possible
+        choices.
+    weights : str or array_like or None or 'total', optional
+        The weights to use when calculating the compound-wise attribute.
+        This can be either the name of an(other) attribute of the input
+        :class:`~MDAnalysis.core.groups.AtomGroup` `ag`, an array of
+        shape ``(ag.n_atoms,)`` assigning a weight to each atom in `ag`,
+        ``None`` or ``'total'``.  If `weights` is an attribute of `ag`,
+        the attribute must be an array of shape ``(ag.n_atoms,)``.  If
+        `weights` is ``None``, all atoms are weighted equally.  If
+        `weights` is ``'total'``, the attributes of all atoms of a
+        compound are simply summed up without taking any average.  See
+        examples below.  If the weights of a compound sum up to zero,
+        its attribute will be ``numpy.inf``.
+    cmp : {'group', 'segments', 'residues', 'molecules', 'fragments', \
+        'atoms'}, optional
+        The compounds of `ag` for which to get the selected attribute.
+        You must either provide `cmp` or `natms_per_cmp`.  If both are
+        given, `cmp` is ignored.
+
+        The selected attribute can be calculated for each
+        :class:`~MDAnalysis.core.groups.Segment`,
+        :class:`~MDAnalysis.core.groups.Residue`, molecule,
+        :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>` or
+        :class:`~MDAnalysis.core.groups.Atom` in the input
+        :class:`~MDAnalysis.core.groups.AtomGroup` or for the entire
+        :class:`~MDAnalysis.core.groups.AtomGroup` itself.  Refer to the
+        MDAnalysis' user guide for an |explanation_of_these_terms|.
+        Note that in any case, even if `cmp` is e.g. ``'residues'``,
+        only the :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging
+        to `ag` are taken into account, even if the compound might
+        comprise additional :class:`Atoms <MDAnalysis.core.groups.Atom>`
+        that are not contained in `ag`.
+
+        If `cmp` is ``'atoms'``, it is faster to call the corresponding
+        attribute of the input
+        :class:`~MDAnalysis.core.groups.AtomGroup` directly.
+    natms_per_cmp : int or array_like or None, optional
+        Number of :class:`Atoms <MDAnalysis.core.groups.Atom>` per
+        compound.  You must either provide `cmp` or `natms_per_cmp`.  If
+        both are given, `cmp` is ignored.
+
+        `natms_per_cmp` can be a single integer or an array of integers.
+        If a single integer is given, all compounds are assumed to
+        contain the same number of
+        :class:`Atoms <MDAnalysis.core.groups.Atom>`.  In this case,
+        `natms_per_cmp` must be an integer divisor of ``ag.n_atoms``.
+        If `natms_per_cmp` is an array of integers, it must contain
+        the number of :class:`Atoms <MDAnalysis.core.groups.Atom>` for
+        each single compound.  In this case, ``sum(natms_per_cmp)`` must
+        be equal to ``ag.n_atoms``.
+
+        Providing `natms_per_cmp` instead of `cmp` can speed up the
+        calculation if this function is called multiple times.
+        Internally, this function uses
+        :func:`mdtools.structure.natms_per_cmp` to calculate
+        `natms_per_cmp` if only `cmp` is given.
+
+    Returns
+    -------
+    attr : numpy.ndarray
+        The selected attribute for each compound in `ag`.  The length of
+        `attr` is equal to the number of compounds in `ag`.  The number
+        of dimensions of `ag` depends on the selected attribute.  For
+        instance, if the selected attribute is 'charges', the shape of
+        `attr` will be ``(n_cmp,)``.  If the selected attribute is
+        'velocities', the shape of `attr` will be ``(n_cmp, 3)``.
+
+    See Also
+    --------
+    :func:`mdtools.structure.natms_per_cmp` :
+        Get the number of :class:`Atoms <MDAnalysis.core.groups.Atom>`
+        of each compound in an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+
+    Examples
+    --------
+    Create an MDAnalysis Universe from scratch for the following
+    examples.
+
+    >>> import MDAnalysis as mda
+    >>> # Number of segments.
+    >>> n_seg = 1
+    >>> # Number of residues per segment.
+    >>> n_res = [n+2 for n in range(n_seg)]
+    >>> # Number of atoms per residue.
+    >>> n_atms = [n+2 for n_r in n_res for n in range(n_r)]
+    >>> u = mda.Universe.empty(
+    ...     n_atoms=sum(n_atms),
+    ...     n_residues=sum(n_res),
+    ...     n_segments=n_seg,
+    ...     atom_resindex=[
+    ...         ix for ix, n_a in enumerate(n_atms) for _ in range(n_a)
+    ...     ],
+    ...     residue_segindex=[
+    ...         ix for ix, n_r in enumerate(n_res) for _ in range(n_r)
+    ...     ],
+    ...     trajectory=True,
+    ...     velocities=True,
+    ...     forces=True,
+    ... )
+    >>> bonds = [
+    ...     (sum(n_atms[:i]), j)
+    ...     for i in range(len(n_atms))
+    ...     for j in range(sum(n_atms[:i])+1, sum(n_atms[:i+1]))
+    ... ]
+    >>> u.add_TopologyAttr("bonds", bonds)
+    >>> u.add_TopologyAttr("masses")
+    >>> u.add_TopologyAttr("charges")
+    >>> ag = u.atoms
+    >>> # Fill AtomGroup attributes.
+    >>> ag.positions = np.random.random(ag.positions.shape) * 10 - 5
+    >>> ag.velocities = np.random.random(ag.velocities.shape) * 2 - 1
+    >>> ag.forces = np.random.random(ag.forces.shape) * 5 - 2.5
+    >>> ag.masses = np.random.random(ag.masses.shape) * 10
+    >>> ag.charges = np.random.random(ag.charges.shape) * - 5
+
+    Center of geometry.
+
+    >>> # Center of geometry of each segment.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="segments", attr="positions")
+    >>> cog2 = [seg.atoms.center_of_geometry() for seg in ag.segments]
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each residue.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="residues", attr="positions")
+    >>> cog2 = [res.atoms.center_of_geometry() for res in ag.residues]
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each fragment.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="fragments", attr="positions")
+    >>> cog2 = [frg.atoms.center_of_geometry() for frg in ag.fragments]
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each atom.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="atoms", attr="positions")
+    >>> cog2 = ag.positions
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of the entire group.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="group", attr="positions")
+    >>> cog2 = ag.center_of_geometry()
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+
+    Instead of `cmp` one can also give `natms_per_cmp`, which can for
+    instance be calculated using
+    :func:`mdtools.structure.natms_per_cmp`.
+
+    >>> # Center of geometry of the entire group.
+    >>> cog1 = mdt.strc.cmp_attr(
+    ...     ag, attr="positions", natms_per_cmp=sum(n_atms)
+    ... )
+    >>> cog2 = ag.center_of_geometry()
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each atom.
+    >>> cog1 = mdt.strc.cmp_attr(ag, attr="positions", natms_per_cmp=1)
+    >>> cog2 = ag.positions
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each residue.
+    >>> cog1 = mdt.strc.cmp_attr(
+    ...     ag, attr="positions", natms_per_cmp=n_atms
+    ... )
+    >>> cog2 = [res.atoms.center_of_geometry() for res in ag.residues]
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+
+    Center of mass.
+
+    >>> com1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="positions", weights="masses"
+    ... )
+    >>> com2 = [res.atoms.center_of_mass() for res in ag.residues]
+    >>> np.allclose(com1, com2, rtol=0)
+    True
+
+    Center of charge (the charges of each compound should not sum up to
+    zero).
+
+    >>> coc1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="positions", weights="charges"
+    ... )
+    >>> coc2 = [
+    ...     res.atoms.center(weights=res.atoms.charges)
+    ...     for res in ag.residues
+    ... ]
+    >>> np.allclose(coc1, coc2, rtol=0)
+    True
+
+    Array of arbitrary weights (must have shape ``(ag.n_atoms,)``).
+
+    >>> coc_abs1 = mdt.strc.cmp_attr(
+    ...     ag,
+    ...     cmp="residues",
+    ...     attr="positions",
+    ...     weights=np.abs(ag.charges),
+    ... )
+    >>> coc_abs2 = [
+    ...     res.atoms.center(weights=np.abs(res.atoms.charges))
+    ...     for res in ag.residues
+    ... ]
+    >>> np.allclose(coc_abs1, coc_abs2, rtol=0)
+    True
+
+    ``weights="total"``: Return the sum of the selected attribute over
+    all atoms of each compound without taking the (weighted) average.
+
+    >>> # Total mass of each residue.
+    >>> res_mass1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="masses", weights="total"
+    ... )
+    >>> res_mass2 = [sum(res.atoms.masses) for res in ag.residues]
+    >>> np.allclose(res_mass1, res_mass2, rtol=0)
+    True
+    >>> # Total charge of each residue.
+    >>> res_charges1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="charges", weights="total"
+    ... )
+    >>> res_charges2 = [sum(res.atoms.charges) for res in ag.residues]
+    >>> np.allclose(res_charges1, res_charges2, rtol=0)
+    True
+    >>> # Center-of-mass velocity of each residue.
+    >>> com_vel1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="velocities", weights="total"
+    ... )
+    >>> com_vel2 = [
+    ...     np.sum(res.atoms.velocities, axis=0) for res in ag.residues
+    ... ]
+    >>> np.allclose(com_vel1, com_vel2)
+    True
+    >>> # Center-of-mass force of each residue.
+    >>> com_force1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="forces", weights="total"
+    ... )
+    >>> com_force2 = [
+    ...     np.sum(res.atoms.forces, axis=0) for res in ag.residues
+    ... ]
+    >>> np.allclose(com_force1, com_force2)
+    True
+
+    If the weights of all atoms belonging to the same compound sum up to
+    zero, the compound's attribute will be ``numpy.inf``.
+
+    >>> weights = np.array([-1, 1, -2, 0, 2])
+    >>> a = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="positions", weights=weights,
+    ... )
+    >>> np.abs(a)  # Only for doctest: Convert -inf to inf
+    array([[inf, inf, inf],
+           [inf, inf, inf]])
+
+    :func:`mdtools.structure.cmp_attr` only takes into account
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` that belong to the
+    input :class:`~MDAnalysis.core.groups.AtomGroup` `ag`, even if the
+    selected compound might comprise additional :class:`Atoms
+    <MDAnalysis.core.groups.Atom>` that are not contained in `ag`.
+    Contrarily, `ag.segments.atoms`, `ag.residues.atoms` and
+    `ag.fragments.atoms` contain all
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` that belong to the
+    respective compound even if `ag` does not contain all their
+    :class:`Atoms <MDAnalysis.core.groups.Atom>`.
+
+    >>> ag = ag[:-1]
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="residues", attr="positions")
+    >>> cog2 = [res.atoms.center_of_geometry() for res in ag.residues]
+    >>> np.allclose(cog1[0], cog2[0], rtol=0)
+    True
+    >>> np.allclose(cog1[1], cog2[1], rtol=0)
+    False
+    """
+    if natms_per_cmp is None:
+        if cmp is None and natms_per_cmp is None:
+            raise ValueError("Either `cmp` or `natms_per_cmp` must be given.")
+        natms_per_cmp = mdt.strc.natms_per_cmp(
+            ag, compound=cmp, return_array=True, check_contiguos=True
+        )
+    else:
+        if cmp is not None:
+            warnings.warn(
+                "`cmp` is ignored because `natms_per_cmp` is given.",
+                UserWarning
+            )
+        if np.any(np.less(natms_per_cmp, 1)):
+            raise ValueError(
+                "All elements of `natms_per_cmp` must be greater than zero"
+            )
+        if np.ndim(natms_per_cmp) == 0:
+            if cmp == "atoms" and natms_per_cmp != 1:
+                raise ValueError(
+                    "`cmp` is 'atoms' but `natms_per_cmp` ({}) is not"
+                    " 1.".format(natms_per_cmp)
+                )
+            elif cmp == "group" and natms_per_cmp != ag.n_atoms:
+                raise ValueError(
+                    "`cmp` is 'group' but `natms_per_cmp` ({}) is not equal to"
+                    " `ag.n_atoms` ({}).".format(natms_per_cmp, ag.n_atoms)
+                )
+            if ag.n_atoms % natms_per_cmp != 0:
+                raise ValueError(
+                    "`natms_per_cmp` ({}) is not an integer divisor of"
+                    " `ag.n_atoms` ({})".format(natms_per_cmp, ag.n_atoms)
+                )
+            natms_per_cmp = np.full(
+                ag.n_atoms//natms_per_cmp, natms_per_cmp, dtype=np.uint32
+            )
+        elif np.ndim(natms_per_cmp) == 1:
+            natms_per_cmp = np.asarray(natms_per_cmp)
+            if np.sum(natms_per_cmp) != ag.n_atoms:
+                raise ValueError(
+                    "The sum of `natms_per_cmp` ({}) is not equal to"
+                    " `ag.n_atoms`"
+                    " ({})".format(np.sum(natms_per_cmp), ag.n_atoms)
+                )
+        else:
+            raise ValueError(
+                "`natms_per_cmp` must be either an integer, 1d array or None"
+            )
+    slices = np.cumsum(natms_per_cmp[:-1], dtype=np.uint32)
+    slices = np.insert(slices, 0, 0)
+
+    attr_atm = getattr(ag, attr).astype(np.float64)
+    if weights is not None and not (
+        isinstance(weights, str) and weights == "total"
+    ):
+        if isinstance(weights, str):
+            weights = getattr(ag, weights).astype(np.float64)
+        else:  # `weights` is expected to be array_like.
+            weights = np.asarray(weights, dtype=np.float64)
+        # Ensure that `weights` and `attr_atm` are broadcastable.
+        # `weights` always has shape ``(n_atoms,)`` whereas `attr_atm`
+        # can in principle have an arbitrary shape, but its first
+        # dimension always has length `n_atoms`.  From
+        # https://numpy.org/doc/stable/user/basics.broadcasting.html:
+        # "When operating on two arrays, NumPy compares their shapes
+        # element-wise.  It starts with the trailing (i.e. rightmost)
+        # dimension and works its way left.  Two dimensions are
+        # compatible when
+        #   1. they are equal, or
+        #   2. one of them is 1."
+        shape = weights.shape + tuple(1 for _ in range(attr_atm.ndim - 1))
+        attr_atm *= weights.reshape(shape)
+    attr_cmp = np.add.reduceat(attr_atm, slices, axis=0)
+    del attr_atm
+    if weights is None:
+        # Ensure that `natms_per_cmp` and `attr_cmp` are broadcastable.
+        # `natms_per_cmp` always has shape ``(n_compounds,)`` whereas
+        # `attr_cmp` can in principle have an arbitrary shape, but its
+        # first dimension always has length `n_compounds`.  See above.
+        shape = natms_per_cmp.shape
+        shape += tuple(1 for _ in range(attr_cmp.ndim - 1))
+        attr_cmp /= natms_per_cmp.reshape(shape)
+    elif isinstance(weights, np.ndarray):  # weights != "total"
+        weights_sum = np.add.reduceat(weights, slices)
+        # Ensure that `weights_sum` and `attr_cmp` are broadcastable.
+        # `weights_sum` always has shape ``(n_compounds,)``.  See above.
+        shape = weights_sum.shape + tuple(1 for _ in range(attr_cmp.ndim - 1))
+        attr_cmp /= weights_sum.reshape(shape)
+    return attr_cmp
+
+
 def cmp_contact_count_matrix(
         cm, natms_per_refcmp=1, natms_per_selcmp=1, dtype=int):
     """
