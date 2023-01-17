@@ -1663,11 +1663,7 @@ def assign_atoms_to_grid(  # noqa: C901
 
 
 def natms_per_cmp(
-    ag,
-    cmp,
-    return_array=False,
-    return_cmp_ix=False,
-    check_contiguous=False
+    ag, cmp, return_array=False, return_cmp_ix=False, check_contiguous=False
 ):
     """
     Get the number of :class:`Atoms <MDAnalysis.core.groups.Atom>` of
@@ -1738,6 +1734,9 @@ def natms_per_cmp(
 
     See Also
     --------
+    :func:`mdtools.structure.cmp_attr` :
+        Get attributes of an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup` compound-wise.
     :func:`mdtools.structure.cmp_contact_matrix` :
         Convert an :class:`~MDAnalysis.core.groups.Atom` contact matrix
         to a compound contact matrix
@@ -1749,6 +1748,55 @@ def natms_per_cmp(
     :func:`mdtools.structure.contact_hists` :
         Bin the number of contacts between reference and selection
         compounds into histograms
+
+    Examples
+    --------
+    Create an MDAnalysis Universe from scratch for the following
+    examples.
+
+    >>> import MDAnalysis as mda
+    >>> # Number of segments.
+    >>> n_seg = 1
+    >>> # Number of residues per segment.
+    >>> n_res = [n+2 for n in range(n_seg)]
+    >>> # Number of atoms per residue.
+    >>> n_atms = [n+2 for n_r in n_res for n in range(n_r)]
+    >>> u = mda.Universe.empty(
+    ...     n_atoms=sum(n_atms),
+    ...     n_residues=sum(n_res),
+    ...     n_segments=n_seg,
+    ...     atom_resindex=[
+    ...         ix for ix, n_a in enumerate(n_atms) for _ in range(n_a)
+    ...     ],
+    ...     residue_segindex=[
+    ...         ix for ix, n_r in enumerate(n_res) for _ in range(n_r)
+    ...     ],
+    ...     trajectory=True,
+    ...     velocities=True,
+    ...     forces=True,
+    ... )
+    >>> bonds = [
+    ...     (sum(n_atms[:i]), j)
+    ...     for i in range(len(n_atms))
+    ...     for j in range(sum(n_atms[:i])+1, sum(n_atms[:i+1]))
+    ... ]
+    >>> u.add_TopologyAttr("bonds", bonds)
+    >>> ag = u.atoms
+
+    >>> mdt.strc.natms_per_cmp(ag, cmp="group")
+    5
+    >>> mdt.strc.natms_per_cmp(ag, cmp="group", return_array=True)
+    array([5])
+    >>> mdt.strc.natms_per_cmp(ag, cmp="segments")
+    5
+    >>> mdt.strc.natms_per_cmp(ag, cmp="residues")
+    array([2, 3])
+    >>> mdt.strc.natms_per_cmp(ag, cmp="residues", return_cmp_ix=True)
+    (array([2, 3]), array([0, 1]))
+    >>> mdt.strc.natms_per_cmp(ag, cmp="fragments")
+    array([2, 3])
+    >>> mdt.strc.natms_per_cmp(ag, cmp="atoms")
+    1
     """
     if cmp == 'atoms':
         if return_array or ag.n_atoms == 0:
@@ -1788,9 +1836,11 @@ def natms_per_cmp(
             " in the input AtomGroup"
         )
     cmp_ix, natms_per_cmp = np.unique(cmp_ix, return_counts=True)
-    if (not return_array and
-        len(natms_per_cmp) > 0 and
-            np.all(natms_per_cmp == natms_per_cmp[0])):
+    if (
+        not return_array
+        and len(natms_per_cmp) > 0
+        and np.all(natms_per_cmp == natms_per_cmp[0])
+    ):
         natms_per_cmp = natms_per_cmp[0]
     if return_cmp_ix:
         return natms_per_cmp, cmp_ix
