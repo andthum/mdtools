@@ -1950,9 +1950,8 @@ def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
         comprise additional :class:`Atoms <MDAnalysis.core.groups.Atom>`
         that are not contained in `ag`.
 
-        If `cmp` is ``'atoms'``, it is faster to call the corresponding
-        attribute of the input
-        :class:`~MDAnalysis.core.groups.AtomGroup` directly.
+        If `cmp` is ``'atoms'``, this function is equivalent to
+        ``getattr(ag, attr).astype(np.float64)``.
     natms_per_cmp : int or array_like or None, optional
         Number of :class:`Atoms <MDAnalysis.core.groups.Atom>` per
         compound.  You must either provide `cmp` or `natms_per_cmp`.  If
@@ -1976,13 +1975,14 @@ def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
 
     Returns
     -------
-    attr : numpy.ndarray
+    attr : numpy.ndarray of dtype numpy.float64
         The selected attribute for each compound in `ag`.  The length of
         `attr` is equal to the number of compounds in `ag`.  The number
         of dimensions of `ag` depends on the selected attribute.  For
         instance, if the selected attribute is 'charges', the shape of
         `attr` will be ``(n_cmp,)``.  If the selected attribute is
-        'velocities', the shape of `attr` will be ``(n_cmp, 3)``.
+        'velocities', the shape of `attr` will be ``(n_cmp, 3)``.  The
+        dtype of `attr` will always be ``numpy.float64``.
 
     See Also
     --------
@@ -2188,18 +2188,17 @@ def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
     >>> np.allclose(cog1[1], cog2[1], rtol=0)
     False
     """
+    attr_atm = getattr(ag, attr).astype(np.float64)
     if natms_per_cmp is None:
-        if cmp is None and natms_per_cmp is None:
+        if cmp is None:
             raise ValueError("Either `cmp` or `natms_per_cmp` must be given.")
+        elif cmp == "atoms":
+            return attr_atm
         natms_per_cmp = mdt.strc.natms_per_cmp(
             ag, cmp=cmp, return_array=True, check_contiguous=True
         )
     else:
-        if cmp is not None:
-            warnings.warn(
-                "`cmp` is ignored because `natms_per_cmp` is given.",
-                UserWarning,
-            )
+        # `cmp` will be ignored when `natms_per_cmp` is given.
         if np.any(np.less(natms_per_cmp, 1)):
             raise ValueError(
                 "All elements of `natms_per_cmp` must be greater than zero"
@@ -2208,29 +2207,43 @@ def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
             if cmp == "atoms" and natms_per_cmp != 1:
                 raise ValueError(
                     "`cmp` is 'atoms' but `natms_per_cmp` ({}) is not"
-                    " 1.".format(natms_per_cmp)
+                    " 1".format(natms_per_cmp)
                 )
             elif cmp == "group" and natms_per_cmp != ag.n_atoms:
                 raise ValueError(
                     "`cmp` is 'group' but `natms_per_cmp` ({}) is not equal to"
-                    " `ag.n_atoms` ({}).".format(natms_per_cmp, ag.n_atoms)
+                    " `ag.n_atoms` ({})".format(natms_per_cmp, ag.n_atoms)
                 )
             if ag.n_atoms % natms_per_cmp != 0:
                 raise ValueError(
                     "`natms_per_cmp` ({}) is not an integer divisor of"
                     " `ag.n_atoms` ({})".format(natms_per_cmp, ag.n_atoms)
                 )
+            if natms_per_cmp == 1:
+                return attr_atm
             natms_per_cmp = np.full(
                 ag.n_atoms // natms_per_cmp, natms_per_cmp, dtype=np.uint32
             )
         elif np.ndim(natms_per_cmp) == 1:
             natms_per_cmp = np.asarray(natms_per_cmp)
+            if cmp == "atoms" and np.any(natms_per_cmp != 1):
+                raise ValueError(
+                    "`cmp` is 'atoms' but not all elements of `natms_per_cmp`"
+                    " are 1"
+                )
+            elif cmp == "group" and len(natms_per_cmp) != 1:
+                raise ValueError(
+                    "`cmp` is 'group' but `len(natms_per_cmp)` ({}) is not"
+                    " 1".format(len(natms_per_cmp))
+                )
             if np.sum(natms_per_cmp) != ag.n_atoms:
                 raise ValueError(
                     "The sum of `natms_per_cmp` ({}) is not equal to"
                     " `ag.n_atoms`"
                     " ({})".format(np.sum(natms_per_cmp), ag.n_atoms)
                 )
+            if np.all(natms_per_cmp == 1):
+                return attr_atm
         else:
             raise ValueError(
                 "`natms_per_cmp` must be either an integer, 1d array or None"
@@ -2238,7 +2251,6 @@ def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
     slices = np.cumsum(natms_per_cmp[:-1], dtype=np.uint32)
     slices = np.insert(slices, 0, 0)
 
-    attr_atm = getattr(ag, attr).astype(np.float64)
     if weights is not None and not (
         isinstance(weights, str) and weights == "total"
     ):
