@@ -23,7 +23,7 @@ This module can be called from :mod:`mdtools` via the shortcut
 ``strc``::
 
     import mdtools as mdt
-    mdt.strc  # insetad of mdt.structure
+    mdt.strc  # instead of mdt.structure
 
 """
 
@@ -70,7 +70,7 @@ def wcenter_pos(
     wrap_pos : bool, optional
         If ``True``, wrap all positions in `pos` back to the primary
         unit cell using :func:`mdtools.box.wrap_pos` **before**
-        calculating the weigted center.  Note that this likely splits
+        calculating the weighted center.  Note that this likely splits
         molecules across periodic boundaries, which is undesired when
         calculating their centers.  If ``True``, `box` must be provided.
     wrap_result : bool, optional
@@ -143,7 +143,7 @@ def wcenter_pos(
 
     Notes
     -----
-    The weighted center is calculated accroding to
+    The weighted center is calculated according to
 
     .. math::
 
@@ -878,7 +878,7 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
     .. important::
 
         `MDAnalysis always guesses atom masses`_!  If MDAnalysis cannot
-        guess the mass from the atom type, it will asign this atom a
+        guess the mass from the atom type, it will assign this atom a
         zero mass.  If the mass of a compound sum up to zero, the
         coordinates of that compound's center of mass will be ``nan``!
         If `debug` is set to ``True``, a warning will be raised if any
@@ -942,7 +942,7 @@ def discrete_pos_trj(
         return_bins=False, return_lbox=False, return_dt=False, dtype=int,
         verbose=True, debug=False, **sel_kwargs):
     """
-    Create a discrete posotion trajectory.
+    Create a discrete position trajectory.
 
     Discretize the positions of compounds of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` in a given spatial
@@ -1044,7 +1044,7 @@ def discrete_pos_trj(
         The tolerance value added to ``lbox`` to account for the
         right-open bin interval of the last bin.
     return_bins : bool, optional
-        If ``True``, return the bin endges used for the discretization.
+        If ``True``, return the bin edges used for the discretization.
     return_lbox : bool, optional
         If ``True``, return the average box length in the given spatial
         direction.
@@ -1101,7 +1101,7 @@ def discrete_pos_trj(
     -----
     The simulation box must be orthogonal.
 
-    Compounds are asigned to bins according to their center of mass
+    Compounds are assigned to bins according to their center of mass
     position.  Compounds are made whole before calculating their centers
     of mass.  The centers of mass are wrapped back into the primary unit
     cell before discretizing their positions.
@@ -1350,7 +1350,7 @@ def assign_atoms_to_grid(  # noqa: C901
           the corresponding box length, there will be a thin box region
           (thinner than `binwidth`) that is beyond the bounds of the
           created bins.
-        * With `bins` you can provide arbitray bin edges for each
+        * With `bins` you can provide arbitrary bin edges for each
           spatial dimension with the only limitation that the bin edges
           must lie within the simulation box.  The given bin edges will
           be sorted in increasing order and duplicate entries will be
@@ -1404,7 +1404,7 @@ def assign_atoms_to_grid(  # noqa: C901
         first valid bin with bin edges [``bins[0]``, ``bins[1]``) in the
         corresponding dimension).
     expand_binnumbers : bool, optional
-        If ``True``, the returned index array is unravled into an array
+        If ``True``, the returned index array is unraveled into an array
         of shape ``(D, N)`` where each row gives the bin numbers of all
         ``N`` atoms along the corresponding dimension ``D``.  If
         ``False``, the returned index array has shape ``(N,)`` and maps
@@ -1462,7 +1462,7 @@ def assign_atoms_to_grid(  # noqa: C901
     See Also
     --------
     :func:`mdtools.numpy_helper_functions.digitize_dd` :
-        Underlying function used for assingning the atoms to their grid
+        Underlying function used for assigning the atoms to their grid
         subvolumes.
     """
     if box is None:
@@ -2252,7 +2252,7 @@ def cmp_contact_count_matrix(
     the contacts of all :class:`Atoms <MDAnalysis.core.groups.Atom>`
     belonging to the same compound.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -2437,7 +2437,7 @@ def cmp_contact_matrix(
     between their :class:`Atoms <MDAnalysis.core.groups.Atom>` is equal
     to or higher than `min_contacts`.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -2612,7 +2612,7 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
         Array of compound indices corresponding to the
         reference/selection compounds contained in `cm`.  If the indices
         contain gaps, these gaps will be filled by this function.
-        Indices must not be negative, dublicate indices will be removed.
+        Indices must not be negative, duplicate indices will be removed.
 
     Returns
     -------
@@ -2706,7 +2706,7 @@ def contact_matrix(
     ref, sel : MDAnalysis.core.groups.AtomGroup
         The reference/selection
         :class:`~MDAnalysis.core.groups.AtomGroup`.  Must be unique,
-        i.e. must not contain dublicate
+        i.e. must not contain duplicate
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.
     cutoff : scalar
         A reference and selection :class:`~MDAnalysis.core.groups.Atom`
@@ -2821,8 +2821,10 @@ def contact_matrix(
                          .format(cutoff))
     for i, ag in enumerate(ags):
         if ag.unique != ag:
-            raise ValueError("The {} group must not contain dublicate"
-                             " atoms".format(ag_names[i]))
+            raise ValueError(
+                "The {} group must not contain duplicate"
+                " atoms".format(ag_names[i])
+            )
 
     for i, ag in enumerate(ags):
         if ag.n_atoms == 0:
@@ -3168,7 +3170,7 @@ MDAnalysis.coordinates.base.FrameIteratorBase, optional
 
 def cms_n_common_contacts(cms):
     """
-    Get the number of contancts common in all contact matrices.
+    Get the number of contacts common in all contact matrices.
 
     Parameters
     ----------
@@ -3196,7 +3198,7 @@ def cms_n_common_contacts(cms):
     :func:`mdtools.structure.contact_matrices` :
         Construct a contact matrix for each frame in a trajectory
     :func:`mdtools.structure.cms_n_contacts` :
-        Get the number of contancts per contact matrix and the number of
+        Get the number of contacts per contact matrix and the number of
         contacts common in all contact matrices
 
     Examples
@@ -3239,7 +3241,7 @@ def cms_n_common_contacts(cms):
 
 def cms_n_contacts(cms, dtype=int):
     """
-    Get the number of contancts per contact matrix and the number of
+    Get the number of contacts per contact matrix and the number of
     contacts common in all contact matrices.
 
     Parameters
@@ -3272,7 +3274,7 @@ def cms_n_contacts(cms, dtype=int):
     :func:`mdtools.structure.contact_matrices` :
         Construct a contact matrix for each frame in a trajectory
     :func:`mdtools.structure.cms_n_common_contacts` :
-        Get the number of contancts common in all contact matrices
+        Get the number of contacts common in all contact matrices
 
     Examples
     --------
@@ -3470,7 +3472,7 @@ def contact_hist_refcmp_diff_selcmp(
     Bin the number of contacts that reference compounds establish to
     **different** selection compounds into a histogram.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -3516,7 +3518,7 @@ def contact_hist_refcmp_diff_selcmp(
     minlength : int, optional
         A minimum number of bins for the output array.  The output array
         will have at least this number of elements, though it will be
-        longer if necessary.  See :func:`numpy.bincount` for furhter
+        longer if necessary.  See :func:`numpy.bincount` for further
         information.
     dtype : dtype, optional
         Data type of the output array.
@@ -3665,7 +3667,7 @@ def contact_hist_refcmp_same_selcmp(
     Bin the number of contacts that reference compounds establish to
     the **same** selection compound into a histogram.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -3934,7 +3936,7 @@ def contact_hist_refcmp_selcmp_tot(
     Bin the **total** number of contacts that reference compounds
     establish to selection compounds into a histogram.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -3978,7 +3980,7 @@ def contact_hist_refcmp_selcmp_tot(
     minlength : int, optional
         A minimum number of bins for the output array.  The output array
         will have at least this number of elements, though it will be
-        longer if necessary.  See :func:`numpy.bincount` for furhter
+        longer if necessary.  See :func:`numpy.bincount` for further
         information.
     dtype : dtype, optional
         Data type of the output array.
@@ -4140,7 +4142,7 @@ def contact_hist_refcmp_selcmp_pair(
     :class:`~MDAnalysis.core.groups.Atom` contacts) between pairs of
     reference and selection compounds.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -4184,7 +4186,7 @@ def contact_hist_refcmp_selcmp_pair(
     minlength : int, optional
         A minimum number of bins for the output array.  The output array
         will have at least this number of elements, though it will be
-        longer if necessary.  See :func:`numpy.bincount` for furhter
+        longer if necessary.  See :func:`numpy.bincount` for further
         information.
     dtype : dtype, optional
         Data type of the output array.
@@ -4367,7 +4369,7 @@ def contact_hists(
     Bin the number of contacts between reference and selection compounds
     into histograms.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
