@@ -1466,7 +1466,7 @@ def assign_atoms_to_grid(  # noqa: C901
         subvolumes.
     """
     if box is None:
-        box = ag.dimensions.asdtype(np.float64)
+        box = ag.dimensions.astype(np.float64)
     mdt.check.box(box, with_angles=True, orthorhombic=True, dim=1)
     if assume_wrapped:
         pos = ag.positions
