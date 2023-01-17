@@ -22,7 +22,8 @@ r"""
 Compute histograms of a given spatial attribute of an MDAnalysis
 :class:`~MDAnalysis.core.groups.AtomGroup`.
 
-The spatial attribute is selected with \--attribute.
+The spatial attribute is selected with \--attribute.  It is always
+calculated with respect to the center of mass of the selected compound.
 
 Five histograms are plotted:
 
@@ -61,6 +62,20 @@ Options
     re-evaluated every :attr:`time step
     <MDAnalysis.coordinates.base.Timestep.dt>`.  This is e.g. useful for
     position-based selections like ``'type Li and prop z <= 2.0'``.
+--cmp
+    {'group', 'segments', 'residues', 'molecules', 'fragments', 'atoms'}
+
+    The compounds of the selection group to use for the analysis.
+    Compounds can be 'group' (the entire selection group), 'segments',
+    'residues', 'molecules', 'fragments', or 'atoms'.  Refer to the
+    MDAnalysis' user guide for an |explanation_of_these_terms|.  Note
+    that in any case, even if ``CMP`` is e.g. 'residues', only the atoms
+    belonging to the selection group are taken into account, even if the
+    compound might comprise additional atoms that are not contained in
+    the selection group.  In all cases, the center of mass of the
+    compound is used for the analysis.  Note that
+    |MDA_always_guesses_atom_masses| from the atom types, even if the
+    input file contains the masses.  Default: ``'atoms'``.
 --attribute
     {'velocities', 'forces', 'positions'}
 
@@ -118,6 +133,11 @@ that simply shifts the distribution to the right.  :math:`\sigma^2` and
 calculated from :math:`\sigma^2` according to :math:`T = m\sigma^2/k_B`,
 where :math:`m` is set to the average mass of all selected compounds.
 
+Usually, it is a bad idea to compute overall histograms of multiple
+compounds in the trajectory.  Instead, better compute separate
+histograms for each compound.  In other words, only select compounds of
+the same type with \--sel and \--cmp (e.g. all water molecules or all
+oxygen atoms belonging to water molecules).
 """
 
 
@@ -273,6 +293,26 @@ if __name__ == "__main__":  # noqa: C901
         help="Use an UpdatingAtomGroup for the analysis.",
     )
     parser.add_argument(
+        "--cmp",
+        dest="CMP",
+        type=str,
+        required=False,
+        choices=(
+            "group",
+            "segments",
+            "residues",
+            "molecules",
+            "fragments",
+            "atoms",
+        ),
+        default="atoms",
+        help=(
+            "The compounds of the selection group to use for the analysis.  In"
+            " all cases, the center of mass of the compound is used for the"
+            " analysis.  Default: %(default)s."
+        ),
+    )
+    parser.add_argument(
         "--attribute",
         dest="ATTR",
         type=str,
@@ -389,10 +429,21 @@ if __name__ == "__main__":  # noqa: C901
     print("Time step first frame:  {:>12.3f} ps".format(first_frame_read.dt))
     print("Time step last frame:   {:>12.3f} ps".format(last_frame_read.dt))
 
+    if args.UPDATING_SEL:
+        napc = None
+    else:
+        napc = mdt.strc.natms_per_cmp(sel, cmp=args.CMP, check_contiguous=True)
+    if args.ATTR in ("velocities", "forces"):
+        weights = "total"
+    elif args.ATTR == "positions":
+        weights = "masses"
+
     print("\n")
     print("Inspecting data...")
     timer = datetime.now()
-    attr = getattr(sel, args.ATTR).astype(np.float64)
+    attr = mdt.strc.cmp_attr(
+        sel, attr=args.ATTR, weights=weights, cmp=args.CMP, natms_per_cmp=napc
+    )
     n_samples = 0
     # The meaning of the indices of the following arrays is described by
     # the `DIMENSION` dictionary.
@@ -406,7 +457,13 @@ if __name__ == "__main__":  # noqa: C901
     maxs = -mins
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
     for _ts in trj:
-        attr = getattr(sel, args.ATTR).astype(np.float64)
+        attr = mdt.strc.cmp_attr(
+            sel,
+            attr=args.ATTR,
+            weights=weights,
+            cmp=args.CMP,
+            natms_per_cmp=napc,
+        )
         n_samples += attr.shape[0]
         moment1[:N_DIMS] += np.nansum(attr, axis=0)
         moment2[:N_DIMS] += np.nansum(attr**2, axis=0)
@@ -468,7 +525,13 @@ if __name__ == "__main__":  # noqa: C901
     hists = [np.zeros(len(bns) - 1, dtype=np.uint64) for bns in bins]
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
     for _ts in trj:
-        attr = getattr(sel, args.ATTR).astype(np.float64)
+        attr = mdt.strc.cmp_attr(
+            sel,
+            attr=args.ATTR,
+            weights=weights,
+            cmp=args.CMP,
+            natms_per_cmp=napc,
+        )
         # One histogram for each spatial dimension.
         for i, at in enumerate(attr.T):
             hist, bin_edges = np.histogram(
@@ -518,6 +581,7 @@ if __name__ == "__main__":  # noqa: C901
     timer = datetime.now()
     header_base = (
         "Selection string:  '{:s}'\n".format(" ".join(args.SEL))
+        + "Selection compound: '{:s}'\n".format(args.CMP)
         + mdt.rti.ag_info_str(sel)
         + "\n\n\n"
         + "Total number of frames: {:>8d}\n".format(u.trajectory.n_frames)
@@ -593,7 +657,7 @@ if __name__ == "__main__":  # noqa: C901
             std_mb = np.sqrt(moment2_mb - moment1_mb**2)
             header += (
                 "  4 Maxwell-Boltzmann fit of the probability density\n"
-                "    p(v) = 4*pi*(v-u)^2 * (1/2*pi*sigma^2)^(3/2) *"
+                "    p(v) = 4*pi*(v-u)^2 * 1/(2*pi*sigma^2)^(3/2) *"
                 " exp[-(v-u)^2 / (2*sigma^2)]\n"
                 "    sigma^2 = kT/m\n"
                 + "\n"
