@@ -1663,8 +1663,12 @@ def assign_atoms_to_grid(  # noqa: C901
 
 
 def natms_per_cmp(
-        ag, compound, return_array=False, return_cmp_ix=False,
-        check_contiguos=False):
+    ag,
+    cmp,
+    return_array=False,
+    return_cmp_ix=False,
+    check_contiguous=False
+):
     """
     Get the number of :class:`Atoms <MDAnalysis.core.groups.Atom>` of
     each compound in an MDAnalysis
@@ -1676,7 +1680,8 @@ def natms_per_cmp(
         The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
         which to get the number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>` per compound.
-    compound : {'group', 'segments', 'residues', 'fragments', 'atoms'}
+    cmp : {'group', 'segments', 'residues', 'molecules', \
+        'fragments', 'atoms'}
         The compounds of `ag` for which to get the number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.  If ``'atoms'``,
         the output will simply be ``1`` or an array of ones (depending
@@ -1684,11 +1689,11 @@ def natms_per_cmp(
         :class:`Atoms <MDAnalysis.core.groups.Atom>` in the entire
         group or of each
         :class:`~MDAnalysis.core.groups.Segment`,
-        :class:`~MDAnalysis.core.groups.Residue` or
+        :class:`~MDAnalysis.core.groups.Residue`, molecule or
         :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>` in
         `ag` is returned.  Refer to the MDAnalysis' user guide for an
         |explanation_of_these_terms|.  Note that in any case, even if
-        `compound` is e.g. ``'residues'``, only the
+        `cmp` is e.g. ``'residues'``, only the
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
         are taken into account, even if the compound might comprise
         additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
@@ -1703,9 +1708,9 @@ def natms_per_cmp(
         `return_array` is ``False``.
     return_cmp_ix : bool, optional
         If ``True``, additionally return the unique indices of the
-        compounds as assigned by MDAnalysis.  If `compound` is e.g.
+        compounds as assigned by MDAnalysis.  If `cmp` is e.g.
         ``'residues'``, this is ``np.unique(ag.resindices)``.
-    check_contiguos : bool, optional
+    check_contiguous : bool, optional
         If ``True`` (default), check if
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the
         same compound form a contiguous set in the input
@@ -1745,7 +1750,7 @@ def natms_per_cmp(
         Bin the number of contacts between reference and selection
         compounds into histograms
     """
-    if compound == 'atoms':
+    if cmp == 'atoms':
         if return_array or ag.n_atoms == 0:
             natms_per_cmp = np.ones(ag.n_atoms, dtype=int)
         else:
@@ -1754,7 +1759,7 @@ def natms_per_cmp(
             return natms_per_cmp, ag.indices
         else:
             return natms_per_cmp
-    elif compound == 'group':
+    elif cmp == 'group':
         if return_array:
             natms_per_cmp = np.array([ag.n_atoms], dtype=int)
         else:
@@ -1763,19 +1768,25 @@ def natms_per_cmp(
             return natms_per_cmp, np.array([0], dtype=int)
         else:
             return natms_per_cmp
-    elif compound == 'segments':
+    elif cmp == 'segments':
         cmp_ix = ag.segindices
-    elif compound == 'residues':
+    elif cmp == 'residues':
         cmp_ix = ag.resindices
-    elif compound == 'fragments':
+    elif cmp == 'molecules':
+        cmp_ix = ag.molnums
+    elif cmp == 'fragments':
         cmp_ix = ag.fragindices
     else:
-        raise ValueError("compound must be either 'group', 'segments',"
-                         " 'residues', 'fragments' or 'atoms', but you"
-                         " gave '{}'".format(compound))
-    if check_contiguos and not np.array_equal(cmp_ix, np.sort(cmp_ix)):
-        raise ValueError("Atoms belonging to the same compound must"
-                         " form a contiguous set")
+        raise ValueError(
+            "`cmp` must be either 'group', 'segments', 'residues',"
+            " 'molecules', 'fragments' or 'atoms', but you gave"
+            " '{}'".format(cmp)
+        )
+    if check_contiguous and not np.array_equal(cmp_ix, np.sort(cmp_ix)):
+        raise ValueError(
+            "Atoms belonging to the same compound do not form a contiguous set"
+            " in the input AtomGroup"
+        )
     cmp_ix, natms_per_cmp = np.unique(cmp_ix, return_counts=True)
     if (not return_array and
         len(natms_per_cmp) > 0 and
@@ -2098,7 +2109,7 @@ def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
         if cmp is None and natms_per_cmp is None:
             raise ValueError("Either `cmp` or `natms_per_cmp` must be given.")
         natms_per_cmp = mdt.strc.natms_per_cmp(
-            ag, compound=cmp, return_array=True, check_contiguos=True
+            ag, cmp=cmp, return_array=True, check_contiguous=True
         )
     else:
         if cmp is not None:
@@ -2786,10 +2797,9 @@ def contact_matrix(
     cmp_ix = [None, ] * n_ags
     napc = [None, ] * n_ags
     for i, ag in enumerate(ags):
-        napc[i], cmp_ix[i] = natms_per_cmp(ag=ag,
-                                           compound=compound[i],
-                                           return_cmp_ix=True,
-                                           check_contiguos=True)
+        napc[i], cmp_ix[i] = mdt.strc.natms_per_cmp(
+            ag=ag, cmp=compound[i], return_cmp_ix=True, check_contiguous=True
+        )
     if np.any([cmp != 'atoms' for cmp in compound]):
         cm = cmp_contact_matrix(cm=cm,
                                 natms_per_refcmp=napc[0],
@@ -3019,17 +3029,11 @@ MDAnalysis.coordinates.base.FrameIteratorBase, optional
     cms = [None, ] * N_FRAMES
     if not updating_ref:
         natms_per_refcmp, refcmp_ix = mdt.strc.natms_per_cmp(
-            ag=ref,
-            compound=compound[0],
-            return_cmp_ix=True,
-            check_contiguos=True,
+            ag=ref, cmp=compound[0], return_cmp_ix=True, check_contiguous=True
         )
     if not updating_sel:
         natms_per_selcmp, selcmp_ix = mdt.strc.natms_per_cmp(
-            ag=sel,
-            compound=compound[1],
-            return_cmp_ix=True,
-            check_contiguos=True,
+            ag=sel, cmp=compound[1], return_cmp_ix=True, check_contiguous=True
         )
     if not updating_ref and not updating_sel:
         dist_array_tmp = np.full(
@@ -3062,18 +3066,18 @@ MDAnalysis.coordinates.base.FrameIteratorBase, optional
             mdabackend=mdabackend,
         )
         if updating_ref and compound[0] != 'atoms':
-            natms_per_refcmp, refcmp_ix = natms_per_cmp(
+            natms_per_refcmp, refcmp_ix = mdt.strc.natms_per_cmp(
                 ag=ref,
-                compound=compound[0],
+                cmp=compound[0],
                 return_cmp_ix=True,
-                check_contiguos=True,
+                check_contiguous=True,
             )
         if updating_sel and compound[1] != 'atoms':
-            natms_per_selcmp, selcmp_ix = natms_per_cmp(
+            natms_per_selcmp, selcmp_ix = mdt.strc.natms_per_cmp(
                 ag=sel,
-                compound=compound[1],
+                cmp=compound[1],
                 return_cmp_ix=True,
-                check_contiguos=True,
+                check_contiguous=True,
             )
         if compound[0] != 'atoms' or compound[1] != 'atoms':
             cm = cmp_contact_matrix(

@@ -353,17 +353,17 @@ if __name__ == '__main__':
     )
 
     if not args.UPDATING_REF:
-        natms_per_refcmp = mdt.strc.natms_per_cmp(ag=ref,
-                                                  compound=args.REFCMP,
-                                                  check_contiguos=True)
+        natms_per_refcmp = mdt.strc.natms_per_cmp(
+            ag=ref, cmp=args.REFCMP, check_contiguous=True
+        )
     if not args.UPDATING_SEL:
-        natms_per_selcmp = mdt.strc.natms_per_cmp(ag=sel,
-                                                  compound=args.SELCMP,
-                                                  check_contiguos=True)
+        natms_per_selcmp = mdt.strc.natms_per_cmp(
+            ag=sel, cmp=args.SELCMP, check_contiguous=True
+        )
     if not args.UPDATING_REF and not args.UPDATING_SEL:
-        dist_array_tmp = np.full((ref.n_atoms, sel.n_atoms),
-                                 np.nan,
-                                 dtype=np.float64)
+        dist_array_tmp = np.full(
+            (ref.n_atoms, sel.n_atoms), np.nan, dtype=np.float64
+        )
     else:
         dist_array_tmp = None
 
@@ -397,15 +397,11 @@ if __name__ == '__main__':
     for ts in trj:
         if args.UPDATING_REF:
             natms_per_refcmp = mdt.strc.natms_per_cmp(
-                ag=ref,
-                compound=args.REFCMP,
-                check_contiguos=True
+                ag=ref, cmp=args.REFCMP, check_contiguous=True
             )
         if args.UPDATING_SEL:
             natms_per_selcmp = mdt.strc.natms_per_cmp(
-                ag=sel,
-                compound=args.SELCMP,
-                check_contiguos=True
+                ag=sel, cmp=args.SELCMP, check_contiguous=True
             )
         # Generate contact matrices:
         cm_refatm_selatm = mdt.strc.contact_matrix(

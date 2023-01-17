@@ -537,20 +537,20 @@ if __name__ == '__main__':
                          " gave {}".format(args.REFCMP))
     # Number of atoms per compound (needed later in step 2 for the
     # calculation of contact matrices):
-    natms_per_refcmp = mdt.strc.natms_per_cmp(ag=ref,
-                                              compound=args.REFCMP,
-                                              return_array=True,
-                                              check_contiguos=True)
+    natms_per_refcmp = mdt.strc.natms_per_cmp(
+        ag=ref, cmp=args.REFCMP, return_array=True, check_contiguous=True
+    )
     if len(natms_per_refcmp) != N_REFCMPS:
-        raise ValueError("'len(natms_per_refcmp)' ({}) != 'N_REFCMPS'"
-                         " ({}). This should not have happened"
-                         .format(len(natms_per_refcmp), N_REFCMPS))
+        raise ValueError(
+            "'len(natms_per_refcmp)' ({}) != 'N_REFCMPS' ({}).  This should"
+            " not have happened".format(len(natms_per_refcmp), N_REFCMPS)
+        )
     refcmp_slices = np.cumsum(natms_per_refcmp, dtype=np.uint32)
     refcmp_slices = np.insert(refcmp_slices, 0, 0)
     del natms_per_refcmp
-    natms_per_selcmp = mdt.strc.natms_per_cmp(ag=sel,
-                                              compound=args.SELCMP,
-                                              check_contiguos=True)
+    natms_per_selcmp = mdt.strc.natms_per_cmp(
+        ag=sel, cmp=args.SELCMP, check_contiguous=True
+    )
     if np.ndim(natms_per_selcmp) == 0:
         N_SELCMPS = sel.n_atoms // natms_per_selcmp
     else:

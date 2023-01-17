@@ -543,9 +543,9 @@ their position at time t0.
     selix_diff = np.zeros_like(selix_var_min_max_b)
     # For creation of the refcmp-selcmp contact matrices from the
     # recmp-selatm contact matrices
-    natms_per_selcmp = mdt.strc.natms_per_cmp(ag=sel,
-                                              compound=args.SELCMP,
-                                              check_contiguos=True)
+    natms_per_selcmp = mdt.strc.natms_per_cmp(
+        ag=sel, cmp=args.SELCMP, check_contiguous=True
+    )
     # Read trajectory:
     trj = u.trajectory[BEGIN + EVERY + LAG:END - LAG:EVERY]
     trj = mdt.rti.ProgressBar(trj,
