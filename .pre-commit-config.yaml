@@ -7,9 +7,8 @@
 #   cd path/to/your/project/root
 #   pre-commit install
 #   pre-commit install-hooks
-# Now pre-commit will run autormatically on every `git commit`.
+# Now pre-commit will run automatically on every `git commit`.
 # Bypass pre-commit and commit-msg hook with `git commit --no-verify`.
-
 
 minimum_pre_commit_version: "2.0"
 
@@ -36,8 +35,12 @@ ci:
 
 repos:
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
-    rev: "v4.3.0"
+    rev: "v4.4.0"
     hooks:
+      ### Git ###
+      # Protect specific branches from direct check-ins.
+      - id: "no-commit-to-branch"
+        args: ["--branch", "main"]
       ### Security ###
       # Detect the presence of private keys.
       - id: "detect-private-key"
@@ -66,7 +69,7 @@ repos:
       # Trim trailing whitespace.
       - id: "trailing-whitespace"
         args:
-          # Preserve Markdown hard linebreaks.
+          # Preserve Markdown hard line breaks.
           - "--markdown-linebreak-ext=md"
       ### Markup languages ###
       # Check toml files for parseable syntax.
@@ -91,12 +94,17 @@ repos:
       - id: "check-docstring-first"
       # Check for debug statements.
       - id: "debug-statements"
+      # Verifies that test files are named correctly.
+      - id: "name-tests-test"
+        args:
+          # Ensure tests match .*_test\.py
+          - "--pytest"
       # Sort entries in requirements.txt.
       - id: "requirements-txt-fixer"
 
-########################################################################
-# Validate CI Configuration Files                                      #
-########################################################################
+  ######################################################################
+  # Validate CI Configuration Files                                    #
+  ######################################################################
 
   - repo: "https://github.com/pre-commit-ci/pre-commit-ci-config"
     rev: "v1.5.1"
@@ -105,8 +113,11 @@ repos:
       - id: "check-pre-commit-ci-config"
 
   - repo: "https://github.com/python-jsonschema/check-jsonschema"
-    rev: "0.18.3"
+    rev: "0.20.0"
     hooks:
+      # Validate Dependabot Config (v2) against the schema provided by
+      # SchemaStore.
+      - id: "check-dependabot"
       # Validate GitHub Actions against the schema provided by
       # SchemaStore.
       - id: "check-github-actions"
@@ -121,12 +132,12 @@ repos:
       # ReadTheDocs.
       - id: "check-readthedocs"
 
-########################################################################
-# Python Hooks                                                         #
-########################################################################
+  ######################################################################
+  # Python Hooks                                                       #
+  ######################################################################
 
   - repo: "https://github.com/pre-commit/pygrep-hooks"
-    rev: "v1.9.0"
+    rev: "v1.10.0"
     hooks:
       # Enforce that `# noqa` comments always occur with specific codes.
       - id: "python-check-blanket-noqa"
@@ -139,7 +150,7 @@ repos:
       - id: "rst-inline-touching-normal"
 
   - repo: "https://github.com/PyCQA/isort"
-    rev: "5.10.1"
+    rev: "5.11.4"
     hooks:
       # Sort import statements with isort
       - id: "isort"
@@ -163,7 +174,7 @@ repos:
     # to XX but somehow the pre-commit hook has version YY when
     # specifying the hook version without the prefix.  See
     # https://github.com/psf/black/issues/2493#issuecomment-1081987650
-    rev: "refs/tags/22.8.0:refs/tags/22.8.0"
+    rev: "refs/tags/22.12.0:refs/tags/22.12.0"
     hooks:
       # Format Python code with black.
       - id: "black"
@@ -217,9 +228,9 @@ repos:
           # Required to read config from pyproject.toml
           - "toml"
 
-########################################################################
-# Shell / Bash Hooks                                                   #
-########################################################################
+  ######################################################################
+  # Shell / Bash Hooks                                                 #
+  ######################################################################
 
   - repo: "https://github.com/maxwinterstein/shfmt-py"
     rev: "v3.4.3.1"
@@ -243,7 +254,7 @@ repos:
           - "-l"
 
   - repo: "https://github.com/shellcheck-py/shellcheck-py"
-    rev: "v0.8.0.4"
+    rev: "v0.9.0.2"
     hooks:
       # Lint shell scripts with shellcheck.
       # NOTE: The official shellcheck hook from
@@ -259,9 +270,9 @@ repos:
           # Use color in terminal output.
           - "--color=always"
 
-########################################################################
-# Markdown Hooks                                                       #
-########################################################################
+  ######################################################################
+  # Markdown Hooks                                                     #
+  ######################################################################
 
   - repo: "https://github.com/markdownlint/markdownlint"
     # v0.12.0 requires ruby2.7, however openSUSE Leap 15.4 officially
