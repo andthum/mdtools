@@ -9,6 +9,7 @@
         "DavidAnson.vscode-markdownlint",
         "eamodio.gitlens",
         "EditorConfig.EditorConfig",
+        "foxundermoon.shell-format",
         "KevinRose.vsc-python-indent",
         "lextudio.restructuredtext",
         "ms-python.black-formatter",
@@ -18,6 +19,7 @@
         "redhat.vscode-yaml",
         "stkb.rewrap",
         "streetsidesoftware.code-spell-checker",
+        "timonwong.shellcheck",
         "trond-snekvik.simple-rst",
         // "VisualStudioExptTeam.vscodeintellicode",  // Not available for VSCodium.
         "wayou.vscode-todo-highlight",
