@@ -7,6 +7,8 @@ on:
     types:
       - "opened"
       - "edited"
+    branches-ignore:
+      - "dependabot/**"
 
 jobs:
   triage:
@@ -15,16 +17,16 @@ jobs:
       pull-requests: "write"
     runs-on: "ubuntu-latest"
     steps:
-    - uses: "github/issue-labeler@v2.5"
-      with:
-        repo-token: "${{ secrets.GITHUB_TOKEN }}"
-        configuration-path: ".github/pr-labeler-config.yml"
-        # Updating the config file or the pull request template can have
-        # impact on the labeling of existing pull requests.  To prevent
-        # this, you can couple the config file and pull request template
-        # by a version number.
-        enable-versioned-regex: 0
-        versioned-regex: 'issue_labeler_regex_version=(\d+)'
-        body-missing-regex-label: "broken-template"
-        # Include the issue title in the regular expression target.
-        include-title: 1
+      - uses: "github/issue-labeler@v2.5"
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: ".github/pr-labeler-config.yml"
+          # Updating the config file or the pull request template can have
+          # impact on the labeling of existing pull requests.  To prevent
+          # this, you can couple the config file and pull request template
+          # by a version number.
+          enable-versioned-regex: 0
+          versioned-regex: 'issue_labeler_regex_version=(\d+)'
+          body-missing-regex-label: "broken-template"
+          # Include the issue title in the regular expression target.
+          include-title: 1
