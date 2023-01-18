@@ -517,7 +517,25 @@ if __name__ == "__main__":  # noqa: C901
             n_bins = int(np.ceil((stop - start) / bin_width))
         else:
             n_bins = args.BIN_NUM
-        bins.append(np.linspace(start, stop, n_bins))
+        bins.append(np.linspace(start, stop, n_bins + 1))
+        if i == N_HISTS - 1:
+            # Histogram of the Euclidean norms.  Euclidean norms are
+            # always positive => bins should be positive, too.
+            valid = bins[i] >= 0
+            if np.any(valid):
+                print("\n")
+                print(
+                    "Note: Discarding negative bin edges for the histogram of"
+                    " Euclidean norms"
+                )
+                bins[i] = bins[i][valid]
+            else:
+                bins[i] = np.abs(bins[i], out=bins[i])
+                print("\n")
+                print(
+                    "Note: All bin edges are negative.  Taking absolute bin"
+                    " edges for the histogram of Euclidean norms"
+                )
 
     print("\n")
     print("Creating histograms...")
@@ -594,19 +612,36 @@ if __name__ == "__main__":  # noqa: C901
         )
         + "Time last frame:        {:>12.3f} ps\n".format(last_frame_read.time)
         + "\n\n"
-        + "Histogram of the center-of-mass {:s}\n".format(args.ATTR)
-        + "of the selected compounds.\n"
+        + "Histogram of the center-of-mass {:s}".format(args.ATTR)
+        + " of the selected compounds.\n"
+        + "\n"
     )
     for i, hist in enumerate(hists):
         header = header_base + (
             "Examined spatial component of the {:s}: {:s}\n".format(
                 args.ATTR, DIMENSION[i]
             )
-            + "Number of samples: {:>16d}\n".format(n_samples[i])
-            + "Bin width in A:    {:>16.9e}\n".format(bins[i][1] - bins[i][0])
+            + "Total number of samples:          {:>16d}\n".format(
+                n_samples[i]
+            )
+            + "Total number of histogram counts: {:>16d}\n".format(
+                np.sum(hist)
+            )
+            + "Number of bins:                   {:>16d}\n".format(
+                len(bins[i]) - 1
+            )
+            + "First bin edge in {:s}: {:>16.9e}\n".format(
+                ATTR_UNITS[args.ATTR], bins[i][0]
+            )
+            + "Last  bin edge in {:s}: {:>16.9e}\n".format(
+                ATTR_UNITS[args.ATTR], bins[i][-1]
+            )
+            + "Bin width in {:s}:      {:>16.9e}\n".format(
+                ATTR_UNITS[args.ATTR], bins[i][1] - bins[i][0]
+            )
             + "\n"
             + "The columns contain:\n"
-            + "  1 Bin midpoints in {}\n".format(ATTR_UNITS[args.ATTR])
+            + "  1 Bin midpoints in {:s}\n".format(ATTR_UNITS[args.ATTR])
             + "  2 Counts\n"
             + "  3 Probability density\n"
         )
@@ -715,12 +750,18 @@ if __name__ == "__main__":  # noqa: C901
     for i, hist in enumerate(hists):
         if np.any(hist < 0):
             raise RuntimeError(
-                "Overflow encountered in histogram {}".format(i)
+                "Component {}: Overflow encountered in"
+                " histogram".format(DIMENSION[i])
             )
-        if np.sum(hist) != n_samples[i]:
+        if (
+            args.BIN_START is None
+            and args.BIN_STOP is None
+            and np.sum(hist) != n_samples[i]
+        ):
             raise ValueError(
-                "The total number of histogram counts ({}) does not match the"
-                " number of samples ({})".format(np.sum(hist), n_samples[i])
+                "Component {}: The total number of histogram counts ({}) does"
+                " not match the number of samples ({}).  This should not have"
+                " happened".format(DIMENSION[i], np.sum(hist), n_samples[i])
             )
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
