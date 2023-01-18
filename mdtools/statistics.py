@@ -19,8 +19,12 @@
 """Functions for the statistical analysis of data."""
 
 
+# Standard libraries
+import warnings
+
 # Third-party libraries
 import numpy as np
+from scipy import constants, special
 from scipy.stats import norm
 
 # First-party libraries
@@ -510,7 +514,7 @@ def acf_se(x, axis=None, n=None):
     .. [#] Wikipedia `Correlogram
         <https://en.wikipedia.org/wiki/Correlogram#Statistical_inference_with_correlograms>`_
 
-    .. [#] Wikipedia `Autoregressive–moving-average model
+    .. [#] Wikipedia `Autoregressive-moving-average model
         <https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model#Moving-average_model>`_
 
     Examples
@@ -1215,6 +1219,186 @@ def exp_dist_log(x, rate):
     array([ 0.69314718, -1.30685282, -3.30685282, -5.30685282, -7.30685282])
     """  # noqa: W505
     return np.log(rate) - rate * x
+
+
+def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
+    r"""
+    Maxwell-Boltzmann speed distribution in d-dimensional space. [#]_
+
+    .. math::
+
+        p(v) = S_d \cdot (v - u)^{d-1}
+        \left(\frac{1}{2\pi\sigma^2}\right)^{\frac{d}{2}}
+        \exp{\left[-\frac{(v - u)^2}{2\sigma^2} \right]}
+
+    With the speed
+
+    .. math::
+
+        v = \sqrt{\sum_{i=1}^d v_i^2},
+
+    a drift speed :math:`u`, the variance of the gaussian part (note
+    that this is not the variance of :math:`p(v)`)
+
+    .. math::
+
+        \sigma^2 = \frac{k_B T}{m}
+
+    and the surface area of a :math:`d`-dimensional unit sphere [#]_
+
+    .. math::
+
+        S_d = \frac{2\pi^{\frac{d}{2}}}{\Gamma\left(\frac{d}{2}\right)}
+            =
+            \begin{cases}
+                2      , & d = 1\\
+                2\pi   , & d = 2\\
+                4\pi   , & d = 3\\
+                2\pi^2 , & d = 4\\
+                \vdots &
+            \end{cases}
+
+    where :math:`\Gamma` is the `gamma function
+    <https://en.wikipedia.org/wiki/Gamma_function>`_.
+
+    Parameters
+    ----------
+    v : array_like
+        Array of speed values for wich to evaluate :math:`p(v)`.
+    temp : scalar or None, optional
+        Temperature of the particles.  Must be provided if `var` is
+        ``None``.
+    mass : scalar or None, optional
+        Mass of the particles.  Must be provided if `var` is ``None``.
+    var : scalar or None, optional
+        Variance :math:`\sigma^2` of the Maxwell-Boltzmann distribution.
+        If ``None``, it is calculated as :math:`\sigma^2 = k_B T / m`,
+        where :math:`k_B` is the Boltzmann constant, :math:`T` is the
+        temperature and :math:`m` is the mass of the particles.  If
+        both, `temp` and `mass`, are provied, `var` is ignored.
+    drift : scalar, optional
+        Drift speed of the particles.
+    d : int, optional
+        Number of spatial dimensions in which the particles can move.
+
+    Returns
+    -------
+    p : scalar or array_like
+        The function values :math:`p(v)` at the given :math:`v` values.
+
+    Notes
+    -----
+    Be aware of the units of your input values!  The unit of the
+    Boltzmann constant :math:`k_B` is J/K.  Thus, temperatures must
+    be given in K, masses in kg and velocities in m/s.  If you parse
+    `var` directly instead of `temp` and `mass`, ``v**2`` and `var` must
+    have the same units.
+
+    Note that all arguments should be positive to get a physically
+    meaningful output.  However, it is also possible to parse negative
+    values to all input arguments.
+
+    Note that a (positive) drift velocity only leads to a shift of the
+    distribution along the x axis (to higher values).  Therefore, parts
+    of the distribution that, without drift, would lie in the region of
+    (unphysical) negative speeds now appear at positive speed values.
+    The user is responsible to take care of this unphysical artifact.
+    Generally, it's easiest to calculate the Maxwell-Boltzmann
+    distribution without drift at positive speed values and afterwards
+    shift the outcome by the drift speed.
+
+    References
+    ----------
+    .. [#] Wikipedia `Maxwell-Boltzmann distribution § In n-dimensional
+        space
+        <https://en.wikipedia.org/wiki/Maxwell%E2%80%93Boltzmann_distribution#In_n-dimensional_space>`_
+    .. [#] Wikipedia `n-sphere § Closed forms
+        <https://en.wikipedia.org/wiki/N-sphere#Closed_forms>`_
+
+    Examples
+    --------
+    >>> x = np.linspace(0, 4, 5)
+    >>> mdt.stats.mb_dist(x, var=1)
+    array([0.        , 0.48394145, 0.43192773, 0.07977327, 0.00428257])
+    >>> mdt.stats.mb_dist(x, var=2)
+    array([0.        , 0.21969564, 0.4151075 , 0.26759315, 0.08266794])
+    >>> mdt.stats.mb_dist(x, var=1, d=1)
+    array([7.97884561e-01, 4.83941449e-01, 1.07981933e-01, 8.86369682e-03,
+           2.67660452e-04])
+    >>> mdt.stats.mb_dist(x, var=1, d=2)
+    array([0.        , 0.60653066, 0.27067057, 0.03332699, 0.00134185])
+    >>> mdt.stats.mb_dist(x, var=1, d=4)
+    array([0.        , 0.30326533, 0.54134113, 0.14997145, 0.0107348 ])
+    >>> mdt.stats.mb_dist(x, var=1, drift=1)
+    array([0.48394145, 0.        , 0.48394145, 0.43192773, 0.07977327])
+    >>> np.allclose(
+    ...     mdt.stats.mb_dist(x, var=1)[:-1],
+    ...     mdt.stats.mb_dist(x, var=1, drift=1)[1:],
+    ...     rtol=0,
+    ... )
+    True
+
+    >>> from scipy import constants
+    >>> temp, mass = 273.15, 1.660e-27
+    >>> var = constants.k * temp / mass
+    >>> np.allclose(
+    ...     mdt.stats.mb_dist(x, temp=temp, mass=mass),
+    ...     mdt.stats.mb_dist(x, var=var),
+    ...     rtol=0,
+    ... )
+    True
+    >>> np.allclose(
+    ...     mdt.stats.mb_dist(x, temp=temp, mass=mass, d=2),
+    ...     mdt.stats.mb_dist(x, var=var, d=2),
+    ...     rtol=0,
+    ... )
+    True
+    >>> np.allclose(
+    ...     mdt.stats.mb_dist(x, temp=temp, mass=mass, drift=2),
+    ...     mdt.stats.mb_dist(x, var=var, drift=2),
+    ...     rtol=0,
+    ... )
+    True
+
+    The area below the Maxwell-Boltzmann distribution is one:
+
+    >>> x = np.linspace(0, 20, 200)
+    >>> for d in range(1, 6):
+    ...     np.isclose(
+    ...         np.trapz(mdt.stats.mb_dist(x, var=1, d=d), x),
+    ...         1,
+    ...         rtol=0,
+    ...         atol=1e-3,
+    ...     )
+    True
+    True
+    True
+    True
+    True
+    """  # noqa: E501, W505
+    if var is None:
+        if temp is None and mass is None:
+            raise ValueError(
+                "'mass' and 'temp' must be provided if 'var' is None"
+            )
+        var = constants.k * temp / mass
+    else:
+        if temp is not None and mass is not None:
+            warnings.warn(
+                "'var' ({}) is ignored, because 'temp' and 'mass' are given",
+                UserWarning,
+            )
+    dist = norm.pdf(v, loc=drift, scale=np.sqrt(var))
+    dist *= (v - drift) ** (d - 1)
+    # Remaining factor: S_d * [1/(2*pi*sigma^2)]**(d/2), but
+    # [1/(2*pi*sigma^2)]**(1/2) is already contained in `norm.pdf`
+    # => The remaining factor is actually
+    #    S_d * [1/(2*pi*sigma^2)]**((d-1)/2)
+    sd = 2 * np.pi ** (d / 2)
+    sd /= special.gamma(d / 2)
+    dist *= sd
+    dist /= (2 * np.pi * var) ** ((d - 1) / 2)
+    return dist
 
 
 def var_weighted(a, weights=None, axis=None, return_mean=False):

@@ -324,15 +324,15 @@ if __name__ == '__main__':
     print("Current memory usage: {:.2f} MiB"
           .format(proc.memory_info().rss / 2**20))
 
-    natms_per_refcmp = mdt.strc.natms_per_cmp(ag=ref,
-                                              compound=args.REFCMP,
-                                              check_contiguos=True)
-    natms_per_selcmp = mdt.strc.natms_per_cmp(ag=sel,
-                                              compound=args.SELCMP,
-                                              check_contiguos=True)
-    dist_array_tmp = np.full((ref.n_atoms, sel.n_atoms),
-                             np.nan,
-                             dtype=np.float64)
+    natms_per_refcmp = mdt.strc.natms_per_cmp(
+        ag=ref, cmp=args.REFCMP, check_contiguous=True
+    )
+    natms_per_selcmp = mdt.strc.natms_per_cmp(
+        ag=sel, cmp=args.SELCMP, check_contiguous=True
+    )
+    dist_array_tmp = np.full(
+        (ref.n_atoms, sel.n_atoms), np.nan, dtype=np.float64
+    )
     # refatms/cmps can stay in their bin (index 0) or leav it (index 1)
     refatm_motion = np.zeros((2, ref.n_atoms), dtype=bool)
     if args.REFCMP == 'segments':

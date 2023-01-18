@@ -23,7 +23,7 @@ This module can be called from :mod:`mdtools` via the shortcut
 ``strc``::
 
     import mdtools as mdt
-    mdt.strc  # insetad of mdt.structure
+    mdt.strc  # instead of mdt.structure
 
 """
 
@@ -70,7 +70,7 @@ def wcenter_pos(
     wrap_pos : bool, optional
         If ``True``, wrap all positions in `pos` back to the primary
         unit cell using :func:`mdtools.box.wrap_pos` **before**
-        calculating the weigted center.  Note that this likely splits
+        calculating the weighted center.  Note that this likely splits
         molecules across periodic boundaries, which is undesired when
         calculating their centers.  If ``True``, `box` must be provided.
     wrap_result : bool, optional
@@ -118,7 +118,8 @@ def wcenter_pos(
 
     See Also
     --------
-    :func:`numpy.average` : Compute the weighted average
+    :func:`numpy.average` :
+        Compute the weighted average
     :meth:`MDAnalysis.core.groups.AtomGroup.center` :
         Weighted center of (compounds of) the group
     :meth:`MDAnalysis.core.groups.AtomGroup.center_of_geometry` :
@@ -143,7 +144,7 @@ def wcenter_pos(
 
     Notes
     -----
-    The weighted center is calculated accroding to
+    The weighted center is calculated according to
 
     .. math::
 
@@ -272,7 +273,7 @@ def wcenter_pos(
 
 
 def wcenter(
-    ag, weights=None, pbc=False, cmp='group', make_whole=False, debug=False
+    ag, weights=None, pbc=False, cmp="group", make_whole=False, debug=False
 ):
     """
     Calculate the weighted center of (compounds of) an MDAnalysis
@@ -416,12 +417,12 @@ def wcenter(
         :class:`~MDAnalysis.core.groups.Atom` coordinates.
 
     """
-    if cmp == 'atoms':
+    if cmp == "atoms":
         if pbc:
             centers = mdt.box.wrap(
                 ag=ag,
                 compound=cmp,
-                center='cog',  # Does not rely on masses
+                center="cog",  # Does not rely on masses
                 inplace=False,
                 debug=debug,
             )
@@ -432,25 +433,28 @@ def wcenter(
         if make_whole:
             mdt.box.wrap(
                 ag=ag,
-                compound='atoms',
-                center='cog',  # Does not rely on masses
+                compound="atoms",
+                center="cog",  # Does not rely on masses
                 inplace=True,
                 debug=debug,
             )
         centers = ag.center(
-            weights=weights, pbc=pbc, compound=cmp, unwrap=make_whole,
+            weights=weights,
+            pbc=pbc,
+            compound=cmp,
+            unwrap=make_whole,
         )
         debug_info = "Probably, the weights of this compound sum up to zero"
     if debug and np.any(np.isnan(centers)):
         warnings.warn(
             "At least one compound's weighted center is NaN.  " + debug_info,
-            RuntimeWarning
+            RuntimeWarning,
         )
     return centers
 
 
 def center(
-    ag, center='cog', pbc=False, cmp='group', make_whole=False, debug=False
+    ag, center="cog", pbc=False, cmp="group", make_whole=False, debug=False
 ):
     """
     Calculate different types of centers of (compounds of) an MDAnalysis
@@ -572,14 +576,15 @@ def center(
     If `make_whole` is ``True``, all
     :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` are wrapped
     back into the primary unit cell using :func:`mdtools.box.wrap`
-    before making compounds whole.  This is done to ensure that the unwrap
-    algorithm (better called "make whole" algorithm) of MDAnalysis is
-    working properly.  This means that making compounds whole in an
-    unwrapped trajectory will lead to a wrapped trajectory with whole
-    compounds (some :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie
-    outside the primary unit cell, but each compound's center will lie
-    inside the primary unit cell).  `make_whole` has no effect if `cmp`
-    is set to ``'atoms'``.
+    before making compounds whole.  This is done to ensure that the
+    unwrap algorithm (better called "make whole" algorithm) of
+    MDAnalysis is working properly.  This means that making compounds
+    whole in an unwrapped trajectory will lead to a wrapped trajectory
+    with whole compounds (some
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` may lie outside the
+    primary unit cell, but each compound's center will lie inside the
+    primary unit cell).  `make_whole` has no effect if `cmp` is set to
+    ``'atoms'``.
 
     .. todo::
 
@@ -600,15 +605,15 @@ def center(
         ``pos = mdt.strc.center(ag, center=args.CENTER, cmp=args.CMP)``.
 
     """  # noqa: D301
-    if center == 'cog':
+    if center == "cog":
         return mdt.strc.cog(
             ag=ag, pbc=pbc, cmp=cmp, make_whole=make_whole, debug=debug
         )
-    elif center == 'com':
+    elif center == "com":
         return mdt.strc.com(
             ag=ag, pbc=pbc, compound=cmp, make_whole=make_whole, debug=debug
         )
-    elif center == 'coc':
+    elif center == "coc":
         return mdt.strc.coc(
             ag=ag, pbc=pbc, cmp=cmp, make_whole=make_whole, debug=debug
         )
@@ -619,7 +624,7 @@ def center(
         )
 
 
-def coc(ag, pbc=False, cmp='group', make_whole=False, debug=False):
+def coc(ag, pbc=False, cmp="group", make_whole=False, debug=False):
     """
     Calculate the center of charge of (compounds of) an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup`.
@@ -702,7 +707,7 @@ def coc(ag, pbc=False, cmp='group', make_whole=False, debug=False):
     )
 
 
-def cog(ag, pbc=False, cmp='group', make_whole=False, debug=False):
+def cog(ag, pbc=False, cmp="group", make_whole=False, debug=False):
     """
     Calculate the center of geometry (a.k.a centroid) of (compounds of)
     an MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup`.
@@ -778,12 +783,12 @@ def cog(ag, pbc=False, cmp='group', make_whole=False, debug=False):
         the :class:`~MDAnalysis.core.groups.Atom` coordinates.
 
     """
-    if cmp == 'atoms':
+    if cmp == "atoms":
         if pbc:
             centers = mdt.box.wrap(
                 ag=ag,
                 compound=cmp,
-                center='cog',  # Does not rely on masses
+                center="cog",  # Does not rely on masses
                 inplace=False,
                 debug=debug,
             )
@@ -793,8 +798,8 @@ def cog(ag, pbc=False, cmp='group', make_whole=False, debug=False):
         if make_whole:
             mdt.box.wrap(
                 ag=ag,
-                compound='atoms',
-                center='cog',  # Does not rely on masses
+                compound="atoms",
+                center="cog",  # Does not rely on masses
                 inplace=True,
                 debug=debug,
             )
@@ -805,12 +810,12 @@ def cog(ag, pbc=False, cmp='group', make_whole=False, debug=False):
         warnings.warn(
             "At least one compound's center of geometry is NaN.  Some of your"
             " atom positions might be NaN",
-            RuntimeWarning
+            RuntimeWarning,
         )
     return centers
 
 
-def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
+def com(ag, pbc=False, compound="group", make_whole=False, debug=False):
     """
     Calculate the center of mass of (compounds of) an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup`.
@@ -878,7 +883,7 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
     .. important::
 
         `MDAnalysis always guesses atom masses`_!  If MDAnalysis cannot
-        guess the mass from the atom type, it will asign this atom a
+        guess the mass from the atom type, it will assign this atom a
         zero mass.  If the mass of a compound sum up to zero, the
         coordinates of that compound's center of mass will be ``nan``!
         If `debug` is set to ``True``, a warning will be raised if any
@@ -899,12 +904,12 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
     .. _MDAnalysis always guesses atom masses:
         https://userguide.mdanalysis.org/formats/guessing.html
     """
-    if compound == 'atoms':
+    if compound == "atoms":
         if pbc:
             centers = mdt.box.wrap(
                 ag=ag,
                 compound=compound,
-                center='cog',  # Does not rely on masses
+                center="cog",  # Does not rely on masses
                 inplace=False,
                 debug=debug,
             )
@@ -915,8 +920,8 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
         if make_whole:
             mdt.box.wrap(
                 ag=ag,
-                compound='atoms',
-                center='cog',  # Does not rely on masses
+                compound="atoms",
+                center="cog",  # Does not rely on masses
                 inplace=True,
                 debug=debug,
             )
@@ -930,19 +935,36 @@ def com(ag, pbc=False, compound='group', make_whole=False, debug=False):
         warnings.warn(
             "At least one compound's center of mass is NaN.  Some of your atom"
             " positions might be NaN",
-            RuntimeWarning
+            RuntimeWarning,
         )
     return centers
 
 
-def discrete_pos_trj(
-        sel, trj=None, topfile=None, trjfile=None, begin=0, end=-1,
-        every=1, compound='atoms', direction='z', bin_start=0,
-        bin_stop=None, bin_num=10, bins=None, tol=1e-6,
-        return_bins=False, return_lbox=False, return_dt=False, dtype=int,
-        verbose=True, debug=False, **sel_kwargs):
+def discrete_pos_trj(  # noqa: C901
+    sel,
+    trj=None,
+    topfile=None,
+    trjfile=None,
+    begin=0,
+    end=-1,
+    every=1,
+    compound="atoms",
+    direction="z",
+    bin_start=0,
+    bin_stop=None,
+    bin_num=10,
+    bins=None,
+    tol=1e-6,
+    return_bins=False,
+    return_lbox=False,
+    return_dt=False,
+    dtype=int,
+    verbose=True,
+    debug=False,
+    **sel_kwargs,
+):
     """
-    Create a discrete posotion trajectory.
+    Create a discrete position trajectory.
 
     Discretize the positions of compounds of a MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` in a given spatial
@@ -961,7 +983,8 @@ def discrete_pos_trj(
         :class:`~MDAnalysis.core.groups.AtomGroup` (if `trj` is
         ``None``).  See MDAnalysis' |selection_syntax| for possible
         choices of selection strings.
-    trj : MDAnalysis.coordinates.base.ReaderBase or MDAnalysis.coordinates.base.FrameIteratorBase, optional
+    trj : MDAnalysis.coordinates.base.ReaderBase or \
+        MDAnalysis.coordinates.base.FrameIteratorBase, optional
         |MDA_trj| to read.  If ``None``, a new MDAnalysis
         :class:`~MDAnalysis.core.universe.Universe` and trajectory are
         created from `topfile` and `trjfile`.
@@ -986,7 +1009,8 @@ def discrete_pos_trj(
     every : int, optional
         Read every n-th frame from the newly created trajectory.
         Ignored if `trj` is not ``None``.
-    compound : {'atoms', 'group', 'segments', 'residues', 'fragments'}, optional
+    compound : {'atoms', 'group', 'segments', 'residues', \
+        'fragments'}, optional
         The compounds of the selection group whose center of mass
         positions should be discretized.  If ``'group'``, the center of
         mass of all :class:`Atoms <MDAnalysis.core.groups.Atom>` in the
@@ -1025,10 +1049,10 @@ def discrete_pos_trj(
         for the right-open bin interval.  If parsing a value less than
         ``lbox``, the last bin interval will be [`bin_stop`,
         ``lbox + tol``).  In this way you can determine the width of the
-        last bin independently from the other bins.  Note that `bin_stop`
-        must lie within the simulation box obtained from the first frame
-        read and it must be greater than `bin_start`.  If ``None``,
-        `bin_stop` is set to ``lbox + tol``.
+        last bin independently from the other bins.  Note that
+        `bin_stop` must lie within the simulation box obtained from the
+        first frame read and it must be greater than `bin_start`.  If
+        ``None``, `bin_stop` is set to ``lbox + tol``.
     bin_num : int, optional
         Number of equidistant bins (not bin edges!) to use for
         discretizing the given spatial direction between `bin_start` and
@@ -1044,7 +1068,7 @@ def discrete_pos_trj(
         The tolerance value added to ``lbox`` to account for the
         right-open bin interval of the last bin.
     return_bins : bool, optional
-        If ``True``, return the bin endges used for the discretization.
+        If ``True``, return the bin edges used for the discretization.
     return_lbox : bool, optional
         If ``True``, return the average box length in the given spatial
         direction.
@@ -1101,7 +1125,7 @@ def discrete_pos_trj(
     -----
     The simulation box must be orthogonal.
 
-    Compounds are asigned to bins according to their center of mass
+    Compounds are assigned to bins according to their center of mass
     position.  Compounds are made whole before calculating their centers
     of mass.  The centers of mass are wrapped back into the primary unit
     cell before discretizing their positions.
@@ -1131,26 +1155,24 @@ def discrete_pos_trj(
         proc.cpu_percent()  # Initiate monitoring of CPU usage
         print("Running mdtools.structure.discrete_pos_trj()...")
     if trj is None and (topfile is None or trjfile is None):
-        raise ValueError("Either 'trj' or 'topfile' and 'trjfile' must"
-                         " be given")
-    if direction not in ('x', 'y', 'z'):
-        raise ValueError("'direction' must be either 'x', 'y' or 'z',"
-                         " but you gave {}".format(direction))
-    dim = {'x': 0, 'y': 1, 'z': 2}
+        raise ValueError(
+            "Either `trj` or `topfile` and `trjfile` must be given"
+        )
+    if direction not in ("x", "y", "z"):
+        raise ValueError(
+            "`direction` must be either 'x', 'y' or 'z', but you gave"
+            " '{}'".format(direction)
+        )
+    dim = {"x": 0, "y": 1, "z": 2}
     ixd = dim[direction]
 
     if trj is None:
         if verbose:
             print()
-        u = mdt.select.universe(top=topfile,
-                                trj=trjfile,
-                                verbose=verbose)
+        u = mdt.select.universe(top=topfile, trj=trjfile, verbose=verbose)
         if verbose:
             print()
-        sel = mdt.select.atoms(ag=u,
-                               sel=sel,
-                               verbose=verbose,
-                               **sel_kwargs)
+        sel = mdt.select.atoms(ag=u, sel=sel, verbose=verbose, **sel_kwargs)
         if verbose:
             print()
         N_FRAMES_TOT = u.trajectory.n_frames
@@ -1159,25 +1181,28 @@ def discrete_pos_trj(
             stop=end,
             step=every,
             n_frames_tot=u.trajectory.n_frames,
-            verbose=verbose
+            verbose=verbose,
         )
         trj = u.trajectory[BEGIN:END:EVERY]
     else:
         N_FRAMES_TOT = len(trj)
         BEGIN, END, EVERY, N_FRAMES = (0, len(trj), 1, len(trj))
         if isinstance(sel, str):
-            raise ValueError("'sel' is a string, but if 'trj' is given,"
-                             " 'sel' must be a"
-                             " MDAnalysis.core.groups.AtomGroup instance")
+            raise ValueError(
+                "`sel` is a string, but if `trj` is given, `sel` must be an"
+                " MDAnalysis.core.groups.AtomGroup instance"
+            )
     if debug:
         if verbose:
             print()
         try:
             mdt.check.time_step(trj=trj, verbose=verbose)
         except ValueError as error:
-            warnings.warn("During checking time step equality, an"
-                          " exception was raised: {}".format(error),
-                          RuntimeWarning)
+            warnings.warn(
+                "During checking time step equality, an exception was raised:"
+                " {}".format(error),
+                RuntimeWarning,
+            )
     time_step = trj[BEGIN].dt * EVERY
 
     if verbose:
@@ -1186,49 +1211,52 @@ def discrete_pos_trj(
         timer = datetime.now()
     lbox = trj[0].dimensions[ixd]
     if lbox <= 0:
-        raise ValueError("Invalid simulation box: The box length ({}) in"
-                         " the given spatial direction ({}) is less than"
-                         " or equal to zero".format(lbox, direction))
+        raise ValueError(
+            "Invalid simulation box: The box length ({}) in the given"
+            " spatial direction ({}) is less than or equal to"
+            " zero".format(lbox, direction)
+        )
     if bins is None:
         if bin_stop is None:
             STOP = lbox
         else:
             STOP = bin_stop
-        START, STOP, STEP, NUM = mdt.check.bins(start=bin_start / lbox,
-                                                stop=STOP / lbox,
-                                                num=bin_num,
-                                                amin=0,
-                                                amax=1,
-                                                verbose=verbose)
+        START, STOP, STEP, NUM = mdt.check.bins(
+            start=bin_start / lbox,
+            stop=STOP / lbox,
+            num=bin_num,
+            amin=0,
+            amax=1,
+            verbose=verbose,
+        )
         bins = np.linspace(START, STOP, NUM + 1)
     else:
         bins = np.unique(bins) / lbox
-    mdt.check.bin_edges(bins=bins,
-                        amin=0,
-                        amax=1,
-                        tol=tol,
-                        verbose=verbose)
+    mdt.check.bin_edges(bins=bins, amin=0, amax=1, tol=tol, verbose=verbose)
     if verbose:
         print("Elapsed time:         {}".format(datetime.now() - timer))
-        print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss / 2**20))
+        print(
+            "Current memory usage: {:.2f}"
+            " MiB".format(proc.memory_info().rss / 2**20)
+        )
 
     # Prepare discrete trajectory:
-    if compound == 'group':
+    if compound == "group":
         N_CMPS = 1
-    elif compound == 'segments':
+    elif compound == "segments":
         N_CMPS = sel.n_segments
-    elif compound == 'residues':
+    elif compound == "residues":
         N_CMPS = sel.n_residues
-    elif compound == 'fragments':
+    elif compound == "fragments":
         N_CMPS = sel.n_fragments
-    elif compound == 'atoms':
+    elif compound == "atoms":
         N_CMPS = sel.n_atoms
     else:
-        raise ValueError("'compound' must be either 'group', 'segments',"
-                         " 'residues', 'fragments' or 'atoms', but you"
-                         " gave {}".format(compound))
-    if compound != 'atoms':
+        raise ValueError(
+            "`compound` must be either 'group', 'segments', 'residues',"
+            " 'fragments' or 'atoms', but you gave '{}'".format(compound)
+        )
+    if compound != "atoms":
         if verbose:
             print()
         mdt.check.masses_new(ag=sel, verbose=verbose)
@@ -1243,31 +1271,30 @@ def discrete_pos_trj(
         print("First frame to read:    {:>8d}".format(BEGIN))
         print("Last frame to read:     {:>8d}".format(END - 1))
         print("Read every n-th frame:  {:>8d}".format(EVERY))
-        print("Time first frame:       {:>12.3f} (ps)"
-              .format(trj[BEGIN].time))
-        print("Time last frame:        {:>12.3f} (ps)"
-              .format(trj[END - 1].time))
-        print("Time step first frame:  {:>12.3f} (ps)"
-              .format(trj[BEGIN].dt))
-        print("Time step last frame:   {:>12.3f} (ps)"
-              .format(trj[END - 1].dt))
+        print("Time first frame:       {:>12.3f} (ps)".format(trj[BEGIN].time))
+        print(
+            "Time last frame:        {:>12.3f} (ps)".format(trj[END - 1].time)
+        )
+        print("Time step first frame:  {:>12.3f} (ps)".format(trj[BEGIN].dt))
+        print("Time step last frame:   {:>12.3f} (ps)".format(trj[END - 1].dt))
         timer = datetime.now()
         trj = mdt.rti.ProgressBar(trj)
     lbox_av = 0  # Average box length in the given direction
     for i, ts in enumerate(trj):
-        mdt.check.box(box=ts.dimensions,
-                      with_angles=True,
-                      orthorhombic=True,
-                      dim=1)
+        mdt.check.box(
+            box=ts.dimensions, with_angles=True, orthorhombic=True, dim=1
+        )
         lbox_av += ts.dimensions[ixd]
-        if compound == 'atoms':
+        if compound == "atoms":
             pos = mdt.box.wrap(ag=sel, debug=debug)
         else:
-            pos = mdt.strc.com(ag=sel,
-                               pbc=True,
-                               compound=compound,
-                               make_whole=True,
-                               debug=debug)
+            pos = mdt.strc.com(
+                ag=sel,
+                pbc=True,
+                compound=compound,
+                make_whole=True,
+                debug=debug,
+            )
         pos = pos[:, ixd]
         pos /= ts.dimensions[ixd]
         if debug:
@@ -1275,44 +1302,50 @@ def discrete_pos_trj(
         dtrj[i] = np.digitize(pos, bins=bins)
         if verbose:
             progress_bar_mem = proc.memory_info().rss / 2**20
-            trj.set_postfix_str("{:>7.2f}MiB".format(progress_bar_mem),
-                                refresh=False)
+            trj.set_postfix_str(
+                "{:>7.2f}MiB".format(progress_bar_mem), refresh=False
+            )
     del pos
     # Discrete trajectories are returned in a format consistent with
     # PyEMMA, i.e. the first dimension contains the compounds and the
     # second dimension the frames.
-    dtrj = np.asarray(dtrj.T, order='C')
+    dtrj = np.asarray(dtrj.T, order="C")
     dtrj -= 1  # Compounds in first bin get index 0
     lbox_av /= N_FRAMES
     bins *= lbox_av  # Convert relative box coordinates to real space
     if verbose:
         trj.close()
         print("Elapsed time:         {}".format(datetime.now() - timer))
-        print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss / 2**20))
+        print(
+            "Current memory usage: {:.2f}"
+            " MiB".format(proc.memory_info().rss / 2**20)
+        )
 
     # Internal consistency check
     if np.any(dtrj < 0) or np.any(dtrj >= len(bins) - 1):
-        raise ValueError("At least one compound position lies outside"
-                         " the primary unit cell. This should not have"
-                         " happened")
+        raise ValueError(
+            "At least one compound position lies outside the primary unit"
+            " cell.  This should not have happened"
+        )
 
     if verbose:
         print()
         print("mdtools.structure.discrete_pos_trj() done")
         print("Totally elapsed time: {}".format(datetime.now() - timer_tot))
-        print("CPU time:             {}"
-              .format(timedelta(seconds=sum(proc.cpu_times()[:4]))))
+        _cpu_time = timedelta(seconds=sum(proc.cpu_times()[:4]))
+        print("CPU time:             {}".format(_cpu_time))
         print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
-        print("Current memory usage: {:.2f} MiB"
-              .format(proc.memory_info().rss / 2**20))
+        print(
+            "Current memory usage: {:.2f}"
+            " MiB".format(proc.memory_info().rss / 2**20)
+        )
 
     if not np.any([return_bins, return_lbox, return_dt]):
         return dtrj
     else:
         output = np.array([bins, lbox_av, time_step], dtype=object)
         output = output[[return_bins, return_lbox, return_dt]].tolist()
-        return tuple([dtrj, ] + output)
+        return tuple([dtrj] + output)
 
 
 def assign_atoms_to_grid(  # noqa: C901
@@ -1350,7 +1383,7 @@ def assign_atoms_to_grid(  # noqa: C901
           the corresponding box length, there will be a thin box region
           (thinner than `binwidth`) that is beyond the bounds of the
           created bins.
-        * With `bins` you can provide arbitray bin edges for each
+        * With `bins` you can provide arbitrary bin edges for each
           spatial dimension with the only limitation that the bin edges
           must lie within the simulation box.  The given bin edges will
           be sorted in increasing order and duplicate entries will be
@@ -1404,7 +1437,7 @@ def assign_atoms_to_grid(  # noqa: C901
         first valid bin with bin edges [``bins[0]``, ``bins[1]``) in the
         corresponding dimension).
     expand_binnumbers : bool, optional
-        If ``True``, the returned index array is unravled into an array
+        If ``True``, the returned index array is unraveled into an array
         of shape ``(D, N)`` where each row gives the bin numbers of all
         ``N`` atoms along the corresponding dimension ``D``.  If
         ``False``, the returned index array has shape ``(N,)`` and maps
@@ -1462,11 +1495,11 @@ def assign_atoms_to_grid(  # noqa: C901
     See Also
     --------
     :func:`mdtools.numpy_helper_functions.digitize_dd` :
-        Underlying function used for assingning the atoms to their grid
+        Underlying function used for assigning the atoms to their grid
         subvolumes.
     """
     if box is None:
-        box = ag.dimensions.asdtype(np.float64)
+        box = ag.dimensions.astype(np.float64)
     mdt.check.box(box, with_angles=True, orthorhombic=True, dim=1)
     if assume_wrapped:
         pos = ag.positions
@@ -1515,7 +1548,7 @@ def assign_atoms_to_grid(  # noqa: C901
                 warnings.warn(
                     "The number of bins for the {}-th dimension was changed"
                     " from {} to {}".format(i, nbins[i], num),
-                    RuntimeWarning
+                    RuntimeWarning,
                 )
             if binwidth[i] is not None and not np.isclose(
                 step, binwidth[i], rtol=0
@@ -1523,7 +1556,7 @@ def assign_atoms_to_grid(  # noqa: C901
                 warnings.warn(
                     "The bin width for the {}-th dimension was changed from {}"
                     " to {}".format(i, binwidth[i], step),
-                    RuntimeWarning
+                    RuntimeWarning,
                 )
             if ((stop - start) / step).is_integer():
                 # `numpy.arange` generates values within the half-open
@@ -1663,8 +1696,8 @@ def assign_atoms_to_grid(  # noqa: C901
 
 
 def natms_per_cmp(
-        ag, compound, return_array=False, return_cmp_ix=False,
-        check_contiguos=False):
+    ag, cmp, return_array=False, return_cmp_ix=False, check_contiguous=False
+):
     """
     Get the number of :class:`Atoms <MDAnalysis.core.groups.Atom>` of
     each compound in an MDAnalysis
@@ -1676,7 +1709,8 @@ def natms_per_cmp(
         The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
         which to get the number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>` per compound.
-    compound : {'group', 'segments', 'residues', 'fragments', 'atoms'}
+    cmp : {'group', 'segments', 'residues', 'molecules', \
+        'fragments', 'atoms'}
         The compounds of `ag` for which to get the number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.  If ``'atoms'``,
         the output will simply be ``1`` or an array of ones (depending
@@ -1684,11 +1718,11 @@ def natms_per_cmp(
         :class:`Atoms <MDAnalysis.core.groups.Atom>` in the entire
         group or of each
         :class:`~MDAnalysis.core.groups.Segment`,
-        :class:`~MDAnalysis.core.groups.Residue` or
+        :class:`~MDAnalysis.core.groups.Residue`, molecule or
         :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>` in
         `ag` is returned.  Refer to the MDAnalysis' user guide for an
         |explanation_of_these_terms|.  Note that in any case, even if
-        `compound` is e.g. ``'residues'``, only the
+        `cmp` is e.g. ``'residues'``, only the
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
         are taken into account, even if the compound might comprise
         additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
@@ -1703,9 +1737,9 @@ def natms_per_cmp(
         `return_array` is ``False``.
     return_cmp_ix : bool, optional
         If ``True``, additionally return the unique indices of the
-        compounds as assigned by MDAnalysis.  If `compound` is e.g.
+        compounds as assigned by MDAnalysis.  If `cmp` is e.g.
         ``'residues'``, this is ``np.unique(ag.resindices)``.
-    check_contiguos : bool, optional
+    check_contiguous : bool, optional
         If ``True`` (default), check if
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the
         same compound form a contiguous set in the input
@@ -1733,6 +1767,9 @@ def natms_per_cmp(
 
     See Also
     --------
+    :func:`mdtools.structure.cmp_attr` :
+        Get attributes of an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup` compound-wise.
     :func:`mdtools.structure.cmp_contact_matrix` :
         Convert an :class:`~MDAnalysis.core.groups.Atom` contact matrix
         to a compound contact matrix
@@ -1744,8 +1781,57 @@ def natms_per_cmp(
     :func:`mdtools.structure.contact_hists` :
         Bin the number of contacts between reference and selection
         compounds into histograms
+
+    Examples
+    --------
+    Create an MDAnalysis Universe from scratch for the following
+    examples.
+
+    >>> import MDAnalysis as mda
+    >>> # Number of segments.
+    >>> n_seg = 1
+    >>> # Number of residues per segment.
+    >>> n_res = [n+2 for n in range(n_seg)]
+    >>> # Number of atoms per residue.
+    >>> n_atms = [n+2 for n_r in n_res for n in range(n_r)]
+    >>> u = mda.Universe.empty(
+    ...     n_atoms=sum(n_atms),
+    ...     n_residues=sum(n_res),
+    ...     n_segments=n_seg,
+    ...     atom_resindex=[
+    ...         ix for ix, n_a in enumerate(n_atms) for _ in range(n_a)
+    ...     ],
+    ...     residue_segindex=[
+    ...         ix for ix, n_r in enumerate(n_res) for _ in range(n_r)
+    ...     ],
+    ...     trajectory=True,
+    ...     velocities=True,
+    ...     forces=True,
+    ... )
+    >>> bonds = [
+    ...     (sum(n_atms[:i]), j)
+    ...     for i in range(len(n_atms))
+    ...     for j in range(sum(n_atms[:i])+1, sum(n_atms[:i+1]))
+    ... ]
+    >>> u.add_TopologyAttr("bonds", bonds)
+    >>> ag = u.atoms
+
+    >>> mdt.strc.natms_per_cmp(ag, cmp="group")
+    5
+    >>> mdt.strc.natms_per_cmp(ag, cmp="group", return_array=True)
+    array([5])
+    >>> mdt.strc.natms_per_cmp(ag, cmp="segments")
+    5
+    >>> mdt.strc.natms_per_cmp(ag, cmp="residues")
+    array([2, 3])
+    >>> mdt.strc.natms_per_cmp(ag, cmp="residues", return_cmp_ix=True)
+    (array([2, 3]), array([0, 1]))
+    >>> mdt.strc.natms_per_cmp(ag, cmp="fragments")
+    array([2, 3])
+    >>> mdt.strc.natms_per_cmp(ag, cmp="atoms")
+    1
     """
-    if compound == 'atoms':
+    if cmp == "atoms":
         if return_array or ag.n_atoms == 0:
             natms_per_cmp = np.ones(ag.n_atoms, dtype=int)
         else:
@@ -1754,7 +1840,7 @@ def natms_per_cmp(
             return natms_per_cmp, ag.indices
         else:
             return natms_per_cmp
-    elif compound == 'group':
+    elif cmp == "group":
         if return_array:
             natms_per_cmp = np.array([ag.n_atoms], dtype=int)
         else:
@@ -1763,23 +1849,31 @@ def natms_per_cmp(
             return natms_per_cmp, np.array([0], dtype=int)
         else:
             return natms_per_cmp
-    elif compound == 'segments':
+    elif cmp == "segments":
         cmp_ix = ag.segindices
-    elif compound == 'residues':
+    elif cmp == "residues":
         cmp_ix = ag.resindices
-    elif compound == 'fragments':
+    elif cmp == "molecules":
+        cmp_ix = ag.molnums
+    elif cmp == "fragments":
         cmp_ix = ag.fragindices
     else:
-        raise ValueError("compound must be either 'group', 'segments',"
-                         " 'residues', 'fragments' or 'atoms', but you"
-                         " gave '{}'".format(compound))
-    if check_contiguos and not np.array_equal(cmp_ix, np.sort(cmp_ix)):
-        raise ValueError("Atoms belonging to the same compound must"
-                         " form a contiguous set")
+        raise ValueError(
+            "`cmp` must be either 'group', 'segments', 'residues',"
+            " 'molecules', 'fragments' or 'atoms', but you gave"
+            " '{}'".format(cmp)
+        )
+    if check_contiguous and not np.array_equal(cmp_ix, np.sort(cmp_ix)):
+        raise ValueError(
+            "Atoms belonging to the same compound do not form a contiguous set"
+            " in the input AtomGroup"
+        )
     cmp_ix, natms_per_cmp = np.unique(cmp_ix, return_counts=True)
-    if (not return_array and
-        len(natms_per_cmp) > 0 and
-            np.all(natms_per_cmp == natms_per_cmp[0])):
+    if (
+        not return_array
+        and len(natms_per_cmp) > 0
+        and np.all(natms_per_cmp == natms_per_cmp[0])
+    ):
         natms_per_cmp = natms_per_cmp[0]
     if return_cmp_ix:
         return natms_per_cmp, cmp_ix
@@ -1787,14 +1881,424 @@ def natms_per_cmp(
         return natms_per_cmp
 
 
+def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
+    """
+    Get attributes of an MDAnalysis
+    :class:`~MDAnalysis.core.groups.AtomGroup` compound-wise.
+
+    Get arbitrary attributes (e.g.
+    :attr:`~MDAnalysis.core.groups.AtomGroup.masses` or
+    :attr:`~MDAnalysis.core.groups.AtomGroup.charges`) that are defined
+    for :class:`Atoms <MDAnalysis.core.groups.AtomGroup>` of an
+    MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for each
+    individual compound contained in the
+    :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    A compound is usually a chemically meaningful subgroup of an
+    :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
+    :class:`~MDAnalysis.core.groups.Segment`,
+    :class:`~MDAnalysis.core.groups.Residue`,
+    :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>` or
+    a single :class:`~MDAnalysis.core.groups.Atom`.
+    Refer to the MDAnalysis' user guide for an
+    |explanation_of_these_terms|.  Note that in any case, only
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the input
+    :class:`~MDAnalysis.core.groups.AtomGroup` are taken into account,
+    even if the compound might comprise additional
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
+    in the input :class:`~MDAnalysis.core.groups.AtomGroup`.
+
+    Parameters
+    ----------
+    ag : MDAnalysis.core.groups.AtomGroup
+        The MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` for
+        which to get the compound-wise attribute.
+    attr : str
+        The attribute to get.  In principle, this can be any attribute
+        of the input :class:`~MDAnalysis.core.groups.AtomGroup`.  See
+        the MDAnalysis documentation and the examples below for possible
+        choices.
+    weights : str or array_like or None or 'total', optional
+        The weights to use when calculating the compound-wise attribute.
+        This can be either the name of an(other) attribute of the input
+        :class:`~MDAnalysis.core.groups.AtomGroup` `ag`, an array of
+        shape ``(ag.n_atoms,)`` assigning a weight to each atom in `ag`,
+        ``None`` or ``'total'``.  If `weights` is an attribute of `ag`,
+        the attribute must be an array of shape ``(ag.n_atoms,)``.  If
+        `weights` is ``None``, all atoms are weighted equally.  If
+        `weights` is ``'total'``, the attributes of all atoms of a
+        compound are simply summed up without taking any average.  See
+        examples below.  If the weights of a compound sum up to zero,
+        its attribute will be ``numpy.inf``.
+    cmp : {'group', 'segments', 'residues', 'molecules', 'fragments', \
+        'atoms'}, optional
+        The compounds of `ag` for which to get the selected attribute.
+        You must either provide `cmp` or `natms_per_cmp`.  If both are
+        given, `cmp` is ignored.
+
+        The selected attribute can be calculated for each
+        :class:`~MDAnalysis.core.groups.Segment`,
+        :class:`~MDAnalysis.core.groups.Residue`, molecule,
+        :attr:`fragment <MDAnalysis.core.groups.AtomGroup.fragments>` or
+        :class:`~MDAnalysis.core.groups.Atom` in the input
+        :class:`~MDAnalysis.core.groups.AtomGroup` or for the entire
+        :class:`~MDAnalysis.core.groups.AtomGroup` itself.  Refer to the
+        MDAnalysis' user guide for an |explanation_of_these_terms|.
+        Note that in any case, even if `cmp` is e.g. ``'residues'``,
+        only the :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging
+        to `ag` are taken into account, even if the compound might
+        comprise additional :class:`Atoms <MDAnalysis.core.groups.Atom>`
+        that are not contained in `ag`.
+
+        If `cmp` is ``'atoms'``, this function is equivalent to
+        ``getattr(ag, attr).astype(np.float64)``.
+    natms_per_cmp : int or array_like or None, optional
+        Number of :class:`Atoms <MDAnalysis.core.groups.Atom>` per
+        compound.  You must either provide `cmp` or `natms_per_cmp`.  If
+        both are given, `cmp` is ignored.
+
+        `natms_per_cmp` can be a single integer or an array of integers.
+        If a single integer is given, all compounds are assumed to
+        contain the same number of
+        :class:`Atoms <MDAnalysis.core.groups.Atom>`.  In this case,
+        `natms_per_cmp` must be an integer divisor of ``ag.n_atoms``.
+        If `natms_per_cmp` is an array of integers, it must contain
+        the number of :class:`Atoms <MDAnalysis.core.groups.Atom>` for
+        each single compound.  In this case, ``sum(natms_per_cmp)`` must
+        be equal to ``ag.n_atoms``.
+
+        Providing `natms_per_cmp` instead of `cmp` can speed up the
+        calculation if this function is called multiple times.
+        Internally, this function uses
+        :func:`mdtools.structure.natms_per_cmp` to calculate
+        `natms_per_cmp` if only `cmp` is given.
+
+    Returns
+    -------
+    attr : numpy.ndarray of dtype numpy.float64
+        The selected attribute for each compound in `ag`.  The length of
+        `attr` is equal to the number of compounds in `ag`.  The number
+        of dimensions of `ag` depends on the selected attribute.  For
+        instance, if the selected attribute is 'charges', the shape of
+        `attr` will be ``(n_cmp,)``.  If the selected attribute is
+        'velocities', the shape of `attr` will be ``(n_cmp, 3)``.  The
+        dtype of `attr` will always be ``numpy.float64``.
+
+    See Also
+    --------
+    :func:`mdtools.structure.natms_per_cmp` :
+        Get the number of :class:`Atoms <MDAnalysis.core.groups.Atom>`
+        of each compound in an MDAnalysis
+        :class:`~MDAnalysis.core.groups.AtomGroup`
+
+    Examples
+    --------
+    Create an MDAnalysis Universe from scratch for the following
+    examples.
+
+    >>> import MDAnalysis as mda
+    >>> # Number of segments.
+    >>> n_seg = 1
+    >>> # Number of residues per segment.
+    >>> n_res = [n+2 for n in range(n_seg)]
+    >>> # Number of atoms per residue.
+    >>> n_atms = [n+2 for n_r in n_res for n in range(n_r)]
+    >>> u = mda.Universe.empty(
+    ...     n_atoms=sum(n_atms),
+    ...     n_residues=sum(n_res),
+    ...     n_segments=n_seg,
+    ...     atom_resindex=[
+    ...         ix for ix, n_a in enumerate(n_atms) for _ in range(n_a)
+    ...     ],
+    ...     residue_segindex=[
+    ...         ix for ix, n_r in enumerate(n_res) for _ in range(n_r)
+    ...     ],
+    ...     trajectory=True,
+    ...     velocities=True,
+    ...     forces=True,
+    ... )
+    >>> bonds = [
+    ...     (sum(n_atms[:i]), j)
+    ...     for i in range(len(n_atms))
+    ...     for j in range(sum(n_atms[:i])+1, sum(n_atms[:i+1]))
+    ... ]
+    >>> u.add_TopologyAttr("bonds", bonds)
+    >>> u.add_TopologyAttr("masses")
+    >>> u.add_TopologyAttr("charges")
+    >>> ag = u.atoms
+    >>> # Fill AtomGroup attributes.
+    >>> ag.positions = np.random.random(ag.positions.shape) * 10 - 5
+    >>> ag.velocities = np.random.random(ag.velocities.shape) * 2 - 1
+    >>> ag.forces = np.random.random(ag.forces.shape) * 5 - 2.5
+    >>> ag.masses = np.random.random(ag.masses.shape) * 10
+    >>> ag.charges = np.random.random(ag.charges.shape) * - 5
+
+    Center of geometry.
+
+    >>> # Center of geometry of each segment.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="segments", attr="positions")
+    >>> cog2 = [seg.atoms.center_of_geometry() for seg in ag.segments]
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each residue.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="residues", attr="positions")
+    >>> cog2 = [res.atoms.center_of_geometry() for res in ag.residues]
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each fragment.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="fragments", attr="positions")
+    >>> cog2 = [frg.atoms.center_of_geometry() for frg in ag.fragments]
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each atom.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="atoms", attr="positions")
+    >>> cog2 = ag.positions
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of the entire group.
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="group", attr="positions")
+    >>> cog2 = ag.center_of_geometry()
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+
+    Instead of `cmp` one can also give `natms_per_cmp`, which can for
+    instance be calculated using
+    :func:`mdtools.structure.natms_per_cmp`.
+
+    >>> # Center of geometry of the entire group.
+    >>> cog1 = mdt.strc.cmp_attr(
+    ...     ag, attr="positions", natms_per_cmp=sum(n_atms)
+    ... )
+    >>> cog2 = ag.center_of_geometry()
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each atom.
+    >>> cog1 = mdt.strc.cmp_attr(ag, attr="positions", natms_per_cmp=1)
+    >>> cog2 = ag.positions
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+    >>> # Center of geometry of each residue.
+    >>> cog1 = mdt.strc.cmp_attr(
+    ...     ag, attr="positions", natms_per_cmp=n_atms
+    ... )
+    >>> cog2 = [res.atoms.center_of_geometry() for res in ag.residues]
+    >>> np.allclose(cog1, cog2, rtol=0)
+    True
+
+    Center of mass.
+
+    >>> com1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="positions", weights="masses"
+    ... )
+    >>> com2 = [res.atoms.center_of_mass() for res in ag.residues]
+    >>> np.allclose(com1, com2, rtol=0)
+    True
+
+    Center of charge (the charges of each compound should not sum up to
+    zero).
+
+    >>> coc1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="positions", weights="charges"
+    ... )
+    >>> coc2 = [
+    ...     res.atoms.center(weights=res.atoms.charges)
+    ...     for res in ag.residues
+    ... ]
+    >>> np.allclose(coc1, coc2, rtol=0)
+    True
+
+    Array of arbitrary weights (must have shape ``(ag.n_atoms,)``).
+
+    >>> coc_abs1 = mdt.strc.cmp_attr(
+    ...     ag,
+    ...     cmp="residues",
+    ...     attr="positions",
+    ...     weights=np.abs(ag.charges),
+    ... )
+    >>> coc_abs2 = [
+    ...     res.atoms.center(weights=np.abs(res.atoms.charges))
+    ...     for res in ag.residues
+    ... ]
+    >>> np.allclose(coc_abs1, coc_abs2, rtol=0)
+    True
+
+    ``weights="total"``: Return the sum of the selected attribute over
+    all atoms of each compound without taking the (weighted) average.
+
+    >>> # Total mass of each residue.
+    >>> res_mass1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="masses", weights="total"
+    ... )
+    >>> res_mass2 = [sum(res.atoms.masses) for res in ag.residues]
+    >>> np.allclose(res_mass1, res_mass2, rtol=0)
+    True
+    >>> # Total charge of each residue.
+    >>> res_charges1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="charges", weights="total"
+    ... )
+    >>> res_charges2 = [sum(res.atoms.charges) for res in ag.residues]
+    >>> np.allclose(res_charges1, res_charges2, rtol=0)
+    True
+    >>> # Center-of-mass velocity of each residue.
+    >>> com_vel1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="velocities", weights="total"
+    ... )
+    >>> com_vel2 = [
+    ...     np.sum(res.atoms.velocities, axis=0) for res in ag.residues
+    ... ]
+    >>> np.allclose(com_vel1, com_vel2)
+    True
+    >>> # Center-of-mass force of each residue.
+    >>> com_force1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="forces", weights="total"
+    ... )
+    >>> com_force2 = [
+    ...     np.sum(res.atoms.forces, axis=0) for res in ag.residues
+    ... ]
+    >>> np.allclose(com_force1, com_force2)
+    True
+
+    If the weights of all atoms belonging to the same compound sum up to
+    zero, the compound's attribute will be ``numpy.inf``.
+
+    >>> weights = np.array([-1, 1, -2, 0, 2])
+    >>> a = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="positions", weights=weights,
+    ... )
+    >>> np.abs(a)  # Only for doctest: Convert -inf to inf
+    array([[inf, inf, inf],
+           [inf, inf, inf]])
+
+    :func:`mdtools.structure.cmp_attr` only takes into account
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` that belong to the
+    input :class:`~MDAnalysis.core.groups.AtomGroup` `ag`, even if the
+    selected compound might comprise additional :class:`Atoms
+    <MDAnalysis.core.groups.Atom>` that are not contained in `ag`.
+    Contrarily, `ag.segments.atoms`, `ag.residues.atoms` and
+    `ag.fragments.atoms` contain all
+    :class:`Atoms <MDAnalysis.core.groups.Atom>` that belong to the
+    respective compound even if `ag` does not contain all their
+    :class:`Atoms <MDAnalysis.core.groups.Atom>`.
+
+    >>> ag = ag[:-1]
+    >>> cog1 = mdt.strc.cmp_attr(ag, cmp="residues", attr="positions")
+    >>> cog2 = [res.atoms.center_of_geometry() for res in ag.residues]
+    >>> np.allclose(cog1[0], cog2[0], rtol=0)
+    True
+    >>> np.allclose(cog1[1], cog2[1], rtol=0)
+    False
+    """
+    attr_atm = getattr(ag, attr).astype(np.float64)
+    if natms_per_cmp is None:
+        if cmp is None:
+            raise ValueError("Either `cmp` or `natms_per_cmp` must be given.")
+        elif cmp == "atoms":
+            return attr_atm
+        natms_per_cmp = mdt.strc.natms_per_cmp(
+            ag, cmp=cmp, return_array=True, check_contiguous=True
+        )
+    else:
+        # `cmp` will be ignored when `natms_per_cmp` is given.
+        if np.any(np.less(natms_per_cmp, 1)):
+            raise ValueError(
+                "All elements of `natms_per_cmp` must be greater than zero"
+            )
+        if np.ndim(natms_per_cmp) == 0:
+            if cmp == "atoms" and natms_per_cmp != 1:
+                raise ValueError(
+                    "`cmp` is 'atoms' but `natms_per_cmp` ({}) is not"
+                    " 1".format(natms_per_cmp)
+                )
+            elif cmp == "group" and natms_per_cmp != ag.n_atoms:
+                raise ValueError(
+                    "`cmp` is 'group' but `natms_per_cmp` ({}) is not equal to"
+                    " `ag.n_atoms` ({})".format(natms_per_cmp, ag.n_atoms)
+                )
+            if ag.n_atoms % natms_per_cmp != 0:
+                raise ValueError(
+                    "`natms_per_cmp` ({}) is not an integer divisor of"
+                    " `ag.n_atoms` ({})".format(natms_per_cmp, ag.n_atoms)
+                )
+            if natms_per_cmp == 1:
+                return attr_atm
+            natms_per_cmp = np.full(
+                ag.n_atoms // natms_per_cmp, natms_per_cmp, dtype=np.uint32
+            )
+        elif np.ndim(natms_per_cmp) == 1:
+            natms_per_cmp = np.asarray(natms_per_cmp)
+            if cmp == "atoms" and np.any(natms_per_cmp != 1):
+                raise ValueError(
+                    "`cmp` is 'atoms' but not all elements of `natms_per_cmp`"
+                    " are 1"
+                )
+            elif cmp == "group" and len(natms_per_cmp) != 1:
+                raise ValueError(
+                    "`cmp` is 'group' but `len(natms_per_cmp)` ({}) is not"
+                    " 1".format(len(natms_per_cmp))
+                )
+            if np.sum(natms_per_cmp) != ag.n_atoms:
+                raise ValueError(
+                    "The sum of `natms_per_cmp` ({}) is not equal to"
+                    " `ag.n_atoms`"
+                    " ({})".format(np.sum(natms_per_cmp), ag.n_atoms)
+                )
+            if np.all(natms_per_cmp == 1):
+                return attr_atm
+        else:
+            raise ValueError(
+                "`natms_per_cmp` must be either an integer, 1d array or None"
+            )
+    slices = np.cumsum(natms_per_cmp[:-1], dtype=np.uint32)
+    slices = np.insert(slices, 0, 0)
+
+    if weights is not None and not (
+        isinstance(weights, str) and weights == "total"
+    ):
+        if isinstance(weights, str):
+            weights = getattr(ag, weights).astype(np.float64)
+        else:  # `weights` is expected to be array_like.
+            weights = np.asarray(weights, dtype=np.float64)
+        # Ensure that `weights` and `attr_atm` are broadcastable.
+        # `weights` always has shape ``(n_atoms,)`` whereas `attr_atm`
+        # can in principle have an arbitrary shape, but its first
+        # dimension always has length `n_atoms`.  From
+        # https://numpy.org/doc/stable/user/basics.broadcasting.html:
+        # "When operating on two arrays, NumPy compares their shapes
+        # element-wise.  It starts with the trailing (i.e. rightmost)
+        # dimension and works its way left.  Two dimensions are
+        # compatible when
+        #   1. they are equal, or
+        #   2. one of them is 1."
+        shape = weights.shape + tuple(1 for _ in range(attr_atm.ndim - 1))
+        attr_atm *= weights.reshape(shape)
+    attr_cmp = np.add.reduceat(attr_atm, slices, axis=0)
+    del attr_atm
+    if weights is None:
+        # Ensure that `natms_per_cmp` and `attr_cmp` are broadcastable.
+        # `natms_per_cmp` always has shape ``(n_compounds,)`` whereas
+        # `attr_cmp` can in principle have an arbitrary shape, but its
+        # first dimension always has length `n_compounds`.  See above.
+        shape = natms_per_cmp.shape
+        shape += tuple(1 for _ in range(attr_cmp.ndim - 1))
+        attr_cmp /= natms_per_cmp.reshape(shape)
+    elif isinstance(weights, np.ndarray):  # weights != "total"
+        weights_sum = np.add.reduceat(weights, slices)
+        # Ensure that `weights_sum` and `attr_cmp` are broadcastable.
+        # `weights_sum` always has shape ``(n_compounds,)``.  See above.
+        shape = weights_sum.shape + tuple(1 for _ in range(attr_cmp.ndim - 1))
+        attr_cmp /= weights_sum.reshape(shape)
+    return attr_cmp
+
+
 def cmp_contact_count_matrix(
-        cm, natms_per_refcmp=1, natms_per_selcmp=1, dtype=int):
+    cm, natms_per_refcmp=1, natms_per_selcmp=1, dtype=int
+):
     """
     Take an :class:`~MDAnalysis.core.groups.Atom` contact matrix and sum
     the contacts of all :class:`Atoms <MDAnalysis.core.groups.Atom>`
     belonging to the same compound.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -1803,10 +2307,10 @@ def cmp_contact_count_matrix(
     Refer to the MDAnalysis' user guide for an
     |explanation_of_these_terms|.  Note that in any case, only
     :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the
-    original :class:`~MDAnalysis.core.groups.AtomGroup` are taken into
+    input :class:`~MDAnalysis.core.groups.AtomGroup` are taken into
     account, even if the compound might comprise additional
     :class:`Atoms <MDAnalysis.core.groups.Atom>` that are not contained
-    in the original :class:`~MDAnalysis.core.groups.AtomGroup`.
+    in the input :class:`~MDAnalysis.core.groups.AtomGroup`.
 
     Parameters
     ----------
@@ -1822,12 +2326,12 @@ def cmp_contact_count_matrix(
         integers.  If `natms_per_refcmp` is a single integer, all
         reference compounds are assumed to contain the same number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.  In this case,
-        `natms_per_refcmp` must be an integer divisor of ``cm.shape[0]``.
-        If `natms_per_refcmp` is an array of integers, it must contain
-        the number of reference
+        `natms_per_refcmp` must be an integer divisor of
+        ``cm.shape[0]``.  If `natms_per_refcmp` is an array of integers,
+        it must contain the number of reference
         :class:`Atoms <MDAnalysis.core.groups.Atom>` for each single
-        reference compound.  In this case,
-        ``numpy.sum(natms_per_refcmp)`` must be equal to ``cm.shape[0]``.
+        reference compound.  In this case, ``sum(natms_per_refcmp)``
+        must be equal to ``cm.shape[0]``.
     natms_per_selcmp : int or array_like, optional
         Same for selection compounds (`natms_per_selcmp` is checked
         against ``cm.shape[1]``).
@@ -1884,15 +2388,17 @@ def cmp_contact_count_matrix(
     array([[2, 0],
            [1, 1],
            [0, 2]])
-    >>> mdt.strc.cmp_contact_count_matrix(cm,
-    ...                                   natms_per_refcmp=[1, 2],
-    ...                                   natms_per_selcmp=[2, 2])
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm, natms_per_refcmp=[1, 2], natms_per_selcmp=[2, 2]
+    ... )
     array([[2, 0],
            [1, 3]])
-    >>> mdt.strc.cmp_contact_count_matrix(cm,
-    ...                                   natms_per_refcmp=[1, 2],
-    ...                                   natms_per_selcmp=[2, 2],
-    ...                                   dtype=np.uint32)
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm,
+    ...     natms_per_refcmp=[1, 2],
+    ...     natms_per_selcmp=[2, 2],
+    ...     dtype=np.uint32,
+    ... )
     array([[2, 0],
            [1, 3]], dtype=uint32)
 
@@ -1914,42 +2420,41 @@ def cmp_contact_count_matrix(
     array([], shape=(0, 4), dtype=int64)
 
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
-    >>> mdt.strc.cmp_contact_count_matrix(cm,
-    ...                                   natms_per_refcmp=3,
-    ...                                   natms_per_selcmp=[],
-    ...                                   dtype=np.uint32)
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm, natms_per_refcmp=3, natms_per_selcmp=[], dtype=np.uint32
+    ... )
     array([], shape=(2, 0), dtype=uint32)
     """
     cm = np.asarray(cm, dtype=dtype)
     if cm.ndim != 2:
-        raise ValueError("'cm' must have 2 dimensions, not {}"
-                         .format(cm.ndim))
+        raise ValueError("`cm` must have 2 dimensions, not {}".format(cm.ndim))
     natms_per_cmp = [natms_per_refcmp, natms_per_selcmp]
     arg_names = ("natms_per_refcmp", "natms_per_selcmp")
     for i, napc in enumerate(natms_per_cmp):
         if np.all(np.equal(napc, 1)):
             continue
         if np.any(np.less(napc, 1)):
-            raise ValueError("(All elements of) '{}' must be greater"
-                             " than zero".format(arg_names[i]))
+            raise ValueError(
+                "All elements of `{}` must be greater than"
+                " zero".format(arg_names[i])
+            )
         if np.ndim(napc) == 0:
             if cm.shape[i] % napc != 0:
                 raise ValueError(
-                    "'{}' ({}) is not an integer divisor of"
-                    " 'cm.shape[{}]' ({})"
-                    .format(arg_names[i], napc, i, cm.shape[i])
+                    "`{}` ({}) is not an integer divisor of `cm.shape[{}]`"
+                    " ({})".format(arg_names[i], napc, i, cm.shape[i])
                 )
             napc = np.full(cm.shape[i] // napc, napc, dtype=np.uint32)
         elif np.ndim(napc) == 1:
             if np.sum(napc) != cm.shape[i]:
                 raise ValueError(
-                    "The sum of '{}' ({}) is not equal to 'cm.shape[{}]'"
-                    " ({})"
-                    .format(arg_names[i], np.sum(napc), i, cm.shape[i])
+                    "The sum of `{}` ({}) is not equal to `cm.shape[{}]`"
+                    " ({})".format(arg_names[i], np.sum(napc), i, cm.shape[i])
                 )
         else:
-            raise ValueError("'{}' must be an integer or a 1d array"
-                             .format(arg_names[i]))
+            raise ValueError(
+                "`{}` must be an integer or a 1d array".format(arg_names[i])
+            )
         slices = np.cumsum(napc[:-1], dtype=np.uint32)
         slices = np.insert(slices, 0, 0)
         # if i == 0:
@@ -1965,7 +2470,8 @@ def cmp_contact_count_matrix(
 
 
 def cmp_contact_matrix(
-        cm, natms_per_refcmp=1, natms_per_selcmp=1, min_contacts=1):
+    cm, natms_per_refcmp=1, natms_per_selcmp=1, min_contacts=1
+):
     """
     Convert an :class:`~MDAnalysis.core.groups.Atom` contact matrix to a
     compound contact matrix.
@@ -1979,7 +2485,7 @@ def cmp_contact_matrix(
     between their :class:`Atoms <MDAnalysis.core.groups.Atom>` is equal
     to or higher than `min_contacts`.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -1997,9 +2503,9 @@ def cmp_contact_matrix(
     ----------
     cm : array_like
         (Boolean) contact matrix of shape ``(m, n)`` as e.g. generated
-        by :func:`mdtools.structure.contact_matrix`, where ``m`` is the number of
-        reference :class:`Atoms <MDAnalysis.core.groups.Atom>` and ``n``
-        is the number of selection
+        by :func:`mdtools.structure.contact_matrix`, where ``m`` is the
+        number of reference :class:`Atoms <MDAnalysis.core.groups.Atom>`
+        and ``n`` is the number of selection
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.
     natms_per_refcmp : int or array_like, optional
         Number of :class:`Atoms <MDAnalysis.core.groups.Atom>` per
@@ -2007,12 +2513,12 @@ def cmp_contact_matrix(
         integers.  If `natms_per_refcmp` is a single integer, all
         reference compounds are assumed to contain the same number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.  In this case,
-        `natms_per_refcmp` must be an integer divisor of ``cm.shape[0]``.
-        If `natms_per_refcmp` is an array of integers, it must contain
-        the number of reference
+        `natms_per_refcmp` must be an integer divisor of
+        ``cm.shape[0]``.  If `natms_per_refcmp` is an array of integers,
+        it must contain the number of reference
         :class:`Atoms <MDAnalysis.core.groups.Atom>` for each single
-        reference compound.  In this case,
-        ``numpy.sum(natms_per_refcmp)`` must be equal to ``cm.shape[0]``.
+        reference compound.  In this case, ``sum(natms_per_refcmp)``
+        must be equal to ``cm.shape[0]``.
     natms_per_selcmp : int or array_like, optional
         Same for selection compounds (`natms_per_selcmp` is checked
         against ``cm.shape[1]``).
@@ -2070,15 +2576,15 @@ def cmp_contact_matrix(
     array([[ True, False],
            [ True,  True],
            [False,  True]])
-    >>> mdt.strc.cmp_contact_matrix(cm,
-    ...                             natms_per_selcmp=2,
-    ...                             min_contacts=2)
+    >>> mdt.strc.cmp_contact_matrix(
+    ...     cm, natms_per_selcmp=2, min_contacts=2
+    ... )
     array([[ True, False],
            [False, False],
            [False,  True]])
-    >>> mdt.strc.cmp_contact_matrix(cm,
-    ...                             natms_per_refcmp=[1, 2],
-    ...                             natms_per_selcmp=2)
+    >>> mdt.strc.cmp_contact_matrix(
+    ...     cm, natms_per_refcmp=[1, 2], natms_per_selcmp=2
+    ... )
     array([[ True, False],
            [ True,  True]])
 
@@ -2100,20 +2606,20 @@ def cmp_contact_matrix(
     array([], shape=(0, 4), dtype=bool)
 
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
-    >>> mdt.strc.cmp_contact_matrix(cm,
-    ...                             natms_per_refcmp=3,
-    ...                             natms_per_selcmp=[],
-    ...                             min_contacts=2)
+    >>> mdt.strc.cmp_contact_matrix(
+    ...     cm, natms_per_refcmp=3, natms_per_selcmp=[], min_contacts=2
+    ... )
     array([], shape=(2, 0), dtype=bool)
     """
     cm = np.asarray(cm, dtype=bool)
-    if (np.any(np.not_equal(natms_per_refcmp, 1)) or
-            np.any(np.not_equal(natms_per_selcmp, 1))):
-        if (np.size(natms_per_refcmp) > 0 and
-                np.size(natms_per_selcmp) > 0):
+    if np.any(np.not_equal(natms_per_refcmp, 1)) or np.any(
+        np.not_equal(natms_per_selcmp, 1)
+    ):
+        if np.size(natms_per_refcmp) > 0 and np.size(natms_per_selcmp) > 0:
             # np.max([]) raises an exception
-            max_contacts = np.prod([np.max(natms_per_refcmp),
-                                    np.max(natms_per_selcmp)])
+            max_contacts = np.prod(
+                [np.max(natms_per_refcmp), np.max(natms_per_selcmp)]
+            )
         elif np.size(natms_per_refcmp) > 0:
             max_contacts = np.max(natms_per_refcmp)
         elif np.size(natms_per_selcmp) > 0:
@@ -2121,17 +2627,22 @@ def cmp_contact_matrix(
         else:
             max_contacts = min_contacts
         if min_contacts > max_contacts:
-            raise ValueError("min_contacts ({}) is greater than the"
-                             " maximally possible number of contacts"
-                             " ({})".format(min_contacts, max_contacts))
+            raise ValueError(
+                "`min_contacts` ({}) is greater than the maximally possible"
+                " number of contacts ({})".format(min_contacts, max_contacts)
+            )
         elif min_contacts < 1:
-            raise ValueError("'min_contacts' ({}) must be greater than"
-                             " zero.".format(min_contacts))
-        cm = cmp_contact_count_matrix(cm=cm,
-                                      natms_per_refcmp=natms_per_refcmp,
-                                      natms_per_selcmp=natms_per_selcmp,
-                                      dtype=np.uint32)
-        cm = (cm >= min_contacts)
+            raise ValueError(
+                "`min_contacts` ({}) must be greater than"
+                " zero.".format(min_contacts)
+            )
+        cm = cmp_contact_count_matrix(
+            cm=cm,
+            natms_per_refcmp=natms_per_refcmp,
+            natms_per_selcmp=natms_per_selcmp,
+            dtype=np.uint32,
+        )
+        cm = cm >= min_contacts
     return cm
 
 
@@ -2154,7 +2665,7 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
         Array of compound indices corresponding to the
         reference/selection compounds contained in `cm`.  If the indices
         contain gaps, these gaps will be filled by this function.
-        Indices must not be negative, dublicate indices will be removed.
+        Indices must not be negative, duplicate indices will be removed.
 
     Returns
     -------
@@ -2178,11 +2689,13 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
     --------
     >>> cm = np.array([[ True,  True, False],
     ...                [False,  True,  True]])
-    >>> mdt.strc.cm_fill_missing_cmp_ix(cm, refix=[2, 4])  # 3 missing
+    >>> # 3 missing
+    >>> mdt.strc.cm_fill_missing_cmp_ix(cm, refix=[2, 4])
     array([[ True,  True, False],
            [False, False, False],
            [False,  True,  True]])
-    >>> mdt.strc.cm_fill_missing_cmp_ix(cm, selix=[0, 1, 4])  # 2, 3 missing
+    >>> # 2, 3 missing
+    >>> mdt.strc.cm_fill_missing_cmp_ix(cm, selix=[0, 1, 4])
     array([[ True,  True, False, False, False],
            [False,  True, False, False,  True]])
 
@@ -2190,16 +2703,15 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
     matrix is returned as :class:`numpy.ndarray`.  If it already was a
     :class:`numpy.ndarray` before, no copy is made.
 
-    >>> result = mdt.strc.cm_fill_missing_cmp_ix(cm,
-    ...                                          refix=[2, 3],
-    ...                                          selix=[1, 2, 3])
+    >>> result = mdt.strc.cm_fill_missing_cmp_ix(
+    ...     cm, refix=[2, 3], selix=[1, 2, 3]
+    ... )
     >>> result is cm
     True
     """
     cm = np.asarray(cm)
     if cm.ndim != 2:
-        raise ValueError("'cm' must have 2 dimensions, not {}"
-                         .format(cm.ndim))
+        raise ValueError("`cm` must have 2 dimensions, not {}".format(cm.ndim))
     agix = (refix, selix)
     for i, ix in enumerate(agix):
         if ix is None:
@@ -2209,26 +2721,36 @@ def cm_fill_missing_cmp_ix(cm, refix=None, selix=None):
             raise ValueError("Indices must not be negative")
         ix -= ix[0]
         if ix[-1] + 1 != len(ix):
+            # Remove current axis from shape => Number of compounds.
             shape = list(cm.shape)
-            shape.pop(i)  # Remove current axis from shape => Number of compounds
+            shape.pop(i)
             insertion = np.zeros(shape, dtype=cm.dtype)
-            missing_ix = np.setdiff1d(np.arange(ix[-1] + 1),
-                                      ix,
-                                      assume_unique=True)
+            missing_ix = np.setdiff1d(
+                np.arange(ix[-1] + 1), ix, assume_unique=True
+            )
             for m_ix in missing_ix:
                 cm = np.insert(cm, m_ix, insertion, axis=i)
         # Internal consistency check
         if cm.shape[i] != ix[-1] + 1:
-            raise ValueError("'cm.shape[{}]' is {} but must be {}. This"
-                             " should not have happened"
-                             .format(i, cm.shape[i], ix[-1] + 1))
+            raise ValueError(
+                "`cm.shape[{}]` is {} but must be {}.  This should not have"
+                " happened".format(i, cm.shape[i], ix[-1] + 1)
+            )
     return cm
 
 
 def contact_matrix(
-        ref, sel, cutoff, compound='atoms', min_contacts=1,
-        fill_missing_cmp_ix=False, box=None, result=None,
-        mdabackend='serial', debug=False):
+    ref,
+    sel,
+    cutoff,
+    compound="atoms",
+    min_contacts=1,
+    fill_missing_cmp_ix=False,
+    box=None,
+    result=None,
+    mdabackend="serial",
+    debug=False,
+):
     """
     Construct a contact matrix for two MDAnalysis
     :class:`AtomGroups <MDAnalysis.core.groups.AtomGroup>`.
@@ -2248,13 +2770,14 @@ def contact_matrix(
     ref, sel : MDAnalysis.core.groups.AtomGroup
         The reference/selection
         :class:`~MDAnalysis.core.groups.AtomGroup`.  Must be unique,
-        i.e. must not contain dublicate
+        i.e. must not contain duplicate
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.
     cutoff : scalar
         A reference and selection :class:`~MDAnalysis.core.groups.Atom`
         are considered to be in contact, if their distance is less than
         or equal to this cutoff.  Must be greater than zero.
-    compound : {'atoms', 'group', 'segments', 'residues', 'fragments'}, optional
+    compound : {'atoms', 'group', 'segments', 'residues', \
+        'fragments'}, optional
         The compounds of `ref` and `sel` for which to calculate the
         contact matrix.  Must be either a single string which is applied
         to both, `ref` and `sel`, or a 1-dimensional array of two
@@ -2282,7 +2805,8 @@ def contact_matrix(
         higher than `min_contacts`.  Must be greater than zero.
         `min_contacts` is ignored if `compound` is ``'atoms'``, because
         :class:`Atoms <MDAnalysis.core.groups.Atom>` can only have one
-        or no contact with another :class:`~MDAnalysis.core.groups.Atom`.
+        or no contact with another
+        :class:`~MDAnalysis.core.groups.Atom`.
     fill_missing_cmp_ix : bool, optional
         If ``True``, also create matrix elements for missing
         *intermediate* compound indices.  These matrix elements will
@@ -2359,60 +2883,68 @@ def contact_matrix(
     ag_names = ("reference", "selection")
     n_ags = len(ags)
     if cutoff <= 0:
-        raise ValueError("'cutoff' ({}) must be greater than zero."
-                         .format(cutoff))
+        raise ValueError(
+            "`cutoff` ({}) must be greater than zero.".format(cutoff)
+        )
     for i, ag in enumerate(ags):
         if ag.unique != ag:
-            raise ValueError("The {} group must not contain dublicate"
-                             " atoms".format(ag_names[i]))
+            raise ValueError(
+                "The {} group must not contain duplicate"
+                " atoms".format(ag_names[i])
+            )
 
-    for i, ag in enumerate(ags):
+    for ag in ags:
         if ag.n_atoms == 0:
             cm = np.array([], dtype=bool)
             return cm.reshape([a.n_atoms for a in ags])
-    dists = mdadist.distance_array(reference=ref.positions,
-                                   configuration=sel.positions,
-                                   box=box,
-                                   result=result,
-                                   backend=mdabackend)
-    cm = (dists <= cutoff)
+    dists = mdadist.distance_array(
+        reference=ref.positions,
+        configuration=sel.positions,
+        box=box,
+        result=result,
+        backend=mdabackend,
+    )
+    cm = dists <= cutoff
     if np.ndim(compound) == 0:
         compound = (compound,) * n_ags
     elif np.ndim(compound) == 1 and len(compound) == 1:
         compound = (compound[0],) * n_ags
     elif np.ndim(compound) > 1:
-        raise ValueError("'compound' must either be a string or a 1d"
-                         " array containing {} strings".format(n_ags))
+        raise ValueError(
+            "`compound` must either be a string or a 1d-array containing {}"
+            " strings".format(n_ags)
+        )
     if len(compound) != n_ags:
-        raise ValueError("'compound' must either be a string or a 1d"
-                         " array containing {} strings".format(n_ags))
-    cmp_ix = [None, ] * n_ags
-    napc = [None, ] * n_ags
+        raise ValueError(
+            "`compound` must either be a string or a 1d-array containing {}"
+            " strings".format(n_ags)
+        )
+    cmp_ix = [None] * n_ags
+    napc = [None] * n_ags
     for i, ag in enumerate(ags):
-        napc[i], cmp_ix[i] = natms_per_cmp(ag=ag,
-                                           compound=compound[i],
-                                           return_cmp_ix=True,
-                                           check_contiguos=True)
-    if np.any([cmp != 'atoms' for cmp in compound]):
-        cm = cmp_contact_matrix(cm=cm,
-                                natms_per_refcmp=napc[0],
-                                natms_per_selcmp=napc[1],
-                                min_contacts=min_contacts)
+        napc[i], cmp_ix[i] = mdt.strc.natms_per_cmp(
+            ag=ag, cmp=compound[i], return_cmp_ix=True, check_contiguous=True
+        )
+    if np.any([cmp != "atoms" for cmp in compound]):
+        cm = cmp_contact_matrix(
+            cm=cm,
+            natms_per_refcmp=napc[0],
+            natms_per_selcmp=napc[1],
+            min_contacts=min_contacts,
+        )
     # Internal consistency check
     if cm.shape != tuple(len(cix) for cix in cmp_ix):
-        raise ValueError("cm has shape {}, but must have shape {}. This"
-                         " should not have happened"
-                         .format(cm.shape,
-                                 tuple(len(cix) for cix in cmp_ix)))
+        raise ValueError(
+            "`cm` has shape {}, but must have shape {}.  This  should not have"
+            " happened".format(cm.shape, tuple(len(cix) for cix in cmp_ix))
+        )
     if fill_missing_cmp_ix:
-        cm = cm_fill_missing_cmp_ix(cm=cm,
-                                    refix=cmp_ix[0],
-                                    selix=cmp_ix[1])
+        cm = cm_fill_missing_cmp_ix(cm=cm, refix=cmp_ix[0], selix=cmp_ix[1])
 
     return cm
 
 
-def contact_matrices(
+def contact_matrices(  # noqa: C901
     ref,
     sel,
     cutoff,
@@ -2424,11 +2956,11 @@ def contact_matrices(
     every=1,
     updating_ref=False,
     updating_sel=False,
-    compound='atoms',
+    compound="atoms",
     min_contacts=1,
     fill_missing_cmp_ix=False,
-    mdabackend='serial',
-    verbose=True
+    mdabackend="serial",
+    verbose=True,
 ):
     """
     Construct a contact matrix for two MDAnalysis
@@ -2449,7 +2981,7 @@ def contact_matrices(
         are considered to be in contact, if their distance is less than
         or equal to this cutoff.  Must be greater than zero.
     trj : MDAnalysis.coordinates.base.ReaderBase or \
-MDAnalysis.coordinates.base.FrameIteratorBase, optional
+        MDAnalysis.coordinates.base.FrameIteratorBase, optional
         |MDA_trj| to read.  If ``None``, a new MDAnalysis
         :class:`~MDAnalysis.core.universe.Universe` and trajectory are
         created from `topfile` and `trjfile`.
@@ -2486,7 +3018,7 @@ MDAnalysis.coordinates.base.FrameIteratorBase, optional
         <MDAnalysis.core.groups.UpdatingAtomGroup>`.  Ignored if `trj`
         is not ``None``.
     compound : {'atoms', 'group', 'segments', 'residues', \
-'fragments'}, optional
+        'fragments'}, optional
         The compounds of `ref` and `sel` for which to calculate the
         contact matrix.  Must be either a single string which is applied
         to both, `ref` and `sel`, or a 1-dimensional array of two
@@ -2575,9 +3107,7 @@ MDAnalysis.coordinates.base.FrameIteratorBase, optional
     if trj is None:
         if verbose:
             print()
-        u = mdt.select.universe(
-            top=topfile, trj=trjfile, verbose=verbose
-        )
+        u = mdt.select.universe(top=topfile, trj=trjfile, verbose=verbose)
         if verbose:
             print()
             print("Creating selections...")
@@ -2607,7 +3137,7 @@ MDAnalysis.coordinates.base.FrameIteratorBase, optional
             stop=end,
             step=every,
             n_frames_tot=u.trajectory.n_frames,
-            verbose=verbose
+            verbose=verbose,
         )
         trj = u.trajectory[BEGIN:END:EVERY]
     else:
@@ -2619,20 +3149,14 @@ MDAnalysis.coordinates.base.FrameIteratorBase, optional
                 " be a MDAnalysis.core.groups.AtomGroup instance"
             )
 
-    cms = [None, ] * N_FRAMES
+    cms = [None] * N_FRAMES
     if not updating_ref:
         natms_per_refcmp, refcmp_ix = mdt.strc.natms_per_cmp(
-            ag=ref,
-            compound=compound[0],
-            return_cmp_ix=True,
-            check_contiguos=True,
+            ag=ref, cmp=compound[0], return_cmp_ix=True, check_contiguous=True
         )
     if not updating_sel:
         natms_per_selcmp, selcmp_ix = mdt.strc.natms_per_cmp(
-            ag=sel,
-            compound=compound[1],
-            return_cmp_ix=True,
-            check_contiguos=True,
+            ag=sel, cmp=compound[1], return_cmp_ix=True, check_contiguous=True
         )
     if not updating_ref and not updating_sel:
         dist_array_tmp = np.full(
@@ -2664,21 +3188,21 @@ MDAnalysis.coordinates.base.FrameIteratorBase, optional
             result=dist_array_tmp,
             mdabackend=mdabackend,
         )
-        if updating_ref and compound[0] != 'atoms':
-            natms_per_refcmp, refcmp_ix = natms_per_cmp(
+        if updating_ref and compound[0] != "atoms":
+            natms_per_refcmp, refcmp_ix = mdt.strc.natms_per_cmp(
                 ag=ref,
-                compound=compound[0],
+                cmp=compound[0],
                 return_cmp_ix=True,
-                check_contiguos=True,
+                check_contiguous=True,
             )
-        if updating_sel and compound[1] != 'atoms':
-            natms_per_selcmp, selcmp_ix = natms_per_cmp(
+        if updating_sel and compound[1] != "atoms":
+            natms_per_selcmp, selcmp_ix = mdt.strc.natms_per_cmp(
                 ag=sel,
-                compound=compound[1],
+                cmp=compound[1],
                 return_cmp_ix=True,
-                check_contiguos=True,
+                check_contiguous=True,
             )
-        if compound[0] != 'atoms' or compound[1] != 'atoms':
+        if compound[0] != "atoms" or compound[1] != "atoms":
             cm = cmp_contact_matrix(
                 cm=cm,
                 natms_per_refcmp=natms_per_refcmp,
@@ -2717,7 +3241,7 @@ MDAnalysis.coordinates.base.FrameIteratorBase, optional
 
 def cms_n_common_contacts(cms):
     """
-    Get the number of contancts common in all contact matrices.
+    Get the number of contacts common in all contact matrices.
 
     Parameters
     ----------
@@ -2745,7 +3269,7 @@ def cms_n_common_contacts(cms):
     :func:`mdtools.structure.contact_matrices` :
         Construct a contact matrix for each frame in a trajectory
     :func:`mdtools.structure.cms_n_contacts` :
-        Get the number of contancts per contact matrix and the number of
+        Get the number of contacts per contact matrix and the number of
         contacts common in all contact matrices
 
     Examples
@@ -2788,7 +3312,7 @@ def cms_n_common_contacts(cms):
 
 def cms_n_contacts(cms, dtype=int):
     """
-    Get the number of contancts per contact matrix and the number of
+    Get the number of contacts per contact matrix and the number of
     contacts common in all contact matrices.
 
     Parameters
@@ -2821,7 +3345,7 @@ def cms_n_contacts(cms, dtype=int):
     :func:`mdtools.structure.contact_matrices` :
         Construct a contact matrix for each frame in a trajectory
     :func:`mdtools.structure.cms_n_common_contacts` :
-        Get the number of contancts common in all contact matrices
+        Get the number of contacts common in all contact matrices
 
     Examples
     --------
@@ -2959,8 +3483,9 @@ def cm_selix_stats(cm, unbound_nan=False):
     if sparse.issparse(cm):
         cm = cm.astype(bool, copy=True)
         if cm.ndim != 2:
-            raise ValueError("'cm' has {} dimension(s) but must have 2"
-                             .format(cm.ndim))
+            raise ValueError(
+                "`cm` has {} dimension(s) but must have 2".format(cm.ndim)
+            )
         cm.eliminate_zeros()
         # Number of bound selection compounds per reference compound
         n_sel_bound = np.squeeze(np.asarray(cm.getnnz(axis=1)))
@@ -2971,8 +3496,7 @@ def cm_selix_stats(cm, unbound_nan=False):
         cm = cm.multiply(np.arange(cm.shape[1], dtype=np.uint32))
         selix_max = np.squeeze(cm.max(axis=1).toarray())
         # Mean of non-zero elements:
-        selix_mean = np.squeeze(np.asarray(cm.sum(axis=1,
-                                                  dtype=np.float64)))
+        selix_mean = np.squeeze(np.asarray(cm.sum(axis=1, dtype=np.float64)))
         np.divide(selix_mean, n_sel_bound, where=bound, out=selix_mean)
         # Variance of non-zero elements:
         selix_var = cm.multiply(cm).sum(axis=1, dtype=np.float64)
@@ -2982,8 +3506,9 @@ def cm_selix_stats(cm, unbound_nan=False):
     else:
         cm = np.asarray(cm, dtype=bool)
         if cm.ndim != 2:
-            raise ValueError("'cm' has {} dimension(s) but must have 2"
-                             .format(cm.ndim))
+            raise ValueError(
+                "`cm` has {} dimension(s) but must have 2".format(cm.ndim)
+            )
         n_sel_bound = np.count_nonzero(cm, axis=1)
         bound = n_sel_bound.astype(bool)
         selix_min = cm.argmax(axis=1)
@@ -2997,29 +3522,30 @@ def cm_selix_stats(cm, unbound_nan=False):
         np.divide(selix_var, n_sel_bound, where=bound, out=selix_var)
         selix_var -= selix_mean**2
     if unbound_nan:
-        selix_stats = np.column_stack([selix_mean,
-                                       selix_var,
-                                       selix_min,
-                                       selix_max])
+        selix_stats = np.column_stack(
+            [selix_mean, selix_var, selix_min, selix_max]
+        )
         selix_stats[~bound] = np.nan
         selix_stats = np.insert(selix_stats, 0, n_sel_bound, axis=1)
     else:
-        selix_stats = np.column_stack([n_sel_bound,
-                                       selix_mean,
-                                       selix_var,
-                                       selix_min,
-                                       selix_max])
-    return np.asarray(selix_stats, order='C')
+        selix_stats = np.column_stack(
+            [n_sel_bound, selix_mean, selix_var, selix_min, selix_max]
+        )
+    return np.asarray(selix_stats, order="C")
 
 
 def contact_hist_refcmp_diff_selcmp(
-        cm, natms_per_refcmp=1, natms_per_selcmp=1, minlength=0,
-        dtype=int):
+    cm,
+    natms_per_refcmp=1,
+    natms_per_selcmp=1,
+    minlength=0,
+    dtype=int,
+):
     """
     Bin the number of contacts that reference compounds establish to
     **different** selection compounds into a histogram.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -3053,19 +3579,19 @@ def contact_hist_refcmp_diff_selcmp(
         integers.  If `natms_per_refcmp` is a single integer, all
         reference compounds are assumed to contain the same number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.  In this case,
-        `natms_per_refcmp` must be an integer divisor of ``cm.shape[0]``.
-        If `natms_per_refcmp` is an array of integers, it must contain
-        the number of reference
+        `natms_per_refcmp` must be an integer divisor of
+        ``cm.shape[0]``.  If `natms_per_refcmp` is an array of
+        integers, it must contain the number of reference
         :class:`Atoms <MDAnalysis.core.groups.Atom>` for each single
-        reference compound.  In this case,
-        ``numpy.sum(natms_per_refcmp)`` must be equal to ``cm.shape[0]``.
+        reference compound.  In this case, ``sum(natms_per_refcmp)``
+        must be equal to ``cm.shape[0]``.
     natms_per_selcmp : int or array_like, optional
         Same for selection compounds (`natms_per_selcmp` is checked
         against ``cm.shape[1]``).
     minlength : int, optional
         A minimum number of bins for the output array.  The output array
         will have at least this number of elements, though it will be
-        longer if necessary.  See :func:`numpy.bincount` for furhter
+        longer if necessary.  See :func:`numpy.bincount` for further
         information.
     dtype : dtype, optional
         Data type of the output array.
@@ -3097,7 +3623,8 @@ def contact_hist_refcmp_diff_selcmp(
         Bin the **total** number of contacts that reference compounds
         establish to selection compounds into a histogram.
     :func:`mdtools.structure.contact_hist_refcmp_selcmp_pair` :
-        Bin the number of "bonds" (:class:`~MDAnalysis.core.groups.Atom`-
+        Bin the number of "bonds"
+        (:class:`~MDAnalysis.core.groups.Atom`-
         :class:`~MDAnalysis.core.groups.Atom` contacts) between pairs of
         reference and selection compounds
     :func:`numpy.count_nonzero` :
@@ -3152,8 +3679,7 @@ def contact_hist_refcmp_diff_selcmp(
            [ True,  True,  True, False],
            [ True,  True,  True,  True]])
     >>> mdt.strc.contact_hist_refcmp_diff_selcmp(
-    ...     cm=cm,
-    ...     natms_per_refcmp=[2, 2, 1]
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1]
     ... )
     array([0, 1, 0, 1, 1])
 
@@ -3163,58 +3689,64 @@ def contact_hist_refcmp_diff_selcmp(
            [ True, False],
            [ True,  True],
            [ True,  True]])
-    >>> mdt.strc.contact_hist_refcmp_diff_selcmp(cm=cm,
-    ...                                          natms_per_selcmp=2)
+    >>> mdt.strc.contact_hist_refcmp_diff_selcmp(
+    ...     cm=cm, natms_per_selcmp=2
+    ... )
     array([1, 2, 2])
 
-    >>> mdt.strc.cmp_contact_matrix(cm=cm,
-    ...                             natms_per_refcmp=[2, 2, 1],
-    ...                             natms_per_selcmp=2)
+    >>> mdt.strc.cmp_contact_matrix(
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
+    ... )
     array([[ True, False],
            [ True,  True],
            [ True,  True]])
     >>> mdt.strc.contact_hist_refcmp_diff_selcmp(
-    ...     cm=cm,
-    ...     natms_per_refcmp=[2, 2, 1],
-    ...     natms_per_selcmp=2
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
     ... )
     array([0, 1, 2])
 
     Edge cases:
 
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
-    >>> mdt.strc.contact_hist_refcmp_diff_selcmp(cm, natms_per_refcmp=[])
+    >>> mdt.strc.contact_hist_refcmp_diff_selcmp(
+    ...     cm, natms_per_refcmp=[]
+    ... )
     array([], dtype=int64)
     >>> mdt.strc.contact_hist_refcmp_diff_selcmp(cm, natms_per_refcmp=1)
     array([], dtype=int64)
-    >>> mdt.strc.contact_hist_refcmp_diff_selcmp(cm,
-    ...                                          natms_per_refcmp=[],
-    ...                                          minlength=2,
-    ...                                          dtype=np.uint32)
+    >>> mdt.strc.contact_hist_refcmp_diff_selcmp(
+    ...     cm, natms_per_refcmp=[], minlength=2, dtype=np.uint32
+    ... )
     array([0, 0], dtype=uint32)
 
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
-    >>> mdt.strc.contact_hist_refcmp_diff_selcmp(cm,
-    ...                                          natms_per_refcmp=3,
-    ...                                          natms_per_selcmp=[])
+    >>> mdt.strc.contact_hist_refcmp_diff_selcmp(
+    ...     cm, natms_per_refcmp=3, natms_per_selcmp=[]
+    ... )
     array([2])
     """
-    cm = cmp_contact_matrix(cm=cm,
-                            natms_per_refcmp=natms_per_refcmp,
-                            natms_per_selcmp=natms_per_selcmp)
+    cm = cmp_contact_matrix(
+        cm=cm,
+        natms_per_refcmp=natms_per_refcmp,
+        natms_per_selcmp=natms_per_selcmp,
+    )
     contacts = np.count_nonzero(cm, axis=1)
     hist_refcmp_diff_selcmp = np.bincount(contacts, minlength=minlength)
     return np.asarray(hist_refcmp_diff_selcmp, dtype=dtype)
 
 
 def contact_hist_refcmp_same_selcmp(
-        cm, natms_per_refcmp=1, natms_per_selcmp=1, minlength=0,
-        dtype=int):
+    cm,
+    natms_per_refcmp=1,
+    natms_per_selcmp=1,
+    minlength=0,
+    dtype=int,
+):
     """
     Bin the number of contacts that reference compounds establish to
     the **same** selection compound into a histogram.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -3246,12 +3778,12 @@ def contact_hist_refcmp_same_selcmp(
         integers.  If `natms_per_refcmp` is a single integer, all
         reference compounds are assumed to contain the same number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.  In this case,
-        `natms_per_refcmp` must be an integer divisor of ``cm.shape[0]``.
-        If `natms_per_refcmp` is an array of integers, it must contain
-        the number of reference
+        `natms_per_refcmp` must be an integer divisor of
+        ``cm.shape[0]``.  If `natms_per_refcmp` is an array of integers,
+        it must contain the number of reference
         :class:`Atoms <MDAnalysis.core.groups.Atom>` for each single
-        reference compound.  In this case,
-        ``numpy.sum(natms_per_refcmp)`` must be equal to ``cm.shape[0]``.
+        reference compound.  In this case, ``sum(natms_per_refcmp)``
+        must be equal to ``cm.shape[0]``.
     natms_per_selcmp : int or array_like, optional
         Same for selection compounds (`natms_per_selcmp` is checked
         against ``cm.shape[1]``).
@@ -3292,7 +3824,8 @@ def contact_hist_refcmp_same_selcmp(
         Bin the **total** number of contacts that reference compounds
         establish to selection compounds into a histogram.
     :func:`mdtools.structure.contact_hist_refcmp_selcmp_pair` :
-        Bin the number of "bonds" (:class:`~MDAnalysis.core.groups.Atom`-
+        Bin the number of "bonds"
+        (:class:`~MDAnalysis.core.groups.Atom`-
         :class:`~MDAnalysis.core.groups.Atom` contacts) between pairs of
         reference and selection compounds
 
@@ -3316,11 +3849,12 @@ def contact_hist_refcmp_same_selcmp(
         Important: Different selection compounds that are connected to
         the same reference compound via the same number of "bonds" are
         not taken into account.  For instance, if a reference compound
-        is connected to two different selection compounds via one "bond",
-        respectively, only the first selection compound is counted.
-        However, if the reference compound is connected to the first
-        selection compound via one "bond" and to the second selection
-        compound via two "bonds", both selection compounds are counted.
+        is connected to two different selection compounds via one
+        "bond", respectively, only the first selection compound is
+        counted.  However, if the reference compound is connected to the
+        first selection compound via one "bond" and to the second
+        selection compound via two "bonds", both selection compounds are
+        counted.
 
         The sum of all histogram elements might therefore exceed the
         number of reference compounds, because a single reference
@@ -3366,14 +3900,14 @@ def contact_hist_refcmp_same_selcmp(
     >>> hist[1] == cm.shape[0] - hist[0]
     True
 
-    >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
-    ...                                   natms_per_refcmp=[2, 2, 1])
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1]
+    ... )
     array([[1, 0, 0, 0],
            [1, 2, 1, 0],
            [1, 1, 1, 1]])
     >>> mdt.strc.contact_hist_refcmp_same_selcmp(
-    ...     cm=cm,
-    ...     natms_per_refcmp=[2, 2, 1]
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1]
     ... )
     array([0, 3, 1])
 
@@ -3383,48 +3917,50 @@ def contact_hist_refcmp_same_selcmp(
            [2, 0],
            [1, 1],
            [2, 2]])
-    >>> mdt.strc.contact_hist_refcmp_same_selcmp(cm=cm,
-    ...                                          natms_per_selcmp=2)
+    >>> mdt.strc.contact_hist_refcmp_same_selcmp(
+    ...     cm=cm, natms_per_selcmp=2
+    ... )
     array([1, 2, 2])
 
-    >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
-    ...                                   natms_per_refcmp=[2, 2, 1],
-    ...                                   natms_per_selcmp=2)
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
+    ... )
     array([[1, 0],
            [3, 1],
            [2, 2]])
     >>> mdt.strc.contact_hist_refcmp_same_selcmp(
-    ...     cm=cm,
-    ...     natms_per_refcmp=[2, 2, 1],
-    ...     natms_per_selcmp=2
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
     ... )
     array([0, 2, 1, 1])
 
     Edge cases:
 
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
-    >>> mdt.strc.contact_hist_refcmp_same_selcmp(cm, natms_per_refcmp=[])
+    >>> mdt.strc.contact_hist_refcmp_same_selcmp(
+    ...     cm, natms_per_refcmp=[]
+    ... )
     array([], dtype=int64)
     >>> mdt.strc.contact_hist_refcmp_same_selcmp(cm, natms_per_refcmp=1)
     array([], dtype=int64)
-    >>> mdt.strc.contact_hist_refcmp_same_selcmp(cm,
-    ...                                          natms_per_refcmp=[],
-    ...                                          minlength=2,
-    ...                                          dtype=np.uint32)
+    >>> mdt.strc.contact_hist_refcmp_same_selcmp(
+    ...     cm, natms_per_refcmp=[], minlength=2, dtype=np.uint32
+    ... )
     array([0, 0], dtype=uint32)
 
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
-    >>> mdt.strc.contact_hist_refcmp_same_selcmp(cm,
-    ...                                          natms_per_refcmp=3,
-    ...                                          natms_per_selcmp=[])
+    >>> mdt.strc.contact_hist_refcmp_same_selcmp(
+    ...     cm, natms_per_refcmp=3, natms_per_selcmp=[]
+    ... )
     array([2])
     """
     cm = np.asarray(cm)
     cm_dtype = cm.dtype
-    cm = cmp_contact_count_matrix(cm=cm,
-                                  natms_per_refcmp=natms_per_refcmp,
-                                  natms_per_selcmp=natms_per_selcmp,
-                                  dtype=np.uint32)
+    cm = cmp_contact_count_matrix(
+        cm=cm,
+        natms_per_refcmp=natms_per_refcmp,
+        natms_per_selcmp=natms_per_selcmp,
+        dtype=np.uint32,
+    )
     if np.any(np.equal(cm.shape, 0)):
         if cm.shape[0] == 0:
             hist = np.zeros(minlength, dtype=dtype)
@@ -3441,7 +3977,7 @@ def contact_hist_refcmp_same_selcmp(
         zero_contacts_exist = False
         hist_length = max(occurring_contacts[-1] + 1, minlength)
     elif occurring_contacts[0] < 0:
-        raise ValueError("'cm' must not contain negative elements")
+        raise ValueError("`cm` must not contain negative elements")
     hist = np.zeros(hist_length, dtype=dtype)
     pair_has_n_contacts = np.zeros_like(cm, dtype=bool)
     any_pair_has_n_contacts = np.zeros(cm.shape[0], dtype=bool)
@@ -3450,7 +3986,8 @@ def contact_hist_refcmp_same_selcmp(
         np.equal(cm, n, out=pair_has_n_contacts)
         # refcmp/selcmp has n contacts with *any* selcmp/refcmp
         np.any(pair_has_n_contacts, axis=1, out=any_pair_has_n_contacts)
-        # Number of refcmp/selcmp having n contacts with any selcmp/refcmp
+        # Number of refcmp/selcmp having n contacts with any
+        # selcmp/refcmp
         hist[n] = np.count_nonzero(any_pair_has_n_contacts)
     if zero_contacts_exist:
         hist[0] = cm.shape[0]
@@ -3458,9 +3995,11 @@ def contact_hist_refcmp_same_selcmp(
         np.any(pair_has_n_contacts, axis=1, out=any_pair_has_n_contacts)
         hist[0] -= np.count_nonzero(any_pair_has_n_contacts)
     # Internal consistency check:
-    if (np.issubdtype(cm_dtype, bool) and
-        np.all(np.equal(natms_per_refcmp, 1)) and
-            np.all(np.equal(natms_per_selcmp, 1))):
+    if (
+        np.issubdtype(cm_dtype, bool)
+        and np.all(np.equal(natms_per_refcmp, 1))
+        and np.all(np.equal(natms_per_selcmp, 1))
+    ):
         # refcmp == refatm and selcmp == selatm
         np.equal(cm, 0, out=pair_has_n_contacts)
         # any_pair_has_n_contacts should now be called
@@ -3470,20 +4009,21 @@ def contact_hist_refcmp_same_selcmp(
         hist_test = np.array([n_unbound_ref, cm.shape[0] - n_unbound_ref])
         hist_test = mdt.nph.extend(hist_test, len(hist))
         if not np.array_equal(hist, hist_test):
-            raise ValueError("refcmp == refatm and selcmp == selatm, but"
-                             "'hist_refcmp_same_selcmp' !="
-                             " [x, cm.shape[0]-x]")
+            raise ValueError(
+                "refcmp == refatm and selcmp == selatm, but"
+                " `hist_refcmp_same_selcmp` != [x, cm.shape[0]-x]"
+            )
     return hist
 
 
 def contact_hist_refcmp_selcmp_tot(
-        cm, natms_per_refcmp=1, natms_per_selcmp=1, minlength=0,
-        dtype=int):
+    cm, natms_per_refcmp=1, natms_per_selcmp=1, minlength=0, dtype=int
+):
     """
     Bin the **total** number of contacts that reference compounds
     establish to selection compounds into a histogram.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -3515,19 +4055,19 @@ def contact_hist_refcmp_selcmp_tot(
         integers.  If `natms_per_refcmp` is a single integer, all
         reference compounds are assumed to contain the same number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.  In this case,
-        `natms_per_refcmp` must be an integer divisor of ``cm.shape[0]``.
-        If `natms_per_refcmp` is an array of integers, it must contain
-        the number of reference
+        `natms_per_refcmp` must be an integer divisor of
+        ``cm.shape[0]``.  If `natms_per_refcmp` is an array of integers,
+        it must contain the number of reference
         :class:`Atoms <MDAnalysis.core.groups.Atom>` for each single
-        reference compound.  In this case,
-        ``numpy.sum(natms_per_refcmp)`` must be equal to ``cm.shape[0]``.
+        reference compound.  In this case, ``sum(natms_per_refcmp)``
+        must be equal to ``cm.shape[0]``.
     natms_per_selcmp : int or array_like, optional
         Same for selection compounds (`natms_per_selcmp` is checked
         against ``cm.shape[1]``).
     minlength : int, optional
         A minimum number of bins for the output array.  The output array
         will have at least this number of elements, though it will be
-        longer if necessary.  See :func:`numpy.bincount` for furhter
+        longer if necessary.  See :func:`numpy.bincount` for further
         information.
     dtype : dtype, optional
         Data type of the output array.
@@ -3558,7 +4098,8 @@ def contact_hist_refcmp_selcmp_tot(
         Bin the number of contacts that reference compounds establish to
         the **same** selection compound into a histogram.
     :func:`mdtools.structure.contact_hist_refcmp_selcmp_pair` :
-        Bin the number of "bonds" (:class:`~MDAnalysis.core.groups.Atom`-
+        Bin the number of "bonds"
+        (:class:`~MDAnalysis.core.groups.Atom`-
         :class:`~MDAnalysis.core.groups.Atom` contacts) between pairs of
         reference and selection compounds
     :func:`numpy.bincount` :
@@ -3589,7 +4130,10 @@ def contact_hist_refcmp_selcmp_tot(
 
     The total number of contacts is given by::
 
-        np.sum(hist_refcmp_selcmp_tot * np.arange(len(hist_refcmp_selcmp_tot)))
+        np.sum(
+            hist_refcmp_selcmp_tot *
+            np.arange(len(hist_refcmp_selcmp_tot))
+        )
 
     Note that this is equal to the total number of refatm-selatm pairs,
     when every reference and selection compound contains only one
@@ -3619,14 +4163,14 @@ def contact_hist_refcmp_selcmp_tot(
     >>> mdt.strc.contact_hist_refcmp_selcmp_tot(cm=cm, dtype=np.uint32)
     array([1, 1, 2, 0, 1], dtype=uint32)
 
-    >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
-    ...                                   natms_per_refcmp=[2, 2, 1])
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1]
+    ... )
     array([[1, 0, 0, 0],
            [1, 2, 1, 0],
            [1, 1, 1, 1]])
     >>> mdt.strc.contact_hist_refcmp_selcmp_tot(
-    ...     cm=cm,
-    ...     natms_per_refcmp=[2, 2, 1]
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1]
     ... )
     array([0, 1, 0, 0, 2])
 
@@ -3636,20 +4180,19 @@ def contact_hist_refcmp_selcmp_tot(
            [2, 0],
            [1, 1],
            [2, 2]])
-    >>> mdt.strc.contact_hist_refcmp_selcmp_tot(cm=cm,
-    ...                                         natms_per_selcmp=2)
+    >>> mdt.strc.contact_hist_refcmp_selcmp_tot(
+    ...     cm=cm, natms_per_selcmp=2
+    ... )
     array([1, 1, 2, 0, 1])
 
-    >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
-    ...                                   natms_per_refcmp=[2, 2, 1],
-    ...                                   natms_per_selcmp=2)
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
+    ... )
     array([[1, 0],
            [3, 1],
            [2, 2]])
     >>> mdt.strc.contact_hist_refcmp_selcmp_tot(
-    ...     cm=cm,
-    ...     natms_per_refcmp=[2, 2, 1],
-    ...     natms_per_selcmp=2
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
     ... )
     array([0, 1, 0, 0, 2])
 
@@ -3660,36 +4203,41 @@ def contact_hist_refcmp_selcmp_tot(
     array([], dtype=int64)
     >>> mdt.strc.contact_hist_refcmp_selcmp_tot(cm, natms_per_refcmp=1)
     array([], dtype=int64)
-    >>> mdt.strc.contact_hist_refcmp_selcmp_tot(cm,
-    ...                                         natms_per_refcmp=[],
-    ...                                         minlength=2,
-    ...                                         dtype=np.uint32)
+    >>> mdt.strc.contact_hist_refcmp_selcmp_tot(
+    ...     cm, natms_per_refcmp=[], minlength=2, dtype=np.uint32
+    ... )
     array([0, 0], dtype=uint32)
 
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
-    >>> mdt.strc.contact_hist_refcmp_selcmp_tot(cm,
-    ...                                         natms_per_refcmp=3,
-    ...                                         natms_per_selcmp=[])
+    >>> mdt.strc.contact_hist_refcmp_selcmp_tot(
+    ...     cm, natms_per_refcmp=3, natms_per_selcmp=[]
+    ... )
     array([2])
     """
-    cm = cmp_contact_count_matrix(cm=cm,
-                                  natms_per_refcmp=natms_per_refcmp,
-                                  natms_per_selcmp=natms_per_selcmp,
-                                  dtype=np.uint32)
+    cm = cmp_contact_count_matrix(
+        cm=cm,
+        natms_per_refcmp=natms_per_refcmp,
+        natms_per_selcmp=natms_per_selcmp,
+        dtype=np.uint32,
+    )
     contacts = np.sum(cm, axis=1, dtype=int)  # bincount cannot handle uint
     hist_refcmp_selcmp_tot = np.bincount(contacts, minlength=minlength)
     return np.asarray(hist_refcmp_selcmp_tot, dtype=dtype)
 
 
 def contact_hist_refcmp_selcmp_pair(
-        cm, natms_per_refcmp=1, natms_per_selcmp=1, minlength=0,
-        dtype=int):
+    cm,
+    natms_per_refcmp=1,
+    natms_per_selcmp=1,
+    minlength=0,
+    dtype=int,
+):
     """
     Bin the number of "bonds" (:class:`~MDAnalysis.core.groups.Atom`-
     :class:`~MDAnalysis.core.groups.Atom` contacts) between pairs of
     reference and selection compounds.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -3721,19 +4269,19 @@ def contact_hist_refcmp_selcmp_pair(
         integers.  If `natms_per_refcmp` is a single integer, all
         reference compounds are assumed to contain the same number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.  In this case,
-        `natms_per_refcmp` must be an integer divisor of ``cm.shape[0]``.
-        If `natms_per_refcmp` is an array of integers, it must contain
-        the number of reference
+        `natms_per_refcmp` must be an integer divisor of
+        ``cm.shape[0]``.  If `natms_per_refcmp` is an array of integers,
+        it must contain the number of reference
         :class:`Atoms <MDAnalysis.core.groups.Atom>` for each single
-        reference compound.  In this case,
-        ``numpy.sum(natms_per_refcmp)`` must be equal to ``cm.shape[0]``.
+        reference compound.  In this case, ``sum(natms_per_refcmp)``
+        must be equal to ``cm.shape[0]``.
     natms_per_selcmp : int or array_like, optional
         Same for selection compounds (`natms_per_selcmp` is checked
         against ``cm.shape[1]``).
     minlength : int, optional
         A minimum number of bins for the output array.  The output array
         will have at least this number of elements, though it will be
-        longer if necessary.  See :func:`numpy.bincount` for furhter
+        longer if necessary.  See :func:`numpy.bincount` for further
         information.
     dtype : dtype, optional
         Data type of the output array.
@@ -3783,7 +4331,8 @@ def contact_hist_refcmp_selcmp_pair(
         "bonds" is not a pair) and therefore set to zero.  The second
         element is the number of refcmp-selcmp pairs connected via
         exactly one "bond", the third element is the number of
-        refcmp-selcmp pairs connected via exactly two "bonds", and so on.
+        refcmp-selcmp pairs connected via exactly two "bonds", and so
+        on.
 
         The sum of all histogram elements might exceed the number of
         reference compounds, because a single reference compound can be
@@ -3794,10 +4343,10 @@ def contact_hist_refcmp_selcmp_pair(
         the same number of "bonds".
 
         Hence, this histogram should be normalized by the number of
-        refcmp-selcmp pairs and not by the number of reference compounds.
-        Then it is e.g. possible to say that 100 % of the refcmp-selcmp
-        connections are monodentate while at the same time 50 % of the
-        refcmp-selcmp connections are bidentate.
+        refcmp-selcmp pairs and not by the number of reference
+        compounds.  Then it is e.g. possible to say that 100 % of the
+        refcmp-selcmp connections are monodentate while at the same time
+        50 % of the refcmp-selcmp connections are bidentate.
 
         This behavior is complementary to the histogram returned by
         :func:`mdtools.structure.contact_hist_refcmp_same_selcmp`
@@ -3829,14 +4378,14 @@ def contact_hist_refcmp_selcmp_pair(
     >>> hist[1] == np.count_nonzero(cm)
     True
 
-    >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
-    ...                                   natms_per_refcmp=[2, 2, 1])
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1]
+    ... )
     array([[1, 0, 0, 0],
            [1, 2, 1, 0],
            [1, 1, 1, 1]])
     >>> mdt.strc.contact_hist_refcmp_selcmp_pair(
-    ...     cm=cm,
-    ...     natms_per_refcmp=[2, 2, 1]
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1]
     ... )
     array([0, 7, 1])
 
@@ -3846,77 +4395,85 @@ def contact_hist_refcmp_selcmp_pair(
            [2, 0],
            [1, 1],
            [2, 2]])
-    >>> mdt.strc.contact_hist_refcmp_selcmp_pair(cm=cm,
-    ...                                          natms_per_selcmp=2)
+    >>> mdt.strc.contact_hist_refcmp_selcmp_pair(
+    ...     cm=cm, natms_per_selcmp=2
+    ... )
     array([0, 3, 3])
 
-    >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
-    ...                                   natms_per_refcmp=[2, 2, 1],
-    ...                                   natms_per_selcmp=2)
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
+    ... )
     array([[1, 0],
            [3, 1],
            [2, 2]])
     >>> mdt.strc.contact_hist_refcmp_selcmp_pair(
-    ...     cm=cm,
-    ...     natms_per_refcmp=[2, 2, 1],
-    ...     natms_per_selcmp=2
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
     ... )
     array([0, 2, 2, 1])
 
     Edge cases:
 
     >>> cm = np.array([], dtype=bool).reshape(0, 4)
-    >>> mdt.strc.contact_hist_refcmp_selcmp_pair(cm, natms_per_refcmp=[])
+    >>> mdt.strc.contact_hist_refcmp_selcmp_pair(
+    ...     cm, natms_per_refcmp=[]
+    ... )
     array([], dtype=int64)
     >>> mdt.strc.contact_hist_refcmp_selcmp_pair(cm, natms_per_refcmp=1)
     array([], dtype=int64)
-    >>> mdt.strc.contact_hist_refcmp_selcmp_pair(cm,
-    ...                                          natms_per_refcmp=[],
-    ...                                          minlength=2,
-    ...                                          dtype=np.uint32)
+    >>> mdt.strc.contact_hist_refcmp_selcmp_pair(
+    ...     cm, natms_per_refcmp=[], minlength=2, dtype=np.uint32
+    ... )
     array([0, 0], dtype=uint32)
 
     >>> cm = np.array([], dtype=bool).reshape(6, 0)
-    >>> mdt.strc.contact_hist_refcmp_selcmp_pair(cm,
-    ...                                          natms_per_refcmp=3,
-    ...                                          natms_per_selcmp=[])
+    >>> mdt.strc.contact_hist_refcmp_selcmp_pair(
+    ...     cm, natms_per_refcmp=3, natms_per_selcmp=[]
+    ... )
     array([], dtype=int64)
     """
     cm = np.asarray(cm)
     cm_dtype = cm.dtype
-    cm = cmp_contact_count_matrix(cm=cm,
-                                  natms_per_refcmp=natms_per_refcmp,
-                                  natms_per_selcmp=natms_per_selcmp,
-                                  dtype=np.uint32)
+    cm = cmp_contact_count_matrix(
+        cm=cm,
+        natms_per_refcmp=natms_per_refcmp,
+        natms_per_selcmp=natms_per_selcmp,
+        dtype=np.uint32,
+    )
     if np.any(np.equal(cm.shape, 0)):
         hist_refcmp_selcmp_pair = np.zeros(minlength, dtype=dtype)
     else:
-        hist_refcmp_selcmp_pair = np.bincount(cm.flat,
-                                              minlength=minlength)
+        hist_refcmp_selcmp_pair = np.bincount(cm.flat, minlength=minlength)
         hist_refcmp_selcmp_pair[0] = 0
     # Internal consistency check:
-    if (np.issubdtype(cm_dtype, bool) and
-        not np.any(np.equal(cm.shape, 0)) and
-        np.all(np.equal(natms_per_refcmp, 1)) and
-            np.all(np.equal(natms_per_selcmp, 1))):
+    if (
+        np.issubdtype(cm_dtype, bool)
+        and not np.any(np.equal(cm.shape, 0))
+        and np.all(np.equal(natms_per_refcmp, 1))
+        and np.all(np.equal(natms_per_selcmp, 1))
+    ):
         # refcmp == refatm and selcmp == selatm
         hist_test = np.array([0, np.count_nonzero(cm)])
-        hist_test = mdt.nph.extend(hist_test,
-                                   len(hist_refcmp_selcmp_pair))
+        hist_test = mdt.nph.extend(hist_test, len(hist_refcmp_selcmp_pair))
         if not np.array_equal(hist_refcmp_selcmp_pair, hist_test):
-            raise ValueError("refcmp == refatm and selcmp == selatm, but"
-                             "'hist_refcmp_selcmp_pair' != [0, y]")
+            raise ValueError(
+                "refcmp == refatm and selcmp == selatm, but"
+                " `hist_refcmp_selcmp_pair` != [0, y]"
+            )
     return np.asarray(hist_refcmp_selcmp_pair, dtype=dtype)
 
 
 def contact_hists(
-        cm, natms_per_refcmp=1, natms_per_selcmp=1, minlength=0,
-        dtype=int):
+    cm,
+    natms_per_refcmp=1,
+    natms_per_selcmp=1,
+    minlength=0,
+    dtype=int,
+):
     """
     Bin the number of contacts between reference and selection compounds
     into histograms.
 
-    A compound is usually a chemically meaningfull subgroup of an
+    A compound is usually a chemically meaningful subgroup of an
     :class:`~MDAnalysis.core.groups.AtomGroup`.  This can e.g. be a
     :class:`~MDAnalysis.core.groups.Segment`,
     :class:`~MDAnalysis.core.groups.Residue`,
@@ -3948,12 +4505,12 @@ def contact_hists(
         integers.  If `natms_per_refcmp` is a single integer, all
         reference compounds are assumed to contain the same number of
         :class:`Atoms <MDAnalysis.core.groups.Atom>`.  In this case,
-        `natms_per_refcmp` must be an integer divisor of ``cm.shape[0]``.
-        If `natms_per_refcmp` is an array of integers, it must contain
-        the number of reference
+        `natms_per_refcmp` must be an integer divisor of
+        ``cm.shape[0]``.  If `natms_per_refcmp` is an array of integers,
+        it must contain the number of reference
         :class:`Atoms <MDAnalysis.core.groups.Atom>` for each single
-        reference compound.  In this case,
-        ``numpy.sum(natms_per_refcmp)`` must be equal to ``cm.shape[0]``.
+        reference compound.  In this case, ``sum(natms_per_refcmp)``
+        must be equal to ``cm.shape[0]``.
     natms_per_selcmp : int or array_like, optional
         Same for selection compounds (`natms_per_selcmp` is checked
         against ``cm.shape[1]``).
@@ -4014,7 +4571,8 @@ def contact_hists(
         Bin the **total** number of contacts that reference compounds
         establish to selection compounds into a histogram.
     :func:`mdtools.structure.contact_hist_refcmp_selcmp_pair` :
-        Bin the number of "bonds" (:class:`~MDAnalysis.core.groups.Atom`-
+        Bin the number of "bonds"
+        (:class:`~MDAnalysis.core.groups.Atom`-
         :class:`~MDAnalysis.core.groups.Atom` contacts) between pairs of
         reference and selection compounds
 
@@ -4067,15 +4625,15 @@ def contact_hists(
     >>> hists[3][1] == np.count_nonzero(cm)
     True
 
-    >>> mdt.strc.cmp_contact_count_matrix(cm=cm,
-    ...                                   natms_per_refcmp=[2, 2, 1],
-    ...                                   natms_per_selcmp=2)
+    >>> mdt.strc.cmp_contact_count_matrix(
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
+    ... )
     array([[1, 0],
            [3, 1],
            [2, 2]])
-    >>> hists = mdt.strc.contact_hists(cm=cm,
-    ...                                natms_per_refcmp=[2, 2, 1],
-    ...                                natms_per_selcmp=2)
+    >>> hists = mdt.strc.contact_hists(
+    ...     cm=cm, natms_per_refcmp=[2, 2, 1], natms_per_selcmp=2
+    ... )
     >>> hists[0]
     array([0, 1, 2, 0, 0])
     >>> hists[1]
@@ -4098,80 +4656,82 @@ def contact_hists(
     ...                        natms_per_refcmp=3,
     ...                        natms_per_selcmp=[])
     (array([2]), array([2]), array([2]), array([0]))
-    """
+    """  # noqa: E501, W505
     cm = np.asarray(cm)
     cm_dtype = cm.dtype
-    cm = cmp_contact_count_matrix(cm=cm,
-                                  natms_per_refcmp=natms_per_refcmp,
-                                  natms_per_selcmp=natms_per_selcmp,
-                                  dtype=np.uint32)
-    hist_refcmp_diff_selcmp = contact_hist_refcmp_diff_selcmp(
+    cm = cmp_contact_count_matrix(
         cm=cm,
-        minlength=minlength,
-        dtype=dtype
+        natms_per_refcmp=natms_per_refcmp,
+        natms_per_selcmp=natms_per_selcmp,
+        dtype=np.uint32,
+    )
+    hist_refcmp_diff_selcmp = contact_hist_refcmp_diff_selcmp(
+        cm=cm, minlength=minlength, dtype=dtype
     )
     hist_refcmp_same_selcmp = contact_hist_refcmp_same_selcmp(
-        cm=cm,
-        minlength=minlength,
-        dtype=dtype
+        cm=cm, minlength=minlength, dtype=dtype
     )
     hist_refcmp_selcmp_tot = contact_hist_refcmp_selcmp_tot(
-        cm=cm,
-        minlength=minlength,
-        dtype=dtype
+        cm=cm, minlength=minlength, dtype=dtype
     )
     hist_refcmp_selcmp_pair = contact_hist_refcmp_selcmp_pair(
-        cm=cm,
-        minlength=minlength,
-        dtype=dtype
+        cm=cm, minlength=minlength, dtype=dtype
     )
 
-    length = max(len(hist_refcmp_diff_selcmp),
-                 len(hist_refcmp_same_selcmp),
-                 len(hist_refcmp_selcmp_tot),
-                 len(hist_refcmp_selcmp_pair),
-                 minlength)
-    hist_refcmp_diff_selcmp = mdt.nph.extend(hist_refcmp_diff_selcmp,
-                                             length)
-    hist_refcmp_same_selcmp = mdt.nph.extend(hist_refcmp_same_selcmp,
-                                             length)
-    hist_refcmp_selcmp_tot = mdt.nph.extend(hist_refcmp_selcmp_tot,
-                                            length)
-    hist_refcmp_selcmp_pair = mdt.nph.extend(hist_refcmp_selcmp_pair,
-                                             length)
+    length = max(
+        len(hist_refcmp_diff_selcmp),
+        len(hist_refcmp_same_selcmp),
+        len(hist_refcmp_selcmp_tot),
+        len(hist_refcmp_selcmp_pair),
+        minlength,
+    )
+    hist_refcmp_diff_selcmp = mdt.nph.extend(hist_refcmp_diff_selcmp, length)
+    hist_refcmp_same_selcmp = mdt.nph.extend(hist_refcmp_same_selcmp, length)
+    hist_refcmp_selcmp_tot = mdt.nph.extend(hist_refcmp_selcmp_tot, length)
+    hist_refcmp_selcmp_pair = mdt.nph.extend(hist_refcmp_selcmp_pair, length)
 
     # Internal consistency check:
-    if (np.issubdtype(cm_dtype, bool) and
-        np.all(np.equal(natms_per_refcmp, 1)) and
-            np.all(np.equal(natms_per_selcmp, 1))):
+    if (
+        np.issubdtype(cm_dtype, bool)
+        and np.all(np.equal(natms_per_refcmp, 1))
+        and np.all(np.equal(natms_per_selcmp, 1))
+    ):
         # refcmp == refatm and selcmp == selatm
-        if not np.array_equal(hist_refcmp_diff_selcmp,
-                              hist_refcmp_selcmp_tot):
-            raise ValueError("refcmp == refatm and selcmp == selatm, but"
-                             "'hist_refcmp_diff_selcmp' !="
-                             " 'hist_refcmp_selcmp_tot'")
+        if not np.array_equal(hist_refcmp_diff_selcmp, hist_refcmp_selcmp_tot):
+            raise ValueError(
+                "refcmp == refatm and selcmp == selatm, but"
+                " `hist_refcmp_diff_selcmp` != `hist_refcmp_selcmp_tot`"
+            )
         if not np.any(np.equal(cm.shape, 0)):
-            hist_test = np.array([hist_refcmp_diff_selcmp[0],
-                                  cm.shape[0] - hist_refcmp_diff_selcmp[0]])
+            hist_test = np.array(
+                [
+                    hist_refcmp_diff_selcmp[0],
+                    cm.shape[0] - hist_refcmp_diff_selcmp[0],
+                ]
+            )
             hist_test = mdt.nph.extend(hist_test, length)
             if not np.array_equal(hist_refcmp_same_selcmp, hist_test):
-                raise ValueError("refcmp == refatm and selcmp == selatm,"
-                                 " but 'hist_refcmp_same_selcmp' !="
-                                 " [x, cm.shape[0]-x]")
+                raise ValueError(
+                    "refcmp == refatm and selcmp == selatm, but"
+                    " `hist_refcmp_same_selcmp` != [x, cm.shape[0]-x]"
+                )
             hist_test = np.array([0, np.count_nonzero(cm.astype(bool))])
             hist_test = mdt.nph.extend(hist_test, length)
             if not np.array_equal(hist_refcmp_selcmp_pair, hist_test):
-                raise ValueError("refcmp == refatm and selcmp == selatm,"
-                                 " but 'hist_refcmp_selcmp_pair' !="
-                                 " [0, y]")
+                raise ValueError(
+                    "refcmp == refatm and selcmp == selatm, but"
+                    " `hist_refcmp_selcmp_pair` != [0, y]"
+                )
 
-    return (hist_refcmp_diff_selcmp,
-            hist_refcmp_same_selcmp,
-            hist_refcmp_selcmp_tot,
-            hist_refcmp_selcmp_pair)
+    return (
+        hist_refcmp_diff_selcmp,
+        hist_refcmp_same_selcmp,
+        hist_refcmp_selcmp_tot,
+        hist_refcmp_selcmp_pair,
+    )
 
 
-def rmsd(
+def rmsd(  # noqa: C901
     refpos,
     selpos,
     weights=None,
@@ -4367,7 +4927,7 @@ def rmsd(
     >>> mdt.strc.rmsd(refpos, selpos, weights=weights, center=True)
     array([1.56324982, 2.54478634])
     >>> mdt.strc.rmsd(
-    ...    refpos, selpos, xyz=True, center=True, inplace=True
+    ...     refpos, selpos, xyz=True, center=True, inplace=True
     ... )
     array([[ 0.  ,  1.  ,  4.  ],
            [ 1.  , 12.25,  0.  ]])

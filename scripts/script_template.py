@@ -258,7 +258,7 @@ if __name__ == "__main__":
         default="atoms",
         help=(
             "The compounds of the selection group to use for the analysis."
-            "  Default: %(default)s"
+            "  Default: %(default)s."
         ),
     )
     parser.add_argument(
@@ -270,7 +270,7 @@ if __name__ == "__main__":
         default="cog",
         help=(
             "The center of the compounds to use for the analysis.  Default:"
-            " %(default)s"
+            " %(default)s."
         ),
     )
     parser.add_argument(

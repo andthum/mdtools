@@ -22,3 +22,4 @@ Scripts
     :nosignatures:
 
     numpy_archive
+    attribute_hist

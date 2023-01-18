@@ -98,6 +98,7 @@ jobs:
           mdtools/scipy_helper_functions.py \
           mdtools/select.py \
           mdtools/statistics.py \
+          mdtools/structure.py \
           mdtools/version.py \
           scripts/discretization/plot_*.py \
           scripts/dynamics/lifetime_autocorr* \
