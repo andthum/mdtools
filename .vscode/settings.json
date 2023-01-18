@@ -219,6 +219,8 @@
     "restructuredtext.editor.listEditing.list.indentationSize": "inherit",
     "rewrap.autoWrap.enabled": true,
     "rewrap.doubleSentenceSpacing": true,
+    "shellformat.flag": "--language-dialect=bash --indent=4 --case-indent --space-redirects",
+    "shellformat.path": "${workspaceFolder}/.venv-dev/bin/shfmt",
     "[yaml]": {
         "editor.detectIndentation": false,
         "editor.insertSpaces": true,
