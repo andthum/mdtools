@@ -11,6 +11,8 @@
         "EditorConfig.EditorConfig",
         "KevinRose.vsc-python-indent",
         "lextudio.restructuredtext",
+        "ms-python.black-formatter",
+        "ms-python.isort",
         "ms-python.python",
         "njpwerner.autodocstring",
         "redhat.vscode-yaml",
@@ -19,6 +21,7 @@
         "trond-snekvik.simple-rst",
         // "VisualStudioExptTeam.vscodeintellicode",  // Not available for VSCodium.
         "wayou.vscode-todo-highlight",
+        "yzhang.markdown-all-in-one",
     ],
     // List of extensions recommended by VS Code that should not be
     // recommended for users of this workspace.
