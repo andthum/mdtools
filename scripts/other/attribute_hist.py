@@ -157,7 +157,6 @@ from scipy import constants, optimize
 
 # First-party libraries
 import mdtools as mdt
-import mdtools.plot as mdtplt  # MDTools plotting style  # noqa: F401
 
 
 def _fit_gaussian(xdata, ydata, p0=None):
