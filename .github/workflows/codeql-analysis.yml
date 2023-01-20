@@ -1,83 +1,75 @@
 # Scan the code for security vulnerabilities with CodeQL.
-# See: https://github.com/github/codeql-action
+# See https://github.com/github/codeql-action
 
 name: CodeQL
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - "main"
+      - "develop"
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [main, develop]
-    paths-ignore:
-      - ./LICENSE.txt
-      - "**/*.eps"
-      - "**/*.EPS"
-      - "**/*.jpg"
-      - "**/*.JPG"
-      - "**/*.jpeg"
-      - "**/*.JPEG"
-      - "**/*.pdf"
-      - "**/*.PDF"
-      - "**/*.png"
-      - "**/*.PNG"
-      - "**/*.svg"
-      - "**/*.SVG"
-      - "**/*.tif"
-      - "**/*.TIF"
-      - "**/*.tiff"
-      - "**/*.TIFF"
+    # The branches below must be a subset of the branches above.
+    branches:
+      - "main"
+      - "develop"
 
 jobs:
   scan:
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.9"]
-    runs-on: ${{ matrix.os }}
+        os:
+          - "ubuntu-latest"
+        python-version:
+          - "3.9"
+    runs-on: "${{ matrix.os }}"
     permissions:
-      security-events: write
+      security-events: "write"
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Export ${HOME}/.local/bin to ${PATH}
-      # Executable Python binaries are ususally stored there
-      run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
-    - name: Get pip cache dir
-      # pip's cache path depends on the operating system, see
-      # https://github.com/actions/cache/blob/main/examples.md#python---pip
-      # This requires pip >=20.1
-      id: pip-cache
-      run: |
-        python -m pip install --user --upgrade pip
-        echo "::set-output name=dir::$(pip cache dir)"
-    - name: Create/Restore Cache
-      uses: actions/cache@v3
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}/**
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.python-version }}
-          ${{ runner.os }}
-    - name: Install/Upgrade setuptools and wheel
-      run: python -m pip install --user --upgrade setuptools wheel
-    - name: Install/Upgrade requirements of MDTools
-      run: |
-        python -m pip install --user --upgrade -r requirements.txt
-        # Set the `CODEQL-PYTHON` environment variable to the Python
-        # executable that includes the dependencies
-        echo "CODEQL_PYTHON=$(which python)" >> ${GITHUB_ENV}
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: python
-        # Override the default behavior so that the action doesn't
-        # attempt to auto-install Python dependencies. See:
-        # https://docs.github.com/en/code-security/secure-coding/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#analyzing-python-dependencies
-        setup-python-dependencies: false
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: "actions/setup-python@v4"
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: "Export ${HOME}/.local/bin to ${PATH}"
+        # Executable Python binaries are usually stored there.
+        run: 'echo "${HOME}/.local/bin" >> ${GITHUB_PATH}'
+      - name: "Get pip cache dir"
+        # pip's cache path depends on the operating system.  See
+        # https://github.com/actions/cache/blob/main/examples.md#python---pip
+        # This requires pip >=20.1.
+        id: "pip-cache"
+        run: |
+          python -m pip install --user --upgrade pip
+          echo "dir=$(pip cache dir)" >> ${GITHUB_OUTPUT}
+      - name: "Create/Restore cache"
+        uses: "actions/cache@v3"
+        with:
+          path: |
+            ${{ steps.pip-cache.outputs.dir }}/**
+            ./*cache*/**
+            ~/*cache*/**
+          key: |
+            ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.python-version }}
+            ${{ runner.os }}
+      - name: "Install/Upgrade setuptools and wheel"
+        run: "python -m pip install --user --upgrade setuptools wheel"
+      - name: "Install/Upgrade requirements of MDTools"
+        run: |
+          python -m pip install --user --upgrade -r requirements.txt
+          # Set the `CODEQL-PYTHON` environment variable to the Python
+          # executable that includes the dependencies.
+          echo "CODEQL_PYTHON=$(which python)" >> ${GITHUB_ENV}
+      - name: "Initialize CodeQL"
+        uses: "github/codeql-action/init@v2"
+        with:
+          languages: "python"
+          # Override the default behavior so that the action doesn't
+          # attempt to auto-install Python dependencies.  See
+          # https://docs.github.com/en/code-security/secure-coding/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#analyzing-python-dependencies
+          setup-python-dependencies: false
+      - name: "Perform CodeQL Analysis"
+        uses: "github/codeql-action/analyze@v2"
