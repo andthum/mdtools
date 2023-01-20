@@ -1,3 +1,5 @@
+.. Keep in sync with pyproject.toml and CITATION.cff.
+
 ##################
 Authors of MDTools
 ##################
@@ -23,10 +25,10 @@ Release-wise list of authors
 Upcoming release
 
     * Add your name, if you have contributed to the upcoming release.
-      Athors are ordered alphabetically by their full name.
+      Authors are ordered alphabetically by their full name.
       Additionally, add your name to the author string in
       :data:`mdtools._metadata.__author__`
-    * Andras Thum
+    * Andreas Thum
     * Len Kimms
 
 0.0.0.dev1
