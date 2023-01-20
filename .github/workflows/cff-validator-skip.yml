@@ -1,0 +1,42 @@
+# This is just a dummy workflow to handle skipped but required branch
+# protection status checks
+# (https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks).
+# In the repository settings, one can specify workflows that must finish
+# successfully before a pull request can be merged with the protected
+# branch.  However, these required workflows might not be triggered by
+# all pull requests, depending on the triggering rules of the workflow.
+# To handle the case when a workflow is required but not triggered,
+# create a dummy workflow with exactly the same name as the required
+# workflow that is always triggered when the required workflow is not
+# triggered and that simulates a successful workflow run.  See
+# https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks
+# However, be aware that both workflows are triggered if two (or more)
+# files are changed and one of them is listed in the requested
+# workflow's `paths` list (which is the same as this workflow's
+# `paths-ignore` list) and the other is not.  See
+# https://github.com/github/docs/issues/21865
+
+# Keep in sync with `cff-validator.yml`.
+
+name: "CITATION.cff"
+
+on:
+  push:
+    branches:
+      - "**"
+    paths-ignore:
+      - "CITATION.cff"
+
+jobs:
+  validate-CITATION-cff:
+    strategy:
+      matrix:
+        os:
+          - "ubuntu-latest"
+        python-version:
+          - "3.9"
+    runs-on: "${{ matrix.os }}"
+    steps:
+      - name: "Skip"
+        run: |
+          echo "${{ github.job }} (${{ matrix.os }}, ${{ matrix.python-version }}) skipped (no files to check)"
