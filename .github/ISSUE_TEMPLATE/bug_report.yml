@@ -69,9 +69,9 @@ body:
         Steps to reproduce the bug.  Optimally, provide a minimal working
         example.
       placeholder: |
-         1. Do this.
-         2. Do that.
-         3. See the bug.
+        1. Do this.
+        2. Do that.
+        3. See the bug.
     validations:
       required: true
   - type: "textarea"
