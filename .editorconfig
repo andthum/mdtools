@@ -26,5 +26,5 @@ trim_trailing_whitespace = true
 # line break
 trim_trailing_whitespace = false
 
-[*.{yaml,yml}]
+[*.{yaml,yml,cff}]
 indent_size = 2
