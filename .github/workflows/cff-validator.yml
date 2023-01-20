@@ -1,0 +1,62 @@
+# Validate CITATION.cff file with cff-converter
+# https://github.com/citation-file-format/cff-converter-python
+
+# Keep in sync with `cff-validator-skip.yml`.
+
+name: "CITATION.cff"
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "CITATION.cff"
+    tags:
+      - "v[0-9]*.[0-9]*.[0-9]*"
+  release:
+
+jobs:
+  validate-CITATION-cff:
+    strategy:
+      matrix:
+        os:
+          - "ubuntu-latest"
+        python-version:
+          - "3.9"
+    runs-on: "${{ matrix.os }}"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: "actions/setup-python@v4"
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: "Export ${HOME}/.local/bin to ${PATH}"
+        # Executable Python binaries are usually stored there.
+        run: 'echo "${HOME}/.local/bin" >> ${GITHUB_PATH}'
+      - name: "Get pip cache dir"
+        # pip's cache path depends on the operating system.  See
+        # https://github.com/actions/cache/blob/main/examples.md#python---pip
+        # This requires pip >=20.1.
+        id: "pip-cache"
+        run: |
+          python -m pip install --user --upgrade pip
+          echo "dir=$(pip cache dir)" >> ${GITHUB_OUTPUT}
+      - name: "Create/Restore cache"
+        uses: "actions/cache@v3"
+        with:
+          path: |
+            ${{ steps.pip-cache.outputs.dir }}/**
+            ./*cache*/**
+            ~/*cache*/**
+          key: |
+            ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.python-version }}
+            ${{ runner.os }}
+      - name: "Install/Upgrade setuptools and wheel"
+        run: "python -m pip install --user --upgrade setuptools wheel"
+      - name: "Install/Upgrade cffconvert"
+        run: "python -m pip install --user --upgrade cffconvert"
+      - name: "Validate CITATION.cff"
+        run: "cffconvert --validate --infile CITATION.cff"
