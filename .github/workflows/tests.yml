@@ -4,84 +4,72 @@
 # See:
 # https://docs.github.com/en/actions/guides/building-and-testing-python
 
-name: Tests
+name: "Tests"
 
 on:
   push:
-    branches: [main, develop]
-    tags: ["v[0-9].[0-9].[0-9]*"]
-  pull_request:
-    # Run this workflow on every PR, except for PRs that only changes
-    # files from the following ignore list.
-    paths-ignore:
-      - ./LICENSE.txt
-      - "**/*.eps"
-      - "**/*.EPS"
-      - "**/*.jpg"
-      - "**/*.JPG"
-      - "**/*.jpeg"
-      - "**/*.JPEG"
-      - "**/*.pdf"
-      - "**/*.PDF"
-      - "**/*.png"
-      - "**/*.PNG"
-      - "**/*.svg"
-      - "**/*.SVG"
-      - "**/*.tif"
-      - "**/*.TIF"
-      - "**/*.tiff"
-      - "**/*.TIFF"
+    paths:
+      - "**.py"
+      - "**.rst"
+      - "docs/**"
+      - ".flake8"
+      - "pyproject.toml"
+      - "**requirements*.txt"
+    tags:
+      - "v[0-9].[0-9].[0-9]*"
   release:
-    types: [published, created, edited, prereleased, released]
 
 jobs:
   lint:
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.9"]
-    runs-on: ${{ matrix.os }}
+        os:
+          - "ubuntu-latest"
+        python-version:
+          - "3.9"
+    runs-on: "${{ matrix.os }}"
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: "actions/setup-python@v4"
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Export ${HOME}/.local/bin to ${PATH}
-        # Executable Python binaries are ususally stored there
-        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
-      - name: Get pip cache dir
-        # pip's cache path depends on the operating system, see
+          python-version: "${{ matrix.python-version }}"
+      - name: "Export ${HOME}/.local/bin to ${PATH}"
+        # Executable Python binaries are usually stored there.
+        run: 'echo "${HOME}/.local/bin" >> ${GITHUB_PATH}'
+      - name: "Get pip cache dir"
+        # pip's cache path depends on the operating system.  See
         # https://github.com/actions/cache/blob/main/examples.md#python---pip
-        # This requires pip >=20.1
-        id: pip-cache
+        # This requires pip >=20.1.
+        id: "pip-cache"
         run: |
           python -m pip install --user --upgrade pip
-          echo "::set-output name=dir::$(pip cache dir)"
-      - name: Create/Restore cache
-        uses: actions/cache@v3
+          echo "dir=$(pip cache dir)" >> ${GITHUB_OUTPUT}
+      - name: "Create/Restore cache"
+        uses: "actions/cache@v3"
         with:
           path: |
             ${{ steps.pip-cache.outputs.dir }}/**
-            ./.cache/black/**
-            ~/.cache/black/**
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
+            ./*cache*/**
+            ~/*cache*/**
+          key: |
+            ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}
             ${{ runner.os }}
-      - name: Install/Upgrade setuptools and wheel
-        run: python -m pip install --user --upgrade setuptools wheel
-      - name: Install/Upgrade packages in requirements-dev.txt
+      - name: "Install/Upgrade setuptools and wheel"
+        run: "python -m pip install --user --upgrade setuptools wheel"
+      - name: "Install/Upgrade packages in requirements-dev.txt"
         run: |
           python -m pip install \
           --user \
           --upgrade \
           --requirement requirements-dev.txt
-      - name: Check code formatting with black
+      - name: "Check code formatting with black"
         # TODO: The --include flag should be removed once all files are
-        # formatted with black.  But as long as this is not the case, only
-        # check those files that are already formatted.
+        # formatted with black.  But as long as this is not the case,
+        # only check those files that are already formatted.
         run: |
           python -m black ./ --check --diff --color \
           --include \
@@ -111,22 +99,23 @@ jobs:
           scripts/structure/rmsd_vs_time.py \
           scripts/*.py \
           setup.py
-      - name: Lint code and docstrings with flake8
+      - name: "Lint code and docstrings with flake8"
         # Use setup.cfg to configure flake8
         # TODO: The --select flag should be removed once all files are
-        # revised to be compliant with flake8.  But as long as this is not
-        # the case, select only those error codes that have been fixed in
-        # all files.
+        # revised to be compliant with flake8.  But as long as this is
+        # not the case, select only those error codes that have been
+        # fixed in all files.
         #
-        # F821 ("undefined name name") gives false positives in doctests,
-        # because it does not recognize `doctest_global_setup` in the
-        # Sphinx configuration file `conf.py`.
+        # F821 ("undefined name name") gives false positives in
+        # doctests, because it does not recognize `doctest_global_setup`
+        # in the Sphinx configuration file `conf.py`.
         #
         # W504 ("line break after binary operator") is turned on in the
-        # .flake config file but the error code isn't fixed in all files,
-        # yet.  So, ignore it in the CI workflow for now.
+        # .flake config file but the error code isn't fixed in all
+        # files, yet.  So, ignore it in the CI workflow for now.
         #
-        # The other ignored error codes are copied from the .flake8 config file.
+        # The other ignored error codes are copied from the .flake8
+        # config file.
         run: |
           python -m flake8 ./ \
           --select=\
@@ -146,8 +135,15 @@ jobs:
     strategy:
       matrix:
         # Tests must be run on all target platforms and Python versions.
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.6", "3.7", "3.8", "3.9"]
+        os:
+          - "ubuntu-latest"
+          - "macos-latest"
+          - "windows-latest"
+        python-version:
+          - "3.6"
+          - "3.7"
+          - "3.8"
+          - "3.9"
         # Python 3.6 is not supported anymore in the Ubuntu 22.04 runner
         # https://github.com/actions/setup-python/issues/544#issuecomment-1332535877
         exclude:
@@ -158,57 +154,59 @@ jobs:
             python-version: "3.6"
       # Do not cancel in-progress jobs if any matrix job fails
       fail-fast: false
-    runs-on: ${{ matrix.os }}
+    runs-on: "${{ matrix.os }}"
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: "actions/setup-python@v4"
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Export ${HOME}/.local/bin to ${PATH}
-        # Executable Python binaries are ususally stored there
-        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
-      - name: Get pip cache dir
-        # pip's cache path depends on the operating system, see
+          python-version: "${{ matrix.python-version }}"
+      - name: "Export ${HOME}/.local/bin to ${PATH}"
+        # Executable Python binaries are usually stored there.
+        run: 'echo "${HOME}/.local/bin" >> ${GITHUB_PATH}'
+      - name: "Get pip cache dir"
+        # pip's cache path depends on the operating system.  See
         # https://github.com/actions/cache/blob/main/examples.md#python---pip
-        # This requires pip >=20.1
-        id: pip-cache
+        # This requires pip >=20.1.
+        id: "pip-cache"
         run: |
           python -m pip install --user --upgrade pip
-          echo "::set-output name=dir::$(pip cache dir)"
-      - name: Create/Restore cache
-        uses: actions/cache@v3
+          echo "dir=$(pip cache dir)" >> ${GITHUB_OUTPUT}
+      - name: "Create/Restore cache"
+        uses: "actions/cache@v3"
         with:
           path: |
             ${{ steps.pip-cache.outputs.dir }}/**
+            ./*cache*/**
+            ~/*cache*/**
             ./docs/build/**
             ~/docs/build/**
-            ./.pytest_cache/**
-            ~/.pytest_cache/**
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
+          key: |
+            ${{ runner.os }}-${{ matrix.python-version }}-${{ github.job }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}
             ${{ runner.os }}
-      - name: Install/Upgrade setuptools and wheel
-        run: python -m pip install --user --upgrade setuptools wheel
-      - name: Test installation of MDTools
+      - name: "Install/Upgrade setuptools and wheel"
+        run: "python -m pip install --user --upgrade setuptools wheel"
+      - name: "Test installation of MDTools"
         run: |
           python -m pip install --user --upgrade .
           python -c "import mdtools"
           # Test import of all modules that must be loaded explicitly.
           python -c "import mdtools.plot"
-      - name: Install/Upgrade requirements to build the documentation
-        run: python -m pip install --user --upgrade -r docs/requirements-docs.txt
-      - name: Test build of the documentation
-        run: make -C ./docs/ html
-      - name: doctest
+      - name: "Install/Upgrade requirements to build the documentation"
+        run: |
+          python -m pip install --user --upgrade -r docs/requirements-docs.txt
+      - name: "Test build of the documentation"
+        run: "make -C ./docs/ html"
+      - name: "doctest"
         # Because the default dtypes of NumPy arrays are different on
         # Windows, doctest will detect false failures.  See e.g.
         # https://stackoverflow.com/questions/36278590/numpy-array-dtype-is-coming-as-int32-by-default-in-a-windows-10-64-bit-machine
-        if: ${{ runner.os != 'Windows' }}
-        run: make -C ./docs/ doctest
-      - name: Install/Upgrade PyTest
-        run: python -m pip install --user --upgrade pytest
-      - name: Test code with pytest
-        run: python -m pytest ./
+        if: "${{ runner.os != 'Windows' }}"
+        run: "make -C ./docs/ doctest"
+      - name: "Install/Upgrade PyTest"
+        run: "python -m pip install --user --upgrade pytest"
+      - name: "Test code with pytest"
+        run: "python -m pytest ./"
