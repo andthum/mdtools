@@ -7,11 +7,17 @@ on:
     types:
       - "opened"
       - "edited"
-    branches-ignore:
-      - "dependabot/**"
 
 jobs:
   triage:
+    # Don't run pr-labeler on branches that were created by Dependabot,
+    # because this removes the labels set by Dependabot.
+    # `branches-ignore` cannot be used, because this checks against the
+    # target branch of the pull request, however we have to check
+    # against the head branch of the pull request.  Solution: if
+    # statement, taken from
+    # https://stackoverflow.com/questions/68388484/github-actions-exclude-pull-requests-from-a-branch
+    if: "startsWith(github.head_ref, 'dependabot/') == false"
     permissions:
       contents: "read"
       pull-requests: "write"
@@ -21,10 +27,10 @@ jobs:
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: ".github/pr-labeler-config.yml"
-          # Updating the config file or the pull request template can have
-          # impact on the labeling of existing pull requests.  To prevent
-          # this, you can couple the config file and pull request template
-          # by a version number.
+          # Updating the config file or the pull request template can
+          # have impact on the labeling of existing pull requests.  To
+          # prevent this, we couple the config file and pull request
+          # template by a version number.
           enable-versioned-regex: 0
           versioned-regex: 'issue_labeler_regex_version=(\d+)'
           body-missing-regex-label: "broken-template"
