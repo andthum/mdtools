@@ -22,7 +22,9 @@ ci:
   autofix_prs: false
   # Interval for autoupdate.
   autoupdate_schedule: "quarterly"
-  # Unskip all hooks when all files have been revised.
+  # TODO: Un-skip all hooks when all files have been revised.  When this
+  # is done, the `lint` job in .github/workflows/tests.yml can be
+  # removed.
   skip:
     - "isort"
     - "black"

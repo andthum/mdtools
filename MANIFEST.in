@@ -20,6 +20,7 @@
 # https://packaging.python.org/guides/using-manifest-in/
 
 include AUTHORS.rst
+include CITATION.cff
 include CONTRIBUTING.rst
 include LICENSE.txt
 include README.rst

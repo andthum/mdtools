@@ -39,6 +39,7 @@ section in MDTools' documentation
 __author__ = "Andreas Thum"
 
 
+# Third-party libraries
 import setuptools
 
 
@@ -53,7 +54,8 @@ def get_varstring(fname="mdtools/version.py", varname="__version__"):
         variable.
     varname : str, optional
         Name of the variable whose value should be read.  The value must
-        be a simple string.
+        be a simple string enquoted in either 'single' order "double"
+        quotes.
 
     Returns
     -------
@@ -65,19 +67,35 @@ def get_varstring(fname="mdtools/version.py", varname="__version__"):
     If `varname` is assigned multiple times, only the first assignment
     will be considered.
     """
-    with open(fname, "r") as f:
-        for line in f:
+    single_quote = "'"
+    double_quote = '"'
+    with open(fname, "r") as file:
+        for line in file:
             if line.startswith(varname):
-                if '"' in line:
-                    delimiter = '"'
-                elif "'" in line:
-                    delimiter = "'"
+                if double_quote in line and single_quote in line:
+                    ix_double_quote = line.find(double_quote)
+                    ix_single_quote = line.find(single_quote)
+                    if ix_single_quote < ix_double_quote:
+                        delimiter = single_quote
+                    else:
+                        delimiter = double_quote
+                elif single_quote in line:
+                    delimiter = single_quote
+                elif double_quote in line:
+                    delimiter = double_quote
                 else:
-                    raise RuntimeError(
-                        "The line starting with '{}' does"
-                        " not contain a string".format(varname)
+                    raise TypeError(
+                        "The line starting with '{}' does not contain a"
+                        " string".format(varname)
                     )
-                return line.split(delimiter)[1]
+                if line[::-1].strip()[0] != delimiter:
+                    raise TypeError(
+                        "The line starting with '{}' does not contain a"
+                        " string".format(varname)
+                    )
+                delimiter_count = line.count(delimiter)
+                varstring = line.split(delimiter)[1:delimiter_count]
+                return "".join(varstring)
 
 
 def get_content(fname="README.rst"):
