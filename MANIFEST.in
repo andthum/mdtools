@@ -16,18 +16,25 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Files to include in the source distribution.  See
-# https://packaging.python.org/guides/using-manifest-in/
+# Files to include in the source distribution (sdist).  See
+# https://packaging.python.org/guides/using-manifest-in/.
+# Note that the built distribution (bdist) created from the sdist only
+# contains files inside the package even if the sdist might contain
+# additional files outside the package.  See
+# https://setuptools.pypa.io/en/latest/userguide/miscellaneous.html#build-process
 
 include AUTHORS.rst
 include CITATION.cff
 include CONTRIBUTING.rst
 include LICENSE.txt
+include MANIFEST.in
+include pyproject.toml
 include README.rst
 include requirements.txt
+include setup.py
 
 # graft <pattern> = include all files under directories matching <pattern>
-# graft docs
+graft docs
 # graft examples
 graft scripts
 graft styles
