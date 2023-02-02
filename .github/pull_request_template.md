@@ -13,7 +13,7 @@ Only for project maintainers, please do not remove!
 Regex version for issue-labeler.
 See https://github.com/github/issue-labeler
 
-issue_labeler_regex_version=0
+issue_labeler_regex_version=1
 -->
 
 ## Related issue(s)
@@ -24,6 +24,11 @@ Resolves #*Issue_Number* .
 Related to issue #*Issue_Number*.
 
 ## Type of change
+
+* [ ] Change of core package.
+* [ ] Change of scripts.
+
+<!-- Blank line -->
 
 * [ ] Bug fix.
 * [ ] New feature.
