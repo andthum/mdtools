@@ -8,6 +8,99 @@
 requires = ["setuptools >=59.0, <68.0"]
 build-backend = "setuptools.build_meta"
 
+[project]
+# Project metadata.  See
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+# Keep project metadata in sync with CITATION.cff and AUTHORS.rst.
+name = "mdtools"
+description = "Python scripts to prepare and analyze molecular dynamics simulations"
+readme = {file = "README.rst", content-type = "text/x-rst"}
+license = {file = "LICENSE.txt"}
+# authors = [
+#     {name = "Andreas Thum", email = "andr.thum@gmail.com"},
+#     {name = "Len Kimms", email = "len.kimms@wwu.de"},
+# ]
+# maintainers = [
+#     {name = "Andreas Thum", email = "andr.thum@gmail.com"},
+# ]
+keywords = [
+    "Scripts Collection",
+    "Python Scripts",
+    "Science",
+    "Scientific Computing",
+    "Computational Science",
+    "Computational Biology",
+    "Computational Chemistry",
+    "Computational Physics",
+    "Materials Science",
+    "Molecular Simulation",
+    "Molecular Modeling",
+    "Molecular Mechanics",
+    "Molecular Dynamics",
+    "Molecular Dynamics Simulation",
+    "Trajectory Analysis",
+    "MDAnalysis",
+    "NumPy",
+    "Python3",
+    "GPLv3",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.6, <3.10"
+dynamic = [
+    "authors",  # Fill in from CITATION.cff
+    "maintainers",  # Fill in from CITATION.cff
+    "version",  # Fill in from git
+    "dependencies",  # Fill in from requirements.txt
+]
+
+[project.urls]
+"Homepage" = "https://github.com/andthum/mdtools"
+"Documentation" = "https://mdtools.readthedocs.io/en/latest"
+"Source" = "https://github.com/andthum/mdtools"
+"Issue Tracker" = "https://github.com/andthum/mdtools/issues"
+"Q&A" = "https://github.com/andthum/mdtools/discussions/categories/q-a"
+"Discussions" = "https://github.com/andthum/mdtools/discussions"
+
+[tool.setuptools.dynamic]
+authors = {attr = "my_package.authors"}  # Not supported.
+maintainers = {attr = "my_package.maintainers"}  # Not supported.
+version = {attr = "my_package.VERSION"}
+dependencies = {file = "requirements.txt"}  # Comments and blank lines not allowed?
+
+[tool.setuptools.packages]
+find = {}  # Scan the project directory for packages.
+include-package-data = true  # Install files specified in MANIFEST.in.
+# Note: Any files that should be accessible at run time must be located
+# inside the package
+# (https://setuptools.pypa.io/en/latest/userguide/datafiles.html#non-package-data-files).
+
+# [tool.setuptools.packages.find]
+# where = ["src"]  # Where to search for packages.
+
+[tool.setuptools_scm]
+write_to = "mdtools/version.py"
+
 [tool.bandit]
 # B101: Use of assert detected.
 # B404: Consider possible security implications associated with the subprocess module
