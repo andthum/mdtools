@@ -16,6 +16,7 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Keep project metadata in sync with AUTHORS.rst and CITATION.cff.
 # This file is read by setup.py.  Do not change its location or the
 # variable names!  The first declaration of each variable must be a
 # plain string, otherwise setup.py will fail to read its content!
@@ -29,56 +30,61 @@ contained in :mod:`mdtools.version`.
 """
 
 
+# Standard libraries
+from datetime import datetime
+
+
 #: String containing the title of the project.
 __title__ = "mdtools"
 
-#: String containig the names of all contributors to MDTools, separated
+#: String containing the names of all contributors to MDTools, separated
 #: by commas and ordered alphabetically by the contributors' full names.
 #: Add your name, if you have contributed to MDTools (either to the core
-#: package, the scripts or the documetation).  Additionally, add your
-#: name in the authors list in AUTHORS.rst
+#: package, the scripts or the documentation).  Additionally, add your
+#: name in the authors list in AUTHORS.rst and CITATION.cff.
 __author__ = "Andreas Thum, Len Kimms"
-# Remove possible dublicates and ensure alphabetical order
+# Remove possible duplicates and ensure alphabetical order.
 author_list = sorted(set(map(str.strip, __author__.split(","))), key=str.lower)
 if __author__ != ", ".join(author_list):
     raise ValueError(
-        "'__author__' contains dublicates or is not ordered alphabetically"
+        "'__author__' contains duplicates or is not ordered alphabetically"
     )
 __author__ = ", ".join(author_list)
 
-#: String containig the name(s) of the maintainer(s) of this project,
+#: String containing the name(s) of the maintainer(s) of this project,
 #: separated by commas and ordered alphabetically by the maintainers'
-#: full names.
+#: full names.  Keep in sync with CITATION.cff.
 __maintainer__ = "Andreas Thum"
-# Remove possible dublicates and ensure alphabetical order
+# Remove possible duplicates and ensure alphabetical order.
 maintainer_list = sorted(
     set(map(str.strip, __maintainer__.split(","))), key=str.lower
 )
 if __maintainer__ != ", ".join(maintainer_list):
     raise ValueError(
-        "'__maintainer__' contains dublicates or is not ordered alphabetically"
+        "'__maintainer__' contains duplicates or is not ordered alphabetically"
     )
 __maintainer__ = ", ".join(maintainer_list)
 del maintainer_list
 
 #: String containing one(!) e-mail address under which the person(s)
-#: responsible for the project can be contacted.
+#: responsible for the project can be contacted.  Keep in sync with
+#: CITATION.cff.
 __email__ = "andr.thum@gmail.com"
 
 #: Acknowledgments to people that advanced the project without writing
 #: code or documentation and acknowledgments to other projects without
 #: which this project would not exist.  Sort entries alphabetically!
 __credits__ = "matplotlib, MDAnalysis, NumPy, Scipy"
-# Remove possible dublicates and ensure alphabetical order
+# Remove possible duplicates and ensure alphabetical order.
 credits_list = sorted(
     set(map(str.strip, __credits__.split(","))), key=str.lower
 )
 if __credits__ != ", ".join(credits_list):
     raise ValueError(
-        "'__credits__' contains dublicates or is not ordered alphabetically"
+        "'__credits__' contains duplicates or is not ordered alphabetically"
     )
 __credits__ = ", ".join(credits_list)
-# Make sure that no authors are mentioned in the credits:
+# Make sure that no authors are mentioned in the credits.
 for a in author_list:
     if a in credits_list:
         raise ValueError(
@@ -86,10 +92,8 @@ for a in author_list:
         )
 del author_list, credits_list
 
-# from datetime import datetime
-# now = datetime.now()
-# years = "2021-{}, ".format(now)
-years = "2021, 2022"
+now = datetime.now().year
+years = "2021-{}, ".format(now)
 #: Copyright notice.
 __copyright__ = "Copyright (C) " + years + " " + __author__
 
