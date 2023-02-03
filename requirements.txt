@@ -1,6 +1,7 @@
 # Install requirements for MDTools in alphabetical order.
 
 # Keep in sync with references in CITATION.cff.
+importlib-resources >=2.0, <6.0
 matplotlib >=3.3, <4.0
 MDAnalysis >=2.0, <2.1
 numpy >=1.15, <2.0
