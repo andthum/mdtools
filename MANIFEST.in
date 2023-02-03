@@ -22,7 +22,13 @@
 # contains files inside the package even if the sdist might contain
 # additional files outside the package.  See
 # https://setuptools.pypa.io/en/latest/userguide/miscellaneous.html#build-process
+# Commands are processed in the order they appear.  In the case of
+# conflicting commands, the last command wins.
 
+# exclude <file-pattern>: Exclude all files matching <file-pattern>.
+exclude .*
+
+# include <file-pattern>: Include all files matching <file-pattern>.
 include AUTHORS.rst
 include CITATION.cff
 include CONTRIBUTING.rst
@@ -30,12 +36,27 @@ include LICENSE.txt
 include MANIFEST.in
 include pyproject.toml
 include README.rst
-include requirements.txt
+include requirements*.txt
 include setup.py
 
-# graft <pattern> = include all files under directories matching <pattern>
+# graft <dir-pattern>: Include all files under directories matching
+# <dir-pattern>.
 graft docs
 # graft examples
 graft scripts
-graft styles
+graft src
 # graft tests
+
+# prune <dir-pattern>: Exclude all files under directories matching
+# <dir-pattern>.
+prune .github
+prune .vscode
+prune docs/buid
+prune **/_sphinx_autosummary
+prune misc
+prune **__pycache__
+
+# global-exclude <file-pattern>: Exclude all files anywhere in the
+# source tree matching <file-pattern>.
+global-exclude .git*
+global-exclude *.py[cod]
