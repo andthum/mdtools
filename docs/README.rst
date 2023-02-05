@@ -18,7 +18,7 @@ To build the documentation, MDTools itself and the dependencies in
     python3 -m venv .venv-docs
     # Activate the virtual Python environment.
     source .venv-docs/bin/activate
-    # Upgrade pip, setuptools and wheel.
+    # Upgrade pip, setuptools and wheel (optional, but recommended)..
     python3 -m pip install --upgrade pip setuptools wheel
     # Install the requirements to build the docs.
     python3 -m pip install --upgrade -r requirements-docs.txt
@@ -39,6 +39,14 @@ After installing all requirements, the documentation can be built via
     make doctest
     # Deactivate the virtual Python environment.
     deactivate
+
+To clean the build directory and remove all automatically generated
+files, run in the ``docs/`` directory the following commands.
+
+.. code-block:: bash
+
+    make clean
+    make clean_autosum
 
 
 .. _Sphinx: https://www.sphinx-doc.org/
