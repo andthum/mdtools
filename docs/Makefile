@@ -7,7 +7,7 @@ SPHINXBUILD        = sphinx-build
 SOURCEDIR          = source
 BUILDDIR           = build
 AUTOSUMDIR_PATTERN = _sphinx_autosummary*
-AUTOSUMDIR         = $(shell find $(SOURCEDIR) -name "$(AUTOSUMDIR_PATTERN)")
+AUTOSUMDIR         = $(shell find $(SOURCEDIR) -type d -name "$(AUTOSUMDIR_PATTERN)")
 
 # Put this first so that "make" without argument is like "make help".
 help:
