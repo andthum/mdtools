@@ -70,16 +70,24 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 
+# The recommended way to read package data at runtime is to use
+# `importlib.resources` which is part of the standard library since
+# Python version 3.7.  Older Python versions can use the backport
+# `importlib_resources`.
+# (https://setuptools.pypa.io/en/latest/userguide/datafiles.html#accessing-data-files-at-runtime).
+# However, `importlib.resources` requires an `__init__.py` file to be
+# present in each data directory (https://bugs.python.org/issue34534,
+# https://gitlab.com/python-devs/importlib_resources/-/issues/58).  This
+# is undesirable, because this exposes the subdirectory as exportable
+# package (https://stackoverflow.com/a/58941536).  The backport
+# `importlib_resources` does not require an `__init__.py`.  Because of
+# this and because MDTools should support Python versions 3.6 to 3.9, we
+# will only rely on the backport `importlib_resources` even if MDTools
+# is installed in Python version 3.9.
+from importlib_resources import files
+
 # First-party libraries
 import mdtools as mdt
-
-
-try:
-    # Standard libraries
-    from importlib.resources import files
-except ImportError:
-    # Third-party libraries
-    from importlib_resources import files
 
 
 # Load custom matplotlib style sheet.
@@ -88,7 +96,13 @@ except ImportError:
 # For accessing package data at run time see
 # https://setuptools.pypa.io/en/latest/userguide/datafiles.html#accessing-data-files-at-runtime
 style_file = files("mdtools.pkg_data").joinpath("mdtools.mplstyle")
-plt.style.use(["default", style_file])
+try:
+    plt.style.use(["default", style_file])
+except OSError:
+    warnings.warn(
+        "Could not find the MDTools plotting style at {}".format(style_file),
+        RuntimeWarning,
+    )
 
 # Alignment of offsetText of colorbars
 CBAR_YAX_HALIGN = "left"
