@@ -33,23 +33,5 @@ Scripts by Application
     dynamics
     gmx
     structure
+    templates
     other
-
-
-Scripts for Developers
-======================
-
-.. Somehow, the `.. currentmodule:: scripts` directive now causes the
-    error "for event 'builder-inited' threw an exception (exception: no
-    module named scripts)".  Therefore, the directive is commented out.
-.. .. currentmodule:: scripts
-
-.. autosummary::
-    :toctree: _sphinx_autosummary
-    :template: custom-module-template.rst
-    :recursive:
-    :nosignatures:
-
-    script_template
-    script_template_dtrj
-    script_template_plot
