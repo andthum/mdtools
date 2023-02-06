@@ -41,7 +41,7 @@ of the project:
     python3 -m venv .venv-dev
     # Activate the virtual environment.
     source .venv-dev/bin/activate
-    # Upgrade pip, setuptools and wheel.
+    # Upgrade pip, setuptools and wheel (optional, but recommend).
     python3 -m pip install --upgrade pip setuptools wheel
 
 Every time you start working on the project, you should first activate
@@ -67,7 +67,7 @@ Install MDTools in development mode (:bash:`--editable`) into the
 
 Now, due to the :bash:`--editable` flag, any changes you make to the
 source directory will immediately affect the installed package without
-the need to re-install it .
+the need to re-install it.
 
 
 .. _install-dev-packages-label:
@@ -82,6 +82,13 @@ formatters, linters, testing packages, pre-commit, etc.) into the
 .. code-block:: bash
 
     python3 -m pip install --upgrade -r requirements-dev.txt
+
+Alternatively, you can install the development packages directly when
+installing MDTools by appending the :bash:`[dev]` option:
+
+.. code-block:: bash
+
+    python3 -m pip install --upgrade --editable .[dev]
 
 
 .. _set-up-pre-commit-label:
