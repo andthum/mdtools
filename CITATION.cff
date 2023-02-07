@@ -41,11 +41,10 @@ contact:
   - given-names: "Andreas"
     family-names: "Thum"
     email: "andr.thum@gmail.com"
-# TODO: Get concept DOI from Zenodo and paste it in the `value` field.
-# identifiers:
-#   - description: "The concept DOI of the work."
-#     type: "doi"
-#     value: "10.5281/zenodo.0000000"
+identifiers:
+  - description: "The concept DOI of the software."
+    type: "doi"
+    value: "10.5281/zenodo.7615177"
 url: "https://github.com/andthum/mdtools"
 repository-code: "https://github.com/andthum/mdtools"
 license: "GPL-3.0-or-later"

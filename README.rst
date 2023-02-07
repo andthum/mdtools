@@ -6,7 +6,7 @@ MDTools
 #######
 
 |pre-commit| |pre-commit.ci_status| |Test_Status| |CodeQL_Status|
-|Documentation_Status| |License_GPLv3| |Made_with_Python|
+|Documentation_Status| |License_GPLv3| |DOI| |Made_with_Python|
 |Code_style_black| |Made_with_Sphinx| |Doc_style_numpy|
 |Powered_by_MDAnalysis|
 
@@ -116,6 +116,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 .. |License_GPLv3| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
     :alt: License GPLv3
     :target: https://www.gnu.org/licenses/gpl-3.0.html
+.. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.7615177.svg
+    :alt: DOI
+    :target: https://doi.org/10.5281/zenodo.7615177
 .. |Made_with_Python| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
     :alt: Made with Python
     :target: https://www.python.org/
