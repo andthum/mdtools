@@ -50,6 +50,7 @@ appended to the version number with a hyphen in accordance to
     (i.e. the API and UI have not stabilized), even **MINOR** increases
     *may* introduce incompatible API or UI changes.
 
+
 .. _publishing-release-label:
 
 Publishing a new release
@@ -63,30 +64,19 @@ Publishing a new release
 Follow these steps when publishing a new release.
 
 
-1. Update the change log
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. todo::
-
-    Establish a change log.  See https://keepachangelog.com/ for some
-    useful guidelines.
-
-
-2. Create a new tag
+1. Create a new tag
 ^^^^^^^^^^^^^^^^^^^
 
-Create a new tag that contains the new MAJOR.MINOR.PATCH version number
-prefixed with a "v":
+Create a new tag that contains the new
+MAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH version number prefixed with a "v":
 
 .. code-block:: bash
 
     git checkout main
-    git tag --annotate vMAJOR.MINOR.PATCH
-
-As tag message use the change log of the new release.
+    git tag vMAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH
 
 
-3. Push the tag to the upstream repository
+2. Push the tag to the upstream repository
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. important::
@@ -97,6 +87,16 @@ As tag message use the change log of the new release.
 
     git push
     git push --tags
+
+
+3. Create a new release
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Open the repository in GitHib and follow the steps outlined in the
+GitHub doc page
+`Creating automatically generated release notes for a new release
+<https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#creating-automatically-generated-release-notes-for-a-new-release>`_.
+When selecting a tag, use the tag you just created in the above steps.
 
 
 .. _semantic versioning: http://semver.org/
