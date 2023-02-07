@@ -24,7 +24,7 @@ Script template for scripts that process MD trajectories.
 
 .. deprecated:: 1.6.0
 
-    **Example deprication warning**.  :mod:`scripts.script_template`
+    **Example deprecation warning**.  :mod:`scripts.script_template`
     will be removed in MDTools 2.0.0.  It is replaced by
     :mod:`scripts.script_template_new`, because the latter has
     additional functionality xyz.
@@ -42,7 +42,7 @@ The first part of the docstring should contain the following paragraphs
 (all separated by a blank line):
 
     1. One-sentence summary (preferably one line only).
-    2. Potential deprication warning.
+    2. Potential deprecation warning.
     3. Potential todo list.
     4. Extended summary clarifying **functionality**, not implementation
        details or background theory (this goes in the Notes section).
@@ -144,7 +144,7 @@ demonstrating how the generated data can be visualized.
 
 
 # TODO: Replace by your name (or add your name if you contribute to an
-# alreandy existing script.  Use a comma separated list in this case:
+# already existing script.  Use a comma separated list in this case:
 # "Author 1, Author 2, Author 3").
 __author__ = "Andreas Thum"
 
@@ -175,10 +175,10 @@ if __name__ == "__main__":
     # TODO: Implement command line interface.
     parser = argparse.ArgumentParser(
         # The description should only contain the short summary from the
-        # docstring and a reference to the documetation.
+        # docstring and a reference to the documentation.
         description=(
             "Script template for scripts that process MD trajectories.  For"
-            " more information, refer to the documetation of this script."
+            " more information, refer to the documentation of this script."
         )
     )
     parser.add_argument(
