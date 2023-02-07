@@ -81,5 +81,4 @@ not apply to your PR as [~].
 * [ ] I followed the guidelines in the [Developer's guide](https://mdtools.readthedocs.io/en/latest/doc_pages/dev_guide/dev_guide.html).
 * [ ] New/changed code is properly tested.
 * [ ] New/changed code is properly documented.
-* [ ] New/changed features are tracked in CHANGELOG.rst.
 * [ ] The CI workflow is passing.
