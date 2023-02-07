@@ -27,5 +27,6 @@ information.
 """
 
 
-# Release of MDTools as a string, using `semantic versioning`_.
-__version__ = "0.0.0.dev1"
+#: Release version of MDTools in MAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH
+#: format.
+__version__ = "0.0.1.0"
