@@ -1,0 +1,41 @@
+# Build and publish the project.
+# See
+# https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+# https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
+
+name: "Upload Python Package"
+
+on:
+  release:
+    types:
+      - "published"
+
+jobs:
+  deploy:
+    strategy:
+      matrix:
+        os:
+          - "ubuntu-latest"
+        python-version:
+          - "3.9"
+    runs-on: "${{ matrix.os }}"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: "actions/setup-python@v4"
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: "Install/Upgrade setuptools and wheel"
+        run: "python -m pip install --user --upgrade setuptools wheel"
+      - name: "Install/Upgrade build and twine"
+        run: "python -m pip install --user --upgrade build twine"
+      - name: "Build sdist and wheel"
+        run: "python3 -m build --sdist --wheel --outdir dist/"
+      - name: "Check project description"
+        run: "python3 -m twine check dist/*"
+      - name: "Publish package to PyPI"
+        uses: "pypa/gh-action-pypi-publish@v1.6"
+        with:
+          password: "${{ secrets.PYPI_API_TOKEN }}"
+          verbose: true
