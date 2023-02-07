@@ -41,10 +41,10 @@ selected energy terms are written to file:
     * Sample mean.
     * Median of the sample.
     * Unbiased sample variance.
-    * Minumum value of the sample.
+    * Minimum value of the sample.
     * Maximum value of the sample.
     * Unbiased sample skewness (Fisher-Pearson).
-    * Unbiased excess sample kurtorsis (Fisher).
+    * Unbiased excess sample kurtosis (Fisher).
     * Biased non-Gaussian parameter.
     * p-value from D'Agostino's and Pearson's test for normality.
 
@@ -53,7 +53,7 @@ Options
 -f
     The name of the .edr file to read.
 --plot-out
-    Output file name for the file that contains the plot.
+    Output file name for the file that contains the plots.
 --stats-out
     Output file name for the file that contains the characteristics of
     the distributions of the selected energy terms.
@@ -95,7 +95,7 @@ Options
     For more details about the significance level see
     :func:`mdtools.statistics.acf_confint`.  Default: ``0.1``
 --num-points
-    Use only the last `NUM_POINTS` data points when ploting the energy
+    Use only the last `NUM_POINTS` data points when plotting the energy
     terms vs. time.  Must not be negative.  If `NUM_POINTS` is greater
     then the actual number of available data points or ``None``, it is
     set to the maximum number of available data points.  Default:
@@ -157,7 +157,7 @@ if __name__ == "__main__":  # noqa: C901
         description=(
             "Plot statistics about the distribution of energy terms contained"
             " in an Gromacs energy file (.edr).  For more information, refer"
-            " to the documetation of this script."
+            " to the documentation of this script."
         )
     )
     parser.add_argument(
@@ -172,7 +172,7 @@ if __name__ == "__main__":  # noqa: C901
         dest="PLOT_OUT",
         type=str,
         required=True,
-        help="Output filename for the file that contains the plot.",
+        help="Output filename for the file that contains the plots.",
     )
     parser.add_argument(
         "--stats-out",
@@ -273,7 +273,7 @@ if __name__ == "__main__":  # noqa: C901
         required=False,
         default=None,
         help=(
-            "Use only the last `NUM_POINTS` data points when ploting the"
+            "Use only the last `NUM_POINTS` data points when plotting the"
             " energy terms vs. time.  Default: %(default)s."
         ),
     )
@@ -523,8 +523,8 @@ if __name__ == "__main__":  # noqa: C901
             plt.close()
 
             print("Plotting Power Spectrum of {}...".format(key))
-            # The zero-frequence term is the sum of the signal => Remove
-            # the mean to get a zero-frequence term that is zero.
+            # The zero-frequency term is the sum of the signal => Remove
+            # the mean to get a zero-frequency term that is zero.
             amplitudes = np.abs(np.fft.rfft(val - dist_props[key]["Mean"]))
             amplitudes **= 2
             frequencies = np.fft.rfftfreq(len(val), time_diff)
@@ -566,7 +566,7 @@ if __name__ == "__main__":  # noqa: C901
         + "  For normally distributed data, mean and median are the same.\n"
         + "Var: Unbiased sample variance.\n"
         + "  s^2 = 1/(N-1) sum_{i=1}^N (x_i - mean)^2\n"
-        + "Min: Minumum value of the sample.\n"
+        + "Min: Minimum value of the sample.\n"
         + "Max: Maximum value of the sample.\n"
         + "Skewness: Unbiased sample skewness (Fisher-Pearson).\n"
         + "  G_1 = sqrt{N*(N-1)}/(N-2) * m_3 / m_2^(3/2)\n"
@@ -574,7 +574,7 @@ if __name__ == "__main__":  # noqa: C901
         + "  with the k-th biased central moment\n"
         + "  m_k = 1/N sum_{i=1}^N (x_i - mean)^k\n"
         + "  For normally distributed data, the skewness is zero.\n"
-        + "Kurtosis: Unbiased excess sample kurtorsis (Fisher).\n"
+        + "Kurtosis: Unbiased excess sample kurtosis (Fisher).\n"
         + "  G_2 = (N-1)/[(N-2)(N-3)] [(N+1) m_4/m_2^2 - 3 (N-1)]\n"
         + "      = N(N+1)/[(N-1)(N-2)(N-3)] sum_{i=1}^N [(x_i - mean)/s]^4 - 3 (N-1)^2/[(N-2)(N-3)]\n"  # noqa: E501
         + "  For normally distributed data, the Kurtosis is zero.\n"
