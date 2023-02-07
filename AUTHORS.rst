@@ -29,6 +29,10 @@ Upcoming release
       Additionally, add your name to the author string in
       :data:`mdtools._metadata.__author__` and in the CITATION.cff file.
     * Andreas Thum
+
+0.0.1.0
+
+    * Andreas Thum
     * Len Kimms
 
 0.0.0.dev1
