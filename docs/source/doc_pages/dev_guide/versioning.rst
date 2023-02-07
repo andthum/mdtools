@@ -99,4 +99,49 @@ GitHub doc page
 When selecting a tag, use the tag you just created in the above steps.
 
 
+4. Upload the project to PyPI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. important::
+
+    The following steps are carried out automatically by an GitHub
+    Action whenever a new release is published.  You should not carry
+    out these steps manually.  The steps are listed here just for
+    reference.
+
+Create a `distribution package
+<https://packaging.python.org/en/latest/glossary/#term-Distribution-Package>`_
+and upload it to `PyPI <https://pypi.org/>`_.
+
+https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/#packaging-your-project
+
+.. code-block:: bash
+
+    # Generate source (sdist) and built/binary distribution (wheel).
+    python3 -m build --sdist --wheel --outdir dist/
+    # Check if the project's description will render correctly on PyPI.
+    python3 -m twine check dist/*
+    # Upload the distributions to PyPI.
+    python3 -m twine upload --repository pypi --sign dist/*
+    # Test if everything worked out.
+    cd to/any/temporary/directory/outside/the/project/
+    # Create a virtual Python environment for the test installation.
+    python3 -m venv venv-test
+    # Activate the virtual environment.
+    source venv-test/bin/Activate
+    # Test installation of the project from PyPI.
+    python3 -m pip install --upgrade mdtools
+    # Test import of MDTools.
+    python3 -c "import mdtools"
+    python3 -c "import mdtools.plot"
+    # Test if scripts can be called.
+    contact_hist.py --help
+    # Uninstall MDTools.
+    python3 -m pip uninstall mdtools
+    # Deactivate the virtual python environment.
+    deactivate
+    # Remove the virtual test environment.
+    rm -r venv-test
+
+
 .. _semantic versioning: http://semver.org/
