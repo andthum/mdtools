@@ -147,13 +147,13 @@ Other Python code guidelines
 Code guidelines for MDTools scripts
 -----------------------------------
 
-    * When writing a new script, make use of the
-      :mod:`~scripts.script_template` in the :file:`scripts/` directory.
+    * When writing a new script, make use of the script templates in the
+      :file:`scripts/templates` directory.
     * If you import objects from other scripts into your current script,
-      only import from scripts in the same directory or subdirectories.
-      But generally try to avoid importing objects from other scripts.
-      Better move the object you want to import from another script into
-      the core package.
+      only import from scripts in the same directory.  But generally try
+      to avoid importing objects from other scripts.  Better move the
+      object you want to import from another script into the core
+      package.
     * When writing a script, use :mod:`argparse` as command-line
       interface.
     * When dealing with a lot of data like MD trajectories, performance

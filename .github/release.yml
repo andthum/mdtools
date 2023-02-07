@@ -1,0 +1,35 @@
+# Config file for automatically generating release notes from
+# pull-request labels.  See
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#configuring-automatically-generated-release-notes
+
+changelog:
+  exclude:
+    labels:
+      - "skip-changelog"
+    authors:
+      - "pre-commit-ci[bot]"
+  categories:
+    - title: "Breaking changes"
+      labels:
+        - "breaking"
+    - title: "New features"
+      labels:
+        - "enhancement"
+    - title: "Bug fixes"
+      labels:
+        - "bugfix"
+    - title: "Dependency updates"
+      labels:
+        - "dependencies"
+    - title: "Documentation updates"
+      labels:
+        - "documentation"
+    - title: "Code refactoring"
+      labels:
+        - "refactoring"
+    - title: "Project maintenance"
+      labels:
+        - "maintenance"
+    - title: "Other changes"
+      labels:
+        - "*"

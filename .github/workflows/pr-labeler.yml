@@ -23,7 +23,7 @@ jobs:
       pull-requests: "write"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "github/issue-labeler@v2.5"
+      - uses: "github/issue-labeler@v2.6"
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: ".github/pr-labeler-config.yml"
@@ -31,7 +31,7 @@ jobs:
           # have impact on the labeling of existing pull requests.  To
           # prevent this, we couple the config file and pull request
           # template by a version number.
-          enable-versioned-regex: 0
+          enable-versioned-regex: 1
           versioned-regex: 'issue_labeler_regex_version=(\d+)'
           body-missing-regex-label: "broken-template"
           # Include the issue title in the regular expression target.

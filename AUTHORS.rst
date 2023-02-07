@@ -1,4 +1,4 @@
-.. Keep in sync with pyproject.toml and CITATION.cff.
+.. Keep authors in sync with mdtools._metadata.py and CITATION.cff.
 
 ##################
 Authors of MDTools
@@ -27,7 +27,11 @@ Upcoming release
     * Add your name, if you have contributed to the upcoming release.
       Authors are ordered alphabetically by their full name.
       Additionally, add your name to the author string in
-      :data:`mdtools._metadata.__author__`
+      :data:`mdtools._metadata.__author__` and in the CITATION.cff file.
+    * Andreas Thum
+
+0.0.1.0
+
     * Andreas Thum
     * Len Kimms
 

@@ -19,19 +19,21 @@
 
 
 """
-Test plots to visualize :file:`mdtools.mplstyle`.
+Test plots to visualize the MDTools plotting style.
 
 Plotting code is taken from
 https://matplotlib.org/stable/tutorials/introductory/sample_plots.html
 """
 
 
-import numpy as np
+# Third-party libraries
 import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.path as mpath
 import matplotlib.patches as mpatches
+import matplotlib.path as mpath
+import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
+
 
 np.random.seed(19680801)
 print("Matplotlib version:", matplotlib.__version__)
@@ -39,14 +41,15 @@ print("Matplotlib backend:", matplotlib.get_backend())
 if matplotlib.__version__ < "3.4":
     raise ValueError("Requires at least matplotlib version 3.4")
 
-for style in ("default", "classic", "./mdtools.mplstyle"):
+style_file = "../src/mdtools/pkg_data/mdtools.mplstyle"
+for style in ("default", "classic", style_file):
     plt.style.use(["default", style])
     print("Current style:", style)
     if style == "default":
         fname = "default.pdf"
     elif style == "classic":
         fname = "classic.pdf"
-    elif style == "./mdtools.mplstyle":
+    elif style == style_file:
         fname = "mdtools.pdf"
     else:
         fname = style + ".pdf"
@@ -119,7 +122,7 @@ for style in ("default", "classic", "./mdtools.mplstyle"):
         x = np.arange(-3.0, 3.0, delta)
         y = np.arange(-2.0, 2.0, delta)
         X, Y = np.meshgrid(x, y)
-        Z1 = np.exp(-(X ** 2) - Y ** 2)
+        Z1 = np.exp(-(X**2) - Y**2)
         Z2 = np.exp(-((X - 1) ** 2) - (Y - 1) ** 2)
         Z = (Z1 - Z2) * 2
         fig, ax = plt.subplots()
@@ -214,7 +217,7 @@ for style in ("default", "classic", "./mdtools.mplstyle"):
         ax3.grid()
         # With errorbars: clip non-positive values
         x = 10.0 ** np.linspace(0.0, 2.0, 20)
-        y = x ** 2.0
+        y = x**2.0
         ax4.set_xscale("log", nonpositive="clip")
         ax4.set_yscale("log", nonpositive="clip")
         ax4.set(title="Ax title: Errorbars go negative")
@@ -300,7 +303,7 @@ for style in ("default", "classic", "./mdtools.mplstyle"):
         X = np.arange(-5, 5, 0.25)
         Y = np.arange(-5, 5, 0.25)
         X, Y = np.meshgrid(X, Y)
-        R = np.sqrt(X ** 2 + Y ** 2)
+        R = np.sqrt(X**2 + Y**2)
         Z = np.sin(R)
         surf = ax.plot_surface(X, Y, Z)
         ax.set(

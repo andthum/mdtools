@@ -28,9 +28,9 @@ explicitly e.g. via::
     import mdtools.plot as mdtplt
 
 This module loads the custom matplotlib style sheet
-:file:`styles/mdtools.mplstyle`.  If you want to keep the default
-plotting style, you have to re-load the default style after importing
-:mod:`mdtools.plot`::
+:file:`src/mdtools/pkg_data/mdtools.mplstyle`.  If you want to keep the
+default plotting style, you have to re-load the default style after
+importing :mod:`mdtools.plot`::
 
     import matplotlib.pyplot as plt
     plt.style.use("default")
@@ -39,14 +39,14 @@ See `Customizing Matplotlib with style sheets and rcParams`_ for more
 information about style sheets.  Among other settings,
 :file:`mdtools.mplstyle` sets the default figure size to 8.26772 x
 5.82677 inches, which is the size of a DIN A5 paper in landscape format.
-The default font size is set to 24 points and also the linewidths and
-markersizes are scaled appropiately.  In this way the produced figures
+The default font size is set to 24 points and also the line widths and
+marker sizes are scaled appropriately.  In this way the produced figures
 can be used for presentations and posters or they can be scaled down to
 the width of a single text column in a scientific journal without
 loosing readability.
 
-With the introduction of the :file:`mdtools.mplstyle` style sheet in
-MDTools version 0.0.0.dev2, a lot of functions in this module became
+With the introduction of the :file:`mdtools.mplstyle` style sheet during
+preparation of version 0.0.1.0, a lot of functions in this module became
 deprecated, because the functions were just wrappers around
 corresponding matplotlib functions with hardcoded style settings.  With
 the style sheet, the matplotlib functions can be called directly and
@@ -62,7 +62,6 @@ create plots with the desired style.
 
 
 # Standard libraries
-import os
 import warnings
 
 # Third-party libraries
@@ -71,15 +70,39 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 
+# The recommended way to read package data at runtime is to use
+# `importlib.resources` which is part of the standard library since
+# Python version 3.7.  Older Python versions can use the backport
+# `importlib_resources`.
+# (https://setuptools.pypa.io/en/latest/userguide/datafiles.html#accessing-data-files-at-runtime).
+# However, `importlib.resources` requires an `__init__.py` file to be
+# present in each data directory (https://bugs.python.org/issue34534,
+# https://gitlab.com/python-devs/importlib_resources/-/issues/58).  This
+# is undesirable, because this exposes the subdirectory as exportable
+# package (https://stackoverflow.com/a/58941536).  The backport
+# `importlib_resources` does not require an `__init__.py`.  Because of
+# this and because MDTools should support Python versions 3.6 to 3.9, we
+# will only rely on the backport `importlib_resources` even if MDTools
+# is installed in Python version 3.9.
+from importlib_resources import files
+
 # First-party libraries
 import mdtools as mdt
 
 
-# Load custom matplotlib style sheet.  See
+# Load custom matplotlib style sheet.
+# For customizing Matplotlib with style sheets see
 # https://matplotlib.org/stable/tutorials/introductory/customizing.html
-file_root = os.path.abspath(os.path.dirname(__file__))
-stylefile = os.path.join(file_root, "./../styles/mdtools.mplstyle")
-plt.style.use(["default", stylefile])
+# For accessing package data at run time see
+# https://setuptools.pypa.io/en/latest/userguide/datafiles.html#accessing-data-files-at-runtime
+style_file = files("mdtools.pkg_data").joinpath("mdtools.mplstyle")
+try:
+    plt.style.use(["default", style_file])
+except OSError:
+    warnings.warn(
+        "Could not find the MDTools plotting style at {}".format(style_file),
+        RuntimeWarning,
+    )
 
 # Alignment of offsetText of colorbars
 CBAR_YAX_HALIGN = "left"
@@ -106,7 +129,7 @@ class MidpointNormalize(colors.Normalize):
         :class:`matplotlib.colors.TwoSlopeNorm` instead.
 
     Renormalizing a colorbar is for instance useful when you want that a
-    diverging colorbar is centerd at zero.  Just parse
+    diverging colorbar is centered at zero.  Just parse
     ``norm = mdtplt.MidpointNormalize(midpoint=0.0)`` to the plotting
     function.
 
@@ -210,8 +233,8 @@ def plot(
     ylabel : str, optional
         Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to :meth:`matplotlib.axes.Axes.plot`.
         See there for possible keyword arguments.
@@ -333,8 +356,8 @@ def scatter(
     ylabel : str, optional
         Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to
         :meth:`matplotlib.axes.Axes.scatter`.  See there for possible
@@ -455,8 +478,8 @@ def errorbar(
     ylabel : str, optional
         Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to
         :meth:`matplotlib.axes.Axes.errorbar`.  See there for possible
@@ -561,8 +584,8 @@ def hist(
     ylabel : str, optional
         Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to :meth:`matplotlib.axes.Axes.hist`.
         See there for possible keyword arguments.
@@ -765,8 +788,8 @@ def hlines(
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to
         :meth:`matplotlib.axes.Axes.hlines`.  See there for possible
@@ -861,8 +884,8 @@ def vlines(
     ymin, ymax : scalar, optional
         Same as `xmin` and `xmax`, but for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to
         :meth:`matplotlib.axes.Axes.vlines`.  See there for possible
@@ -954,8 +977,8 @@ def plot_2nd_xaxis(
     xlabel : str, optional
         Label for the secondary x-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to :meth:`matplotlib.axes.Axes.plot`.
         See there for possible keyword arguments.
@@ -1054,8 +1077,8 @@ def plot_2nd_yaxis(
     ylabel : str, optional
         Label for the secondary y-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to :meth:`matplotlib.axes.Axes.plot`.
         See there for possible keyword arguments.
@@ -1173,8 +1196,8 @@ def fill_between(
     ylabel : str, optional
         Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to
         :meth:`matplotlib.axes.Axes.fill_between`.  See there for
@@ -1292,8 +1315,8 @@ def fill_betweenx(
     ylabel : str, optional
         Label for the y-axis.
     legend_loc : int or str, optional
-        Postion of the legend.  See :func:`matplotlib.pyplot.legend` for
-        possible arguments.
+        Position of the legend.  See :func:`matplotlib.pyplot.legend`
+        for possible arguments.
     kwargs : dict, optional
         Keyword arguments to pass to
         :meth:`matplotlib.axes.Axes.fill_betweenx`.  See there for
@@ -1963,7 +1986,7 @@ def sci_notation_tex(x, dec_places=1):
     Parameters
     ----------
     x : scalar
-        The number which to converto to scientific notation in TeX
+        The number which to convert to scientific notation in TeX
         format.
     dec_places : int
         Number of decimal places.  Must not be negative.

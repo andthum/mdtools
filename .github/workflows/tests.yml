@@ -20,7 +20,7 @@ on:
       - "pyproject.toml"
       - "**requirements*.txt"
     tags:
-      - "v[0-9].[0-9].[0-9]*"
+      - "v[0-9]*"
   release:
 
 jobs:
@@ -79,21 +79,21 @@ jobs:
         run: |
           python -m black ./ --check --diff --color \
           --include \
-          **/*template*.py \
           docs/source/conf.py \
-          mdtools/__init__.py \
-          mdtools/_metadata.py \
-          mdtools/box.py \
-          mdtools/dtrj.py \
-          mdtools/file_handler.py \
-          mdtools/numpy_helper_functions.py \
-          mdtools/plot.py \
-          mdtools/run_time_info.py \
-          mdtools/scipy_helper_functions.py \
-          mdtools/select.py \
-          mdtools/statistics.py \
-          mdtools/structure.py \
-          mdtools/version.py \
+          misc/*.py \
+          src/mdtools/__init__.py \
+          src/mdtools/_metadata.py \
+          src/mdtools/box.py \
+          src/mdtools/dtrj.py \
+          src/mdtools/file_handler.py \
+          src/mdtools/numpy_helper_functions.py \
+          src/mdtools/plot.py \
+          src/mdtools/run_time_info.py \
+          src/mdtools/scipy_helper_functions.py \
+          src/mdtools/select.py \
+          src/mdtools/statistics.py \
+          src/mdtools/structure.py \
+          src/mdtools/version.py \
           scripts/discretization/plot_*.py \
           scripts/dynamics/lifetime_autocorr* \
           scripts/dynamics/plot_msd_layer*.py \
@@ -103,8 +103,8 @@ jobs:
           scripts/structure/subvolume_charge.py \
           scripts/structure/plot_gmx_densmap.py \
           scripts/structure/rmsd_vs_time.py \
-          scripts/*.py \
-          setup.py
+          scripts/templates/*.py \
+          *.py
       - name: "Lint code and docstrings with flake8"
         # Use setup.cfg to configure flake8
         # TODO: The --select flag should be removed once all files are

@@ -12,54 +12,37 @@ to execute and run it.  All (documented) scripts are listed in the
     :local:
 
 
-Usage with virtual environment
-------------------------------
+Location of the scripts
+-----------------------
 
-If you have installed MDTools inside a |virtual_Python_environment|
-(recommended), you can run the Python scripts shipped along with this
-package in the :file:`scripts/` directory like this:
-
-.. code-block:: bash
-
-    path/to/virtual/environment/bin/python3 path/to/script.py
-
-or like this:
+If you have installed MDTools into its own |virtual_Python_environment|
+(recommended), all MDTools scripts should have been installed to
+:file:`path/to/virtual/environment/bin/`.  If you have installed MDTools
+without using a virtual environment, all scripts should have been
+installed to :bash:`${HOME}/.local/bin/` (on Linux systems).  Usually,
+these directories are part of your PATH, so that you can simply run the
+scripts by typing their name, e.g.
 
 .. code-block:: bash
 
-    source path/to/virtual/environment/bin/activate
-    python3 path/to/script.py
+    contact_hist.py --help
 
-If you have made the scripts executable with
+If you get a "command-not-found" error, you probably have to add the
+:file:`bin/` directory to your PATH.  On Linux systems, this can e.g. be
+done by adding :bash:`export PATH="${PATH}:absolute/path/to/bin/"` to
+your :bash:`${HOME}/.bashrc` file.
 
-.. code-block:: bash
-
-    chmod u+x path/to/script.py
-
-you can also run the scripts in the following way:
-
-.. code-block:: bash
-
-    source path/to/virtual/environment/bin/activate
-    path/to/script.py
-
-
-Usage without virtual environment
----------------------------------
-
-If you have installed MDTools without creating a
-|virtual_Python_environment| (not recommended), you can run the scripts
-simply by typing
+Alternatively, you can always run the scripts by calling:
 
 .. code-block:: bash
 
     python3 path/to/script.py
 
-or, if you have made the scripts executable (see above), by typing
-
-.. code-block:: bash
-
-    path/to/script.py
+If you have installed MDTools using a virtual environment, you must
+first activate the virtual environment with
+:bash:`source path/to/virtual/environment/bin/activate` or you have to
+replace :bash:`python3` by
+:bash:`path/to/virtual/environment/bin/python3`.
 
 
 Examples
@@ -156,22 +139,6 @@ These might help you to identify bad user input, parameter settings or
 bugs.  If you spot a bug, please open a new |Issue| on |GitHub|.
 
 
-The scripts/ directory
-----------------------
-
-You should not move the scripts to other directories, because some
-scripts import functions from other scripts with relative imports.
-However, scripts will only import from other scripts in the same
-directory or in subdirectories.  Thus, it should be save to move the
-entire :file:`scripts/` directory to another location.  Note however,
-that if you upgrade MDTools, your moved :file:`scripts/` directory will
-contain the old (not upgraded) scripts.  The upgraded scripts are again
-at their default location in :file:`path/to/mdtools/scripts/`.
-
-
-.. _assert statements: https://docs.python.org/3/reference/simple_stmts.html#the-assert-statement
-
-
 Differences to the terminology of MDAnalysis
 --------------------------------------------
 
@@ -210,3 +177,6 @@ unwrap
     (re-)constructed by suming up the displacements from frame to frame
     and adding these displacements to the initial configuration.  See
     e.g. Bülow et al., J. Chem. Phys., 2020, 153, 021101.
+
+
+.. _assert statements: https://docs.python.org/3/reference/simple_stmts.html#the-assert-statement

@@ -4,7 +4,8 @@
 cff-version: "1.2.0"
 message: "If you use this software, please cite it using these metadata."
 
-# Keep project metadata in sync with pyproject.toml and AUTHORS.rst.
+# Keep project metadata in sync with mdtools._metadata.py and
+# AUTHORS.rst.
 type: "software"
 title: "MDTools"
 abstract: >-

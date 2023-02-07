@@ -45,7 +45,7 @@ import sys
 
 # Either install MDTools before building the docs or add MDTools to
 # sys.path.
-module_path = os.path.abspath("../../")
+module_path = os.path.abspath("../../src/")
 sys.path.insert(1, module_path)
 try:
     # First-party libraries
@@ -56,10 +56,11 @@ except ModuleNotFoundError:
         " MDTools directory to sys.path in Sphinx's configuration file"
     )
 
-# Recursively import all directories containing scripts.
+# Recursively add all directories containing scripts to sys.path.
 script_path = os.path.abspath("../../scripts/")
-for script_dir in os.walk(script_path):
-    sys.path.insert(1, script_dir[0])
+for root, _dirs, _files in os.walk(script_path):
+    if os.path.basename(os.path.normpath(root)) not in ("", "__pycache__"):
+        sys.path.insert(1, root)
 
 
 # -- Project information -----------------------------------------------
@@ -260,7 +261,7 @@ primary_domain = "py"
 default_role = None
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = "3.0"
+needs_sphinx = "5.0"
 
 # If true, Sphinx will warn about all references where the target cannot
 # be found.  This includes also argument types like "array_like",
@@ -336,7 +337,7 @@ html_logo = "../logo/mdtools_logo_192x135.png"
 # large.
 html_favicon = "../logo/mdtools_favicon_32x32.png"
 
-# A list of CSS files.  Filenams must be relative to html_static_path.
+# A list of CSS files.  Filenames must be relative to html_static_path.
 html_css_files = ["custom.css"]
 
 # A list of paths that contain custom static files (such as style sheets

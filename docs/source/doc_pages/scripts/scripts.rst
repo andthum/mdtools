@@ -33,20 +33,5 @@ Scripts by Application
     dynamics
     gmx
     structure
+    templates
     other
-
-
-Scripts for Developers
-======================
-
-.. currentmodule:: scripts
-
-.. autosummary::
-    :toctree: _sphinx_autosummary
-    :template: custom-module-template.rst
-    :recursive:
-    :nosignatures:
-
-    script_template
-    script_template_dtrj
-    script_template_plot
