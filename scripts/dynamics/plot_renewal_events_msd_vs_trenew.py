@@ -192,8 +192,8 @@ if __name__ == '__main__':
         pos_t0 *= args.LCONV
 
     sort_ix = np.argsort(trenew)
-    running_average = mdt.stats.running_average(msd[sort_ix], axis=0)
-    running_average_tot = mdt.stats.running_average(msd_tot[sort_ix])
+    cumav = mdt.stats.cumav(msd[sort_ix], axis=0)
+    cumav_tot = mdt.stats.cumav(msd_tot[sort_ix])
 
     print("Elapsed time:         {}"
           .format(datetime.now() - timer),
@@ -288,11 +288,11 @@ if __name__ == '__main__':
                                 direction='out',
                                 length=0.5 * tick_length,
                                 labelsize=0.8 * fontsize_ticks)
-        mask = (running_average_tot > 0)
+        mask = (cumav_tot > 0)
         mdtplt.plot(
             ax=axis,
             x=trenew[mask][sort_ix[mask]],
-            y=running_average_tot[mask],
+            y=cumav_tot[mask],
             xmin=args.XMIN,
             xmax=args.XMAX,
             ymin=args.YMIN,
@@ -378,11 +378,11 @@ if __name__ == '__main__':
                                     direction='out',
                                     length=0.5 * tick_length,
                                     labelsize=0.8 * fontsize_ticks)
-            mask = (running_average.T[i] > 0)
+            mask = (cumav.T[i] > 0)
             mdtplt.plot(
                 ax=axis,
                 x=trenew[mask][sort_ix[mask]],
-                y=running_average.T[i][mask],
+                y=cumav.T[i][mask],
                 xmin=args.XMIN,
                 xmax=args.XMAX,
                 ymin=args.YMIN,

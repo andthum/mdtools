@@ -64,7 +64,7 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
     unbiased : bool, optional
         If ``True``, the covariance
         :math:`\text{Cov}[X_{t_0}, X_{t_0 + \tau}]` is normed by the
-        acutal number of sample points :math:`t_0` (which depends on the
+        actual number of sample points :math:`t_0` (which depends on the
         lag time :math:`\tau`).  If ``False``, the covariance is for all
         lag times normed by the number of sampling points at
         :math:`t_0 = 0` (which is equal to the length of the input array
@@ -93,9 +93,9 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
     :func:`mdtools.statistics.acf_np` :
         Different implementation of the ACF using
         :func:`numpy.correlate`
-    :func:`mdtools.statistics.acf_se`
+    :func:`mdtools.statistics.acf_se` :
         Calculate the standard errors of an autocorrelation function
-    :func:`mdtools.statistics.acf_confint`
+    :func:`mdtools.statistics.acf_confint` :
         Calculate the confidence intervals of an autocorrelation
         function
 
@@ -132,8 +132,8 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
     of `tau_max`.  :math:`T^*` is either :math:`T - \tau` if `unbiased`
     is ``True`` or simply :math:`T` if `unbiased` is ``False``.
 
-    For the sake of completness, the ACF of a non-stationary
-    stochasitic process is given by: [1]_:sup:`,` [2]_
+    For the sake of completeness, the ACF of a non-stationary
+    stochastic process is given by: [1]_:sup:`,` [2]_
 
     .. math::
 
@@ -376,7 +376,7 @@ def acf_np(x, center=True, unbiased=False):
     unbiased : bool, optional
         If ``True``, the covariance
         :math:`\text{Cov}[X_{t_0}, X_{t_0 + \tau}]` is normed by the
-        acutal number of sample points :math:`t_0` (which depends on the
+        actual number of sample points :math:`t_0` (which depends on the
         lag time :math:`\tau`).  If ``False``, the covariance is for all
         lag times normed by the number of sampling points at
         :math:`t_0 = 0` (which is equal to the length of the input array
@@ -400,10 +400,10 @@ def acf_np(x, center=True, unbiased=False):
     See Also
     --------
     :func:`mdtools.statistics.acf` :
-        Different tmplementation of the ACF using using a for loop
-    :func:`mdtools.statistics.acf_se`
+        Different implementation of the ACF using using a for loop
+    :func:`mdtools.statistics.acf_se` :
         Calculate the standard errors of an autocorrelation function
-    :func:`mdtools.statistics.acf_confint`
+    :func:`mdtools.statistics.acf_confint` :
         Calculate the confidence intervals of an autocorrelation
         function
 
@@ -472,7 +472,7 @@ def acf_se(x, axis=None, n=None):
         The axis along which to calculate the SE.  By default, the
         flattened input array is used.
     n : int, optional
-        Sample size (i.e. number of recoreded time points) of the
+        Sample size (i.e. number of recorded time points) of the
         underlying time series.  By default, `n` is set to the number of
         lag times :math:`\tau` in the given ACF.  This is valid for ACFs
         that were computed at all possible lag times from the underlying
@@ -491,7 +491,7 @@ def acf_se(x, axis=None, n=None):
     --------
     :func:`mdtools.statistics.acf` :
         Calculate the autocorrelation function of an array
-    :func:`mdtools.statistics.acf_confint`
+    :func:`mdtools.statistics.acf_confint` :
         Calculate the confidence intervals of an autocorrelation
         function
 
@@ -572,13 +572,13 @@ def acf_se(x, axis=None, n=None):
     # Consistency check
     if se.shape != x.shape:
         raise ValueError(
-            "'se' has shape {} but shoud have shape {}.  This should not have"
+            "'se' has shape {} but should have shape {}.  This should not have"
             " happened".format(se.shape, x.shape)
         )
     if np.any(mdt.nph.take(se, start=0, stop=1, axis=axis) != 0):
         raise ValueError(
             "The first element of the standard error of the ACF is not zero"
-            " but {}.  This shoud not have"
+            " but {}.  This should not have"
             " happened".format(mdt.nph.take(se, start=0, stop=1, axis=axis))
         )
     if not np.allclose(
@@ -586,7 +586,7 @@ def acf_se(x, axis=None, n=None):
     ):
         raise ValueError(
             "The second element of the standard error of the ACF is not"
-            " 1/sqrt(n) = {} but {}.  This shoud not have happened".format(
+            " 1/sqrt(n) = {} but {}.  This should not have happened".format(
                 1 / np.sqrt(n),
                 mdt.nph.take(se, start=1, stop=2, axis=axis),
             )
@@ -614,15 +614,15 @@ def acf_confint(x, axis=None, alpha=0.05, n=None):
         default, the flattened input array is used.
     alpha : scalar, optional
         The significance level (also known as probability of error).
-        The significance leve is the maximum probability for rejecting
+        The significance level is the maximum probability for rejecting
         the null hypothesis although its true (Type 1 error).  Here, the
         null hypothesis is that the underlying time series has no
-        autcorrelation.  Typical values for the significance level are
+        autocorrelation.  Typical values for the significance level are
         0.01 or 0.05.  The smaller the significance level (probability
         for Type 1 error), the higher the probability of a Type 2 error
         (i.e. the null hypothesis is not rejected although it is wrong).
     n : int, optional
-        Sample size (i.e. number of recoreded time points) of the
+        Sample size (i.e. number of recorded time points) of the
         underlying time series.  By default, `n` is set to the number of
         lag times :math:`\tau` in the given ACF.  This is valid for ACFs
         that were computed at all possible lag times from the underlying
@@ -644,12 +644,12 @@ def acf_confint(x, axis=None, alpha=0.05, n=None):
     --------
     :func:`mdtools.statistics.acf` :
         Calculate the autocorrelation function of an array
-    :func:`mdtools.statistics.acf_se`
+    :func:`mdtools.statistics.acf_se` :
         Calculate the standard errors of an autocorrelation function
 
     Notes
     -----
-    The confidence interval of the autcorrelation function (ACF)
+    The confidence interval of the autocorrelation function (ACF)
     :math:`C_\tau` at lag time :math:`\tau` is estimated according to:
     [1]_
 
@@ -781,9 +781,9 @@ def center(x, axis=None, dtype=None, inplace=False):
 
     See Also
     --------
-    :func:`numpy.mean`
+    :func:`numpy.mean` :
         Compute the arithmetic mean along the specified axis
-    :func:`mdtools.statistics.standardize`
+    :func:`mdtools.statistics.standardize` :
         Standardize a distribution
 
     Examples
@@ -883,11 +883,11 @@ def standardize(x, axis=None, dtype=None, inplace=False, ddof=0):
 
     See Also
     --------
-    :func:`numpy.mean`
+    :func:`numpy.mean` :
         Compute the arithmetic mean along the specified axis
-    :func:`numpy.std`
+    :func:`numpy.std` :
         Compute the standard deviation along the specified axis
-    :func:`mdtools.statistics.center`
+    :func:`mdtools.statistics.center` :
         Center a distribution around its sample mean
 
     Examples
@@ -961,7 +961,7 @@ def gaussian(x, mu=0, sigma=1):
     Parameters
     ----------
     x : scalar or array_like
-        Array of :math:`x` values for wich to evaluate :math:`f(x)`.
+        Array of :math:`x` values for which to evaluate :math:`f(x)`.
     mu : scalar or array_like, optional
         Mean of the distribution.  If an array of means is given, it
         must be broadcastable to a common shape with `x`.
@@ -977,7 +977,7 @@ def gaussian(x, mu=0, sigma=1):
 
     See Also
     --------
-    :obj:`scipy.stats.norm`
+    :obj:`scipy.stats.norm` :
         Normal continuous random variable.
 
     Examples
@@ -1026,7 +1026,7 @@ def ngp(x, axis=None, d=1, center=False, is_squared=False):
         `Moment (mathematics) § Sample moments
         <https://en.wikipedia.org/wiki/Moment_(mathematics)#Sample_moments>`_
         `center` must not be used together with `is_squared`, because we
-        cannot estimate the orginal sample mean if `x` is already
+        cannot estimate the original sample mean if `x` is already
         squared.
     is_squared : bool, optional
         If ``True``, `x` is assumed to be already squared.  If ``False``
@@ -1050,8 +1050,9 @@ def ngp(x, axis=None, d=1, center=False, is_squared=False):
     particle displacements :math:`\Delta\mathbf{r}(\tau)` follow a
     Gaussian distribution.  For a Gaussian distribution the NGP is zero.
 
-    This function uses the defition of the NGP in :math:`d`-dimensional
-    euclidean space given in the text on page 12735 of Reference: [#]_
+    This function uses the definition of the NGP in
+    :math:`d`-dimensional euclidean space given in the text on page
+    12735 of Reference: [#]_
 
     .. math::
 
@@ -1152,7 +1153,7 @@ def exp_dist(x, rate=1):
     Parameters
     ----------
     x : scalar or array_like
-        Array of :math:`x` values for wich to evaluate :math:`f(x)`.
+        Array of :math:`x` values for which to evaluate :math:`f(x)`.
     rate : scalar or array_like, optional
         The value(s) for :math:`\lambda`.  If an array is provided, it
         must be broadcastable to a common shape with `x`.
@@ -1164,7 +1165,7 @@ def exp_dist(x, rate=1):
 
     See Also
     --------
-    :obj:`scipy.stats.expon`
+    :obj:`scipy.stats.expon` :
         Exponential continuous random variable
 
     Examples
@@ -1193,7 +1194,7 @@ def exp_dist_log(x, rate):
     Parameters
     ----------
     x : scalar or array_like
-        Array of :math:`x` values for wich to evaluate :math:`f(x)`.
+        Array of :math:`x` values for which to evaluate :math:`f(x)`.
     rate : scalar or array_like, optional
         The value(s) for :math:`\lambda`.  If an array is provided, it
         must be broadcastable to a common shape with `x`.
@@ -1205,7 +1206,7 @@ def exp_dist_log(x, rate):
 
     See Also
     --------
-    :func:`exp_dist`
+    :func:`exp_dist` :
         Exponential distribution
 
     Examples
@@ -1264,7 +1265,7 @@ def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
     Parameters
     ----------
     v : array_like
-        Array of speed values for wich to evaluate :math:`p(v)`.
+        Array of speed values for which to evaluate :math:`p(v)`.
     temp : scalar or None, optional
         Temperature of the particles.  Must be provided if `var` is
         ``None``.
@@ -1275,7 +1276,7 @@ def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
         If ``None``, it is calculated as :math:`\sigma^2 = k_B T / m`,
         where :math:`k_B` is the Boltzmann constant, :math:`T` is the
         temperature and :math:`m` is the mass of the particles.  If
-        both, `temp` and `mass`, are provied, `var` is ignored.
+        both, `temp` and `mass`, are provided, `var` is ignored.
     drift : scalar, optional
         Drift speed of the particles.
     d : int, optional
@@ -1435,11 +1436,11 @@ def var_weighted(a, weights=None, axis=None, return_mean=False):
 
     See Also
     --------
-    :func:`numpy.average`
+    :func:`numpy.average` :
         Compute the weighted average along the specified axis
-    :func:`numpy.var`
+    :func:`numpy.var` :
         Compute the variance along the specified axis
-    :func:`mdtools.statistics.std_weighted`
+    :func:`mdtools.statistics.std_weighted` :
         Compute the weighted standard deviation along a given axis
 
     Notes
@@ -1508,11 +1509,11 @@ def std_weighted(a, weights=None, axis=None, return_mean=False):
 
     See Also
     --------
-    :func:`numpy.average`
+    :func:`numpy.average` :
         Compute the weighted average along the specified axis
-    :func:`numpy.std`
+    :func:`numpy.std` :
         Compute the standard deviation along the specified axis
-    :func:`mdtools.statistics.var_weighted`
+    :func:`mdtools.statistics.var_weighted` :
         Compute the weighted variance along a given axis
 
     Notes
@@ -1547,53 +1548,250 @@ def std_weighted(a, weights=None, axis=None, return_mean=False):
         return std
 
 
-def running_average(a, axis=None, out=None):
+def cumav(a, axis=None, out=None):
     r"""
-    Calculate the running average.
+    Calculate the cumulative average.
 
     Parameters
     ----------
     a : array_like
-        Array of values for which to calculate the running average.
+        Array of values for which to calculate the cumulative average.
+        The dtype is converted to ``numpy.float64``.
     axis : None or int, optional
-        Axis along which the running average is computed.  The default
-        is to compute the running average of the flattened array.
+        Axis along which the cumulative average is computed.  The
+        default is to compute the cumulative average of the flattened
+        array.
     out : array_like
         Alternative output array in which to place the result.  It must
-        have the same shape and buffer length as the expected output but
-        the type will be cast if necessary.  See :func:`numpy.cumsum`
-        for more details.
+        have the same shape and buffer length as ``a.flatten()`` (if
+        `axis` is ``None``) or `a` (if `axis` is not ``None``), but the
+        type will be cast if necessary.  See :func:`numpy.cumsum` for
+        more details.  Note that the result will be cast to the dtype of
+        `out`, even if this dtype cannot hold the resulting values (e.g.
+        if the dtype of `out` is :class:`int` but the result contains
+        floating point values, the fractional part of these floats is
+        cut).  So it's safest, to parse an output array of dtype
+        ``numpy.float64``, also with respect to the accuracy of the
+        average calculation (compare notes of :func:`numpy.mean`).
 
     Returns
     -------
     rav : numpy.ndarray
-        The running average along the specified axis.  The result has
+        The cumulative average along the specified axis.  The result has
         the same size as `a`, and also the same shape as `a` if `axis`
-        is not ``None`` or `a` is a 1-d array.
+        is not ``None`` or if `a` is a 1-d array.
 
     See Also
     --------
-    :func:`numpy.cumsum`
+    :func:`numpy.cumsum` :
         Return the cumulative sum of the elements along a given axis
+    :func:`mdtools.statistics.movav` :
+        Calculate a (weighted) moving average.
+
 
     Notes
     -----
-    The running average at the :math:`n`-position is given by
+    The cumulative average at the :math:`n`-th position is given by
 
     .. math::
 
-        \mu_n = \frac{1}{n} \sum_{i=1}^{n} a_i
+        \mu_n = \frac{1}{n} \sum_{i=0}^{n} a_i
+
+    Examples
+    --------
+    >>> a = np.arange(6)
+    >>> mdt.stats.cumav(a)
+    array([0. , 0.5, 1. , 1.5, 2. , 2.5])
+
+    >>> a = np.arange(6).reshape(2,3)
+    >>> mdt.stats.cumav(a)
+    array([0. , 0.5, 1. , 1.5, 2. , 2.5])
+    >>> mdt.stats.cumav(a, axis=0)
+    array([[0. , 1. , 2. ],
+           [1.5, 2.5, 3.5]])
+    >>> mdt.stats.cumav(a, axis=1)
+    array([[0. , 0.5, 1. ],
+           [3. , 3.5, 4. ]])
+
+    >>> a = np.arange(12).reshape(2,2,3)
+    >>> mdt.stats.cumav(a)
+    array([0. , 0.5, 1. , 1.5, 2. , 2.5, 3. , 3.5, 4. , 4.5, 5. , 5.5])
+    >>> mdt.stats.cumav(a, axis=0)
+    array([[[0., 1., 2.],
+            [3., 4., 5.]],
+    <BLANKLINE>
+           [[3., 4., 5.],
+            [6., 7., 8.]]])
+    >>> mdt.stats.cumav(a, axis=1)
+    array([[[0. , 1. , 2. ],
+            [1.5, 2.5, 3.5]],
+    <BLANKLINE>
+           [[6. , 7. , 8. ],
+            [7.5, 8.5, 9.5]]])
+    >>> mdt.stats.cumav(a, axis=2)
+    array([[[ 0. ,  0.5,  1. ],
+            [ 3. ,  3.5,  4. ]],
+    <BLANKLINE>
+           [[ 6. ,  6.5,  7. ],
+            [ 9. ,  9.5, 10. ]]])
     """
-    a = np.asarray(a)
-    rav = np.cumsum(a, axis=axis, out=out)
+    a = np.asarray(a, dtype=np.float64)
+    cav = np.cumsum(a, axis=axis, out=out)
     if axis is None:
-        norm = np.arange(1, a.size + 1)
+        norm = np.arange(1, a.size + 1, dtype=np.uint32)
     else:
         s = [1 for i in range(a.ndim)]
         s[axis] = a.shape[axis]
         norm = np.arange(1, a.shape[axis] + 1, dtype=np.uint32).reshape(s)
-    rav /= norm
-    return rav
+    cav /= norm
+    return cav
+
+
+def movav(a, wlen, axis=None, out=None):
+    r"""
+    Calculate the moving average.
+
+    Also known as rolling average or running average.
+
+    Parameters
+    ----------
+    a : array_like
+        Array of values for which to calculate the moving average.  The
+        dtype is converted to ``numpy.float64``.
+    wlen : int
+        Length of the averaging window (corresponds to :math:`k` in the
+        formula below).  Must be at least one and not greater than the
+        size of `a` (if `axis` is ``None``) or the length of `a` along
+        the given axis (if `axis` is not ``None``).
+    axis : None or int, optional
+        Axis along which to compute the moving average.  The default is
+        to compute the moving average of the flattened array.
+    out : array_like
+        Alternative output array in which to place the result.  The
+        first ``wlen - 1`` elements along the given axis must be
+        discarded after receiving the result.  `out` must have the same
+        shape and buffer length as ``a.flatten()`` (if `axis` is
+        ``None``) or `a` (if `axis` is not ``None``), but the type will
+        be cast if necessary.  See :func:`numpy.cumsum` for more
+        details.  Note that the result will be cast to the dtype of
+        `out`, even if this dtype cannot hold the resulting values (e.g.
+        if the dtype of `out` is :class:`int` but the result contains
+        floating point values, the fractional part of these floats is
+        cut).  So it's safest, to parse an output array of dtype
+        ``numpy.float64``, also with respect to the accuracy of the
+        average calculation (compare notes of :func:`numpy.mean`).
+
+    Returns
+    -------
+    mav : numpy.ndarray
+        The moving average along the specified axis.  The result has the
+        same shape as `a` except along the given axis where the length
+        is smaller by ``wlen - 1``.
+
+    See Also
+    --------
+    :func:`mdtools.statistics.cumav` :
+        Calculate the cumulative average.
+
+    Notes
+    -----
+    The moving average at the :math:`m`-th position with a window size
+    of :math:`k` is given by
+
+    .. math::
+
+        \mu_m^k = \frac{1}{k} \sum_{i=m}^{m+k-1} a_i
+
+    This function implements the moving average according to the
+    following formula using :func:`numpy.cumsum`:
+
+    .. math::
+
+        \mu_m^k = \frac{1}{k}
+        \left( \sum_{i=0}^{m+k-1} a_i - \sum_{i=0}^{m-1} a_i \right)
+
+    Examples
+    --------
+    >>> a = np.arange(6)
+    >>> mdt.stats.movav(a, wlen=3)
+    array([1., 2., 3., 4.])
+    >>> mdt.stats.movav(a, wlen=4)
+    array([1.5, 2.5, 3.5])
+
+    >>> a = np.arange(12).reshape(3,4)
+    >>> mdt.stats.movav(a, wlen=5)
+    array([2., 3., 4., 5., 6., 7., 8., 9.])
+    >>> mdt.stats.movav(a, wlen=2, axis=0)
+    array([[2., 3., 4., 5.],
+           [6., 7., 8., 9.]])
+    >>> mdt.stats.movav(a, wlen=2, axis=1)
+    array([[ 0.5,  1.5,  2.5],
+           [ 4.5,  5.5,  6.5],
+           [ 8.5,  9.5, 10.5]])
+
+    >>> a = np.arange(36).reshape(3,3,4)
+    >>> mdt.stats.movav(a, wlen=29)
+    array([14., 15., 16., 17., 18., 19., 20., 21.])
+    >>> mdt.stats.movav(a, wlen=2, axis=0)
+    array([[[ 6.,  7.,  8.,  9.],
+            [10., 11., 12., 13.],
+            [14., 15., 16., 17.]],
+    <BLANKLINE>
+           [[18., 19., 20., 21.],
+            [22., 23., 24., 25.],
+            [26., 27., 28., 29.]]])
+    >>> mdt.stats.movav(a, wlen=2, axis=1)
+    array([[[ 2.,  3.,  4.,  5.],
+            [ 6.,  7.,  8.,  9.]],
+    <BLANKLINE>
+           [[14., 15., 16., 17.],
+            [18., 19., 20., 21.]],
+    <BLANKLINE>
+           [[26., 27., 28., 29.],
+            [30., 31., 32., 33.]]])
+    >>> mdt.stats.movav(a, wlen=3, axis=2)
+    array([[[ 1.,  2.],
+            [ 5.,  6.],
+            [ 9., 10.]],
+    <BLANKLINE>
+           [[13., 14.],
+            [17., 18.],
+            [21., 22.]],
+    <BLANKLINE>
+           [[25., 26.],
+            [29., 30.],
+            [33., 34.]]])
+    """
+    a = np.asarray(a, dtype=np.float64)
+    mav = np.cumsum(a, axis=axis, out=out)
+    if wlen < 1:
+        raise ValueError(
+            "The window length must be at least 1 but you gave"
+            " {}.".format(wlen)
+        )
+    # Call `a.shape[axis]` only after `np.cumsum` to get a proper
+    # `AxisError` instead of an `IndexError` if the axis does not exist.
+    elif axis is None and wlen > a.size:
+        raise ValueError(
+            "The window length ({}) must not be greater than the size of the"
+            " input array {}.".format(wlen, a.size)
+        )
+    elif axis is not None and wlen > a.shape[axis]:
+        raise ValueError(
+            "The window length ({}) must not be greater than the length of the"
+            " input array along the given axis {}.".format(wlen, a.shape[axis])
+        )
+    # `mav_full_sum` is the first sum in the round brackets of the
+    # implementation formula from the above docstring.
+    # Note that `mdt.nph.take` always creates a view, not a copy.
+    mav_full_sum = mdt.nph.take(mav, start=wlen, axis=axis)
+    # Don't do an in-place subtraction here (`mav_windows -= ...`),
+    # because then array elements will already be changed before the
+    # subtraction process has finished.
+    mav_full_sum[:] = mav_full_sum - mdt.nph.take(mav, stop=-wlen, axis=axis)
+    mav_windows = mdt.nph.take(mav, start=wlen - 1, axis=axis)
+    mav_windows /= wlen
+    return mav_windows
 
 
 def block_average(data, axis=0, ddof=0, dtype=np.float64):
@@ -1615,7 +1813,7 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
         Delta Degrees of Freedom.  The divisor used in calculating the
         standard deviation is ``N-ddof``, where ``N`` is the number of
         measurements.
-    dtpye : type, optional
+    dtype : type, optional
         The data type of the output arrays and the data type to use in
         computing the means and standard deviations.  Note: Computing
         means and standard deviation using ``numpy.float32`` or lower
@@ -1630,17 +1828,17 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
 
     See Also
     --------
-    :func:`numpy.mean`
+    :func:`numpy.mean` :
         Compute the arithmetic mean along the specified axis
-    :func:`numpy.std`
+    :func:`numpy.std` :
         Compute the standard deviation along the specified axis
     """
     data = np.asarray(data)
-    num_measurments = data.shape[axis]
+    num_measurements = data.shape[axis]
     mean = np.mean(data, axis=axis, dtype=dtype)
     sd = np.std(data, axis=axis, ddof=ddof, dtype=dtype)
     # Standard deviation of the mean value after n series of
     # measurement: sd_n = sd / sqrt(n).  The mean value remains always
     # the same inside the error region.
-    np.divide(sd, np.sqrt(num_measurments), out=sd, dtype=dtype)
+    np.divide(sd, np.sqrt(num_measurements), out=sd, dtype=dtype)
     return mean, sd
