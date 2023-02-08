@@ -93,9 +93,9 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
     :func:`mdtools.statistics.acf_np` :
         Different implementation of the ACF using
         :func:`numpy.correlate`
-    :func:`mdtools.statistics.acf_se`
+    :func:`mdtools.statistics.acf_se` :
         Calculate the standard errors of an autocorrelation function
-    :func:`mdtools.statistics.acf_confint`
+    :func:`mdtools.statistics.acf_confint` :
         Calculate the confidence intervals of an autocorrelation
         function
 
@@ -401,9 +401,9 @@ def acf_np(x, center=True, unbiased=False):
     --------
     :func:`mdtools.statistics.acf` :
         Different implementation of the ACF using using a for loop
-    :func:`mdtools.statistics.acf_se`
+    :func:`mdtools.statistics.acf_se` :
         Calculate the standard errors of an autocorrelation function
-    :func:`mdtools.statistics.acf_confint`
+    :func:`mdtools.statistics.acf_confint` :
         Calculate the confidence intervals of an autocorrelation
         function
 
@@ -491,7 +491,7 @@ def acf_se(x, axis=None, n=None):
     --------
     :func:`mdtools.statistics.acf` :
         Calculate the autocorrelation function of an array
-    :func:`mdtools.statistics.acf_confint`
+    :func:`mdtools.statistics.acf_confint` :
         Calculate the confidence intervals of an autocorrelation
         function
 
@@ -644,7 +644,7 @@ def acf_confint(x, axis=None, alpha=0.05, n=None):
     --------
     :func:`mdtools.statistics.acf` :
         Calculate the autocorrelation function of an array
-    :func:`mdtools.statistics.acf_se`
+    :func:`mdtools.statistics.acf_se` :
         Calculate the standard errors of an autocorrelation function
 
     Notes
@@ -781,9 +781,9 @@ def center(x, axis=None, dtype=None, inplace=False):
 
     See Also
     --------
-    :func:`numpy.mean`
+    :func:`numpy.mean` :
         Compute the arithmetic mean along the specified axis
-    :func:`mdtools.statistics.standardize`
+    :func:`mdtools.statistics.standardize` :
         Standardize a distribution
 
     Examples
@@ -883,11 +883,11 @@ def standardize(x, axis=None, dtype=None, inplace=False, ddof=0):
 
     See Also
     --------
-    :func:`numpy.mean`
+    :func:`numpy.mean` :
         Compute the arithmetic mean along the specified axis
-    :func:`numpy.std`
+    :func:`numpy.std` :
         Compute the standard deviation along the specified axis
-    :func:`mdtools.statistics.center`
+    :func:`mdtools.statistics.center` :
         Center a distribution around its sample mean
 
     Examples
@@ -977,7 +977,7 @@ def gaussian(x, mu=0, sigma=1):
 
     See Also
     --------
-    :obj:`scipy.stats.norm`
+    :obj:`scipy.stats.norm` :
         Normal continuous random variable.
 
     Examples
@@ -1165,7 +1165,7 @@ def exp_dist(x, rate=1):
 
     See Also
     --------
-    :obj:`scipy.stats.expon`
+    :obj:`scipy.stats.expon` :
         Exponential continuous random variable
 
     Examples
@@ -1206,7 +1206,7 @@ def exp_dist_log(x, rate):
 
     See Also
     --------
-    :func:`exp_dist`
+    :func:`exp_dist` :
         Exponential distribution
 
     Examples
@@ -1436,11 +1436,11 @@ def var_weighted(a, weights=None, axis=None, return_mean=False):
 
     See Also
     --------
-    :func:`numpy.average`
+    :func:`numpy.average` :
         Compute the weighted average along the specified axis
-    :func:`numpy.var`
+    :func:`numpy.var` :
         Compute the variance along the specified axis
-    :func:`mdtools.statistics.std_weighted`
+    :func:`mdtools.statistics.std_weighted` :
         Compute the weighted standard deviation along a given axis
 
     Notes
@@ -1509,11 +1509,11 @@ def std_weighted(a, weights=None, axis=None, return_mean=False):
 
     See Also
     --------
-    :func:`numpy.average`
+    :func:`numpy.average` :
         Compute the weighted average along the specified axis
-    :func:`numpy.std`
+    :func:`numpy.std` :
         Compute the standard deviation along the specified axis
-    :func:`mdtools.statistics.var_weighted`
+    :func:`mdtools.statistics.var_weighted` :
         Compute the weighted variance along a given axis
 
     Notes
@@ -1574,7 +1574,7 @@ def running_average(a, axis=None, out=None):
 
     See Also
     --------
-    :func:`numpy.cumsum`
+    :func:`numpy.cumsum` :
         Return the cumulative sum of the elements along a given axis
 
     Notes
@@ -1631,9 +1631,9 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
 
     See Also
     --------
-    :func:`numpy.mean`
+    :func:`numpy.mean` :
         Compute the arithmetic mean along the specified axis
-    :func:`numpy.std`
+    :func:`numpy.std` :
         Compute the standard deviation along the specified axis
     """
     data = np.asarray(data)
