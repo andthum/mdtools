@@ -1585,6 +1585,9 @@ def cumav(a, axis=None, out=None):
     --------
     :func:`numpy.cumsum` :
         Return the cumulative sum of the elements along a given axis
+    :func:`mdtools.statistics.movav` :
+        Calculate a (weighted) moving average.
+
 
     Notes
     -----
@@ -1592,7 +1595,7 @@ def cumav(a, axis=None, out=None):
 
     .. math::
 
-        \mu_n = \frac{1}{n} \sum_{i=1}^{n} a_i
+        \mu_n = \frac{1}{n} \sum_{i=0}^{n} a_i
 
     Examples
     --------
@@ -1642,6 +1645,153 @@ def cumav(a, axis=None, out=None):
         norm = np.arange(1, a.shape[axis] + 1, dtype=np.uint32).reshape(s)
     cav /= norm
     return cav
+
+
+def movav(a, wlen, axis=None, out=None):
+    r"""
+    Calculate the moving average.
+
+    Also known as rolling average or running average.
+
+    Parameters
+    ----------
+    a : array_like
+        Array of values for which to calculate the moving average.  The
+        dtype is converted to ``numpy.float64``.
+    wlen : int
+        Length of the averaging window (corresponds to :math:`k` in the
+        formula below).  Must be at least one and not greater than the
+        size of `a` (if `axis` is ``None``) or the length of `a` along
+        the given axis (if `axis` is not ``None``).
+    axis : None or int, optional
+        Axis along which to compute the moving average.  The default is
+        to compute the moving average of the flattened array.
+    out : array_like
+        Alternative output array in which to place the result.  The
+        first ``wlen - 1`` elements along the given axis must be
+        discarded after receiving the result.  `out` must have the same
+        shape and buffer length as ``a.flatten()`` (if `axis` is
+        ``None``) or `a` (if `axis` is not ``None``), but the type will
+        be cast if necessary.  See :func:`numpy.cumsum` for more
+        details.  Note that the result will be cast to the dtype of
+        `out`, even if this dtype cannot hold the resulting values (e.g.
+        if the dtype of `out` is :class:`int` but the result contains
+        floating point values, the fractional part of these floats is
+        cut).  So it's safest, to parse an output array of dtype
+        ``numpy.float64``, also with respect to the accuracy of the
+        average calculation (compare notes of :func:`numpy.mean`).
+
+    Returns
+    -------
+    mav : numpy.ndarray
+        The moving average along the specified axis.  The result has the
+        same shape as `a` except along the given axis where the length
+        is smaller by ``wlen - 1``.
+
+    See Also
+    --------
+    :func:`mdtools.statistics.cumav` :
+        Calculate the cumulative average.
+
+    Notes
+    -----
+    The moving average at the :math:`m`-th position with a window size
+    of :math:`k` is given by
+
+    .. math::
+
+        \mu_m^k = \frac{1}{k} \sum_{i=m}^{m+k-1} a_i
+
+    This function implements the moving average according to the
+    following formula using :func:`numpy.cumsum`:
+
+    .. math::
+
+        \mu_m^k = \frac{1}{k}
+        \left( \sum_{i=0}^{m+k-1} a_i - \sum_{i=0}^{m-1} a_i \right)
+
+    Examples
+    --------
+    >>> a = np.arange(6)
+    >>> mdt.stats.movav(a, wlen=3)
+    array([1., 2., 3., 4.])
+    >>> mdt.stats.movav(a, wlen=4)
+    array([1.5, 2.5, 3.5])
+
+    >>> a = np.arange(12).reshape(3,4)
+    >>> mdt.stats.movav(a, wlen=5)
+    array([2., 3., 4., 5., 6., 7., 8., 9.])
+    >>> mdt.stats.movav(a, wlen=2, axis=0)
+    array([[2., 3., 4., 5.],
+           [6., 7., 8., 9.]])
+    >>> mdt.stats.movav(a, wlen=2, axis=1)
+    array([[ 0.5,  1.5,  2.5],
+           [ 4.5,  5.5,  6.5],
+           [ 8.5,  9.5, 10.5]])
+
+    >>> a = np.arange(36).reshape(3,3,4)
+    >>> mdt.stats.movav(a, wlen=29)
+    array([14., 15., 16., 17., 18., 19., 20., 21.])
+    >>> mdt.stats.movav(a, wlen=2, axis=0)
+    array([[[ 6.,  7.,  8.,  9.],
+            [10., 11., 12., 13.],
+            [14., 15., 16., 17.]],
+    <BLANKLINE>
+           [[18., 19., 20., 21.],
+            [22., 23., 24., 25.],
+            [26., 27., 28., 29.]]])
+    >>> mdt.stats.movav(a, wlen=2, axis=1)
+    array([[[ 2.,  3.,  4.,  5.],
+            [ 6.,  7.,  8.,  9.]],
+    <BLANKLINE>
+           [[14., 15., 16., 17.],
+            [18., 19., 20., 21.]],
+    <BLANKLINE>
+           [[26., 27., 28., 29.],
+            [30., 31., 32., 33.]]])
+    >>> mdt.stats.movav(a, wlen=3, axis=2)
+    array([[[ 1.,  2.],
+            [ 5.,  6.],
+            [ 9., 10.]],
+    <BLANKLINE>
+           [[13., 14.],
+            [17., 18.],
+            [21., 22.]],
+    <BLANKLINE>
+           [[25., 26.],
+            [29., 30.],
+            [33., 34.]]])
+    """
+    a = np.asarray(a, dtype=np.float64)
+    mav = np.cumsum(a, axis=axis, out=out)
+    if wlen < 1:
+        raise ValueError(
+            "The window length must be at least 1 but you gave"
+            " {}.".format(wlen)
+        )
+    # Call `a.shape[axis]` only after `np.cumsum` to get a proper
+    # `AxisError` instead of an `IndexError` if the axis does not exist.
+    elif axis is None and wlen > a.size:
+        raise ValueError(
+            "The window length ({}) must not be greater than the size of the"
+            " input array {}.".format(wlen, a.size)
+        )
+    elif axis is not None and wlen > a.shape[axis]:
+        raise ValueError(
+            "The window length ({}) must not be greater than the length of the"
+            " input array along the given axis {}.".format(wlen, a.shape[axis])
+        )
+    # `mav_full_sum` is the first sum in the round brackets of the
+    # implementation formula from the above docstring.
+    # Note that `mdt.nph.take` always creates a view, not a copy.
+    mav_full_sum = mdt.nph.take(mav, start=wlen, axis=axis)
+    # Don't do an in-place subtraction here (`mav_windows -= ...`),
+    # because then array elements will already be changed before the
+    # subtraction process has finished.
+    mav_full_sum[:] = mav_full_sum - mdt.nph.take(mav, stop=-wlen, axis=axis)
+    mav_windows = mdt.nph.take(mav, start=wlen - 1, axis=axis)
+    mav_windows /= wlen
+    return mav_windows
 
 
 def block_average(data, axis=0, ddof=0, dtype=np.float64):
