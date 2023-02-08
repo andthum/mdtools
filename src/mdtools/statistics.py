@@ -1548,17 +1548,18 @@ def std_weighted(a, weights=None, axis=None, return_mean=False):
         return std
 
 
-def running_average(a, axis=None, out=None):
+def cumav(a, axis=None, out=None):
     r"""
-    Calculate the running average.
+    Calculate the cumulative average.
 
     Parameters
     ----------
     a : array_like
-        Array of values for which to calculate the running average.
+        Array of values for which to calculate the cumulative average.
     axis : None or int, optional
-        Axis along which the running average is computed.  The default
-        is to compute the running average of the flattened array.
+        Axis along which the cumulative average is computed.  The
+        default is to compute the cumulative average of the flattened
+        array.
     out : array_like
         Alternative output array in which to place the result.  It must
         have the same shape and buffer length as the expected output but
@@ -1568,7 +1569,7 @@ def running_average(a, axis=None, out=None):
     Returns
     -------
     rav : numpy.ndarray
-        The running average along the specified axis.  The result has
+        The cumulative average along the specified axis.  The result has
         the same size as `a`, and also the same shape as `a` if `axis`
         is not ``None`` or if `a` is a 1-d array.
 
@@ -1579,22 +1580,23 @@ def running_average(a, axis=None, out=None):
 
     Notes
     -----
-    The running average at the :math:`n`-position is given by
+    The cumulative average at the :math:`n`-th position is given by
 
     .. math::
 
         \mu_n = \frac{1}{n} \sum_{i=1}^{n} a_i
+
     """
     a = np.asarray(a)
-    rav = np.cumsum(a, axis=axis, out=out)
+    cav = np.cumsum(a, axis=axis, out=out)
     if axis is None:
         norm = np.arange(1, a.size + 1)
     else:
         s = [1 for i in range(a.ndim)]
         s[axis] = a.shape[axis]
         norm = np.arange(1, a.shape[axis] + 1, dtype=np.uint32).reshape(s)
-    rav /= norm
-    return rav
+    cav /= norm
+    return cav
 
 
 def block_average(data, axis=0, ddof=0, dtype=np.float64):
