@@ -64,7 +64,7 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
     unbiased : bool, optional
         If ``True``, the covariance
         :math:`\text{Cov}[X_{t_0}, X_{t_0 + \tau}]` is normed by the
-        acutal number of sample points :math:`t_0` (which depends on the
+        actual number of sample points :math:`t_0` (which depends on the
         lag time :math:`\tau`).  If ``False``, the covariance is for all
         lag times normed by the number of sampling points at
         :math:`t_0 = 0` (which is equal to the length of the input array
@@ -132,8 +132,8 @@ def acf(x, axis=None, dt=1, dtau=1, tau_max=None, center=True, unbiased=False):
     of `tau_max`.  :math:`T^*` is either :math:`T - \tau` if `unbiased`
     is ``True`` or simply :math:`T` if `unbiased` is ``False``.
 
-    For the sake of completness, the ACF of a non-stationary
-    stochasitic process is given by: [1]_:sup:`,` [2]_
+    For the sake of completeness, the ACF of a non-stationary
+    stochastic process is given by: [1]_:sup:`,` [2]_
 
     .. math::
 
@@ -376,7 +376,7 @@ def acf_np(x, center=True, unbiased=False):
     unbiased : bool, optional
         If ``True``, the covariance
         :math:`\text{Cov}[X_{t_0}, X_{t_0 + \tau}]` is normed by the
-        acutal number of sample points :math:`t_0` (which depends on the
+        actual number of sample points :math:`t_0` (which depends on the
         lag time :math:`\tau`).  If ``False``, the covariance is for all
         lag times normed by the number of sampling points at
         :math:`t_0 = 0` (which is equal to the length of the input array
@@ -400,7 +400,7 @@ def acf_np(x, center=True, unbiased=False):
     See Also
     --------
     :func:`mdtools.statistics.acf` :
-        Different tmplementation of the ACF using using a for loop
+        Different implementation of the ACF using using a for loop
     :func:`mdtools.statistics.acf_se`
         Calculate the standard errors of an autocorrelation function
     :func:`mdtools.statistics.acf_confint`
@@ -472,7 +472,7 @@ def acf_se(x, axis=None, n=None):
         The axis along which to calculate the SE.  By default, the
         flattened input array is used.
     n : int, optional
-        Sample size (i.e. number of recoreded time points) of the
+        Sample size (i.e. number of recorded time points) of the
         underlying time series.  By default, `n` is set to the number of
         lag times :math:`\tau` in the given ACF.  This is valid for ACFs
         that were computed at all possible lag times from the underlying
@@ -572,13 +572,13 @@ def acf_se(x, axis=None, n=None):
     # Consistency check
     if se.shape != x.shape:
         raise ValueError(
-            "'se' has shape {} but shoud have shape {}.  This should not have"
+            "'se' has shape {} but should have shape {}.  This should not have"
             " happened".format(se.shape, x.shape)
         )
     if np.any(mdt.nph.take(se, start=0, stop=1, axis=axis) != 0):
         raise ValueError(
             "The first element of the standard error of the ACF is not zero"
-            " but {}.  This shoud not have"
+            " but {}.  This should not have"
             " happened".format(mdt.nph.take(se, start=0, stop=1, axis=axis))
         )
     if not np.allclose(
@@ -586,7 +586,7 @@ def acf_se(x, axis=None, n=None):
     ):
         raise ValueError(
             "The second element of the standard error of the ACF is not"
-            " 1/sqrt(n) = {} but {}.  This shoud not have happened".format(
+            " 1/sqrt(n) = {} but {}.  This should not have happened".format(
                 1 / np.sqrt(n),
                 mdt.nph.take(se, start=1, stop=2, axis=axis),
             )
@@ -614,15 +614,15 @@ def acf_confint(x, axis=None, alpha=0.05, n=None):
         default, the flattened input array is used.
     alpha : scalar, optional
         The significance level (also known as probability of error).
-        The significance leve is the maximum probability for rejecting
+        The significance level is the maximum probability for rejecting
         the null hypothesis although its true (Type 1 error).  Here, the
         null hypothesis is that the underlying time series has no
-        autcorrelation.  Typical values for the significance level are
+        autocorrelation.  Typical values for the significance level are
         0.01 or 0.05.  The smaller the significance level (probability
         for Type 1 error), the higher the probability of a Type 2 error
         (i.e. the null hypothesis is not rejected although it is wrong).
     n : int, optional
-        Sample size (i.e. number of recoreded time points) of the
+        Sample size (i.e. number of recorded time points) of the
         underlying time series.  By default, `n` is set to the number of
         lag times :math:`\tau` in the given ACF.  This is valid for ACFs
         that were computed at all possible lag times from the underlying
@@ -649,7 +649,7 @@ def acf_confint(x, axis=None, alpha=0.05, n=None):
 
     Notes
     -----
-    The confidence interval of the autcorrelation function (ACF)
+    The confidence interval of the autocorrelation function (ACF)
     :math:`C_\tau` at lag time :math:`\tau` is estimated according to:
     [1]_
 
@@ -961,7 +961,7 @@ def gaussian(x, mu=0, sigma=1):
     Parameters
     ----------
     x : scalar or array_like
-        Array of :math:`x` values for wich to evaluate :math:`f(x)`.
+        Array of :math:`x` values for which to evaluate :math:`f(x)`.
     mu : scalar or array_like, optional
         Mean of the distribution.  If an array of means is given, it
         must be broadcastable to a common shape with `x`.
@@ -1026,7 +1026,7 @@ def ngp(x, axis=None, d=1, center=False, is_squared=False):
         `Moment (mathematics) § Sample moments
         <https://en.wikipedia.org/wiki/Moment_(mathematics)#Sample_moments>`_
         `center` must not be used together with `is_squared`, because we
-        cannot estimate the orginal sample mean if `x` is already
+        cannot estimate the original sample mean if `x` is already
         squared.
     is_squared : bool, optional
         If ``True``, `x` is assumed to be already squared.  If ``False``
@@ -1050,8 +1050,9 @@ def ngp(x, axis=None, d=1, center=False, is_squared=False):
     particle displacements :math:`\Delta\mathbf{r}(\tau)` follow a
     Gaussian distribution.  For a Gaussian distribution the NGP is zero.
 
-    This function uses the defition of the NGP in :math:`d`-dimensional
-    euclidean space given in the text on page 12735 of Reference: [#]_
+    This function uses the definition of the NGP in
+    :math:`d`-dimensional euclidean space given in the text on page
+    12735 of Reference: [#]_
 
     .. math::
 
@@ -1152,7 +1153,7 @@ def exp_dist(x, rate=1):
     Parameters
     ----------
     x : scalar or array_like
-        Array of :math:`x` values for wich to evaluate :math:`f(x)`.
+        Array of :math:`x` values for which to evaluate :math:`f(x)`.
     rate : scalar or array_like, optional
         The value(s) for :math:`\lambda`.  If an array is provided, it
         must be broadcastable to a common shape with `x`.
@@ -1193,7 +1194,7 @@ def exp_dist_log(x, rate):
     Parameters
     ----------
     x : scalar or array_like
-        Array of :math:`x` values for wich to evaluate :math:`f(x)`.
+        Array of :math:`x` values for which to evaluate :math:`f(x)`.
     rate : scalar or array_like, optional
         The value(s) for :math:`\lambda`.  If an array is provided, it
         must be broadcastable to a common shape with `x`.
@@ -1264,7 +1265,7 @@ def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
     Parameters
     ----------
     v : array_like
-        Array of speed values for wich to evaluate :math:`p(v)`.
+        Array of speed values for which to evaluate :math:`p(v)`.
     temp : scalar or None, optional
         Temperature of the particles.  Must be provided if `var` is
         ``None``.
@@ -1275,7 +1276,7 @@ def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
         If ``None``, it is calculated as :math:`\sigma^2 = k_B T / m`,
         where :math:`k_B` is the Boltzmann constant, :math:`T` is the
         temperature and :math:`m` is the mass of the particles.  If
-        both, `temp` and `mass`, are provied, `var` is ignored.
+        both, `temp` and `mass`, are provided, `var` is ignored.
     drift : scalar, optional
         Drift speed of the particles.
     d : int, optional
@@ -1569,7 +1570,7 @@ def running_average(a, axis=None, out=None):
     rav : numpy.ndarray
         The running average along the specified axis.  The result has
         the same size as `a`, and also the same shape as `a` if `axis`
-        is not ``None`` or `a` is a 1-d array.
+        is not ``None`` or if `a` is a 1-d array.
 
     See Also
     --------
@@ -1615,7 +1616,7 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
         Delta Degrees of Freedom.  The divisor used in calculating the
         standard deviation is ``N-ddof``, where ``N`` is the number of
         measurements.
-    dtpye : type, optional
+    dtype : type, optional
         The data type of the output arrays and the data type to use in
         computing the means and standard deviations.  Note: Computing
         means and standard deviation using ``numpy.float32`` or lower
@@ -1636,11 +1637,11 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
         Compute the standard deviation along the specified axis
     """
     data = np.asarray(data)
-    num_measurments = data.shape[axis]
+    num_measurements = data.shape[axis]
     mean = np.mean(data, axis=axis, dtype=dtype)
     sd = np.std(data, axis=axis, ddof=ddof, dtype=dtype)
     # Standard deviation of the mean value after n series of
     # measurement: sd_n = sd / sqrt(n).  The mean value remains always
     # the same inside the error region.
-    np.divide(sd, np.sqrt(num_measurments), out=sd, dtype=dtype)
+    np.divide(sd, np.sqrt(num_measurements), out=sd, dtype=dtype)
     return mean, sd
