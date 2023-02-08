@@ -1556,15 +1556,23 @@ def cumav(a, axis=None, out=None):
     ----------
     a : array_like
         Array of values for which to calculate the cumulative average.
+        The dtype is converted to ``numpy.float64``.
     axis : None or int, optional
         Axis along which the cumulative average is computed.  The
         default is to compute the cumulative average of the flattened
         array.
     out : array_like
         Alternative output array in which to place the result.  It must
-        have the same shape and buffer length as the expected output but
-        the type will be cast if necessary.  See :func:`numpy.cumsum`
-        for more details.
+        have the same shape and buffer length as ``a.flatten()`` (if
+        `axis` is ``None``) or `a` (if `axis` is not ``None``), but the
+        type will be cast if necessary.  See :func:`numpy.cumsum` for
+        more details.  Note that the result will be cast to the dtype of
+        `out`, even if this dtype cannot hold the resulting values (e.g.
+        if the dtype of `out` is :class:`int` but the result contains
+        floating point values, the fractional part of these floats is
+        cut).  So it's safest, to parse an output array of dtype
+        ``numpy.float64``, also with respect to the accuracy of the
+        average calculation (compare notes of :func:`numpy.mean`).
 
     Returns
     -------
@@ -1586,11 +1594,48 @@ def cumav(a, axis=None, out=None):
 
         \mu_n = \frac{1}{n} \sum_{i=1}^{n} a_i
 
+    Examples
+    --------
+    >>> a = np.arange(6)
+    >>> mdt.stats.cumav(a)
+    array([0. , 0.5, 1. , 1.5, 2. , 2.5])
+
+    >>> a = np.arange(6).reshape(2,3)
+    >>> mdt.stats.cumav(a)
+    array([0. , 0.5, 1. , 1.5, 2. , 2.5])
+    >>> mdt.stats.cumav(a, axis=0)
+    array([[0. , 1. , 2. ],
+           [1.5, 2.5, 3.5]])
+    >>> mdt.stats.cumav(a, axis=1)
+    array([[0. , 0.5, 1. ],
+           [3. , 3.5, 4. ]])
+
+    >>> a = np.arange(12).reshape(2,2,3)
+    >>> mdt.stats.cumav(a)
+    array([0. , 0.5, 1. , 1.5, 2. , 2.5, 3. , 3.5, 4. , 4.5, 5. , 5.5])
+    >>> mdt.stats.cumav(a, axis=0)
+    array([[[0., 1., 2.],
+            [3., 4., 5.]],
+    <BLANKLINE>
+           [[3., 4., 5.],
+            [6., 7., 8.]]])
+    >>> mdt.stats.cumav(a, axis=1)
+    array([[[0. , 1. , 2. ],
+            [1.5, 2.5, 3.5]],
+    <BLANKLINE>
+           [[6. , 7. , 8. ],
+            [7.5, 8.5, 9.5]]])
+    >>> mdt.stats.cumav(a, axis=2)
+    array([[[ 0. ,  0.5,  1. ],
+            [ 3. ,  3.5,  4. ]],
+    <BLANKLINE>
+           [[ 6. ,  6.5,  7. ],
+            [ 9. ,  9.5, 10. ]]])
     """
-    a = np.asarray(a)
+    a = np.asarray(a, dtype=np.float64)
     cav = np.cumsum(a, axis=axis, out=out)
     if axis is None:
-        norm = np.arange(1, a.size + 1)
+        norm = np.arange(1, a.size + 1, dtype=np.uint32)
     else:
         s = [1 for i in range(a.ndim)]
         s[axis] = a.shape[axis]
