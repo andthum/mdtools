@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This file is part of MDTools.
-# Copyright (C) 2021, 2022  The MDTools Development Team and all
+# Copyright (C) 2021-2023  The MDTools Development Team and all
 # contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
@@ -27,7 +27,9 @@ Plot statistics about the distribution of energy terms contained in an
 For each energy term selected with \--observables the following plots
 are created:
 
-    * The evolution of the energy term with time.
+    * The full evolution of the energy term with time including the
+      cumulative average and the centered moving average.
+    * A cutout of the above plot for the last \--num-points data points.
     * A histogram showing the distribution of the energy values.
     * The autocorrelation function (ACF) of the energy term with
       confidence intervals given by :math:`1 - \alpha`.
@@ -75,12 +77,21 @@ Options
     must be present in the .edr file.  If an energy term contains a
     space, like 'Kinetic En.', put it in quotes.  ``'Time'`` is not
     allowed as selection.  Default:
-    ``["Potential", "Kinetic En.", "Pressure"]``
+    ``["Potential", "Kinetic En.", "Total Energy"]``
 --print-obs
     Only print all energy terms contained in the .edr file and exit.
 --diff
     Use the difference between consecutive values of the energy term for
     the analysis rather than the energy term itself.
+--wlen
+    Window length for calculating the centered moving average.  Should
+    be odd for a real *centered* moving average.  Default: ``501``.
+--num-points
+    The cutout plot show the last `NUM_POINTS` data points of the
+    selected energy term(s) vs. time.  Must not be negative.  If
+    `NUM_POINTS` is greater then the actual number of available data
+    points or ``None``, it is set to the maximum number of available
+    data points.  Default: ``500``.
 --alpha
     Significance level for D'Agostino's and Pearson's K-squared test for
     normality of the distribution of energy values (see
@@ -94,12 +105,6 @@ Options
     K-squared test) or have no autocorrelation (in case of the ACF).
     For more details about the significance level see
     :func:`mdtools.statistics.acf_confint`.  Default: ``0.1``
---num-points
-    Use only the last `NUM_POINTS` data points when plotting the energy
-    terms vs. time.  Must not be negative.  If `NUM_POINTS` is greater
-    then the actual number of available data points or ``None``, it is
-    set to the maximum number of available data points.  Default:
-    ``None``
 
 See Also
 --------
@@ -228,7 +233,7 @@ if __name__ == "__main__":  # noqa: C901
         type=str,
         nargs="+",
         required=False,
-        default=("Potential", "Kinetic En.", "Pressure"),
+        default=("Potential", "Kinetic En.", "Total Energy"),
         help=(
             "Space separated list of energy terms to select.  Default:"
             " %(default)s."
@@ -256,6 +261,28 @@ if __name__ == "__main__":  # noqa: C901
         ),
     )
     parser.add_argument(
+        "--wlen",
+        dest="WLEN",
+        type=int,
+        required=False,
+        default=501,
+        help=(
+            "Window length for calculating the centered moving average."
+            "  Default: %(default)s."
+        ),
+    )
+    parser.add_argument(
+        "--num-points",
+        dest="NUM_POINTS",
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=float),
+        required=False,
+        default=500,
+        help=(
+            "Use the last `NUM_POINTS` data points for the cutout plot."
+            "  Default: %(default)s."
+        ),
+    )
+    parser.add_argument(
         "--alpha",
         dest="ALPHA",
         type=float,
@@ -264,17 +291,6 @@ if __name__ == "__main__":  # noqa: C901
         help=(
             "Significance level for statistical tests and confidence"
             " intervals.  Default: %(default)s."
-        ),
-    )
-    parser.add_argument(
-        "--num-points",
-        dest="NUM_POINTS",
-        type=int,
-        required=False,
-        default=None,
-        help=(
-            "Use only the last `NUM_POINTS` data points when plotting the"
-            " energy terms vs. time.  Default: %(default)s."
         ),
     )
     args = parser.parse_args()
@@ -368,6 +384,13 @@ if __name__ == "__main__":  # noqa: C901
     del time_diffs
     lag_times = np.arange(0, time_diff * len(times), time_diff)
 
+    if args.WLEN < 1:
+        raise ValueError("--wlen ({}) must be at least 1".format(args.WLEN))
+    elif args.WLEN > len(times):
+        raise ValueError(
+            "--wlen ({}) must not be greater than the number of frames"
+            " ({})".format(args.WLEN, len(times))
+        )
     if args.NUM_POINTS is None:
         args.NUM_POINTS = len(times)
     elif args.NUM_POINTS < 0:
@@ -375,12 +398,6 @@ if __name__ == "__main__":  # noqa: C901
             "--num-points ({}) must be positive'".format(args.NUM_POINTS)
         )
     args.NUM_POINTS = min(args.NUM_POINTS, len(times))
-    if args.NUM_POINTS > 1000:
-        # Force rasterized (bitmap) drawing for vector graphics output.
-        # This leads to smaller files for plots with many data points.
-        rasterized = True
-    else:
-        rasterized = False
 
     print("\n")
     print("Calculating characteristics of the distributions...")
@@ -436,13 +453,31 @@ if __name__ == "__main__":  # noqa: C901
         for key, val in data.items():
             print()
             print("Plotting {} vs. Time...".format(key))
+            cumav = mdt.stats.cumav(val)
+            movav = mdt.stats.movav(val, args.WLEN)
             fig, ax = plt.subplots(clear=True)
-            ax.plot(times, val, rasterized=rasterized)
+            lines = ax.plot(
+                times, val, linestyle="", marker=".", rasterized=True
+            )
+            ax.plot(
+                times[args.WLEN // 2 : args.WLEN // 2 + len(movav)],
+                movav,
+                label="Mov. Av. ({})".format(args.WLEN),
+            )
+            ax.plot(times, cumav, label="Cum. Av.")
             ax.set(
                 xlabel="Time / " + time_unit,
                 ylabel=key_prefix + key + " / " + units[key],
-                xlim=(times[len(times) - args.NUM_POINTS], times[-1]),
+                xlim=(times[0], times[-1]),
             )
+            ax.legend(
+                loc="upper center", ncols=2, **mdtplt.LEGEND_KWARGS_XSMALL
+            )
+            pdf.savefig()
+
+            print("Plotting Cutout of {} vs. Time...".format(key))
+            lines[0].set_linestyle("solid")
+            ax.set(xlim=(times[len(times) - args.NUM_POINTS], times[-1]))
             pdf.savefig()
             plt.close()
 
