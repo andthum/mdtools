@@ -61,7 +61,8 @@ build/
 develop-eggs/
 dist/
 downloads/
-.?eggs/
+eggs/
+.eggs/
 lib/
 lib64/
 parts/
@@ -176,10 +177,14 @@ celerybeat.pid
 *.sage.py
 
 # Virtual Python environments
-.?ENV*/
-.?env*/
-.?VENV*/
-.?venv*/
+.ENV*/
+.env*/
+.VENV*/
+.venv*/
+ENV*/
+env*/
+VENV*/
+venv*/
 
 # Spyder project settings
 .spyderproject
