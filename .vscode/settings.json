@@ -227,7 +227,8 @@
         "**/.Python": true,
         "**/develop-eggs/": true,
         "**/dist/": true,
-        "**/.?eggs/": true,
+        "**/eggs/": true,
+        "**/.eggs/": true,
         "**/lib64/": true,
         "**/sdist/": true,
         "**/wheels/": true,
@@ -250,10 +251,14 @@
         // PEP 582.
         "**/__pypackages__/": true,
         // Virtual Python environments.
-        "**/.?ENV*/": true,
-        "**/.?env*/": true,
-        "**/.?VENV*/": true,
-        "**/.?venv*/": true,
+        "**/.ENV*/": true,
+        "**/.env*/": true,
+        "**/.VENV*/": true,
+        "**/.venv*/": true,
+        "**/ENV*/": true,
+        "**/env*/": true,
+        "**/VENV*/": true,
+        "**/venv*/": true,
         // mypy.
         "**/.mypy_cache/": true,
     },
