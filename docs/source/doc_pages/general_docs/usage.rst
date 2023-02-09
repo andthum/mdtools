@@ -79,6 +79,18 @@ uncompressed.
     https://en.wikipedia.org/wiki/List_of_file_signatures
 
 
+Plots
+-----
+
+Scripts that create plots are optimized for writing PDF files.  Other
+output formats may work, too, but are not guaranteed to work.  When a
+script saves multiple plots to the same file, PDF is the only supported
+file format.
+
+You can convert PDF pages to many other image formats for instance with
+`pdftoppm <https://askubuntu.com/a/50180>`_.
+
+
 Unbuffered output
 -----------------
 
