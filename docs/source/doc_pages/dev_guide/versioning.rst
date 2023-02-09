@@ -64,20 +64,52 @@ Publishing a new release
 Follow these steps when publishing a new release.
 
 
-1. Create a new tag
+1. Update the version number
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Create a new branch out of ``main`` named
+``chore/release/vMAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH``.
+
+.. code:: bash
+
+    git checkout main
+    git checkout -b chore/release/vMAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH
+
+Update :file:`AUTHORS.rst` to list all authors that have contributed to
+the new release and commit the changes to the new branch.
+
+Update the version number ``__version__`` in the `version` module
+(:file:`src/mdtools/version.py`) of MDTools to the new
+MAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH version and commit the changes to
+the new branch.
+
+Push the branch to the upstream repository.
+
+.. code:: bash
+
+    git push --set-upstream origin chore/release/vMAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH
+
+Open the upstream repository in GitHub, create a pull request and merge
+the branch into ``main`` when all tests passed successfully.
+
+Pull the changes to your remote repository.
+
+.. code:: bash
+
+    git pull
+
+
+2. Create a new tag
 ^^^^^^^^^^^^^^^^^^^
 
-Create a new tag that contains the new
+On the ``main`` branch, create a new tag that contains the new
 MAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH version number prefixed with a "v":
 
 .. code-block:: bash
 
-    git checkout main
     git tag vMAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH
 
-
-2. Push the tag to the upstream repository
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Push the tag to the upstream repository.
 
 .. important::
 
@@ -92,11 +124,11 @@ MAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH version number prefixed with a "v":
 3. Create a new release
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Open the repository in GitHib and follow the steps outlined in the
-GitHub doc page
+Open the upstream repository in GitHib and follow the steps outlined in
+the GitHub doc page
 `Creating automatically generated release notes for a new release
 <https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#creating-automatically-generated-release-notes-for-a-new-release>`_.
-When selecting a tag, use the tag you just created in the above steps.
+When selecting a tag, use the tag you just created in the previous step.
 
 
 .. _semantic versioning: http://semver.org/
