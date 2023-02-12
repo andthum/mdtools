@@ -8,7 +8,8 @@
 #   pre-commit install
 #   pre-commit install-hooks
 # Now pre-commit will run automatically on every `git commit`.
-# Bypass pre-commit and commit-msg hook with `git commit --no-verify`.
+# Bypass pre-commit and commit-msg hook with `git commit --no-verify`
+# or bypass individual hooks with `SKIP=<hook_id> git commit`.
 
 minimum_pre_commit_version: "3.0"
 
@@ -50,7 +51,7 @@ repos:
       # Prevent giant files from being committed.
       - id: "check-added-large-files"
       # Check for files that would conflict in case-insensitive
-      # filesystems.
+      # file systems.
       - id: "check-case-conflict"
       # Check for symlinks which do not point to anything.
       - id: "check-symlinks"
@@ -96,7 +97,7 @@ repos:
       - id: "check-docstring-first"
       # Check for debug statements.
       - id: "debug-statements"
-      # Verifies that test files are named correctly.
+      # Verify that test files are named correctly.
       - id: "name-tests-test"
         args:
           # Ensure tests match .*_test\.py
@@ -146,7 +147,7 @@ repos:
       # Enforce that `# type: ignore` comments always occur with
       # specific codes.
       - id: "python-check-blanket-type-ignore"
-      # Prevent common mock mistakes
+      # Prevent common mock mistakes.
       - id: "python-check-mock-methods"
       # Check if inline code touches normal text.
       - id: "rst-inline-touching-normal"
@@ -194,8 +195,6 @@ repos:
       # Lint Python code with Flake8.
       - id: "flake8"
         args:
-          # Decrease the verbosity of the output.
-          - "--quiet"
           # See .github/workflows/tests.yml.
           - "--extend-ignore=S101,D205,D400,E203,W503,S404,S603,N806,N813,W504,F821"
         additional_dependencies:
