@@ -78,6 +78,11 @@ Create a new branch out of ``main`` named
 Update :file:`AUTHORS.rst` to list all authors that have contributed to
 the new release and commit the changes to the new branch.
 
+Add authors that have contributed for the first time to the
+:file:`CITATION.cf` file and to the list of authors in the `_metadata`
+module of MDTools (:file:`src/mdtools/_metadata.py`) and commit the
+changes to the new branch.
+
 Update the version number ``__version__`` in the `version` module
 (:file:`src/mdtools/version.py`) of MDTools to the new
 MAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH version and commit the changes to
@@ -96,6 +101,7 @@ Pull the changes to your remote repository.
 
 .. code:: bash
 
+    git checkout main
     git pull
 
 
@@ -107,7 +113,15 @@ MAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH version number prefixed with a "v":
 
 .. code-block:: bash
 
-    git tag vMAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH
+    git tag -a vMAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH
+
+As tag message enter:
+
+.. code-block:: text
+
+    MDTools version MAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH
+
+    Release notes at https://github.com/andthum/mdtools/releases
 
 Push the tag to the upstream repository.
 
@@ -124,11 +138,13 @@ Push the tag to the upstream repository.
 3. Create a new release
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Open the upstream repository in GitHib and follow the steps outlined in
+Open the upstream repository in GitHub and follow the steps outlined in
 the GitHub doc page
 `Creating automatically generated release notes for a new release
 <https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#creating-automatically-generated-release-notes-for-a-new-release>`_.
 When selecting a tag, use the tag you just created in the previous step.
+Carefully check the automatically generated release notes and make
+changes if necessary.
 
 
 .. _semantic versioning: http://semver.org/
