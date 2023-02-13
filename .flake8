@@ -77,7 +77,7 @@ extend-ignore =
 extend-select =
     ### Compatibility with black ###
     # W504: line break after binary operator
-    W504
+    W504,
 # List of glob patterns to include for checks.
 filename = *.py
 # Files that are checked by PyFlakes for doctest syntax.
@@ -118,7 +118,7 @@ rst-directives =
     note,
     tip,
     todo,
-    warning
+    warning,
     # Spinx-specific directives from
     # https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html
     centered,
