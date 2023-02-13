@@ -75,7 +75,7 @@ the need to re-install it.
 4. Install the development packages
 -----------------------------------
 
-Install the pacakges required for developing the project (i.e.
+Install the packages required for developing the project (i.e.
 formatters, linters, testing packages, pre-commit, etc.) into the
 :ref:`development environment <set-up-dev-env-label>`:
 
@@ -105,6 +105,20 @@ this project by typing:
 .. code-block:: bash
 
     pre-commit install --install-hooks
+
+.. note::
+
+    You might need to install
+    `markdownlint <https://github.com/markdownlint/markdownlint>`_ (a
+    Ruby gem package) in order to get the markdownlint pre-commit hook
+    running.
+
+    Software required for installing `RubyGems <https://rubygems.org/>`_
+    packages:
+
+    * Ruby developer package
+    * `Ruby <https://www.ruby-lang.org/en/>`_
+    * `RubyGems <https://rubygems.org/>`_
 
 You can check if pre-commit works properly by running
 
