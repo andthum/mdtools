@@ -1,5 +1,4 @@
-# markdownlint style file.
-# See
+# markdownlint style file.  See
 # https://github.com/markdownlint/markdownlint/blob/master/docs/creating_styles.md
 
 all
