@@ -1,9 +1,8 @@
-# markdownlint configuration file.
-# See
+# markdownlint configuration file.  See
 # https://github.com/markdownlint/markdownlint/blob/master/docs/configuration.md
 #
 # Sort all entries alphabetically!
 
-# Ignore files in listed in .gitignore
+# Ignore files listed in .gitignore
 git_recurse "true"
 style ".mdlstyle.rb"

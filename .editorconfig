@@ -23,7 +23,7 @@ trim_trailing_whitespace = true
 
 [*.md]
 # Markdown uses two or more spaces at the end of a line to signify a
-# line break
+# line break.
 trim_trailing_whitespace = false
 
 [*.{yaml,yml,cff}]
