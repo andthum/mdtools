@@ -77,7 +77,7 @@ Other Python code guidelines
         - Constant variable names: ``UPPER_CASE_WITH_UNDERSCORES``
         - Underscores:
 
-            + ``_``: For throwaway varibales, i.e. for variables that
+            + ``_``: For throwaway variables, i.e. for variables that
               will never be used.  For instance if a function returns
               two values, but only one is of interest.
             + ``single_trailing_underscore_``: Used by convention to
@@ -133,12 +133,12 @@ Other Python code guidelines
               ``ndx`` or ``ixs``, ``ndxs``
             + NumPy boolean :class:`arrays <numpy.ndarray>` to use as
               mask for other :class:`arrays <numpy.ndarray>`: ``mask``
-            + temporary varibles: ``tmp`` or ``varname_tmp``
+            + temporary variables: ``tmp`` or ``varname_tmp``
             + particle positions (coordinates): ``pos``.  Do not use
               ``coord`` to avoid confusion with variables related to
               coordination.  The other way round, try to use ``lig`` or
               ``ligands`` (if it does not disturb readability) instead
-              of ``coord`` for varibales related to coordinations.
+              of ``coord`` for variables related to coordinations.
 
     * Try to avoid hardcoding anything too keep code as generic and
       flexible as possible.

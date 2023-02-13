@@ -156,7 +156,7 @@ Differences to the terminology of MDAnalysis
 
 Because MDTools is build on MDAnalysis, we use basically the same
 terminology as MDAnalysis.  However, some terms are used differently.
-Here is a list of terms whoose meaning is different in MDTools compared
+Here is a list of terms whose meaning is different in MDTools compared
 to MDAnalysis:
 
 .. Use alphabetical order!
@@ -186,7 +186,7 @@ unwrap
 
     Usually, it makes only sense to unwrap a trajectory starting from
     the very first frame, because the unwrapped trajectory is
-    (re-)constructed by suming up the displacements from frame to frame
+    (re-)constructed by summing up the displacements from frame to frame
     and adding these displacements to the initial configuration.  See
     e.g. Bülow et al., J. Chem. Phys., 2020, 153, 021101.
 
