@@ -53,7 +53,7 @@ Numpy
 
 :meth:`numpy.ufunc.reduceat`
 
-    Perfrom a local :meth:`~numpy.ufunc.reduce` at specified slices.
+    Perform a local :meth:`~numpy.ufunc.reduce` at specified slices.
     See :func:`mdtools.structure.contact_matrix` for an example.
 
 .. _universal function: https://numpy.org/doc/stable/reference/ufuncs.html

@@ -105,16 +105,16 @@ Topic branch naming conventions:
       ``release``, ``rel``, ``fix``, ``hotfix``, ``bug``, ``bugfix``,
       ``feature``, ``feat``, ``refactor``, ``ref``, ``documentation``,
       ``docs``, ``doc``, ``dependencies``, ``dependency``,
-      ``dependend``, ``dep``, ``chore``, ``maintenance``, because these
+      ``dependent``, ``dep``, ``chore``, ``maintenance``, because these
       are (more or less) commonly used names for special branches or
       branch groups.
-    * Use slashes to sparate parts of your branch name.  However, be
+    * Use slashes to separate parts of your branch name.  However, be
       aware of the following limitation:  If a branch ``spam`` exists,
       no branch named ``spam/eggs`` can be created.  Likewise, if a
       branch ``spam/eggs`` exists, no branch named ``spam`` can be
       created (but ``spam/spam`` is possible).  The reason is that
       branches are implemented as paths.  You cannot create a directory
-      ``spam`` if a file ``spam`` already exsits and the other way
+      ``spam`` if a file ``spam`` already exists and the other way
       round.  This means, once you started branch naming without a
       sub-token, you cannot add a sub-token later.  This is the reason
       why you should never name your branches simply ``fix``, ``feat``,
@@ -133,7 +133,7 @@ Topic branch naming conventions:
           work.
 
     * Use sub-tokens where applicable and meaningful.
-    * If you adress a specific issue or feature request, reference this
+    * If you address a specific issue or feature request, reference this
       in your branch name, e.g. ``feat/issue/n15``, but
     * Do **not** use bare numbers as one part of your branch name, e.g.
       do **not** name your branch ``feat/issue/15``.  Otherwise,
@@ -216,7 +216,7 @@ Commit message conventions:
       present tense.  It should not end with a period.
     * Start the summary line with "[File]: Change", e.g.
       "[msd_serial.py]: Fix Typo".  In this way other developers and
-      maintainers immediatly know which file has been changed.  If you
+      maintainers immediately know which file has been changed.  If you
       have a complex commit affecting several files, break it down into
       smaller commits (see above).  If the file name is too long to
       get the summary line within 50 characters, you can leave it out.
@@ -262,7 +262,7 @@ rebase_ your topic branch onto the target branch (which is usually the
 9. Push your commits to your fork on GitHub
 -------------------------------------------
 
-Immediatly after rebasing, push your changes to your fork's remote
+Immediately after rebasing, push your changes to your fork's remote
 repository:
 
 .. code-block:: bash

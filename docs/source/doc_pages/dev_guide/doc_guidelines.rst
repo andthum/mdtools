@@ -32,7 +32,7 @@ In short:
     * Use docstrings to explain *what* the code does and *how to use*
       it.
 
-      Documentation is inteded to be read by users that don't
+      Documentation is intended to be read by users that don't
       necessarily know anything about programming.  Especially, they
       don't want to read the source code.  Think about what you would
       like to know when using the code from someone else.

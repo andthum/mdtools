@@ -3,7 +3,7 @@
 Discretization
 ===============
 
-Scripts that either discretze MD trajectories or that work with
+Scripts that either discretize MD trajectories or that work with
 discretized trajectories.
 
 .. contents:: Site contents

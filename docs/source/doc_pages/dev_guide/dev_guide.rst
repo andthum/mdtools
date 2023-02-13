@@ -14,7 +14,7 @@ mess.
 
 Also make yourself familiar with the philosophy and functionality of
 |MDAnalysis|, because MDTools is mainly based on this package.  If not
-alreay done, please take a look at the |MDA_user_guide|.
+already done, please take a look at the |MDA_user_guide|.
 
 .. note::
 
@@ -26,7 +26,7 @@ alreay done, please take a look at the |MDA_user_guide|.
     comfortable with that *before* you contribute to the project.
 
 .. toctree::
-    :caption: Table of contens
+    :caption: Table of contents
     :name: developers-guide-toc
     :maxdepth: 1
     :hidden:

@@ -58,7 +58,7 @@ Doctests
 ^^^^^^^^
 
 We use :mod:`doctest` to check whether the code examples given in the
-documentation work as expected.  Sphinx already brings a convient
+documentation work as expected.  Sphinx already brings a convenient
 `extension
 <https://www.sphinx-doc.org/en/master/usage/extensions/doctest.html>`__
 to run doctest on all our example codes.  Simply do:
