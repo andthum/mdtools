@@ -25,6 +25,7 @@ on:
     branches:
       - "**"
     paths-ignore:
+      - ".github/**"
       - "**.py"
       - "**.rst"
       - "docs/**"
@@ -64,7 +65,7 @@ jobs:
         # Python 3.6 is not supported anymore in the Ubuntu 22.04 runner
         # https://github.com/actions/setup-python/issues/544#issuecomment-1332535877
         exclude:
-          - os: ubuntu-latest
+          - os: "ubuntu-latest"
             python-version: "3.6"
         include:
           - os: "ubuntu-20.04"

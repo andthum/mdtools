@@ -25,6 +25,7 @@ on:
     branches:
       - "**"
     paths-ignore:
+      - ".github/**"
       - "CITATION.cff"
     tags-ignore:
       - "v[0-9]*"
