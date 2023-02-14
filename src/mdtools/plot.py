@@ -114,7 +114,7 @@ LEGEND_KWARGS_XSMALL = {
     "fontsize": "x-small",
     "borderaxespad": 0.8,
     "labelspacing": 0.25,
-    "handlelength": 1.6,
+    "handlelength": 1.35,
     "handletextpad": 0.5,
     "columnspacing": 1.4,
 }
