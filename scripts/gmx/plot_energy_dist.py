@@ -316,7 +316,7 @@ if __name__ == "__main__":  # noqa: C901
     parser.add_argument(
         "--num-points",
         dest="NUM_POINTS",
-        type=lambda val: mdt.fh.str2none_or_type(val, dtype=float),
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=int),
         required=False,
         default=500,
         help=(
