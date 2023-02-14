@@ -33,6 +33,11 @@ jobs:
           # template by a version number.
           enable-versioned-regex: 1
           versioned-regex: 'issue_labeler_regex_version=(\d+)'
-          body-missing-regex-label: "broken-template"
+          # `body-missing-regex-label` causes the pr-labeler workflow to
+          # fail with
+          # "Could not remove label "broken-template" from issue #Number
+          #  Error: AggregateError"
+          # Therefore, disable it.
+          #body-missing-regex-label: "broken-template"
           # Include the issue title in the regular expression target.
           include-title: 1
