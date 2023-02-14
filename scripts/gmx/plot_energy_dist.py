@@ -27,8 +27,9 @@ Plot statistics about the distribution of energy terms contained in an
 For each energy term selected with \--observables the following plots
 are created:
 
-    * The full evolution of the energy term with time including the
-      cumulative average and the centered moving average.
+    * The full evolution of the energy term with time including a
+      centered moving average, the cumulative average and the total
+      average.
     * A cutout of the above plot for the last \--num-points data points.
     * A histogram showing the distribution of the energy values.
     * The autocorrelation function (ACF) of the energy term with
@@ -507,13 +508,21 @@ if __name__ == "__main__":  # noqa: C901
                 label="Mov. Av. ({})".format(args.WLEN),
             )
             ax.plot(times, cumav, label="Cum. Av.")
+            ax.hlines(
+                dist_props[key]["Mean"],
+                times[0],
+                times[-1],
+                linestyles="--",
+                color="black",
+                label="Mean",
+            )
             ax.set(
                 xlabel="Time / " + time_unit,
                 ylabel=key_prefix + key + " / " + units[key],
                 xlim=(times[0], times[-1]),
             )
             ax.legend(
-                loc="upper center", ncols=2, **mdtplt.LEGEND_KWARGS_XSMALL
+                loc="upper center", ncols=3, **mdtplt.LEGEND_KWARGS_XSMALL
             )
             pdf.savefig()
 
