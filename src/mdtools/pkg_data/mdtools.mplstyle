@@ -311,6 +311,7 @@ legend.markerscale: 1  # The relative size of legend markers vs.
 legend.fontsize: small
 legend.title_fontsize: small
 
+legend.handlelength:  1.8  # the length of the legend lines
 legend.borderaxespad: 0.6  # Space between the axes and legend edge as
                            # fraction of font size.
 

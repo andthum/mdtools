@@ -27,9 +27,10 @@ Plot statistics about the distribution of energy terms contained in an
 For each energy term selected with \--observables the following plots
 are created:
 
-    * The full evolution of the energy term with time including the
-      cumulative average and the centered moving average.
-    * A cutout of the above plot for the last \--num-points data points.
+    * The full evolution of the energy term with time including a
+      centered moving average, the cumulative average and the total
+      average.
+    * A cutout of the above plot from \--cutout-start to \--cutout-stop.
     * A histogram showing the distribution of the energy values.
     * The autocorrelation function (ACF) of the energy term with
       confidence intervals given by :math:`1 - \alpha`.
@@ -86,12 +87,14 @@ Options
 --wlen
     Window length for calculating the centered moving average.  Should
     be odd for a real *centered* moving average.  Default: ``501``.
---num-points
-    The cutout plot show the last `NUM_POINTS` data points of the
-    selected energy term(s) vs. time.  Must not be negative.  If
-    `NUM_POINTS` is greater then the actual number of available data
-    points or ``None``, it is set to the maximum number of available
-    data points.  Default: ``500``.
+--cutout-start
+    First frame to show in the cutout.  Frame numbering starts at zero.
+    A value of ``None`` means start 500 frames before the end.  Default:
+    ``None``.
+--cutout-stop
+    Last frame to show in the cutout.  This is inclusive, i.e. the last
+    shown frame is indeed ``CUTOUT_STOP``.  A value of ``None`` means
+    to use the very last frame.  Default: ``None``.
 --alpha
     Significance level for D'Agostino's and Pearson's K-squared test for
     normality of the distribution of energy values (see
@@ -314,15 +317,23 @@ if __name__ == "__main__":  # noqa: C901
         ),
     )
     parser.add_argument(
-        "--num-points",
-        dest="NUM_POINTS",
-        type=lambda val: mdt.fh.str2none_or_type(val, dtype=float),
+        "--cutout-start",
+        dest="CUTOUT_START",
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=int),
         required=False,
-        default=500,
+        default=None,
         help=(
-            "Use the last `NUM_POINTS` data points for the cutout plot."
-            "  Default: %(default)s."
+            "First frame to show in the cutout.  Frame numbering starts at"
+            " zero.  Default: %(default)s."
         ),
+    )
+    parser.add_argument(
+        "--cutout-stop",
+        dest="CUTOUT_STOP",
+        type=lambda val: mdt.fh.str2none_or_type(val, dtype=int),
+        required=False,
+        default=None,
+        help="Last frame to show in the cutout.  Default: %(default)s.",
     )
     parser.add_argument(
         "--alpha",
@@ -402,9 +413,29 @@ if __name__ == "__main__":  # noqa: C901
     print("First frame to use:     {:>8d}".format(BEGIN))
     print("Last frame to use:      {:>8d}".format(END - 1))
     print("Use every n-th frame:   {:>8d}".format(EVERY))
+    if args.CUTOUT_START is None:
+        args.CUTOUT_START = max(END - 501, BEGIN)
+    if args.CUTOUT_STOP is None:
+        args.CUTOUT_STOP = END - 1
+    if args.CUTOUT_START < BEGIN or args.CUTOUT_START >= END - EVERY:
+        raise ValueError(
+            "--cutout-start ({}) must lie between `BEGIN` ({}) and"
+            " `END - EVERY - 1`"
+            " ({})".format(args.CUTOUT_START, BEGIN, END - EVERY - 1)
+        )
+    if args.CUTOUT_STOP < args.CUTOUT_START + EVERY or args.CUTOUT_STOP >= END:
+        raise ValueError(
+            "--cutout-stop ({}) must lie between `CUTOUT_START + EVERY` ({})"
+            " and `END - 1` ({})".format(
+                args.CUTOUT_STOP, args.CUTOUT_START + EVERY, END - 1
+            )
+        )
+    args.CUTOUT_START = max((args.CUTOUT_START - BEGIN) // EVERY, 0)
+    args.CUTOUT_STOP = (args.CUTOUT_STOP - BEGIN) // EVERY
     times = times[BEGIN:END:EVERY]
     if args.DIFF:
         times = times[1:]
+        args.CUTOUT_STOP -= 1
     time_unit = units.pop("Time")
     for key in tuple(data.keys()):
         if key not in args.OBSERVABLES:
@@ -433,13 +464,6 @@ if __name__ == "__main__":  # noqa: C901
             "--wlen ({}) must not be greater than the number of frames"
             " ({})".format(args.WLEN, len(times))
         )
-    if args.NUM_POINTS is None:
-        args.NUM_POINTS = len(times)
-    elif args.NUM_POINTS < 0:
-        raise ValueError(
-            "--num-points ({}) must be positive'".format(args.NUM_POINTS)
-        )
-    args.NUM_POINTS = min(args.NUM_POINTS, len(times))
 
     print("\n")
     print("Calculating characteristics of the distributions...")
@@ -507,19 +531,27 @@ if __name__ == "__main__":  # noqa: C901
                 label="Mov. Av. ({})".format(args.WLEN),
             )
             ax.plot(times, cumav, label="Cum. Av.")
+            ax.hlines(
+                dist_props[key]["Mean"],
+                times[0],
+                times[-1],
+                linestyles="--",
+                color="black",
+                label="Mean",
+            )
             ax.set(
                 xlabel="Time / " + time_unit,
                 ylabel=key_prefix + key + " / " + units[key],
                 xlim=(times[0], times[-1]),
             )
             ax.legend(
-                loc="upper center", ncols=2, **mdtplt.LEGEND_KWARGS_XSMALL
+                loc="upper center", ncols=3, **mdtplt.LEGEND_KWARGS_XSMALL
             )
             pdf.savefig()
 
             print("Plotting Cutout of {} vs. Time...".format(key))
             lines[0].set_linestyle("solid")
-            ax.set(xlim=(times[len(times) - args.NUM_POINTS], times[-1]))
+            ax.set(xlim=(times[args.CUTOUT_START], times[args.CUTOUT_STOP]))
             pdf.savefig()
             plt.close()
 
