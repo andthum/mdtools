@@ -122,8 +122,50 @@ See Also
 Notes
 -----
 The produced plots and distribution characteristics can be used to judge
-wether the distribution of energy terms is reasonable for the simulated
+whether the distribution of energy terms is reasonable for the simulated
 ensemble.
+
+For instance, in the canonical (:math:`NVT`) ensemble, the variance of
+the total energy :math:`\sigma_{E_{tot}}^2` is related to the heat
+capacity :math:`C_V` of the system at constant volume. [1]_
+
+.. math::
+
+    \sigma_{E_{tot}}^2 = k_B T^2 C_V
+
+Here, :math:`k_B` is the Boltzmann constant and :math:`T` is the
+temperature.  Furthermore, the variance of the kinetic energy
+:math:`\sigma_{E_{kin}}^2` is related to the number of degrees of
+freedom :math:`f` of the system.
+
+.. math::
+
+    \sigma_{E_{kin}}^2 = \frac{f}{2} \left( k_B T \right)^2
+
+The total number of degrees of freedom of :math:`N` molecules in
+:math:`d`-dimensional space is usually :math:`f = Nd`.  However, in
+molecular dynamics simulations, the total momentum of the system and the
+length of bonds to hydrogen atoms are typically kept constant.  Thus,
+the number of degrees of freedom reduces by :math:`d` (for the total
+momentum) and the number of constraints :math:`N_c`, such that :math:`f`
+becomes :math:`f = d(N-1) - N_c`.
+
+In the :math:`NpT` ensemble, the ratio of the variance of the simulation
+box volume :math:`\sigma_V^2` to the average simulation box volume
+:math:`\langle V \rangle` is related to the isothermal compressibility
+:math:`\kappa_T` of the system. [1]_
+
+.. math::
+
+    \frac{\sigma_V^2}{\langle V \rangle} = k_B T \kappa_T
+
+References
+----------
+.. [1] Terrell I. Hill,
+    `An Introduction to Statistical Thermodynamics
+    <https://www.eng.uc.edu/~beaucag/Classes/AdvancedMaterialsThermodynamics/Books/Terrell%20L.%20Hill%20-%20Introduction%20to%20Statistical%20Thermodynamics-Addison-Wesley%20Educational%20Publishers%20Inc%20(1960).pdf>`_,
+    Addison-Wesley Publishing Company Inc., Reading, Massachusetts, USA,
+    1960, Chapter 2-1, Pages 33-38.
 """
 
 
