@@ -22,14 +22,14 @@
 # Standard libraries
 from datetime import datetime
 
-# Third party libraries
-import psutil
-import numpy as np
+# Third-party libraries
 import MDAnalysis as mda
 import MDAnalysis.lib.distances as mdadist
 import MDAnalysis.lib.mdamath as mdamath
+import numpy as np
+import psutil
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 
 
@@ -108,7 +108,7 @@ def volume(box, debug=False, **kwargs):
             This argument is without functionality and will be removed
             in a future release.
 
-    **kwargs : dict, optional
+    kwargs : dict, optional
         Additional keyword arguments to parse to :func:`numpy.prod`.
         See there for possible choices.  Note that the keyword `axis`
         will be ignored.
