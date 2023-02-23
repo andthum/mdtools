@@ -1589,8 +1589,8 @@ def make_whole(
     )
 
 
-def vdist(pos1, pos2, box=None, out=None):
-    """
+def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
+    r"""
     Calculate the distance vectors between two position arrays.
 
     Parameters
@@ -1600,32 +1600,81 @@ def vdist(pos1, pos2, box=None, out=None):
         vectors.  Position arrays must be of shape ``(3,)``, ``(n, 3)``
         or ``(k, n, 3)`` where ``n`` is the number of particles and
         ``k`` is the number of frames.  If `pos1` and `pos2` do not have
-        the same shape, they must be broadcastable to a common shape
-        (which becomes the shape of the output).  The user is
-        responsible to provide inputs that result in a physically
-        meaningful broadcasting!
+        the same shape, they must be broadcastable to a common shape.
+        The user is responsible to provide inputs that result in a
+        physically meaningful broadcasting!
     box : None or array_like, optional
-        The unit cell dimensions of the system, which must be orthogonal
-        and provided in the same format as returned by
-        :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
+        The unit cell dimensions of the system, which can be orthogonal
+        or triclinic and must be provided in the same format as returned
+        by :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
         ``[lx, ly, lz, alpha, beta, gamma]``.  If supplied, the minimum
-        image convention is taken into account.  Works currently only
-        for orthogonal boxes.  `box` can also be an array of boxes of
-        shape ``(k, 6)`` (one box for each frame).  In this case a
-        2-dimensional position array is interpreted to contain one
-        position per frame instead of ``n`` positions for one frame.
+        image convention is taken into account.  `box` can also be an
+        array of boxes of shape ``(k, 6)`` (one box for each frame).  If
+        `box` has shape ``(k, 6)`` and the result of ``pos1 - pos2`` has
+        shape ``(n, 3)``, the latter will be broadcast to ``(k, n, 3)``.
+        If `box` has shape ``(k, 6)`` and the result of ``pos1 - pos2``
+        has shape ``(3,)``, the latter will be broadcast to
+        ``(k, 1, 3)``.
+
+        Alternatively, `box` can be provided in the same format as
+        returned by
+        :attr:`MDAnalysis.coordinates.base.Timestep.triclinic_dimensions`:
+        ``[[lx1, lx2, lx3], [[lz1, lz2, lz3]], [[lz1, lz2, lz3]]]``.
+        `box` can also be an array of boxes of shape ``(k, 3, 3)`` (one
+        box for each frame).  Equivalent broadcasting rules as above
+        apply.  Providing `box` already in matrix representation avoids
+        the conversion step from the length-angle to the matrix
+        representation.
     out : None or numpy.ndarray, optional
-        Preallocated array into which the result is stored.  If
-        provided, it must have a shape that the inputs broadcast to.  If
-        not provided, a freshly-allocated array is returned.
+        Preallocated array of the given dtype and appropriate shape into
+        which the result is stored.  If `box` is ``None``, `out` is
+        ignored the final result is stored in `out_tmp`.
+    out_tmp : None or numpy.ndarray, optional
+        Preallocated array of the given dtype into which temporary
+        results are stored.  If provided, it must have the same shape as
+        the result of ``pos1 - pos2``.  Providing `out_tmp` can speed up
+        the calculated if this function is called many times.
+    dtype : type, optional
+        The data type of the output array.  If ``None``, the data type
+        is inferred from the input arrays.
 
     Returns
     -------
     dist_vecs : numpy.ndarray
-        Distance array containing the result of ``pos1 - pos2``.
+        Distance array containing the result of ``pos1 - pos2`` with the
+        minimum image convention taken into account if `box` was
+        supplied.
+
+        .. list-table:: Shapes
+            :align: left
+            :header-rows: 1
+
+            *   - ``pos1 - pos2``
+                - `box`
+                - `dist_vecs`
+            *   - ``(3,)``
+                - ``(6,)`` or ``(3, 3)``
+                - ``(3,)``
+            *   - ``(3,)``
+                - ``(k, 6)`` or ``(k, 3, 3)``
+                - ``(k, 1, 3)``
+            *   - ``(n, 3)``
+                - ``(6,)`` or ``(3, 3)``
+                - ``(n, 3)``
+            *   - ``(n, 3)``
+                - ``(k, 6)`` or ``(k, 3, 3)``
+                - ``(k, n, 3)``
+            *   - ``(k, n, 3)``
+                - ``(6,)`` or ``(3, 3)``
+                - ``(k, n, 3)``
+            *   - ``(k, n, 3)``
+                - ``(k, 6)`` or ``(k, 3, 3)``
+                - ``(k, n, 3)``
 
     See Also
     --------
+    :func:`MDAnalysis.lib.distances.minimize_vectors` :
+        Apply the minimum image convention to an array of vectors
     :func:`MDAnalysis.lib.distances.distance_array` :
         Calculate all possible distances between a reference set and
         another configuration
@@ -1651,11 +1700,28 @@ def vdist(pos1, pos2, box=None, out=None):
     :func:`MDAnalysis.analysis.distances.dist` or
     :func:`MDAnalysis.lib.distances.calc_bonds` instead.
 
+    The function :func:`MDAnalysis.lib.distances.minimize_vectors` (new
+    in MDAnalysis version 2.1) has similar functionality as this
+    function but only accepts distance vectors of shape ``(n, 3)`` and
+    boxes of shape ``(6,)``.
+
     If `box` is provided, the minimum image convention is taken into
-    account using algorithm C4 from Deiters [#]_
-    (``dist_vecs -= numpy.floor(dist_vecs / box + 0.5) * box``).  This
-    algorithm also works if the particle distances are an arbitrary
-    multiple of the box length.
+    account using algorithm C4 from Deiters [#]_.  This algorithm not
+    only works for wrapped coordinates but for any image coordinates.
+    Mathematically, it can be described by the following formula:
+
+    .. math::
+
+        \Delta\mathbf{r}^{mic} = \Delta\mathbf{r} - \mathbf{L}
+        \biggl\lfloor
+        \mathbf{L}^{-1} \Delta\mathbf{r} + \mathbf{\frac{1}{2}}
+        \biggr\rfloor
+
+    Here, :math:`\Delta\mathbf{r} = \mathbf{r}_1 - \mathbf{r}_2` is the
+    difference of the position vectors and
+    :math:`\mathbf{L} =
+    \left( \mathbf{L}_x | \mathbf{L}_y | \mathbf{L}_z \right)`
+    is the matrix of the (triclinic) box vectors.
 
     References
     ----------
@@ -1671,9 +1737,35 @@ def vdist(pos1, pos2, box=None, out=None):
     >>> pos2 = np.array([5, 3, 1])
     >>> mdt.box.vdist(pos1, pos2)
     array([-5., -1.,  3.])
+    >>> # Shape of box is (6,), shape of output is (3,).
     >>> box = np.array([3, 2, 2, 90, 90, 90])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([ 1., -1., -1.])
+    >>> # Shape of box is (3, 3), shape of output is (3,).
+    >>> box_mat = np.array([[3, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 2]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([ 1., -1., -1.])
+    >>> # Shape of box is (k, 6), shape of output is (k, 1, 3).
+    >>> box = np.array([[3, 2, 2, 90, 90, 90],
+    ...                 [2, 3, 4, 90, 90, 90]])
+    >>> mdt.box.vdist(pos1, pos2, box=box)
+    array([[[ 1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.]]])
+    >>> # Shape of box is (k, 3, 3), shape of output is (k, 1, 3).
+    >>> box_mat = np.array([[[3, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 2]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 3, 0],
+    ...                      [0, 0, 4]]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[[ 1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.]]])
 
     Shape of `pos1` and `pos2` is ``(n, 3)``:
 
@@ -1684,14 +1776,41 @@ def vdist(pos1, pos2, box=None, out=None):
     >>> mdt.box.vdist(pos1, pos2)
     array([[-5., -1.,  3.],
            [ 5.,  1., -3.]])
+    >>> # Shape of box is (6,), shape of output is (n, 3).
+    >>> box = np.array([3, 2, 2, 90, 90, 90])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[ 1., -1., -1.],
            [-1., -1., -1.]])
+    >>> # Shape of box is (3, 3), shape of output is (n, 3).
+    >>> box_mat = np.array([[3, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 2]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[ 1., -1., -1.],
+           [-1., -1., -1.]])
+    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
     >>> box = np.array([[3, 2, 2, 90, 90, 90],
     ...                 [2, 3, 4, 90, 90, 90]])
     >>> mdt.box.vdist(pos1, pos2, box=box)
-    array([[ 1., -1., -1.],
-           [-1.,  1.,  1.]])
+    array([[[ 1., -1., -1.],
+            [-1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.],
+            [-1.,  1.,  1.]]])
+    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
+    >>> box_mat = np.array([[[3, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 2]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 3, 0],
+    ...                      [0, 0, 4]]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[[ 1., -1., -1.],
+            [-1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.],
+            [-1.,  1.,  1.]]])
 
     Shape of `pos1` and `pos2` is ``(k, n, 3)``:
 
@@ -1711,6 +1830,7 @@ def vdist(pos1, pos2, box=None, out=None):
     <BLANKLINE>
            [[-1., -3.,  1.],
             [ 1.,  3., -1.]]])
+    >>> # Shape of box is (6,), shape of output is (k, n, 3).
     >>> box = np.array([3, 2, 2, 90, 90, 90])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[[ 1., -1., -1.],
@@ -1718,9 +1838,34 @@ def vdist(pos1, pos2, box=None, out=None):
     <BLANKLINE>
            [[-1., -1., -1.],
             [ 1., -1., -1.]]])
+    >>> # Shape of box is (3, 3), shape of output is (k, n, 3).
+    >>> box_mat = np.array([[3, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 2]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[[ 1., -1., -1.],
+            [-1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.],
+            [ 1., -1., -1.]]])
+    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
     >>> box = np.array([[3, 2, 2, 90, 90, 90],
     ...                 [2, 3, 4, 90, 90, 90]])
     >>> mdt.box.vdist(pos1, pos2, box=box)
+    array([[[ 1., -1., -1.],
+            [-1., -1., -1.]],
+    <BLANKLINE>
+           [[-1.,  0.,  1.],
+            [-1.,  0., -1.]]])
+    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
+    >>> box_mat = np.array([[[3, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 2]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 3, 0],
+    ...                      [0, 0, 4]]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
     array([[[ 1., -1., -1.],
             [-1., -1., -1.]],
     <BLANKLINE>
@@ -1735,15 +1880,41 @@ def vdist(pos1, pos2, box=None, out=None):
     >>> mdt.box.vdist(pos1, pos2)
     array([[-5., -1.,  3.],
            [ 0.,  0.,  0.]])
+    >>> # Shape of box is (6,), shape of output is (n, 3).
     >>> box = np.array([3, 2, 2, 90, 90, 90])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[ 1., -1., -1.],
            [ 0.,  0.,  0.]])
+    >>> # Shape of box is (3, 3), shape of output is (n, 3).
+    >>> box_mat = np.array([[3, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 2]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[ 1., -1., -1.],
+           [ 0.,  0.,  0.]])
+    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
     >>> box = np.array([[3, 2, 2, 90, 90, 90],
     ...                 [2, 3, 4, 90, 90, 90]])
     >>> mdt.box.vdist(pos1, pos2, box=box)
-    array([[ 1., -1., -1.],
-           [ 0.,  0.,  0.]])
+    array([[[ 1., -1., -1.],
+            [ 0.,  0.,  0.]],
+    <BLANKLINE>
+           [[-1., -1., -1.],
+            [ 0.,  0.,  0.]]])
+    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
+    >>> box_mat = np.array([[[3, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 2]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 3, 0],
+    ...                      [0, 0, 4]]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[[ 1., -1., -1.],
+            [ 0.,  0.,  0.]],
+    <BLANKLINE>
+           [[-1., -1., -1.],
+            [ 0.,  0.,  0.]]])
 
     Shape of `pos1` is ``(3,)`` and shape of `pos2` is ``(k, n, 3)``:
 
@@ -1759,6 +1930,7 @@ def vdist(pos1, pos2, box=None, out=None):
     <BLANKLINE>
            [[-5., -1.,  3.],
             [-4.,  2.,  2.]]])
+    >>> # Shape of box is (6,), shape of output is (k, n, 3).
     >>> box = np.array([3, 2, 2, 90, 90, 90])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[[ 1., -1., -1.],
@@ -1766,9 +1938,34 @@ def vdist(pos1, pos2, box=None, out=None):
     <BLANKLINE>
            [[ 1., -1., -1.],
             [-1.,  0.,  0.]]])
+    >>> # Shape of box is (3, 3), shape of output is (k, n, 3).
+    >>> box_mat = np.array([[3, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 2]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[[ 1., -1., -1.],
+            [ 0.,  0.,  0.]],
+    <BLANKLINE>
+           [[ 1., -1., -1.],
+            [-1.,  0.,  0.]]])
+    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
     >>> box = np.array([[3, 2, 2, 90, 90, 90],
     ...                 [2, 3, 4, 90, 90, 90]])
     >>> mdt.box.vdist(pos1, pos2, box=box)
+    array([[[ 1., -1., -1.],
+            [ 0.,  0.,  0.]],
+    <BLANKLINE>
+           [[-1., -1., -1.],
+            [ 0., -1., -2.]]])
+    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
+    >>> box_mat = np.array([[[3, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 2]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 3, 0],
+    ...                      [0, 0, 4]]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
     array([[[ 1., -1., -1.],
             [ 0.,  0.,  0.]],
     <BLANKLINE>
@@ -1790,6 +1987,7 @@ def vdist(pos1, pos2, box=None, out=None):
     <BLANKLINE>
            [[-5., -1.,  3.],
             [ 1.,  3., -1.]]])
+    >>> # Shape of box is (6,), shape of output is (k, n, 3).
     >>> box = np.array([3, 2, 2, 90, 90, 90])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[[ 1., -1., -1.],
@@ -1797,6 +1995,17 @@ def vdist(pos1, pos2, box=None, out=None):
     <BLANKLINE>
            [[ 1., -1., -1.],
             [ 1., -1., -1.]]])
+    >>> # Shape of box is (3, 3), shape of output is (k, n, 3).
+    >>> box_mat = np.array([[3, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 2]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[[ 1., -1., -1.],
+            [-1., -1., -1.]],
+    <BLANKLINE>
+           [[ 1., -1., -1.],
+            [ 1., -1., -1.]]])
+    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
     >>> box = np.array([[3, 2, 2, 90, 90, 90],
     ...                 [2, 3, 4, 90, 90, 90]])
     >>> mdt.box.vdist(pos1, pos2, box=box)
@@ -1805,33 +2014,177 @@ def vdist(pos1, pos2, box=None, out=None):
     <BLANKLINE>
            [[-1., -1., -1.],
             [-1.,  0., -1.]]])
+    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
+    >>> box_mat = np.array([[[3, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 2]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 3, 0],
+    ...                      [0, 0, 4]]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[[ 1., -1., -1.],
+            [-1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.],
+            [-1.,  0., -1.]]])
+
+    Triclinic boxes:
+
+    >>> pos1 = np.array([[0, 2, 4],
+    ...                  [5, 3, 1]])
+    >>> pos2 = np.array([[5, 3, 1],
+    ...                  [0, 2, 4]])
+    >>> mdt.box.vdist(pos1, pos2)
+    array([[-5., -1.,  3.],
+           [ 5.,  1., -3.]])
+    >>> box = np.array([3, 2, 2, 80, 90, 100])
+    >>> np.round(mdt.box.vdist(pos1, pos2, box=box), 3)
+    array([[ 0.653,  0.264, -0.937],
+           [-0.653, -0.264,  0.937]])
+    >>> box_mat = np.array([[1, 0, 0],
+    ...                     [2, 3, 0],
+    ...                     [4, 5, 6]])
+    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
+    array([[-2., -3., -3.],
+           [-2., -2., -3.]])
+
+    `out` and `out_tmp` arguments:
+
+    >>> # box is None.
+    >>> pos1 = np.array([0, 2, 4])
+    >>> pos2 = np.array([5, 3, 1])
+    >>> out_tmp = np.full_like(pos1, np.nan, dtype=np.float64)
+    >>> dist_vecs = mdt.box.vdist(pos1, pos2, out_tmp=out_tmp)
+    >>> dist_vecs
+    array([-5., -1.,  3.])
+    >>> out_tmp
+    array([-5., -1.,  3.])
+    >>> dist_vecs is out_tmp
+    True
+    >>> # Shape of box is (6,), shape of output is (3,).
+    >>> box = np.array([3, 2, 2, 90, 90, 90])
+    >>> out = np.full_like(box[:3], np.nan, dtype=np.float64)
+    >>> dist_vecs = mdt.box.vdist(pos1, pos2, box=box, out=out)
+    >>> dist_vecs
+    array([ 1., -1., -1.])
+    >>> out
+    array([ 1., -1., -1.])
+    >>> dist_vecs is out
+    True
+    >>> # Shape of box is (3, 3), shape of output is (3,).
+    >>> box_mat = np.array([[3, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 2]])
+    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
+    >>> dist_vecs = mdt.box.vdist(pos1, pos2, box=box_mat, out=out)
+    >>> dist_vecs
+    array([ 1., -1., -1.])
+    >>> out
+    array([ 1., -1., -1.])
+    >>> dist_vecs is out
+    True
+    >>> # Shape of box is (k, 6), shape of output is (k, 1, 3).
+    >>> box = np.array([[3, 2, 2, 90, 90, 90],
+    ...                 [2, 3, 4, 90, 90, 90]])
+    >>> out = np.full_like(box[:,:3], np.nan, dtype=np.float64)
+    >>> out_tmp = np.full_like(pos1, np.nan, dtype=np.float64)
+    >>> dist_vecs = mdt.box.vdist(
+    ...     pos1, pos2, box=box, out=out, out_tmp=out_tmp
+    ... )
+    >>> dist_vecs
+    array([[[ 1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.]]])
+    >>> out
+    array([[[ 1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.]]])
+    >>> dist_vecs is out
+    True
+    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
+    >>> box_mat = np.array([[[3, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 2]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 3, 0],
+    ...                      [0, 0, 4]]])
+    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
+    >>> out_tmp = np.full_like(pos1, np.nan, dtype=np.float64)
+    >>> dist_vecs = mdt.box.vdist(
+    ...     pos1, pos2, box=box_mat, out=out, out_tmp=out_tmp
+    ... )
+    >>> dist_vecs
+    array([[[ 1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.]]])
+    >>> out
+    array([[[ 1., -1., -1.]],
+    <BLANKLINE>
+           [[-1., -1., -1.]]])
+    >>> dist_vecs is out
+    True
+
+    >>> import MDAnalysis.lib.distances as mdadist
+    >>> import numpy as np
+    >>> pos1 = np.array([[0, 2, 4],
+    ...                  [5, 3, 1]])
+    >>> pos2 = np.array([[5, 3, 1],
+    ...                  [0, 2, 4]])
+    >>> box = np.array([3, 2, 2, 90, 90, 90])
+    >>> dist_vecs1 = mdt.box.vdist(pos1, pos2, box)
+    >>> dists1 = np.linalg.norm(dist_vecs1, axis=-1)
+    >>> dists2 = mdadist.calc_bonds(pos1, pos2, box)
+    >>> np.allclose(dists1, dists2, rtol=0, atol=1e-6)
+    True
+    >>> box = np.array([3, 2, 2, 80, 90, 100])
+    >>> dist_vecs1 = mdt.box.vdist(pos1, pos2, box)
+    >>> dists1 = np.linalg.norm(dist_vecs1, axis=-1)
+    >>> dists2 = mdadist.calc_bonds(pos1, pos2, box)
+    >>> np.allclose(dists1, dists2, rtol=0, atol=1e-5)
+    True
     """
+    if out_tmp is not None and out_tmp is out:
+        raise ValueError("`out_tmp` must not point to `out`")
     pos1 = mdt.check.pos_array(pos1)
     pos2 = mdt.check.pos_array(pos2)
-    dist_vecs = np.subtract(pos1, pos2, out=out, dtype=np.float64)
+    dist_vecs = np.subtract(pos1, pos2, out=out_tmp, dtype=dtype)
     if box is not None:
-        box = mdt.check.box(box, with_angles=True, orthorhombic=True)
-        if box.ndim == 1:
-            box = box[:3]
-        elif box.ndim == 2:
-            box = box[:, :3]
-            if dist_vecs.ndim == 3:
-                box = np.expand_dims(box, axis=1)
-            elif dist_vecs.ndim != 2:
-                raise ValueError(
-                    "If 'box' has shape (k, 6), 'dist_vecs' must have shape"
-                    " (k, n, 3) or (k, 3), but has shape"
-                    " {}".format(dist_vecs.shape)
-                )
-        else:
-            # This else clause should never be entered, because this
-            # error should already be raised by `mdt.check.box(box)`.
+        if box.ndim == 0:
             raise ValueError(
-                "'box' must have shape (6,) or (k, 6), but has shape"
-                " {}".format(box.shape)
+                "`box` ({}) must be at least 1-dimensional.".format(box)
             )
-        dist_vecs -= np.floor(dist_vecs / box + 0.5) * box
-    return dist_vecs
+        elif box.shape[-1] == 6:
+            # Convert length-angle representation to matrix
+            # representation.
+            box = mdt.box.triclinic_vectors(box, dtype=dtype)
+        elif box.shape[-1] == 3:
+            # `box` is already given in matrix representation.
+            box = box
+        else:
+            raise ValueError("Invalid box (box.shape = {})".format(box.shape))
+        # Transform to box coordinates.
+        dist_vecs_prime = mdt.box.cart2box(dist_vecs, box, out=out)
+        dist_vecs_prime += 0.5
+        dist_vecs_prime = np.floor(dist_vecs_prime, out=dist_vecs_prime)
+        # Transform back to the Cartesian coordinate system.
+        dist_vecs_prime = mdt.box.box2cart(
+            dist_vecs_prime, box, out=dist_vecs_prime
+        )
+        if dist_vecs.shape != dist_vecs_prime.shape:
+            # `dist_vecs_prime` gets additional axes prepended if `box`
+            # had shape ``(k, 6)`` or ``(k, 3, 3)`` but the result of
+            # ``pos1 - pos2`` only had shape ``(n, 3)`` or ``(3,)``.  To
+            # enable inplace subtraction in all other cases, resize
+            # `dist_vecs` to the new shape.  Alternatively, we could use
+            # ``dist_vecs = dist_vecs - dist_vecs_prime``.
+            dist_vecs = np.resize(dist_vecs, dist_vecs_prime.shape)
+        dist_vecs_prime *= -1
+        dist_vecs_prime += dist_vecs
+        return dist_vecs_prime
+    else:
+        return dist_vecs
 
 
 def unwrap(
