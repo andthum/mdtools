@@ -4779,15 +4779,14 @@ def rmsd(  # noqa: C901
         that in this case the square root is not taken, because you
         cannot extract the square root of each summand individually.
     box : None or array_like, optional
-        The unit cell dimensions of the system, which must be orthogonal
-        and provided in the same format as returned by
+        The unit cell dimensions of the system, which can be orthogonal
+        or triclinic and must provided in the same format as returned by
         :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
         ``[lx, ly, lz, alpha, beta, gamma]``.  `box` can also be an
         array of boxes of shape ``(k, 6)``, where ``k`` must match the
         number of frames in `refpos`.  If given, the minimum image
         convention is taken into account when calculating the distance
-        between the reference and candidate positions.  Works currently
-        only for orthogonal boxes.
+        between the reference and candidate positions.
 
     Raises
     ------
