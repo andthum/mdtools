@@ -65,15 +65,15 @@ def box_volume(box, debug=False):
 
     See Also
     --------
-    :func:`volume` :
+    :func:`mdtools.box.volume` :
         Calculate the volume of (multiple) orthogonal box(es)
-    :func:`~MDAnalysis.lib.mdamath.box_volume` :
+    :func:`MDAnalysis.lib.mdamath.box_volume` :
         Calculate the volume of a single (triclinic) box
 
     Notes
     -----
     This function is just a wrapper around
-    :func:`~MDAnalysis.lib.mdamath.box_volume` that raises an exception
+    :func:`MDAnalysis.lib.mdamath.box_volume` that raises an exception
     if the calculated volume is equal to or less than zero.
     """
     volume = mdamath.box_volume(box)
@@ -122,9 +122,9 @@ def volume(box, debug=False, **kwargs):
 
     See Also
     --------
-    :func:`box_volume` :
+    :func:`mdtools.box.box_volume` :
        Calculate the volume of a single (triclinic) box
-    :func:`~MDAnalysis.lib.mdamath.box_volume` :
+    :func:`MDAnalysis.lib.mdamath.box_volume` :
         Calculate the volume of a single (triclinic) box
     :func:`numpy.prod` :
         Calculate the product of array elements over a given axis
@@ -397,7 +397,7 @@ def wrap(
     :func:`MDAnalysis.lib.distances.apply_PBC` :
         Shift coordinates stored as :class:`numpy.ndarray` into the
         primary unit cell
-    :func:`make_whole` :
+    :func:`mdtools.box.make_whole` :
         Make compounds of a MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` whole
 
@@ -414,8 +414,8 @@ def wrap(
     When calling this function with `compounds` set to something
     different than ``'atoms'``, make sure that the respective compounds
     are whole.  Broken compounds will not be made whole by this
-    function.  See :func:`make_whole` for a possibility to make
-    compounds whole that are split across periodic boundaries.
+    function.  See :func:`mdtools.box.make_whole` for a possibility to
+    make compounds whole that are split across periodic boundaries.
 
     Because :mod:`MDAnalysis` will pull
     :attr:`~MDAnalysis.core.universe.Universe.trajectory` data directly
@@ -513,16 +513,16 @@ def make_whole(
 
     See Also
     --------
-    :meth:`~MDAnalysis.core.groups.AtomGroup.unwrap` :
+    :meth:`MDAnalysis.core.groups.AtomGroup.unwrap` :
         Move :class:`Atoms <MDAnalysis.core.groups.Atom>` in the
         :class:`~MDAnalysis.core.groups.AtomGroup` such that bonds
         within the group's compounds aren't split across periodic
         boundaries
-    :func:`~MDAnalysis.lib.mdamath.make_whole` :
+    :func:`MDAnalysis.lib.mdamath.make_whole` :
         Move all :class:`Atoms <MDAnalysis.core.groups.Atom>` in a
         MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` such that
         bonds don't split over periodic images
-    :func:`wrap` :
+    :func:`mdtools.box.wrap` :
         Shift compounds of a MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` back into the primary
         unit cell`
@@ -857,10 +857,10 @@ def unwrap(
     displacements from frame to frame and adds these displacements to
     the previous atom positions to build the unwrapped trajectory.
 
-    The main difference to :func:`unwrap_trj` is that :func:`unwrap_trj`
-    unwraps the complete trajectory while this function only unwraps a
-    single frame based on the unwrapped coordinates of the previous
-    frame.
+    The main difference to :func:`mdtools.box.unwrap_trj` is that
+    :func:`mdtools.box.unwrap_trj` unwraps the complete trajectory while
+    this function only unwraps a single frame based on the unwrapped
+    coordinates of the previous frame.
 
     Note
     ----
@@ -960,9 +960,9 @@ def unwrap_trj(
     displacements from frame to frame and adds these displacements to
     the previous atom positions to build the unwrapped trajectory.
 
-    The main difference to :func:`unwrap` is that :func:`unwrap` only
-    unwraps a single frame while this function unwraps the complete
-    trajectory.
+    The main difference to :func:`mdtools.box.unwrap` is that
+    :func:`mdtools.box.unwrap` only unwraps a single frame while this
+    function unwraps the complete trajectory.
 
     Parameters
     ----------
@@ -1017,8 +1017,9 @@ def unwrap_trj(
     compound : str, optional
         Which type of component to make whole. Must be either
         ``'group'``, ``'segments'``, ``'residues'``, ``'molecules'`` or
-        ``'fragments'``. See :func:`make_whole` for more details. Is
-        meaningless if `make_whole` and `keep_whole` are ``False``.
+        ``'fragments'``. See :func:`mdtools.box.make_whole` for more
+        details.  Is meaningless if `make_whole` and `keep_whole` are
+        ``False``.
     reference : str, optional
         If 'com' (center of mass) or 'cog' (center of geometry), the
         compounds that were made whole will be shifted so that their
