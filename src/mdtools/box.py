@@ -514,9 +514,10 @@ def make_whole(
     See Also
     --------
     :meth:`MDAnalysis.core.groups.AtomGroup.unwrap` :
-        Move :class:`Atoms <MDAnalysis.core.groups.Atom>` in the
-        :class:`~MDAnalysis.core.groups.AtomGroup` such that bonds
-        within the group's compounds aren't split across periodic
+        Move
+        :class:`Atoms <MDAnalysis.core.groups.Atom>`
+        in the :class:`~MDAnalysis.core.groups.AtomGroup` such that
+        bonds within the group's compounds aren't split across periodic
         boundaries
     :func:`MDAnalysis.lib.mdamath.make_whole` :
         Move all :class:`Atoms <MDAnalysis.core.groups.Atom>` in a
