@@ -509,7 +509,7 @@ def make_whole(
     pos : numpy.ndarray
         Array of shape ``(ag.n_atoms, 3)`` containing the coordinates of
         all :class:`Atoms <MDAnalysis.core.groups.Atom>` in `ag` after
-        the specifed compouds of `ag` were made whole.
+        the specified compounds of `ag` were made whole.
 
     See Also
     --------
@@ -855,7 +855,7 @@ def unwrap(
     This function uses the algorithm proposed by von Bülow et al. in
     J. Chem. Phys., 2020, 153, 021101. Basically it calculates the atom
     displacements from frame to frame and adds these displacements to
-    the previous atom positions to build the unwraped trajectory.
+    the previous atom positions to build the unwrapped trajectory.
 
     The main difference to :func:`unwrap_trj` is that :func:`unwrap_trj`
     unwraps the complete trajectory while this function only unwraps a
@@ -958,7 +958,7 @@ def unwrap_trj(
     This function uses the algorithm proposed by von Bülow et al. in
     J. Chem. Phys., 2020, 153, 021101. Basically it calculates the atom
     displacements from frame to frame and adds these displacements to
-    the previous atom positions to build the unwraped trajectory.
+    the previous atom positions to build the unwrapped trajectory.
 
     The main difference to :func:`unwrap` is that :func:`unwrap` only
     unwraps a single frame while this function unwraps the complete
@@ -978,7 +978,7 @@ def unwrap_trj(
         of the new (unwrapped) trajectory is given by `trjfile` and the
         name of the corresponding topology is given by `topfile`. Only
         the atoms of `atm_grp` are written to the new trajectory. When
-        the unwrapping precedure is done, you can create a new universe
+        the unwrapping procedure is done, you can create a new universe
         from this unwrapped trajectory and topology. See the
         `MDAnalysis user guide`_ for supported file formats.
 
