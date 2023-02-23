@@ -369,8 +369,8 @@ def wrap(
         or triclinic and must be provided in the same format as returned
         by :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
         ``[lx, ly, lz, alpha, beta, gamma]``.  If ``None``, the
-        :attr.`~MDAnalysis.coordinates.base.Timestep.dimensions` of the
-        current :class.`~MDAnalysis.coordinates.base.Timestep` will be
+        :attr:`~MDAnalysis.coordinates.base.Timestep.dimensions` of the
+        current :class:`~MDAnalysis.coordinates.base.Timestep` will be
         used.
     inplace : bool, optional
         If ``True``, coordinates are modified in place.
@@ -421,7 +421,7 @@ def wrap(
     :attr:`~MDAnalysis.core.universe.Universe.trajectory` data directly
     from the file it is reading from, changes to
     :class:`~MDAnalysis.core.groups.Atom` coordinates and box
-    :attr.`~MDAnalysis.coordinates.base.Timestep.dimensions` will not
+    :attr:`~MDAnalysis.coordinates.base.Timestep.dimensions` will not
     persist once the :attr:`~MDAnalysis.coordinates.base.Timestep.frame`
     is changed (even if `inplace` is ``True``).  The only way to make
     these changes permanent is to load the
@@ -560,7 +560,7 @@ def make_whole(
     :attr:`~MDAnalysis.core.universe.Universe.trajectory` data directly
     from the file it is reading from, changes to
     :class:`~MDAnalysis.core.groups.Atom` coordinates and box
-    :attr.`~MDAnalysis.coordinates.base.Timestep.dimensions` will not
+    :attr:`~MDAnalysis.coordinates.base.Timestep.dimensions` will not
     persist once the :attr:`~MDAnalysis.coordinates.base.Timestep.frame`
     is changed (even if `inplace` is ``True``).  The only way to make
     these changes permanent is to load the
