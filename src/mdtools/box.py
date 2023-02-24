@@ -20,6 +20,7 @@
 
 
 # Standard libraries
+import warnings
 from datetime import datetime
 
 # Third-party libraries
@@ -175,6 +176,193 @@ def diagonal(box, dtype=None, debug=False):
     mdt.check.box(box=box, orthorhombic=True)
     np.sum(np.square(box, dtype=dtype), axis=-1)
     return np.sqrt()
+
+
+def triclinic_box(box_mat, dtype=None):
+    r"""
+    Convert the matrix representation of a simulation box to the
+    length-angle representation.
+
+    Convert the matrix representation
+    ``[[lx1, lx2, lx3], [[lz1, lz2, lz3]], [[lz1, lz2, lz3]]]`` (as
+    returned by
+    :attr:`MDAnalysis.coordinates.base.Timestep.triclinic_dimensions`)
+    to the length-angle representation
+    ``[lx, ly, lz, alpha, beta, gamma]`` (as returned by
+    :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`).
+
+    Parameters
+    ----------
+    box_mat : array_like
+        The unit cell dimensions of the system, which can be orthogonal
+        or triclinic and must be provided in the same format as returned
+        by
+        :attr:`MDAnalysis.coordinates.base.Timestep.triclinic_dimensions`:
+        ``[[lx1, lx2, lx3], [[lz1, lz2, lz3]], [[lz1, lz2, lz3]]]``.
+        `box_mat` can also be an array of box matrices with an arbitrary
+        number of dimensions as long as the last two dimensions have
+        shape ``(3, 3)``.  Note that each box matrix must contain the
+        box vectors as rows!
+    dtype : type, optional
+        The data type of the output array.  If ``None``, the data type
+        is inferred from the input array.
+
+    Returns
+    -------
+    box : numpy.ndarray of dtype numpy.float32
+        The unit cell dimensions of the system in the same format as
+        returned by
+        :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
+        ``[lx, ly, lz, alpha, beta, gamma]``.  `box` will have one
+        dimension less than `box_mat` and its last dimension will have
+        shape ``(6,)``.
+
+        .. list-table:: Shapes
+            :align: left
+            :header-rows: 1
+
+            *   - `box_mat`
+                - `box`
+            *   - ``(3, 3)``
+                - ``(6,)``
+            *   - ``(k, 3, 3)``
+                - ``(k, 6)``
+            *   - ``(j, k, 3, 3)``
+                - ``(j, k, 6)``
+            *   - ``(i, j, k, 3, 3)``
+                - ``(i, j, k, 6)``
+            *   - ...
+                - ...
+
+    See Also
+    --------
+    :func:`MDAnalysis.lib.mdamath.triclinic_box` :
+        Similar function: Convert the matrix representation of a
+        simulation box to the length-angle representation.
+
+    Notes
+    -----
+    The box vectors are converted to their lengths and angles using the
+    following formulas:
+
+    .. math::
+
+        l_x = |\mathbf{l_x}| = \sqrt{\sum_{i=1}^3 l_{x,i}^2}
+
+    .. math::
+
+        \alpha = \arccos{\frac{\mathbf{l_y}\mathbf{l_z}}{l_y l_z}}
+
+    .. math::
+
+        \beta = \arccos{\frac{\mathbf{l_z}\mathbf{l_x}}{l_z l_x}}
+
+    .. math::
+
+        \gamma = \arccos{\frac{\mathbf{l_x}\mathbf{l_y}}{l_x l_y}}
+
+    The angles are returned in degrees and are ensured to lie within the
+    interval :math:`]0, 180[`.
+
+    If one of the resulting length-angle representations is invalid, a
+    warning will be raised and a zero vector will be returned for all
+    boxes.
+
+    Examples
+    --------
+    >>> box_mat = np.eye(3) * 2
+    >>> mdt.box.triclinic_box(box_mat)
+    array([ 2.,  2.,  2., 90., 90., 90.])
+    >>> box_mat = [box_mat, np.eye(3) * 3]
+    >>> mdt.box.triclinic_box(box_mat)
+    array([[ 2.,  2.,  2., 90., 90., 90.],
+           [ 3.,  3.,  3., 90., 90., 90.]])
+    >>> box_mat = [box_mat, [np.eye(3) * 4, np.eye(3) * 5]]
+    >>> mdt.box.triclinic_box(box_mat)
+    array([[[ 2.,  2.,  2., 90., 90., 90.],
+            [ 3.,  3.,  3., 90., 90., 90.]],
+    <BLANKLINE>
+           [[ 4.,  4.,  4., 90., 90., 90.],
+            [ 5.,  5.,  5., 90., 90., 90.]]])
+
+    >>> import MDAnalysis.lib.mdamath as mdamath
+    >>> box_mat = np.eye(3) * 2
+    >>> box1 = mdt.box.triclinic_box(box_mat)
+    >>> box1
+    array([ 2.,  2.,  2., 90., 90., 90.])
+    >>> box2 = mdamath.triclinic_box(*box_mat)
+    >>> box2
+    array([ 2.,  2.,  2., 90., 90., 90.], dtype=float32)
+    >>> np.allclose(box1, box2)
+    True
+    >>> box_mat = np.arange(9).reshape((3, 3))
+    >>> box1 = mdt.box.triclinic_box(box_mat)
+    >>> box1
+    array([ 2.23606798,  7.07106781, 12.20655562,  4.88390747, 32.57846892,
+           27.69456145])
+    >>> box2 = mdamath.triclinic_box(*box_mat)
+    >>> box2
+    array([ 2.236068 ,  7.071068 , 12.206555 ,  4.8839073, 32.57847  ,
+           27.694561 ], dtype=float32)
+    >>> np.allclose(box1, box2)
+    True
+    >>> box_mat = np.array([[1, 0, 0], [2, 3, 0], [4, 5, 6]])
+    >>> box1 = mdt.box.triclinic_box(box_mat)
+    >>> box1
+    array([ 1.        ,  3.60555128,  8.77496439, 43.36781871, 62.88085723,
+           56.30993247])
+    >>> box2 = mdamath.triclinic_box(*box_mat)
+    >>> box2
+    array([ 1.       ,  3.6055512,  8.774964 , 43.367817 , 62.880856 ,
+           56.309933 ], dtype=float32)
+    >>> np.allclose(box1, box2)
+    True
+    """  # noqa: W505
+    box_mat = np.asarray(box_mat, dtype=dtype)
+    # Actually, this function works with any input arrays that have at
+    # least 2 dimensions.  This if statement only checks for physically
+    # meaningful inputs and could be replaced by ``if box_mat.ndim < 2``
+    # without breaking functionality.
+    if box_mat.shape[-2:] != (3, 3):
+        raise ValueError(
+            "`box_mat` has shape {}, but the last two dimensions of `box_mat`"
+            " must have shape (3, 3)".format(box_mat.shape)
+        )
+
+    # Box lengths: lx, ly, lz.
+    box_lengths = np.linalg.norm(box_mat, axis=-1)
+    # Products of box lengths: lx*ly, ly*lz, lz*lx.
+    shift = -1
+    box_lengths_prods = box_lengths * np.roll(box_lengths, shift, axis=-1)
+    # Dot products of box vectors: lx*ly, ly*lz, lz*lx.
+    dot_prods = box_mat * np.roll(box_mat, shift, axis=-2)
+    dot_prods = np.sum(dot_prods, axis=-1)
+    # Box angles: gamma, alpha, beta.
+    angles = dot_prods / box_lengths_prods
+    angles = np.arccos(angles, out=angles)
+    angles = np.rad2deg(angles, out=angles)
+    # Box angles: alpha, beta, gamma.
+    angles = np.roll(angles, shift, axis=-1)
+    # Box in length-angle representation: lx, ly, lz, alpha, beta, gamma
+    box = np.concatenate([box_lengths, angles], axis=-1)
+
+    if box.shape[-1] != np.sum(box_mat.shape[-2:]):
+        raise ValueError(
+            "`box` has shape {}, but the last dimension of `box` must have"
+            " shape ({},).  This should not have"
+            " happened.".format(box.shape, np.sum(box_mat.shape[-2:]))
+        )
+    # Only positive box lengths and angles in ]0, 180[ are allowed:
+    if np.all(box > 0) and np.all(mdt.nph.take(box, start=3, axis=-1) < 180):
+        return box
+    else:
+        # invalid box, return zero vector.
+        warnings.warn(
+            "Invalid box.  At least one box length is not greater than zero"
+            " and/or at leas one angle lies not in ]0, 180[",
+            RuntimeWarning,
+        )
+        return np.zeros(box_mat.shape[:-2] + (6,), dtype=dtype)
 
 
 def wrap_pos(pos, box, mda_backend=None):
