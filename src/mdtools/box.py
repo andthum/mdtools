@@ -236,6 +236,9 @@ def triclinic_box(box_mat, dtype=None):
 
     See Also
     --------
+    :func:`mdtools.box.triclinic_vectors` :
+        Inverse function: Convert the length-angle representation of a
+        simulation box to the matrix representation.
     :func:`MDAnalysis.lib.mdamath.triclinic_box` :
         Similar function: Convert the matrix representation of a
         simulation box to the length-angle representation.
@@ -363,6 +366,141 @@ def triclinic_box(box_mat, dtype=None):
             RuntimeWarning,
         )
         return np.zeros(box_mat.shape[:-2] + (6,), dtype=dtype)
+
+
+def triclinic_vectors(box, dtype=None):
+    """
+    Convert the length-angle representation of a simulation box to the
+    matrix representation.
+
+    Convert the length-angle representation
+    ``[lx, ly, lz, alpha, beta, gamma]`` (as returned by
+    :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`) to the
+    the matrix representation
+    ``[[lx1, lx2, lx3], [[lz1, lz2, lz3]], [[lz1, lz2, lz3]]]`` (as
+    returned by
+    :attr:`MDAnalysis.coordinates.base.Timestep.triclinic_dimensions`).
+
+    Parameters
+    ----------
+    box : array_like
+        The unit cell dimensions of the system, which can be orthogonal
+        or triclinic and must be provided in the same format as returned
+        by :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
+        ``[lx, ly, lz, alpha, beta, gamma]``.  `box` can also be an
+        array of boxes of shape ``(k, 6)`` (one box for each frame).
+    dtype : type, optional
+        The data type of the output array.  If ``None``, the data type
+        is inferred from the input array.
+
+    Returns
+    -------
+    box_mat : numpy.ndarray
+        The unit cell dimensions of the system in the same format as
+        returned by
+        :attr:`MDAnalysis.coordinates.base.Timestep.triclinic_dimensions`:
+        ``[[lx1, lx2, lx3], [[lz1, lz2, lz3]], [[lz1, lz2, lz3]]]``
+        `box_mat` will be an array of shape ``(k, 3, 3)`` if `box` had
+        shape ``(k, 6)``.  Each 3x3 box matrix contains the box vectors
+        as *rows*!
+
+        .. list-table:: Shapes
+            :align: left
+            :header-rows: 1
+
+            *   - `box`
+                - `box_mat`
+            *   - ``(6,)``
+                - ``(3, 3)``
+            *   - ``(k, 6)``
+                - ``(k, 3, 3)``
+
+    See Also
+    --------
+    :func:`mdtools.box.triclinic_box` :
+        Inverse function: Convert the matrix representation of a
+        simulation box to the length-angle representation.
+    :func:`MDAnalysis.lib.mdamath.triclinic_vectors` :
+        Same function: Convert the length-angle representation of a
+        simulation box to the matrix representation.
+
+    Notes
+    -----
+    * The first vector is guaranteed to point along the x-axis, i.e., it
+      has the form ``(lx, 0, 0)``.
+    * The second vector is guaranteed to lie in the x/y-plane, i.e., its
+      z-component is guaranteed to be zero.
+    * If any box length is negative or zero, or if any box angle is
+      zero, the box is treated as invalid and an all-zero-matrix is
+      returned.
+
+    This function is just a wrapper around
+    :func:`MDAnalysis.lib.mdamath.triclinic_vectors` that also allows to
+    parse arrays of boxes.
+
+    Examples
+    --------
+    >>> box = [1, 2, 3, 90, 90, 90]
+    >>> mdt.box.triclinic_vectors(box)
+    array([[1., 0., 0.],
+           [0., 2., 0.],
+           [0., 0., 3.]])
+    >>> box = [box, [4, 5, 6, 90, 90, 90]]
+    >>> mdt.box.triclinic_vectors(box)
+    array([[[1., 0., 0.],
+            [0., 2., 0.],
+            [0., 0., 3.]],
+    <BLANKLINE>
+           [[4., 0., 0.],
+            [0., 5., 0.],
+            [0., 0., 6.]]])
+
+    >>> import MDAnalysis.lib.mdamath as mdamath
+    >>> box = [1, 2, 3, 40, 60, 80]
+    >>> box1 = mdt.box.triclinic_vectors(box)
+    >>> box1
+    array([[1.        , 0.        , 0.        ],
+           [0.34729636, 1.96961551, 0.        ],
+           [1.5       , 2.06909527, 1.57125579]])
+    >>> box2 = mdamath.triclinic_vectors(box)
+    >>> box2
+    array([[1.        , 0.        , 0.        ],
+           [0.34729636, 1.9696155 , 0.        ],
+           [1.5       , 2.0690954 , 1.5712558 ]], dtype=float32)
+    >>> np.allclose(box1, box2)
+    True
+    >>> box = [4, 5, 6, 100, 110, 120]
+    >>> box1 = mdt.box.triclinic_vectors(box)
+    >>> box1
+    array([[ 4.        ,  0.        ,  0.        ],
+           [-2.5       ,  4.33012702,  0.        ],
+           [-2.05212086, -2.3878624 ,  5.10753494]])
+    >>> box2 = mdamath.triclinic_vectors(box)
+    >>> box2
+    array([[ 4.       ,  0.       ,  0.       ],
+           [-2.5      ,  4.3301272,  0.       ],
+           [-2.052121 , -2.3878624,  5.107535 ]], dtype=float32)
+    >>> np.allclose(box1, box2)
+    True
+    """
+    box = mdt.check.box(box, with_angles=True)
+    # ATTENTION: The array that is returned by
+    # `mdamath.triclinic_vectors` contains the box vectors as rows, not
+    # as columns!
+    if box.ndim == 1:
+        box_mat = mdamath.triclinic_vectors(box, dtype=dtype)
+    elif box.ndim == 2:
+        box_mat = np.asarray(
+            [mdamath.triclinic_vectors(b, dtype=dtype) for b in box]
+        )
+    else:
+        # This else clause should never be entered, because this error
+        # should already be raised by `mdt.check.box(box)`.
+        raise ValueError(
+            "'box' must have shape (6,) or (k, 6), but has shape"
+            " {}".format(box.shape)
+        )
+    return box_mat
 
 
 def wrap_pos(pos, box, mda_backend=None):
