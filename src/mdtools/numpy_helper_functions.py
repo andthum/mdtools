@@ -331,7 +331,7 @@ def take(a, start=None, stop=None, step=None, axis=None):
     if axis is None:
         return a.reshape(-1)[start:stop:step]
     else:
-        if abs(axis) >= a.ndim:
+        if axis >= a.ndim or axis < -a.ndim:
             raise np.AxisError(axis=axis, ndim=a.ndim)
         # The modulo operator % ensures proper handling of negative axes
         sl = (slice(None),) * (axis % a.ndim) + (slice(start, stop, step),)
