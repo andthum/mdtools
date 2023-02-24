@@ -347,6 +347,9 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
 
     See Also
     --------
+    :func:`mdtools.check.box_mat` :
+        Check if the input array satisfies the conditions for a
+        simulation box matrix.
     :func:`mdtools.check.array` :
         Check if an array meets given requirements
     :func:`mdtools.check.pos_array` :
@@ -403,6 +406,105 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
     if dim is not None or dtype is not None:
         array(a=box, dim=dim, dtype=dtype)
     return box
+
+
+def box_mat(
+    box_mat, orthorhombic=False, x_aligned=False, dim=None, dtype=None
+):
+    """
+    Check if the input array satisfies the conditions for a simulation
+    box matrix.
+
+    Arrays that contain simulation box matrices must meet the following
+    requirements:
+
+        * Must be of an `array_like` type, i.e. a type that can be
+          converted to a :class:`numpy.ndarray`.
+        * Must be of shape ``(3, 3)`` or ``(k, 3, 3)``, where ``k`` is
+          the number of frames.
+
+    Parameters
+    ----------
+    box_mat : array_like
+        The array to check.  It is assumed that box matrices contain the
+        box vectors as rows not as columns!
+    orthorhombic : bool, optional
+        If ``True``, the simulation boxes must be orthorhombic, i.e. all
+        given box matrices must be diagonal.
+    x_aligned : bool, optional
+        If ``True``, the simulation boxes must align with the x-axis and
+        the xy-plane, i.e. the first box vector must have the form
+        ``[lx, 0, 0]`` and the second box vector must have the form
+        ``[ly1, ly2, 0]``.
+    dim : {None, 2, 3}, optional
+        The dimension expected for `box_mat`.  Default is ``None``,
+        which means that the dimension of `box_mat` is not checked.  If
+        `box_mat` should contain the box vectors for only one frame, set
+        `dim` to 2.  If `box_mat` should contain the box vectors for
+        multiple frames, set `dim` to 3.
+    dtype : type, optional
+        The data type expected for `box_mat`.  Default is ``None``,
+        which means that the data type of `box_mat` is not checked.
+
+    Returns
+    -------
+    box_mat : numpy.ndarray
+        The input array as :class:`numpy.ndarray`.
+
+    Raises
+    ------
+    ValueError
+        If `box_mat` has an incorrect shape or an incorrect
+        dimensionality.
+
+        Or if `orthorhombic` is ``True`` but the matrices have non-zero
+        off-diagonal elements.
+
+        Or if `x_aligned` is ``True`` but the values in the upper
+        triangle of the matrices are not zero.
+
+        Or if `dim` is not ``None`` and neither two or three.
+
+        See :func:`mdtools.check.array` for further potentially raised
+        exceptions.
+
+    See Also
+    --------
+    :func:`mdtools.check.box` :
+        Check if the input array satisfies the conditions for a
+        simulation box array.
+    :func:`mdtools.check.array` :
+        Check if an array meets given requirements
+    :func:`mdtools.check.pos_array` :
+        Check if an array is a suitable position array
+    """
+    box_mat = np.asarray(box_mat)
+    allowed_dims = (2, 3)
+    # Check input parameters:
+    if dim is not None and dim not in allowed_dims:
+        raise ValueError("`dim` ({}) must be in {}".format(dim, allowed_dims))
+
+    # Check box matrix:
+    if box_mat.ndim not in allowed_dims or box_mat.shape[-2:] != (3, 3):
+        raise ValueError(
+            "`box_mat` has shape {} but must have shape (3, 3) or"
+            " (k, 3, 3)".format(box_mat.shape)
+        )
+    if orthorhombic:
+        diagonals = np.diagonal(box_mat, axis1=-2, axis2=-1)
+        box_mat_diag = np.apply_along_axis(np.diag, -1, diagonals)
+        if not np.allclose(box_mat, box_mat_diag, rtol=0):
+            raise ValueError(
+                "At least one of the given box(es) is not orthorhombic"
+            )
+    if x_aligned and not np.allclose(np.triu(box_mat, 1), 0, rtol=0):
+        raise ValueError(
+            "At least one of the given box(es) is not aligned with the"
+            " x-axis and the xy-plane"
+        )
+    if any(arg is not None for arg in (dim, dtype)):
+        mdt.check.array(box_mat, dim=dim, dtype=dtype)
+    return box_mat
 
 
 def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
