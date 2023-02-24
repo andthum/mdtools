@@ -503,6 +503,337 @@ def triclinic_vectors(box, dtype=None):
     return box_mat
 
 
+def box2cart(pos, box, out=None, dtype=None):
+    r"""
+    Transform box coordinates to Cartesian coordinates.
+
+    Parameters
+    ----------
+    pos : array_like
+        The position array which to transform from box coordinates to
+        Cartesian coordinates.  Must be either of shape ``(3,)``,
+        ``(n, 3)`` or ``(k, n, 3)``, where ``n`` is the number of
+        particles and ``k`` is the number of frames.
+    box : array_like, optional
+        The unit cell dimensions of the system in Cartesian coordinates.
+        Can be orthogonal or triclinic and must be provided in the same
+        format as returned by
+        :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
+        ``[lx, ly, lz, alpha, beta, gamma]``.  `box` can also be an
+        array of boxes of shape ``(k, 6)`` (one box for each frame).  If
+        `box` has shape ``(k, 6)`` and ``pos`` has shape ``(n, 3)``, the
+        latter will be broadcast to ``(k, n, 3)``.  If `box` has shape
+        ``(k, 6)`` and ``pos`` has shape ``(3,)``, the latter will be
+        broadcast to ``(k, 1, 3)``.
+
+        Alternatively, `box` can be provided in the same format as
+        returned by
+        :attr:`MDAnalysis.coordinates.base.Timestep.triclinic_dimensions`:
+        ``[[lx1, lx2, lx3], [[lz1, lz2, lz3]], [[lz1, lz2, lz3]]]``.
+        `box` can also be an array of boxes of shape ``(k, 3, 3)`` (one
+        box for each frame).  Equivalent broadcasting rules as above
+        apply.  Providing `box` already in matrix representation avoids
+        the conversion step from the length-angle to the matrix
+        representation.
+    out : None or numpy.ndarray, optional
+        Preallocated array of the given dtype and appropriate shape into
+        which the result is stored.
+    dtype : type, optional
+        The data type of the output array.  If ``None``, the data type
+        is inferred from the input arrays.
+
+    Returns
+    -------
+    pos_cart : numpy.ndarray
+        The position array in Cartesian coordinates.
+
+        .. list-table:: Shapes
+            :align: left
+            :header-rows: 1
+
+            *   - `pos`
+                - `box`
+                - `pos_cart`
+            *   - ``(3,)``
+                - ``(6,)`` or ``(3, 3)``
+                - ``(3,)``
+            *   - ``(3,)``
+                - ``(k, 6)`` or ``(k, 3, 3)``
+                - ``(k, 1, 3)``
+            *   - ``(n, 3)``
+                - ``(6,)`` or ``(3, 3)``
+                - ``(n, 3)``
+            *   - ``(n, 3)``
+                - ``(k, 6)`` or ``(k, 3, 3)``
+                - ``(k, n, 3)``
+            *   - ``(k, n, 3)``
+                - ``(6,)`` or ``(3, 3)``
+                - ``(k, n, 3)``
+            *   - ``(k, n, 3)``
+                - ``(k, 6)`` or ``(k, 3, 3)``
+                - ``(k, n, 3)``
+
+    See Also
+    --------
+    :func:`mdtools.box.cart2box`
+        Inverse function: Transform Cartesian coordinates to box
+        coordinates.
+
+    Notes
+    -----
+    The formula for the transformation of a vector
+    :math:`\hat{\mathbf{r}}` given in box coordinates to the vector
+    :math:`\mathbf{r}` given in Cartesian coordinates is
+
+    .. math::
+
+        \mathbf{r} = \mathbf{L} \hat{\mathbf{r}}
+
+    where :math:`\mathbf{L} =
+    \left( \mathbf{L}_x | \mathbf{L}_y | \mathbf{L}_z \right)`
+    is the matrix of the (triclinic) box vectors in Cartesian
+    coordinates.
+
+    Examples
+    --------
+    `pos` has shape ``(3,)``:
+
+    >>> pos = np.array([1, 2, 3])
+    >>> box = np.array([1, 2, 3, 90, 90, 90])
+    >>> mdt.box.box2cart(pos, box)
+    array([1., 4., 9.])
+    >>> box_mat = np.array([[1, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 3]])
+    >>> mdt.box.box2cart(pos, box_mat)
+    array([1, 4, 9])
+    >>> box = np.array([[1, 2, 3, 90, 90, 90],
+    ...                 [2, 4, 6, 90, 90, 90]])
+    >>> mdt.box.box2cart(pos, box)
+    array([[[ 1.,  4.,  9.]],
+    <BLANKLINE>
+           [[ 2.,  8., 18.]]])
+    >>> box_mat = np.array([[[1, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 3]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 4, 0],
+    ...                      [0, 0, 6]]])
+    >>> mdt.box.box2cart(pos, box_mat)
+    array([[[ 1,  4,  9]],
+    <BLANKLINE>
+           [[ 2,  8, 18]]])
+
+    `pos` has shape ``(n, 3)``:
+
+    >>> pos = np.array([[1, 2, 3],
+    ...                 [4, 5, 6]])
+    >>> box = np.array([1, 2, 3, 90, 90, 90])
+    >>> mdt.box.box2cart(pos, box)
+    array([[ 1.,  4.,  9.],
+           [ 4., 10., 18.]])
+    >>> box_mat = np.array([[1, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 3]])
+    >>> mdt.box.box2cart(pos, box_mat)
+    array([[ 1,  4,  9],
+           [ 4, 10, 18]])
+    >>> box = np.array([[1, 2, 3, 90, 90, 90],
+    ...                 [2, 4, 6, 90, 90, 90]])
+    >>> mdt.box.box2cart(pos, box)
+    array([[[ 1.,  4.,  9.],
+            [ 4., 10., 18.]],
+    <BLANKLINE>
+           [[ 2.,  8., 18.],
+            [ 8., 20., 36.]]])
+    >>> box_mat = np.array([[[1, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 3]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 4, 0],
+    ...                      [0, 0, 6]]])
+    >>> mdt.box.box2cart(pos, box_mat)
+    array([[[ 1,  4,  9],
+            [ 4, 10, 18]],
+    <BLANKLINE>
+           [[ 2,  8, 18],
+            [ 8, 20, 36]]])
+
+    `pos` has shape ``(k, n, 3)``:
+
+    >>> pos = np.array([[[ 1,  2,  3],
+    ...                  [ 4,  5,  6]],
+    ...
+    ...                 [[ 7,  8,  9],
+    ...                  [10, 11, 12]]])
+    >>> box = np.array([1, 2, 3, 90, 90, 90])
+    >>> mdt.box.box2cart(pos, box)
+    array([[[ 1.,  4.,  9.],
+            [ 4., 10., 18.]],
+    <BLANKLINE>
+           [[ 7., 16., 27.],
+            [10., 22., 36.]]])
+    >>> box_mat = np.array([[1, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 3]])
+    >>> mdt.box.box2cart(pos, box_mat)
+    array([[[ 1,  4,  9],
+            [ 4, 10, 18]],
+    <BLANKLINE>
+           [[ 7, 16, 27],
+            [10, 22, 36]]])
+    >>> box = np.array([[1, 2, 3, 90, 90, 90],
+    ...                 [2, 4, 6, 90, 90, 90]])
+    >>> mdt.box.box2cart(pos, box)
+    array([[[ 1.,  4.,  9.],
+            [ 4., 10., 18.]],
+    <BLANKLINE>
+           [[14., 32., 54.],
+            [20., 44., 72.]]])
+    >>> box_mat = np.array([[[1, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 3]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 4, 0],
+    ...                      [0, 0, 6]]])
+    >>> mdt.box.box2cart(pos, box_mat)
+    array([[[ 1,  4,  9],
+            [ 4, 10, 18]],
+    <BLANKLINE>
+           [[14, 32, 54],
+            [20, 44, 72]]])
+
+    Triclinic box:
+
+    >>> pos = np.array([[ 7,  8,  9],
+    ...                 [10, 11, 12]])
+    >>> box_mat = np.array([[1, 0, 0],
+    ...                     [2, 3, 0],
+    ...                     [4, 5, 6]])
+    >>> mdt.box.box2cart(pos, box_mat)
+    array([[59, 69, 54],
+           [80, 93, 72]])
+    >>> box = mdt.box.triclinic_box(box_mat)
+    >>> np.round(box, 3)
+    array([ 1.   ,  3.606,  8.775, 43.368, 62.881, 56.31 ])
+    >>> mdt.box.box2cart(pos, box)
+    array([[59., 69., 54.],
+           [80., 93., 72.]])
+    >>> pos_cart = mdt.box.box2cart(box_mat, box_mat)
+    >>> pos_cart
+    array([[ 1,  0,  0],
+           [ 8,  9,  0],
+           [38, 45, 36]])
+    >>> np.allclose(
+    ...     pos_cart, np.linalg.matrix_power(box_mat, 2), rtol=0
+    ... )
+    True
+
+    `out` argument:
+
+    >>> pos = np.array([1, 2, 3])
+    >>> box = np.array([1, 2, 3, 90, 90, 90])
+    >>> out = np.full_like(box[:3], np.nan, dtype=np.float64)
+    >>> pos_cart = mdt.box.box2cart(pos, box, out=out)
+    >>> pos_cart
+    array([1., 4., 9.])
+    >>> out
+    array([1., 4., 9.])
+    >>> pos_cart is out
+    True
+    >>> box_mat = np.array([[1, 0, 0],
+    ...                     [0, 2, 0],
+    ...                     [0, 0, 3]])
+    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
+    >>> pos_cart = mdt.box.box2cart(pos, box_mat, out=out)
+    >>> pos_cart
+    array([1., 4., 9.])
+    >>> out
+    array([1., 4., 9.])
+    >>> pos_cart is out
+    True
+    >>> box = np.array([[1, 2, 3, 90, 90, 90],
+    ...                 [2, 4, 6, 90, 90, 90]])
+    >>> out = np.full_like(box[:,:3], np.nan, dtype=np.float64)
+    >>> pos_cart = mdt.box.box2cart(pos, box, out=out)
+    >>> pos_cart
+    array([[[ 1.,  4.,  9.]],
+    <BLANKLINE>
+           [[ 2.,  8., 18.]]])
+    >>> out
+    array([[[ 1.,  4.,  9.]],
+    <BLANKLINE>
+           [[ 2.,  8., 18.]]])
+    >>> pos_cart is out
+    True
+    >>> box_mat = np.array([[[1, 0, 0],
+    ...                      [0, 2, 0],
+    ...                      [0, 0, 3]],
+    ...
+    ...                     [[2, 0, 0],
+    ...                      [0, 4, 0],
+    ...                      [0, 0, 6]]])
+    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
+    >>> pos_cart = mdt.box.box2cart(pos, box_mat, out=out)
+    >>> pos_cart
+    array([[[ 1.,  4.,  9.]],
+    <BLANKLINE>
+           [[ 2.,  8., 18.]]])
+    >>> out
+    array([[[ 1.,  4.,  9.]],
+    <BLANKLINE>
+           [[ 2.,  8., 18.]]])
+    >>> pos_cart is out
+    True
+    """
+    pos = mdt.check.pos_array(pos)
+    if box.ndim == 0:
+        raise ValueError(
+            "`box` ({}) must be at least 1-dimensional.".format(box)
+        )
+    elif box.shape[-1] == 6:
+        # Get matrix of box vectors.
+        # ATTENTION: The array that is returned by
+        # `mdt.box.triclinic_vectors` contains the box vectors as rows,
+        # not as columns like in the algebraic formula for coordinate
+        # transformations!
+        box_mat = mdt.box.triclinic_vectors(box, dtype=dtype)
+        box_was_mat = False
+    elif box.shape[-1] == 3:
+        # `box`` is already given in matrix representation.
+        box_mat = box
+        box_was_mat = True
+    else:
+        raise ValueError("Invalid box (box.shape = {})".format(box.shape))
+
+    # Transform the given position vector from box coordinates to
+    # Cartesian coordinates.
+    # About `np.einsum`: https://stackoverflow.com/a/33641428
+    if pos.ndim == 1:
+        # If the matrix contained the box vectors as columns, we had to
+        # use ``subscripts = "...ij,...j->...i"``.  But the matrix
+        # contains the box vectors as rows, therefore we have to use the
+        # "transpose" of the subscripts.
+        subscripts = "...ij,...i->...j"
+    else:
+        # If the matrix contained the box vectors as columns:
+        # ``subscripts = "...ij,...kj->...ki"``.
+        subscripts = "...ij,...ki->...kj"
+    pos_cart = np.einsum(subscripts, box_mat, pos, out=out, dtype=dtype)
+    if pos.ndim == 1 and (
+        (not box_was_mat and box.ndim > 1) or (box_was_mat and box.ndim > 2)
+    ):
+        # Reshape the result array to (k, 1, 3) if `box` had shape
+        # (k, 6) or (k, 3, 3) but `pos` only had shape (3,).
+        pos_cart.shape = (box.shape[0], 1, pos.shape[0])
+        if out is not None:
+            out.shape = pos_cart.shape
+    return pos_cart
+
+
 def cart2box(pos, box, out=None, dtype=None):
     r"""
     Transform Cartesian coordinates to box coordinates.
@@ -572,6 +903,12 @@ def cart2box(pos, box, out=None, dtype=None):
             *   - ``(k, n, 3)``
                 - ``(k, 6)`` or ``(k, 3, 3)``
                 - ``(k, n, 3)``
+
+    See Also
+    --------
+    :func:`mdtools.box.box2cart`
+        Inverse function: Transform box coordinates to Cartesian
+        coordinates.
 
     Notes
     -----
