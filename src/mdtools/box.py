@@ -25,7 +25,6 @@ from datetime import datetime
 
 # Third-party libraries
 import MDAnalysis as mda
-import MDAnalysis.lib.distances as mdadist
 import MDAnalysis.lib.mdamath as mdamath
 import numpy as np
 import psutil
@@ -1170,8 +1169,8 @@ def cart2box(pos, box, out=None, dtype=None):
     return pos_box
 
 
-def wrap_pos(pos, box, mda_backend=None):
-    """
+def wrap_pos(pos, box, out=None, dtype=None):
+    r"""
     Shift all particle positions into the primary unit cell.
 
     Parameters
@@ -1186,22 +1185,60 @@ def wrap_pos(pos, box, mda_backend=None):
         or triclinic and must be provided in the same format as returned
         by :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
         ``[lx, ly, lz, alpha, beta, gamma]``.  `box` can also be an
-        array of boxes of shape ``(k, 6)`` (one box for each frame).  In
-        this case a 2-dimensional position array is interpreted to
-        contain one position per frame instead of ``n`` positions for
-        one frame.
-    mda_backend : {None, 'serial', 'OpenMP'}, optional
-        The backend to parse to
-        :func:`MDAnalysis.lib.distances.apply_PBC`.  If ``None``, it
-        will be set to ``'OpenMP'`` if more than one CPU is available
-        (as determined by :func:`mdtools.run_time_info.get_num_CPUs`) or
-        to ``'serial'`` if only one CPU is available.
+        array of boxes of shape ``(k, 6)`` (one box for each frame).  If
+        `box` has shape ``(k, 6)`` and ``pos`` has shape ``(n, 3)``, the
+        latter will be broadcast to ``(k, n, 3)``.  If `box` has shape
+        ``(k, 6)`` and ``pos`` has shape ``(3,)``, the latter will be
+        broadcast to ``(k, 1, 3)``.
+
+        Alternatively, `box` can be provided in the same format as
+        returned by
+        :attr:`MDAnalysis.coordinates.base.Timestep.triclinic_dimensions`:
+        ``[[lx1, lx2, lx3], [[lz1, lz2, lz3]], [[lz1, lz2, lz3]]]``.
+        `box` can also be an array of boxes of shape ``(k, 3, 3)`` (one
+        box for each frame).  Equivalent broadcasting rules as above
+        apply.  Providing `box` already in matrix representation avoids
+        the conversion step from the length-angle to the matrix
+        representation.
+    out : None or numpy.ndarray, optional
+        Preallocated array of the given dtype and appropriate shape into
+        which the result is stored.  `out` must not point to any input
+        array.
+    dtype : type, optional
+        The data type of the output array.  If ``None``, the data type
+        is inferred from the input arrays.
 
     Returns
     -------
     pos_wrapped : numpy.ndarray
-        Array of the same shape as `pos` containing the positions that
-        all lie within the primary unit cell as defined by `box`.
+        The input position array with all positions shifted into the
+        primary unit cell as defined by `box`.
+
+        .. list-table:: Shapes
+            :align: left
+            :header-rows: 1
+
+            *   - `pos`
+                - `box`
+                - `pos_wrapped`
+            *   - ``(3,)``
+                - ``(6,)`` or ``(3, 3)``
+                - ``(3,)``
+            *   - ``(3,)``
+                - ``(k, 6)`` or ``(k, 3, 3)``
+                - ``(k, 1, 3)``
+            *   - ``(n, 3)``
+                - ``(6,)`` or ``(3, 3)``
+                - ``(n, 3)``
+            *   - ``(n, 3)``
+                - ``(k, 6)`` or ``(k, 3, 3)``
+                - ``(k, n, 3)``
+            *   - ``(k, n, 3)``
+                - ``(6,)`` or ``(3, 3)``
+                - ``(k, n, 3)``
+            *   - ``(k, n, 3)``
+                - ``(k, 6)`` or ``(k, 3, 3)``
+                - ``(k, n, 3)``
 
     See Also
     --------
@@ -1214,101 +1251,248 @@ def wrap_pos(pos, box, mda_backend=None):
 
     Notes
     -----
-    This function uses :func:`MDAnalysis.lib.distances.apply_PBC` to
-    wrap the input positions into the primary unit cell.  But in
-    contrast to :func:`MDAnalysis.lib.distances.apply_PBC`, this
-    function also accepts position arrays of shape ``(k, n, 3)`` and box
-    arrays of shape ``(k, 6)``.
+    This function has the same functionality as
+    :func:`MDAnalysis.lib.distances.apply_PBC`.  But in contrast to
+    :func:`MDAnalysis.lib.distances.apply_PBC`, this function also
+    accepts position arrays of shape ``(k, n, 3)`` and box arrays of
+    shape ``(k, 6)``.
+
+    Mathematically, the wrapping algorithm can be described by the
+    following formula:
+
+    .. math::
+
+        \Delta\mathbf{r}^w = \Delta\mathbf{r}^u - \mathbf{L}
+        \biggl\lfloor
+        \mathbf{L}^{-1} \Delta\mathbf{r}^u
+        \biggr\rfloor
+
+    Here, :math:`\Delta\mathbf{r}^w` and :math:`\Delta\mathbf{r}^u` are
+    the wrapped and unwrapped coordinates, respectively, and
+    :math:`\mathbf{L} =
+    \left( \mathbf{L}_x | \mathbf{L}_y | \mathbf{L}_z \right)`
+    is the matrix of the (triclinic) box vectors.
 
     Examples
     --------
-    >>> pos = np.array([0, 3, 6])
-    >>> mdt.box.wrap_pos(pos, [4, 5, 6, 90, 90, 90])
-    array([0., 3., 0.], dtype=float32)
+    pos has shape ``(3,)``:
 
-    >>> pos = np.array([[0, 3, 6],
-    ...                 [1, 5, 7]])
-    >>> mdt.box.wrap_pos(pos, [4, 5, 6, 90, 90, 90])
-    array([[0., 3., 0.],
-           [1., 0., 1.]], dtype=float32)
+    >>> pos = np.array([0, 3, 6])
+    >>> box = np.array([4, 5, 6, 90, 90, 90])
+    >>> mdt.box.wrap_pos(pos, box)
+    array([0., 3., 0.])
+    >>> box_mat = np.array([[4, 0, 0],
+    ...                     [0, 5, 0],
+    ...                     [0, 0, 6]])
+    >>> mdt.box.wrap_pos(pos, box_mat)
+    array([0., 3., 0.])
     >>> box = np.array([[4, 5, 6, 90, 90, 90],
     ...                 [6, 5, 4, 90, 90, 90]])
     >>> mdt.box.wrap_pos(pos, box)
+    array([[[0., 3., 0.]],
+    <BLANKLINE>
+           [[0., 3., 2.]]])
+    >>> box_mat = np.array([[[4, 0, 0],
+    ...                      [0, 5, 0],
+    ...                      [0, 0, 6]],
+    ...
+    ...                     [[6, 0, 0],
+    ...                      [0, 5, 0],
+    ...                      [0, 0, 4]]])
+    >>> mdt.box.wrap_pos(pos, box_mat)
+    array([[[0., 3., 0.]],
+    <BLANKLINE>
+           [[0., 3., 2.]]])
+
+    pos has shape ``(n, 3)``:
+
+    >>> pos = np.array([[0, 3, 6],
+    ...                 [1, 5, 7]])
+    >>> box = np.array([4, 5, 6, 90, 90, 90])
+    >>> mdt.box.wrap_pos(pos, box)
     array([[0., 3., 0.],
-           [1., 0., 3.]], dtype=float32)
+           [1., 0., 1.]])
+    >>> box_mat = np.array([[4, 0, 0],
+    ...                     [0, 5, 0],
+    ...                     [0, 0, 6]])
+    >>> mdt.box.wrap_pos(pos, box_mat)
+    array([[0., 3., 0.],
+           [1., 0., 1.]])
+    >>> box = np.array([[4, 5, 6, 90, 90, 90],
+    ...                 [6, 5, 4, 90, 90, 90]])
+    >>> mdt.box.wrap_pos(pos, box)
+    array([[[0., 3., 0.],
+            [1., 0., 1.]],
+    <BLANKLINE>
+           [[0., 3., 2.],
+            [1., 0., 3.]]])
+    >>> box_mat = np.array([[[4, 0, 0],
+    ...                      [0, 5, 0],
+    ...                      [0, 0, 6]],
+    ...
+    ...                     [[6, 0, 0],
+    ...                      [0, 5, 0],
+    ...                      [0, 0, 4]]])
+    >>> mdt.box.wrap_pos(pos, box_mat)
+    array([[[0., 3., 0.],
+            [1., 0., 1.]],
+    <BLANKLINE>
+           [[0., 3., 2.],
+            [1., 0., 3.]]])
+
+    pos has shape ``(k, n, 3)``:
 
     >>> pos = np.array([[[0, 3, 6],
     ...                  [1, 5, 7]],
     ...
     ...                 [[2, 6, 10],
     ...                  [3, 7, 11]]])
-    >>> mdt.box.wrap_pos(pos, [4, 5, 6, 90, 90, 90])
+    >>> box = np.array([4, 5, 6, 90, 90, 90])
+    >>> mdt.box.wrap_pos(pos, box)
     array([[[0., 3., 0.],
             [1., 0., 1.]],
     <BLANKLINE>
            [[2., 1., 4.],
-            [3., 2., 5.]]], dtype=float32)
+            [3., 2., 5.]]])
+    >>> box_mat = np.array([[4, 0, 0],
+    ...                     [0, 5, 0],
+    ...                     [0, 0, 6]])
+    >>> mdt.box.wrap_pos(pos, box_mat)
+    array([[[0., 3., 0.],
+            [1., 0., 1.]],
+    <BLANKLINE>
+           [[2., 1., 4.],
+            [3., 2., 5.]]])
+    >>> box = np.array([[4, 5, 6, 90, 90, 90],
+    ...                 [6, 5, 4, 90, 90, 90]])
     >>> mdt.box.wrap_pos(pos, box)
     array([[[0., 3., 0.],
             [1., 0., 1.]],
     <BLANKLINE>
            [[2., 1., 2.],
-            [3., 2., 3.]]], dtype=float32)
-    """
-    pos = mdt.check.pos_array(pos)
-    box = mdt.check.box(box)
-    if mda_backend is None:
-        if mdt.rti.get_num_CPUs() > 1:
-            mda_backend = "OpenMP"
-        else:
-            mda_backend = "serial"
+            [3., 2., 3.]]])
+    >>> box_mat = np.array([[[4, 0, 0],
+    ...                      [0, 5, 0],
+    ...                      [0, 0, 6]],
+    ...
+    ...                     [[6, 0, 0],
+    ...                      [0, 5, 0],
+    ...                      [0, 0, 4]]])
+    >>> mdt.box.wrap_pos(pos, box_mat)
+    array([[[0., 3., 0.],
+            [1., 0., 1.]],
+    <BLANKLINE>
+           [[2., 1., 2.],
+            [3., 2., 3.]]])
 
-    if box.ndim == 1:
-        if pos.ndim in (1, 2):
-            pos_wrapped = mdadist.apply_PBC(
-                coords=pos, box=box, backend=mda_backend
-            )
-        elif pos.ndim == 3:
-            # `MDAnalysis.lib.distances.apply_PBC` returns array of
-            # dtype numpy.float32
-            pos_wrapped = np.full_like(pos, np.nan, dtype=np.float32)
-            for i, pos_frame in enumerate(pos):
-                pos_wrapped[i] = mdadist.apply_PBC(
-                    coords=pos_frame, box=box, backend=mda_backend
-                )
-        else:
-            # This else clause should never be entered, because this
-            # error should already be raised by
-            # `mdt.check.pos_array(pos)`.
-            raise ValueError(
-                "'pos' has shape {} but must have shape (3,) or (n, 3) or"
-                " (k, n, 3).  This should not have happened".format(pos.shape)
-            )
-    elif box.ndim == 2:
-        if pos.ndim not in (2, 3):
-            raise ValueError(
-                "If 'box' has shape (k, 6), 'pos' must have shape (k, n, 3) or"
-                " (k, 3), but has shape {}".format(pos.shape)
-            )
-        if pos.shape[0] != box.shape[0]:
-            raise ValueError(
-                "If 'box' has 2 dimensions, pos.shape[0] ({}) must"
-                " match box.shape[0] ({})".format(pos.shape[0], box.shape[0])
-            )
-        # `MDAnalysis.lib.distances.apply_PBC` returns array of dtype
-        # numpy.float32
-        pos_wrapped = np.full_like(pos, np.nan, dtype=np.float32)
-        for i, pos_frame in enumerate(pos):
-            pos_wrapped[i] = mdadist.apply_PBC(
-                coords=pos_frame, box=box[i], backend=mda_backend
-            )
-    else:
-        # This else clause should never be entered, because this error
-        # should already be raised by `mdt.check.box(box)`
+    Triclinic box:
+
+    >>> pos = np.array([[0, 3, 6],
+    ...                 [1, 5, 7]])
+    >>> box = np.array([4, 5, 6, 80, 90, 100])
+    >>> np.round(mdt.box.wrap_pos(pos, box), 3)
+    array([[0.   , 1.942, 0.094],
+           [1.   , 3.942, 1.094]])
+    >>> box_mat = np.array([[1, 0, 0],
+    ...                     [2, 3, 0],
+    ...                     [4, 5, 6]])
+    >>> mdt.box.wrap_pos(pos, box_mat)
+    array([[1., 1., 0.],
+           [3., 3., 1.]])
+
+    `out` argument:
+
+    >>> pos = np.array([0, 3, 6])
+    >>> box = np.array([4, 5, 6, 90, 90, 90])
+    >>> out = np.full_like(box[:3], np.nan, dtype=np.float64)
+    >>> pos_wrapped = mdt.box.wrap_pos(pos, box, out=out)
+    >>> pos_wrapped
+    array([0., 3., 0.])
+    >>> out
+    array([0., 3., 0.])
+    >>> pos_wrapped is out
+    True
+    >>> box_mat = np.array([[4, 0, 0],
+    ...                     [0, 5, 0],
+    ...                     [0, 0, 6]])
+    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
+    >>> pos_wrapped = mdt.box.wrap_pos(pos, box_mat, out=out)
+    >>> pos_wrapped
+    array([0., 3., 0.])
+    >>> out
+    array([0., 3., 0.])
+    >>> pos_wrapped is out
+    True
+    >>> box = np.array([[4, 5, 6, 90, 90, 90],
+    ...                 [6, 5, 4, 90, 90, 90]])
+    >>> out = np.full_like(box[:,:3], np.nan, dtype=np.float64)
+    >>> pos_wrapped = mdt.box.wrap_pos(pos, box, out=out)
+    >>> pos_wrapped
+    array([[[0., 3., 0.]],
+    <BLANKLINE>
+           [[0., 3., 2.]]])
+    >>> out
+    array([[[0., 3., 0.]],
+    <BLANKLINE>
+           [[0., 3., 2.]]])
+    >>> pos_wrapped is out
+    True
+    >>> box_mat = np.array([[[4, 0, 0],
+    ...                      [0, 5, 0],
+    ...                      [0, 0, 6]],
+    ...
+    ...                     [[6, 0, 0],
+    ...                      [0, 5, 0],
+    ...                      [0, 0, 4]]])
+    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
+    >>> pos_wrapped = mdt.box.wrap_pos(pos, box_mat, out=out)
+    >>> pos_wrapped
+    array([[[0., 3., 0.]],
+    <BLANKLINE>
+           [[0., 3., 2.]]])
+    >>> out
+    array([[[0., 3., 0.]],
+    <BLANKLINE>
+           [[0., 3., 2.]]])
+    >>> pos_wrapped is out
+    True
+
+    >>> import MDAnalysis.lib.distances as mdadist
+    >>> pos = np.array([[0, 3, 6],
+    ...                 [1, 5, 7]])
+    >>> box = np.array([4, 5, 6, 90, 90, 90])
+    >>> pos_wrapped1 = mdt.box.wrap_pos(pos, box)
+    >>> pos_wrapped2 = mdadist.apply_PBC(pos, box)
+    >>> np.allclose(pos_wrapped1, pos_wrapped2, rtol=0, atol=1e-6)
+    True
+    >>> box = np.array([4, 5, 6, 80, 90, 100])
+    >>> pos_wrapped1 = mdt.box.wrap_pos(pos, box)
+    >>> pos_wrapped2 = mdadist.apply_PBC(pos, box)
+    >>> np.allclose(pos_wrapped1, pos_wrapped2, rtol=0, atol=1e-5)
+    True
+    """
+    if box.ndim == 0:
         raise ValueError(
-            "'box' has shape {} but must have shape (3,) or (k, 3).  This"
-            " should not have happened".format(box.shape)
+            "`box` ({}) must be at least 1-dimensional.".format(box)
         )
+    elif box.shape[-1] == 6:
+        # Convert length-angle representation to matrix representation.
+        box = mdt.box.triclinic_vectors(box, dtype=dtype)
+    elif box.shape[-1] == 3:
+        # `box` is already given in matrix representation.
+        box = box
+    else:
+        raise ValueError("Invalid box (box.shape = {})".format(box.shape))
+
+    if out is not None and any(arg is out for arg in (pos, box)):
+        raise ValueError("`out` must not point to `pos`")
+
+    # Transform to box coordinates.
+    pos_wrapped = mdt.box.cart2box(pos, box, out=out, dtype=dtype)
+    pos_wrapped = np.floor(pos_wrapped, out=pos_wrapped)
+    # Transform back to the Cartesian coordinate system.
+    pos_wrapped = mdt.box.box2cart(pos_wrapped, box, out=pos_wrapped)
+    pos_wrapped = np.subtract(pos, pos_wrapped, out=pos_wrapped, dtype=dtype)
     return pos_wrapped
 
 
@@ -1390,6 +1574,8 @@ def wrap(
     :func:`MDAnalysis.lib.distances.apply_PBC` :
         Shift coordinates stored as :class:`numpy.ndarray` into the
         primary unit cell
+    :func:`mdtools.box.wrap_pos` :
+        Shift all particle positions into the primary unit cell
     :func:`mdtools.box.make_whole` :
         Make compounds of a MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` whole
