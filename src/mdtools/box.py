@@ -1665,7 +1665,7 @@ def make_whole(
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to `ag`
         are taken into account, even if the compound might comprise
         additional :class:`Atoms <MDAnalysis.core.groups.Atom>` that are
-        not contained in `ag`..  If you want entire molecules to be made
+        not contained in `ag`.  If you want entire molecules to be made
         whole, make sure that all
         :class:`Atoms <MDAnalysis.core.groups.Atom>` of these molecules
         are part of `ag`.
@@ -1699,9 +1699,10 @@ def make_whole(
         bonds within the group's compounds aren't split across periodic
         boundaries
     :func:`MDAnalysis.lib.mdamath.make_whole` :
-        Move all :class:`Atoms <MDAnalysis.core.groups.Atom>` in a
-        MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` such that
-        bonds don't split over periodic images
+        Move all
+        :class:`Atoms <MDAnalysis.core.groups.Atom>`
+        in an MDAnalysis :class:`~MDAnalysis.core.groups.AtomGroup` such
+        that bonds don't split over periodic images
     :func:`mdtools.box.wrap` :
         Shift compounds of a MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` back into the primary
@@ -1762,7 +1763,7 @@ def make_whole(
         reference = "cog"
     elif reference == "com":  # and ag.n_atoms > 1
         mdt.check.masses_new(ag=ag, verbose=debug)
-    wrap(
+    mdt.box.wrap(
         ag=ag,
         compound="atoms",
         center="cog",
@@ -1770,9 +1771,7 @@ def make_whole(
         inplace=True,
         debug=debug,
     )
-    return ag.unwrap(
-        compound=compound, reference=reference, inplace=inplace, debug=debug
-    )
+    return ag.unwrap(compound=compound, reference=reference, inplace=inplace)
 
 
 def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
