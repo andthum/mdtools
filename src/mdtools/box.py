@@ -2372,6 +2372,952 @@ def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
         return dist_vecs
 
 
+def unwrap_frame(
+    pos_w,
+    pos_u_prev,
+    box,
+    box_prev,
+    pos_w_prev=None,
+    method="scaling",
+    out=None,
+    out_tmp=None,
+    dtype=np.float64,
+):
+    r"""
+    Unwrap a single trajectory frame.
+
+    Unwrap the given position array out of the primary unit cell, i.e.
+    calculate the real-space coordinates.
+
+    .. note::
+
+        If you want to change the
+        :attr:`~MDAnalysis.core.groups.AtomGroup.positions` attribute of
+        an :class:`~MDAnalysis.core.groups.AtomGroup` to the outcome of
+        this function, keep in mind that changing atom positions is not
+        reflected in any file; reading any frame from the
+        :attr:`~MDAnalysis.core.universe.Universe.trajectory` will
+        replace the change with that from the file except if the
+        :attr:`~MDAnalysis.core.universe.Universe.trajectory` is held in
+        memory, e.g., when the
+        :meth:`~MDAnalysis.core.universe.Universe.transfer_to_memory`
+        method was used.
+
+    Parameters
+    ----------
+    pos_w : array_like
+        Position array of shape ``(3,)`` or ``(n, 3)`` containing the
+        wrapped positions in the current frame.  In the formulas below,
+        `pos_w` corresponds to :math:`x_{i+1}^w`.
+    pos_w_prev, pos_u_prev : array_like
+        Array of the same shape as `pos_w` containing the wrapped
+        (`pos_w_prev`) or unwrapped (`pos_u_prev`) positions in the
+        previous frame.
+        `pos_w_prev` is only required if `method` is "displacement",
+        "hybrid" or "in-house" and is ignored otherwise.
+        In the formulas below, `pos_w_prev` corresponds to :math:`x_i^w`
+        and `pos_u_prev` corresponds to :math:`x_i^u`.
+    box, box_prev : array_like
+        The unit cell dimensions of the system for the current frame
+        (`box`) or the previous frame (`box_prev`).  The dimensions must
+        be provided in the same format as returned by
+        :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
+        ``[lx, ly, lz, alpha, beta, gamma]``.
+        The boxes can be orthogonal or triclinic if method is "scaling".
+        For all other methods, the box must be orthogonal.
+        In the formulas below, `box` corresponds to :math:`L_{i+1}` and
+        `box_prev` corresponds to :math:`L_i`.
+    method : {"scaling", "heuristic", "displacement", "hybrid", "in-house"}, optional
+        The unwrapping method to choose.  See notes for further details.
+        Note that only the "scaling" method is implemented for triclinic
+        boxes, all other methods only work for orthogonal boxes.  Also
+        note that only the "scaling" and "hybrid" method work for
+        simulations with changing boxes.
+    out : None or numpy.ndarray, optional
+        Preallocated array of the given dtype and appropriate shape into
+        which the result is stored.  `out` must not point to any input
+        array, except `pos_u_prev`.
+    out_tmp : None or numpy.ndarray, optional
+        Preallocated array of the given dtype and appropriate shape into
+        which temporary results are stored.  Providing `out_tmp` can
+        speed up the calculation if this function of called many times.
+        `out_tmp` is ignored if method is "heuristic".  `out_tmp` must
+        not point to any input array.
+    dtype : type, optional
+        The dtype of the output array.
+
+    Returns
+    -------
+    pos_u : numpy.ndarray
+        Unwrapped positions in the current frame.  In the formulas
+        below, `pos_u` corresponds to :math:`x_{i+1}^u`.
+
+    See Also
+    --------
+    :mod:`scripts.trajectory.unwrap_trj` :
+        Script to unwrap a given trajectory.
+
+    Notes
+    -----
+    The limitations of each method and their mathematical formulas are
+    given below.  In the equations, :math:`x` stands for the particle
+    position in one spatial dimension and :math:`\mathbf{r}` stands for
+    the full position vector.  :math:`L` denotes the box length in one
+    spatial dimension and :math:`\mathbf{L} =
+    \left( \mathbf{L}_x | \mathbf{L}_y | \mathbf{L}_z \right)` denotes
+    the matrix of all box vectors.  Subscripts :math:`i` indicate the
+    frame number and the superscripts :math:`u` and :math:`w` stand for
+    "unwrapped" and "wrapped", respectively.  :math:`m_i` is the number
+    of boxes that the unwrapped particle is translated compared to the
+    wrapped particle: :math:`x_i^u = x_i^w - m_i L_i`.
+    :math:`\lfloor x \rfloor = \max\{ k \in \mathbb{Z} | k \leq x \}`
+    denotes the floor function, so that
+    :math:`\lfloor x + \frac{1}{2} \rfloor` represents
+    "`round half up
+    <https://en.wikipedia.org/wiki/Rounding#Rounding_half_up>`_".
+    :math:`d = x_{i+1}^u - x_i^u` stands for the real-space displacement
+    and
+    :math:`\hat{d} = \frac{d_I}{L_{i+1}} =
+    \frac{x_{i+1}^u}{L_{i+1}} - \frac{x_i^u}{L_i}`
+    is the the real-space displacement in the box coordinate system.
+    :math:`d_I` denotes the particle displacement that results from
+    interactions with the particles' surroundings, opposed to the
+    displacement :math:`d_S` that results from the rescaling of the
+    simulation box during barostating in a constant-pressure simulation.
+    Note that when the box is constant, i.e. :math:`L_{i+1} = L_i`, all
+    methods are equivalent.
+
+    *Scaling Method*
+
+        .. math::
+
+            \mathbf{r}_{i+1}^u = \mathbf{r}_{i+1}^w - \mathbf{L}_{i+1}
+            \biggl\lfloor
+                \mathbf{L}_{i+1}^{-1} \mathbf{r}_{i+1}^w -
+                \mathbf{L}_i^{-1} \mathbf{r}_i^u +
+                \mathbf{\frac{1}{2}}
+            \biggr\rfloor
+
+        The above formula is Equation 7 from the supplementary material
+        of Bülow *et al.* [1]_  It can be retyped to the form given in
+        Equation B8 by Kulke and Vermaas: [2]_
+
+        .. math::
+
+            \mathbf{r}_{i+1}^u =
+            \mathbf{L}_{i+1} \mathbf{L}_i^{-1} \mathbf{r}_i^u +
+            \left(
+                \mathbf{r}_{i+1}^w -
+                \mathbf{L}_{i+1} \mathbf{L}_i^{-1} \mathbf{r}_i^w
+            \right)
+            - \mathbf{L}_{i+1}
+            \biggl\lfloor
+                \mathbf{L}_{i+1}^{-1} \mathbf{r}_{i+1}^w -
+                \mathbf{L}_i^{-1} \mathbf{r}_i^w +
+                \mathbf{\frac{1}{2}}
+            \biggr\rfloor
+
+        When using the scaling method, the particle displacement in the
+        box coordinate system between two consecutive frames must not be
+        larger than :math:`\frac{1}{2}`:
+
+        .. math::
+
+            \hat{\mathbf{d}} = \mathbf{L}_{i+1}^{-1} \mathbf{r}_{i+1}^u
+            - \mathbf{L}_i^{-1} \mathbf{r}_i^u
+            \in
+            \left[
+                -\mathbf{\frac{1}{2}}, \mathbf{\frac{1}{2}}
+            \right[
+
+        The scaling method is implemented for triclinic boxes and also
+        works if the box is changing between the two frames :math:`i`
+        and :math:`i+1`, as long as the above condition is fulfilled.
+
+    *Heuristic Method*
+
+        .. math::
+
+            x_{i+1}^u = x_{i+1}^w - L_{i+1}
+            \biggl\lfloor
+                \frac{x_{i+1}^w - x_i^u}{L_{i+1}} + \frac{1}{2}
+            \biggr\rfloor
+
+        The above formula is Equation 3 from Bülow *et al.* [1]_ or
+        Equation 1 from Kulke and Vermaas. [2]_  When using the
+        heuristic method, the particle displacement between two
+        consecutive frames normalized by the current box length must not
+        be larger than :math:`\frac{1}{2}`:
+
+        .. math::
+
+            \frac{d}{L_{i+1}} \in
+            \left[ -\frac{1}{2}, \frac{1}{2} \right[
+
+        This expression can be reformulated to:
+
+        .. math::
+
+            \hat{d} \in
+            \left[
+                -\frac{1}{2} +
+                \left( \frac{x_i^w}{L_i} - m_i \right)
+                \frac{L_i - L_{i+1}}{L_{i+1}},
+                \frac{1}{2} +
+                \left( \frac{x_i^w}{L_i} - m_i \right)
+                \frac{L_i - L_{i+1}}{L_{i+1}}
+            \right[
+
+        When the box is changing between the two frames :math:`i` and
+        :math:`i+1`, the heuristic method fails if a particle has
+        traveled too far from the point of origin.  The reason is that
+        the displacement :math:`d` might get larger than half the box
+        length, because particles that are further away from the point
+        of origin are in absolute terms more affected by the coordinate
+        scaling of the barostat.  For more details refer to Kulke and
+        Vermaas. [2]_  A warning will be raised if
+
+        .. math::
+
+            2 - \frac{L_{i+1}}{2 |L_{i+1} - L_i|} \leq m_i <
+            \frac{L_{i+1}}{2 |L_{i+1} - L_i|} - 1
+
+        is not fulfilled.  This is just a rough check.  The heuristic
+        method might still work in this case but it is more likely that
+        it already failed earlier.
+
+        The heuristic method is only implemented for orthogonal boxes.
+
+    *Displacement Method*
+
+        .. math::
+
+            x_{i+1}^u = x_i^u + \left( x_{i+1}^w - x_i^w \right)
+            - L_{i+1}
+            \biggl\lfloor
+                \frac{x_{i+1}^w - x_i^w}{L_{i+1}} + \frac{1}{2}
+            \biggr\rfloor
+
+        The displacement method was first proposed by Bülow *et al.*
+        [1]_ (Equation 1 in their paper) and was revisited by Kulke and
+        Vermaas [2]_ (Equation 2 in their paper).  When using the
+        displacement method, the box must not change between frames
+        :math:`i` and :math:`i+1` and the particle displacement between
+        two consecutive frames normalized by the current box length must
+        not be larger than :math:`\frac{1}{2}`:
+
+        .. math::
+
+            L_{i+1} = L_i = L
+
+        .. math::
+
+            \frac{d}{L} \in \left[ -\frac{1}{2}, \frac{1}{2} \right[
+
+        Because :math:`L_{i+1} = L_i = L`, this expression is equivalent
+        to
+
+        .. math::
+
+            \hat{d} \in \left[ -\frac{1}{2}, \frac{1}{2} \right[
+
+        The displacement method is only implemented for orthogonal
+        boxes.
+
+    *Hybrid Method*
+
+        .. math::
+
+            x_{i+1}^u = x_i^u + \left( x_{i+1}^w - x_i^w \right)
+            - L_{i+1}
+            \biggl\lfloor
+                \frac{x_{i+1}^w - x_i^w}{L_{i+1}} + \frac{1}{2}
+            \biggr\rfloor
+            - \left( L_{i+1} - L_i \right)
+            \biggl\lfloor
+                \frac{x_i^w - x_i^u}{L_i} + \frac{1}{2}
+            \biggr\rfloor
+
+        The above formula is Equation 12 from Kulke and Vermaas. [2]_
+        When using the hybrid method, the particle displacement in the
+        box coordinate system between two consecutive frames must not be
+        larger than :math:`\frac{1}{2}` plus the normalized wrapped
+        coordinates in the previous frame times the relative box change:
+
+        .. math::
+
+            \hat{d} \in
+            \left[
+                -\frac{1}{2} +
+                \frac{x_i^w}{L_i} \frac{L_i - L_{i+1}}{L_{i+1}},
+                \frac{1}{2} +
+                \frac{x_i^w}{L_i} \frac{L_i - L_{i+1}}{L_{i+1}}
+            \right[
+
+        This is a reformulation of the condition given by Kulke and
+        Vermaas: [2]_
+
+        .. math::
+
+            m_i \frac{L_i - L_{i+1}}{L_{i+1}} - \frac{d}{L_{i+1}} \in
+            \left] -\frac{1}{2}, \frac{1}{2} \right]
+
+        The hybrid method is only implemented for orthogonal boxes.  It
+        works if the box is changing between the two frames :math:`i`
+        and :math:`i+1`, as long as the above condition is fulfilled.
+
+    *In-House Method*
+
+        .. math::
+
+            x_{i+1}^u = x_i^u +
+            \left(
+                x_{i+1}^w - \frac{L_{i+1}}{L_i} x_i^w
+            \right)
+            - L_{i+1}
+            \biggl\lfloor
+                \frac{x_{i+1}^w}{L_{i+1}} -
+                \frac{x_i^w}{L_i} +
+                \frac{1}{2}
+            \biggr\rfloor
+
+        This is the method I used during my Master's Thesis in spring
+        2018.  If the first term :math:`x_i^u` were multiplied by
+        :math:`\frac{L_{i+1}}{L_i}`, it would be equivalent to the
+        scaling method.  When using the in-house method, the box must
+        not change between frames :math:`i` and :math:`i+1` and the
+        particle displacement between two consecutive frames normalized
+        by the previous box length must not be larger than
+        :math:`\frac{1}{2}`:
+
+        .. math::
+
+            L_{i+1} = L_i = L
+
+        .. math::
+
+            \frac{d}{L} \in \left[ -\frac{1}{2}, \frac{1}{2} \right[
+
+        Because :math:`L_{i+1} = L_i = L`, this expression is equivalent
+        to
+
+        .. math::
+
+            \hat{d} \in \left[ -\frac{1}{2}, \frac{1}{2} \right[
+
+        The in-house method is only implemented for orthogonal boxes.
+
+    References
+    ----------
+    .. [1] Sören von Bülow, Jakob Tómas Bullerjahn, and Gerhard Hummer,
+        `Systematic errors in diffusion coefficients from long-time
+        molecular dynamics simulations at constant pressure
+        <https://doi.org/10.1063/5.0008316>`_, The Journal of Chemical
+        Physics, 2020, 153, 021101.
+    .. [2] Martin Kulke and Josh V. Vermaas, `Reversible Unwrapping
+        Algorithm for Constant-Pressure Molecular Dynamics Simulations
+        <https://doi.org/10.1021/acs.jctc.2c00327>`_, Journal of
+        Chemical Theory and Computation, 2022, 18, 10, 6161-6171.
+
+    Examples
+    --------
+    .. Use misc/test_mdtools-box-unwrap_frame.ods to generate examples
+        and test cases.
+
+    Position arrays have shape ``(3,)``:
+
+    >>> # Example 1: Constant Box, Stationary Particle
+    >>> # Previous frame:
+    >>> box_prev = np.array([1, 2, 3, 90, 90, 90])
+    >>> pos_w_prev = np.arange(3)
+    >>> translation = np.array([ 0, -2,  4]) * box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.zeros(3)  # Stationary particle.
+    >>> # Current frame:
+    >>> box = box_prev  # Constant box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([1., 1., 1.])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([0., 1., 2.])
+    >>> pos_u_scaling = mdt.box.unwrap_frame(
+    ...     pos_w, pos_u_prev, box, box_prev=box_prev, method="scaling"
+    ... )
+    >>> pos_u_scaling
+    array([ 0., -3., 14.])
+    >>> methods = ("heuristic", "displacement", "hybrid", "in-house")
+    >>> for method in methods:
+    ...     pos_u = mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...     )
+    ...     np.allclose(pos_u, pos_u_scaling, rtol=0)
+    True
+    True
+    True
+    True
+
+    >>> # Example 2: Constant Box, Moving Particle
+    >>> # Previous frame:
+    >>> box_prev = np.array([1, 2, 3, 90, 90, 90])
+    >>> pos_w_prev = np.arange(3)
+    >>> translation = np.array([ 0, -2,  4]) * box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.array([ 0.25,  0.5 , -0.75])  # Moving particle.
+    >>> # Current frame:
+    >>> box = box_prev  # Constant box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([1., 1., 1.])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([0.25, 1.5 , 1.25])
+    >>> pos_u_scaling = mdt.box.unwrap_frame(
+    ...     pos_w, pos_u_prev, box, box_prev=box_prev, method="scaling"
+    ... )
+    >>> pos_u_scaling
+    array([ 0.25, -2.5 , 13.25])
+    >>> methods = ("heuristic", "displacement", "hybrid", "in-house")
+    >>> for method in methods:
+    ...     pos_u = mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...     )
+    ...     np.allclose(pos_u, pos_u_scaling, rtol=0)
+    True
+    True
+    True
+    True
+
+    >>> # Example 3: Changing Box, Stationary Particle
+    >>> # Previous frame:
+    >>> box_prev = np.array([1, 2, 3, 90, 90, 90])
+    >>> pos_w_prev = np.arange(3)
+    >>> translation = np.array([ 0, -2,  4]) * box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.zeros(3)  # Stationary particle.
+    >>> # Current frame:
+    >>> box = np.array([2, 2, 2, 90, 90, 90])  # Changing box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([2.        , 1.        , 0.66666667])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([0.        , 1.        , 1.33333333])
+    >>> pos_u_scaling = mdt.box.unwrap_frame(
+    ...     pos_w, pos_u_prev, box, box_prev=box_prev, method="scaling"
+    ... )
+    >>> pos_u_scaling
+    array([ 0.        , -3.        ,  9.33333333])
+    >>> methods = ("heuristic", "displacement", "hybrid", "in-house")
+    >>> for method in methods:
+    ...     mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...     )
+    array([ 0.        , -3.        , 13.33333333])
+    array([ 0.        , -3.        , 13.33333333])
+    array([ 0.        , -3.        ,  9.33333333])
+    array([ 0., -3., 14.])
+    >>> # Note that only the scaling and the hybrid method yield the
+    >>> # correct result.
+
+    >>> # Example 4: Changing Box, Moving Particle
+    >>> # Previous frame:
+    >>> box_prev = np.array([1, 2, 3, 90, 90, 90])
+    >>> pos_w_prev = np.arange(3)
+    >>> translation = np.array([ 0, -2,  4]) * box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.array([ 0.25,  0.5 , -0.75])  # Moving particle.
+    >>> # Current frame:
+    >>> box = np.array([2, 2, 2, 90, 90, 90])  # Changing box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([2.        , 1.        , 0.66666667])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([0.5       , 1.5       , 0.83333333])
+    >>> pos_u_scaling = mdt.box.unwrap_frame(
+    ...     pos_w, pos_u_prev, box, box_prev=box_prev, method="scaling"
+    ... )
+    >>> pos_u_scaling
+    array([ 0.5       , -2.5       ,  8.83333333])
+    >>> methods = ("heuristic", "displacement", "hybrid", "in-house")
+    >>> for method in methods:
+    ...     mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...     )
+    array([ 0.5       , -2.5       , 14.83333333])
+    array([ 0.5       , -2.5       , 14.83333333])
+    array([ 0.5       , -2.5       , 10.83333333])
+    array([ 0.5, -2.5, 13.5])
+    >>> # Note that only the scaling method yields the correct result.
+    >>> # Even the hybrid method is wrong in this case, because its
+    >>> # condition is violated.
+
+    Position arrays have shape ``(n, 3)``:
+
+    >>> # Example 1: Constant Box, Stationary Particle
+    >>> # Previous frame:
+    >>> box_prev = np.array([2, 4, 6, 90, 90, 90])
+    >>> pos_w_prev = np.array([[0, 2, 4],
+    ...                        [1, 3, 5]])
+    >>> translation = np.array([[ 1, -3,  5],
+    ...                         [ 2, -4,  6]])
+    >>> translation *= box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.zeros(3)  # Stationary particle.
+    >>> # Current frame:
+    >>> box = box_prev  # Constant box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([1., 1., 1.])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([[0., 2., 4.],
+    ...    [1., 3., 5.]])
+    >>> pos_u_scaling = mdt.box.unwrap_frame(
+    ...     pos_w, pos_u_prev, box, box_prev=box_prev, method="scaling"
+    ... )
+    >>> pos_u_scaling
+    array([[  2., -10.,  34.],
+           [  5., -13.,  41.]])
+    >>> methods = ("heuristic", "displacement", "hybrid", "in-house")
+    >>> for method in methods:
+    ...     pos_u = mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...     )
+    ...     np.allclose(pos_u, pos_u_scaling, rtol=0)
+    True
+    True
+    True
+    True
+
+    >>> # Example 2: Constant Box, Moving Particle
+    >>> # Previous frame:
+    >>> box_prev = np.array([2, 4, 6, 90, 90, 90])
+    >>> pos_w_prev = np.array([[0, 2, 4],
+    ...                        [1, 3, 5]])
+    >>> translation = np.array([[ 1, -3,  5],
+    ...                         [ 2, -4,  6]])
+    >>> translation *= box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.array([[ 0.5 ,  1.  , -2.5 ],
+    ...                          [ 0.75,  1.5 , -2.25]]) # Moving particle.
+    >>> # Current frame:
+    >>> box = box_prev  # Constant box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([1., 1., 1.])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([[0.5 , 3.  , 1.5 ],
+    ...    [1.75, 0.5 , 2.75]])
+    >>> pos_u_scaling = mdt.box.unwrap_frame(
+    ...     pos_w, pos_u_prev, box, box_prev=box_prev, method="scaling"
+    ... )
+    >>> pos_u_scaling
+    array([[  2.5 ,  -9.  ,  31.5 ],
+           [  5.75, -11.5 ,  38.75]])
+    >>> methods = ("heuristic", "displacement", "hybrid", "in-house")
+    >>> for method in methods:
+    ...     pos_u = mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...     )
+    ...     np.allclose(pos_u, pos_u_scaling, rtol=0)
+    True
+    True
+    True
+    True
+
+    >>> # Example 3: Changing Box, Stationary Particle
+    >>> # Previous frame:
+    >>> box_prev = np.array([2, 4, 6, 90, 90, 90])
+    >>> pos_w_prev = np.array([[0, 2, 4],
+    ...                        [1, 3, 5]])
+    >>> translation = np.array([[ 1, -3,  5],
+    ...                         [ 2, -4,  6]])
+    >>> translation *= box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.zeros((2, 3))  # Stationary particle.
+    >>> # Current frame:
+    >>> box = np.array([3, 4, 5, 90, 90, 90])  # Changing box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([1.5       , 1.        , 0.83333333])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([[0.        , 2.        , 3.33333333],
+    ...    [1.5       , 3.        , 4.16666667]])
+    >>> pos_u_scaling = mdt.box.unwrap_frame(
+    ...     pos_w, pos_u_prev, box, box_prev=box_prev, method="scaling"
+    ... )
+    >>> pos_u_scaling
+    array([[  3.        , -10.        ,  28.33333333],
+           [  7.5       , -13.        ,  34.16666667]])
+    >>> methods = ("heuristic", "displacement", "hybrid", "in-house")
+    >>> for method in methods:
+    ...     mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...     )
+    array([[  3.        , -10.        ,  33.33333333],
+           [  4.5       , -13.        ,  39.16666667]])
+    array([[  2.        , -10.        ,  33.33333333],
+           [  5.5       , -13.        ,  40.16666667]])
+    array([[  3.        , -10.        ,  28.33333333],
+           [  7.5       , -13.        ,  34.16666667]])
+    array([[  2., -10.,  34.],
+           [  5., -13.,  41.]])
+    >>> # Note that only the scaling and the hybrid method yield the
+    >>> # correct result.
+
+    >>> # Example 4: Changing Box, Moving Particle
+    >>> # Previous frame:
+    >>> box_prev = np.array([2, 4, 6, 90, 90, 90])
+    >>> pos_w_prev = np.array([[0, 2, 4],
+    ...                        [1, 3, 5]])
+    >>> translation = np.array([[ 1, -3,  5],
+    ...                         [ 2, -4,  6]])
+    >>> translation *= box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.array([[ 0.5 ,  1.  , -2.5 ],
+    ...                          [ 0.75,  1.5 , -2.25]]) # Moving particle.
+    >>> # Current frame:
+    >>> box = np.array([3, 4, 5, 90, 90, 90])  # Changing box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([1.5       , 1.        , 0.83333333])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([[0.75      , 3.        , 1.25      ],
+    ...    [2.625     , 0.5       , 2.29166667]])
+    >>> pos_u_scaling = mdt.box.unwrap_frame(
+    ...     pos_w, pos_u_prev, box, box_prev=box_prev, method="scaling"
+    ... )
+    >>> pos_u_scaling
+    array([[  3.75      ,  -9.        ,  26.25      ],
+           [  8.625     , -11.5       ,  32.29166667]])
+    >>> methods = ("heuristic", "displacement", "hybrid", "in-house")
+    >>> for method in methods:
+    ...     mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...     )
+    array([[  0.75      ,  -9.        ,  36.25      ],
+           [  5.625     , -11.5       ,  42.29166667]])
+    array([[  2.75      ,  -9.        ,  36.25      ],
+           [  3.625     , -11.5       ,  43.29166667]])
+    array([[  3.75      ,  -9.        ,  31.25      ],
+           [  5.625     , -11.5       ,  37.29166667]])
+    array([[  2.75      ,  -9.        ,  31.91666667],
+           [  6.125     , -11.5       ,  39.125     ]])
+    >>> # Note that only the scaling method yields the correct result.
+    >>> # Even the hybrid method is wrong in this case, because its
+    >>> # condition is violated.
+
+    `out` and `out_tmp` arguments:
+
+    >>> # Test 1 (From Example 1: Constant Box, Stationary Particle)
+    >>> # Previous frame:
+    >>> box_prev = np.array([1, 2, 3, 90, 90, 90])
+    >>> pos_w_prev = np.arange(3)
+    >>> translation = np.array([ 0, -2,  4]) * box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.zeros(3)  # Stationary particle.
+    >>> # Current frame:
+    >>> box = box_prev  # Constant box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([1., 1., 1.])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([0., 1., 2.])
+    >>> methods = (
+    ...     "scaling", "heuristic", "displacement", "hybrid", "in-house"
+    ... )
+    >>> for method in methods:
+    ...     out = np.full(3, np.nan, dtype=np.float64)
+    ...     pos_u = mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...         out=out,
+    ...     )
+    ...     pos_u
+    ...     out
+    ...     pos_u is out
+    array([ 0., -3., 14.])
+    array([ 0., -3., 14.])
+    True
+    array([ 0., -3., 14.])
+    array([ 0., -3., 14.])
+    True
+    array([ 0., -3., 14.])
+    array([ 0., -3., 14.])
+    True
+    array([ 0., -3., 14.])
+    array([ 0., -3., 14.])
+    True
+    array([ 0., -3., 14.])
+    array([ 0., -3., 14.])
+    True
+
+    >>> # Example 2: Constant Box, Moving Particle
+    >>> # Previous frame:
+    >>> box_prev = np.array([1, 2, 3, 90, 90, 90])
+    >>> pos_w_prev = np.arange(3)
+    >>> translation = np.array([ 0, -2,  4]) * box_prev[:3]
+    >>> pos_u_prev = pos_w_prev + translation
+    >>> displacement = np.array([ 0.25,  0.5 , -0.75])  # Moving particle.
+    >>> # Current frame:
+    >>> box = box_prev  # Constant box.
+    >>> box_scaling = box[:3] / box_prev[:3]
+    >>> box_scaling
+    array([1., 1., 1.])
+    >>> pos_w = (pos_w_prev + displacement) * box_scaling
+    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
+    >>> pos_w
+    array([0.25, 1.5 , 1.25])
+    >>> methods = (
+    ...     "scaling", "heuristic", "displacement", "hybrid", "in-house"
+    ... )
+    >>> for method in methods:
+    ...     out = np.full(3, np.nan, dtype=np.float64)
+    ...     out_tmp = np.full_like(out, np.nan)
+    ...     pos_u = mdt.box.unwrap_frame(
+    ...         pos_w,
+    ...         pos_u_prev,
+    ...         box,
+    ...         box_prev=box_prev,
+    ...         pos_w_prev=pos_w_prev,
+    ...         method=method,
+    ...         out=out,
+    ...         out_tmp=out_tmp,
+    ...     )
+    ...     pos_u
+    ...     out
+    ...     pos_u is out
+    array([ 0.25, -2.5 , 13.25])
+    array([ 0.25, -2.5 , 13.25])
+    True
+    array([ 0.25, -2.5 , 13.25])
+    array([ 0.25, -2.5 , 13.25])
+    True
+    array([ 0.25, -2.5 , 13.25])
+    array([ 0.25, -2.5 , 13.25])
+    True
+    array([ 0.25, -2.5 , 13.25])
+    array([ 0.25, -2.5 , 13.25])
+    True
+    array([ 0.25, -2.5 , 13.25])
+    array([ 0.25, -2.5 , 13.25])
+    True
+    """  # noqa: W505, E501
+    pos_u_prev = mdt.check.pos_array(pos_u_prev)
+    out_is_input = any(
+        arg is out for arg in (pos_w, pos_w_prev, box, box_prev, out_tmp)
+    )
+    if out is not None and out_is_input:
+        raise ValueError(
+            "`out` must not point to any input array, except `pos_u_prev`"
+        )
+    out_tmp_is_input = any(
+        arg is out_tmp
+        for arg in (pos_w, pos_w_prev, pos_u_prev, box, box_prev, out)
+    )
+    if out_tmp is not None and out_tmp_is_input:
+        raise ValueError("`out_tmp` must not point to any input array")
+
+    if method.lower() == "scaling":
+        box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
+        box = mdt.box.triclinic_vectors(box, dtype=dtype)
+        # Ensure that `pos_w` is wrapped.
+        pos_w = mdt.box.wrap_pos(pos_w, box, out=None, dtype=dtype)
+        # Transform to box coordinates.
+        pos_w_box = mdt.box.cart2box(pos_w, box, out=out_tmp, dtype=dtype)
+        pos_u_box_prev = mdt.box.cart2box(
+            pos_u_prev, box_prev, out=out, dtype=dtype
+        )
+        shift = np.subtract(pos_w_box, pos_u_box_prev, out=pos_u_box_prev)
+        shift += 0.5
+        shift = np.floor(shift, out=shift)
+        # Transform back to the Cartesian coordinate system.
+        shift = mdt.box.box2cart(shift, box, out=shift)
+        pos_u = np.subtract(pos_w, shift, out=shift, dtype=dtype)
+    elif method.lower() == "heuristic":
+        box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
+        box_lengths_prev = mdt.nph.take(box_prev, start=0, stop=3, axis=-1)
+        box = mdt.check.box(box, with_angles=True, orthorhombic=True)
+        box_lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
+        box = mdt.box.triclinic_vectors(box, dtype=dtype)
+        box_change = np.abs(box_lengths - box_lengths_prev)
+        box_change *= 2
+        box_change_mask = box_change != 0
+        box_change = np.divide(box_lengths, box_change, where=box_change_mask)
+        box_change[~box_change_mask] = np.inf
+        # Ensure that `pos_w` is wrapped.
+        pos_w = mdt.box.wrap_pos(pos_w, box, out=out_tmp, dtype=dtype)
+        shift = np.subtract(pos_w, pos_u_prev, out=out, dtype=dtype)
+        shift /= box_lengths
+        shift += 0.5
+        shift = np.floor(shift, out=shift)
+        if np.any(shift < 2 - box_change) or np.any(shift > box_change - 1):
+            warnings.warn(
+                "At least one particle has traversed so many boxes that"
+                " unwrapping errors must be expected",
+                RuntimeWarning,
+            )
+        shift *= box_lengths
+        pos_u = np.subtract(pos_w, shift, out=shift, dtype=dtype)
+    elif method.lower() == "displacement":
+        box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
+        box = mdt.check.box(box, with_angles=True, orthorhombic=True)
+        if not np.allclose(box, box_prev):
+            warnings.warn(
+                "`box` and `box_prev` are different, but the {} method only"
+                " works if the box does not change".format(method.lower()),
+                RuntimeWarning,
+            )
+        box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
+        box = mdt.box.triclinic_vectors(box, dtype=dtype)
+        if pos_w_prev is None:
+            raise ValueError(
+                "`pos_w_prev` must be provided when using the {}"
+                " method".format(method.lower())
+            )
+        # Ensure that `pos_w_prev` is wrapped.
+        pos_w_prev = mdt.box.wrap_pos(
+            pos_w_prev, box_prev, out=None, dtype=dtype
+        )
+        # Ensure that `pos_w` is wrapped.
+        pos_w = mdt.box.wrap_pos(pos_w, box, out=out_tmp, dtype=dtype)
+        shift = mdt.box.vdist(
+            pos_w, pos_w_prev, box=box, out=pos_w, dtype=dtype
+        )
+        pos_u = np.add(pos_u_prev, shift, out=out, dtype=dtype)
+    elif method.lower() == "hybrid":
+        box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
+        box_lengths_prev = mdt.nph.take(box_prev, start=0, stop=3, axis=-1)
+        box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
+        box = mdt.check.box(box, with_angles=True, orthorhombic=True)
+        box_lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
+        box = mdt.box.triclinic_vectors(box, dtype=dtype)
+        if pos_w_prev is None:
+            raise ValueError(
+                "`pos_w_prev` must be provided when using the {}"
+                " method".format(method.lower())
+            )
+        # Ensure that `pos_w_prev` is wrapped.
+        pos_w_prev = mdt.box.wrap_pos(
+            pos_w_prev, box_prev, out=None, dtype=dtype
+        )
+        # Ensure that `pos_w` is wrapped.
+        pos_w = mdt.box.wrap_pos(pos_w, box, out=out_tmp, dtype=dtype)
+        shift = mdt.box.vdist(
+            pos_w, pos_w_prev, box=box, out=pos_w, dtype=dtype
+        )
+        pos_u = np.add(pos_u_prev, shift, out=shift, dtype=dtype)
+        shift = np.subtract(pos_w_prev, pos_u_prev, out=out, dtype=dtype)
+        shift /= box_lengths_prev
+        shift += 0.5
+        shift = np.floor(shift, out=shift)
+        box_diff = np.subtract(box_lengths, box_lengths_prev, dtype=dtype)
+        shift *= box_diff
+        pos_u = np.subtract(pos_u, shift, out=shift, dtype=dtype)
+    elif method.lower() == "in-house":
+        box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
+        box = mdt.check.box(box, with_angles=True, orthorhombic=True)
+        if not np.allclose(box, box_prev):
+            warnings.warn(
+                "`box` and `box_prev` are different, but the {} method only"
+                " works if the box does not change".format(method.lower()),
+                RuntimeWarning,
+            )
+        box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
+        box = mdt.box.triclinic_vectors(box, dtype=dtype)
+        if pos_w_prev is None:
+            raise ValueError(
+                "`pos_w_prev` must be provided when using the {}"
+                " method".format(method.lower())
+            )
+        # Ensure that `pos_w_prev` is indeed wrapped.
+        pos_w_prev = mdt.box.wrap_pos(
+            pos_w_prev, box_prev, out=out_tmp, dtype=dtype
+        )
+        # Ensure that `pos_w` is wrapped.
+        pos_w = mdt.box.wrap_pos(pos_w, box, out=None, dtype=dtype)
+        # Transform to box coordinates.
+        pos_w_box_prev = mdt.box.cart2box(
+            pos_w_prev, box_prev, out=pos_w_prev, dtype=dtype
+        )
+        pos_w_box = mdt.box.cart2box(pos_w, box, out=None, dtype=dtype)
+        shift = np.subtract(pos_w_box, pos_w_box_prev, out=None)
+        shift += 0.5
+        shift = np.floor(shift, out=shift)
+        # Transform back to the Cartesian coordinate system.
+        shift = mdt.box.box2cart(shift, box, out=shift)
+        pos_u = np.subtract(pos_u_prev, shift, out=out, dtype=dtype)
+        pos_u += pos_w
+        # Transform `pos_w_box_prev` to Cartesian coordinates within
+        # `box` (not within `box_prev`).
+        pos_w_prev_box_new = mdt.box.box2cart(
+            pos_w_box_prev, box, out=pos_w_box_prev
+        )
+        pos_u -= pos_w_prev_box_new
+    else:
+        raise ValueError("Unknown method: {}".format(method))
+    return pos_u
+
+
 def unwrap(
     atm_grp,
     coord_unwrapped_prev,
