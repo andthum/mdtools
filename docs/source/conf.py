@@ -57,7 +57,9 @@ except ModuleNotFoundError:
     )
 
 # Recursively add all directories containing scripts to sys.path.
-script_path = os.path.abspath("../../scripts/")
+script_path = os.path.abspath("../../")
+sys.path.insert(1, script_path)
+script_path += "/scripts/"
 for root, _dirs, _files in os.walk(script_path):
     if os.path.basename(os.path.normpath(root)) not in ("", "__pycache__"):
         sys.path.insert(1, root)
