@@ -40,6 +40,31 @@ After installing all requirements, the documentation can be built via
     # Deactivate the virtual Python environment.
     deactivate
 
+.. note::
+
+    Doc pages of scripts might not get updated if you simply run
+    :bash:`make html` after changing a script's docstring.  In this
+    case, you need to re-install MDTools first even if you have
+    installed it in editable mode.
+
+    .. code-block:: bash
+
+        # Enter the root directory of the project.
+        cd ../
+        # Install MDTools.
+        python3 -m pip install --upgrade --editable .
+        # Enter the docs directory of the project.
+        cd docs/
+        # Create the documentation.
+        make html
+
+    Alternatively, you can use from within the :file:`docs/` directory:
+
+    .. code-block:: bash
+
+        make install_mdt
+        make html
+
 To clean the build directory and remove all automatically generated
 files, run in the ``docs/`` directory the following commands.
 
