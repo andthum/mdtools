@@ -37,15 +37,15 @@ import mdtools as mdt
 
 
 def array(
-        a, shape=None, dim=None, axis=None, amin=None, amax=None,
-        dtype=None):
+    a, shape=None, dim=None, axis=None, amin=None, amax=None, dtype=None
+):
     """
     Check if the input array satisfies the given conditions.
 
     The array must meet the following requirements:
 
         * Must be of an `array_like` type, i.e. a type that can be
-          convertet to a :class:`numpy.ndarray`.
+          converted to a :class:`numpy.ndarray`.
         * Must have a shape equal to the supplied `shape`.
         * Must have a dimension equal to the supplied `dim`.
         * Must contain the supplied `axis`.
@@ -94,14 +94,13 @@ def array(
         `shape` is not ``None`` and the shape of `a` is not `shape`;
         `dim` is not ``None`` and the dimension of `a` is not `dim`;
         `a` contains elements that are less than `amin`;
-        `a` contains elements that are greater than `amax`.
+        `a` contains elements that are greater than `amax`;
 
         Or if
-        the given combination of `shape`, `dim` and `axis` is
-        satisfiable by any array;
+        the given combination of `shape`, `dim` and `axis` is invalid;
         `amax` is less than `amin`.
     :exc:`numpy.AxisError`
-        If `a` does not contain the given `axis`.
+        If `axis` is not ``None`` and the axis is out of bounds for `a`.
     TypeError
         If `dtype` is not ``None`` and the data type of `a` is not
         `dtype`.
@@ -119,54 +118,59 @@ def array(
     """
     a = np.asarray(a)
     # Check input parameters:
-    if (shape is None and
-        dim is None and
-        axis is None and
-        amin is None and
-        amax is None and
-            dtype is None):
-        raise RuntimeError("No arguments provided to check 'a'")
+    if all(arg is None for arg in (shape, dim, axis, amin, amax, dtype)):
+        raise RuntimeError("No arguments provided to check `a`")
     if dim is not None and shape is not None and dim != len(shape):
-        raise ValueError("The given combination of 'dim' ({}) and"
-                         " 'shape' ({}) is not satisfiable by any array"
-                         .format(dim, shape))
+        raise ValueError(
+            "Invalid combination of `dim` ({}) and `shape` ({}).  `dim` must"
+            " be equal to len(shape)".format(dim, shape)
+        )
     if axis is not None and shape is not None:
-        try:
-            shape[axis]
-        except IndexError:
-            raise ValueError("The given combination of 'axis' ({}) and"
-                             " 'shape' ({}) is not satisfiable by any"
-                             " array".format(axis, shape))
+        if axis >= len(shape) or axis < -len(shape):
+            raise ValueError(
+                "Invalid combination of `axis` ({}) and `shape` ({}).  `axis`"
+                " must lie in the interval"
+                " [-len(shape), len(shape)[".format(axis, shape)
+            )
     if axis is not None and dim is not None:
-        if axis >= dim or -axis > dim:
-            raise ValueError("The given combination of 'axis' ({}) and"
-                             " 'dim' ({}) is not satisfiable by any"
-                             " array".format(axis, dim))
-    if amin is not None and amax is not None and amax < amin:
-        raise ValueError("'amax' ({}) must be greater than 'amin' ({})"
-                         .format(amax, amin))
+        if axis >= dim or axis < -dim:
+            raise ValueError(
+                "Invalid combination of `axis` ({}) and `dim` ({}).  `axis`"
+                " must lie in the interval [-dim, dim[".format(axis, dim)
+            )
+    if amin is not None and amax is not None and np.any(amax < amin):
+        raise ValueError(
+            "`amax` ({}) must be greater than `amin` ({})".format(amax, amin)
+        )
+
     # Check array:
     if shape is not None and a.shape != shape:
-        raise ValueError("'a' has shape {} but must have shape {}"
-                         .format(a.shape, shape))
+        raise ValueError(
+            "`a` has shape {} but must have shape {}".format(a.shape, shape)
+        )
     if dim is not None and a.ndim != dim:
-        raise ValueError("'a' has dimension {} but must have dimension"
-                         " {}".format(a.ndim, dim))
+        raise ValueError(
+            "`a` has {} dimension(s) but must have {}"
+            " dimension(s)".format(a.ndim, dim)
+        )
     if axis is not None:
         try:
             a.shape[axis]
         except IndexError:
-            raise np.AxisError("axis {} is out of bounds for array of"
-                               " dimension {}".format(axis, a.ndim))
+            raise np.AxisError(axis=axis, ndim=a.ndim)
     if amin is not None and np.any(a < amin):
-        raise ValueError("'a' has elements less than 'amin' ({})"
-                         .format(amin))
+        raise ValueError(
+            "At least one element of `a` is less than `amin` ({})".format(amin)
+        )
     if amax is not None and np.any(a > amax):
-        raise ValueError("'a' has elements greater than 'amax' ({})"
-                         .format(amax))
+        raise ValueError(
+            "At least one element of `a` is greater than `amax`"
+            " ({})".format(amax)
+        )
     if dtype is not None and a.dtype != dtype:
-        raise TypeError("The data type of 'a' is {} but must be {}"
-                        .format(a.dtype, dtype))
+        raise TypeError(
+            "The data type of `a` is {} but must be {}".format(a.dtype, dtype)
+        )
     return a
 
 
