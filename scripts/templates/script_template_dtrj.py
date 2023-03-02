@@ -99,9 +99,9 @@ Outfile2 (\--dtrj-out): .npy
 
 See Also
 --------
-:mod:`scripts.script_template` :
+:mod:`scripts.templates.script_template` :
     Script template for scripts that process MD trajectories
-:mod:`scripts.script_template_plot` :
+:mod:`scripts.templates.script_template_plot` :
     Script template for scripts that create plots
 :func:`some_function` :
     A function that is not defined in this script, but which helps
