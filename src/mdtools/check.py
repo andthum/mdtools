@@ -524,7 +524,7 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     requirements:
 
         * Must be of an `array_like` type, i.e. a type that can be
-          convertet to a :class:`numpy.ndarray`.
+          converted to a :class:`numpy.ndarray`.
         * Must be of shape ``(f,)`` or ``(n, f)``, where ``n`` is the
           number of compounds and ``f`` is the number of frames.
           Transposed discrete trajectories of shape ``(f, n)`` are also
@@ -588,30 +588,24 @@ def dtrj(dtrj, shape=None, amin=None, amax=None, dtype=None):
     dimensions.
     """
     dtrj = np.asarray(dtrj, order="C")
-    # Check input paramaters:
+    # Check input parameters:
     if shape is not None and len(shape) != 2:
         raise ValueError(
-            "The length of 'shape' is {} but must be 2".format(len(shape))
+            "The length of `shape` is {} but must be 2".format(len(shape))
         )
+
     # Check discrete trajectory array:
     if dtrj.ndim == 1:
         dtrj = np.expand_dims(dtrj, axis=0)
-    elif dtrj.ndim > 2:
+    elif dtrj.ndim != 2:
         raise ValueError(
-            "'dtrj' has {} dimensions but must have one or two"
+            "`dtrj` has {} dimensions but must have one or two"
             " dimensions".format(dtrj.ndim)
         )
     if np.any(np.modf(dtrj)[0] != 0):
-        raise ValueError(
-            "At least one element of 'dtrj' is not an integer"
-        )
-    if (shape is not None or
-        amin is not None or
-        amax is not None or
-            dtype is not None):
-        mdt.check.array(
-            a=dtrj, shape=shape, amin=amin, amax=amax, dtype=dtype
-        )
+        raise ValueError("At least one element of 'dtrj' is not an integer")
+    if any(arg is not None for arg in (shape, amin, amax, dtype)):
+        mdt.check.array(dtrj, shape=shape, amin=amin, amax=amax, dtype=dtype)
     return dtrj
 
 
