@@ -175,8 +175,8 @@ def array(
 
 
 def pos_array(
-        pos_array, shape=None, dim=None, amin=None, amax=None,
-        dtype=None):
+    pos_array, shape=None, dim=None, amin=None, amax=None, dtype=None
+):
     """
     Check if the input array satisfies the conditions for a position
     array.
@@ -185,7 +185,7 @@ def pos_array(
     must meet the following requirements:
 
         * Must be of an `array_like` type, i.e. a type that can be
-          convertet to a :class:`numpy.ndarray`.
+          converted to a :class:`numpy.ndarray`.
         * Must be of shape ``(3,)`` or ``(n, 3)`` or ``(k, n, 3)``,
           where ``n`` is the number of particles and ``k`` is the number
           of frames.
@@ -196,9 +196,9 @@ def pos_array(
         The array to check.
     shape : tuple, optional
         The shape expected for `pos_array`.  Default is ``None``, which
-        means that the shape of `pos_array` is not checked.  If provided,
-        the length of `shape` must be either one, two or three and the
-        last element of shape must be 3.
+        means that the shape of `pos_array` is not checked.  If
+        provided, the length of `shape` must be either one, two or three
+        and the last element of shape must be 3.
     dim : {None, 1, 2, 3}, optional
         The dimension expected for `pos_array`.  Default is ``None``,
         which means that the dimension of `pos_array` is not checked.
@@ -212,8 +212,9 @@ def pos_array(
         be broadcastable to a common shape.  `amax` must be greater than
         `amin`.
     dtype : type, optional
-        The data type expected for `pos_array`.  The default is ``None``,
-        which means that the data type of `pos_array` is not checked.
+        The data type expected for `pos_array`.  The default is
+        ``None``, which means that the data type of `pos_array` is not
+        checked.
 
     Returns
     -------
@@ -243,34 +244,26 @@ def pos_array(
         Check if an array is a suitable simulation box array
     """
     pos_array = np.asarray(pos_array)
+    allowed_dims = (1, 2, 3)
     # Check input parameters:
-    if (shape is not None and
-        (len(shape) < 1 or len(shape) > 3) and
-            shape[-1] != 3):
-        raise ValueError("'shape' ({}) must be either (3,) or (n, 3) or"
-                         " (k, n, 3)".format(shape))
-    if dim is not None and dim not in (1, 2, 3):
-        raise ValueError("'dim' ({}) must be 1, 2 or 3".format(dim))
+    if shape is not None and len(shape) not in allowed_dims and shape[-1] != 3:
+        raise ValueError(
+            "`shape` ({}) must be either (3,) or (n, 3) or"
+            " (k, n, 3)".format(shape)
+        )
+    if dim is not None and dim not in allowed_dims:
+        raise ValueError("`dim` ({}) must be in {}".format(dim, allowed_dims))
+
     # Check position array:
-    if pos_array.shape[-1] != 3:
-        raise ValueError("'pos_array' has shape {} but must have shape"
-                         " (3,) or (n, 3) or (k, n, 3)"
-                         .format(pos_array.shape))
-    if pos_array.ndim < 1 or pos_array.ndim > 3:
-        raise ValueError("'pos_array' has shape {} but must have shape"
-                         " (3,) or (n, 3) or (k, n, 3)"
-                         .format(pos_array.shape))
-    if (shape is not None or
-        dim is not None or
-        amin is not None or
-        amax is not None or
-            dtype is not None):
-        mdt.check.array(a=pos_array,
-                        shape=shape,
-                        dim=dim,
-                        amin=amin,
-                        amax=amax,
-                        dtype=dtype)
+    if pos_array.ndim not in allowed_dims or pos_array.shape[-1] != 3:
+        raise ValueError(
+            "`pos_array` has shape {} but must have shape (3,) or (n, 3) or"
+            " (k, n, 3)".format(pos_array.shape)
+        )
+    if any(arg is not None for arg in (shape, dim, amin, amax, dtype)):
+        mdt.check.array(
+            pos_array, shape=shape, dim=dim, amin=amin, amax=amax, dtype=dtype
+        )
     return pos_array
 
 
