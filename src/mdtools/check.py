@@ -267,17 +267,24 @@ def pos_array(
     return pos_array
 
 
-def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
-        allow_zero=False, dim=None, dtype=None):
+def box(
+    box,
+    with_angles=None,
+    orthorhombic=False,
+    allow_negative=False,
+    allow_zero=False,
+    dim=None,
+    dtype=None,
+):
     """
     Check if the input array satisfies the conditions for a simulation
-    box array.
+    box array in length-angle representation.
 
-    Arrays that contain the dimensions of simulation boxes must meet the
-    following requirements:
+    Arrays that contain the dimensions of simulation boxes in the
+    length-angle representation must meet the following requirements:
 
         * Must be of an `array_like` type, i.e. a type that can be
-          convertet to a :class:`numpy.ndarray`.
+          converted to a :class:`numpy.ndarray`.
         * Must have a data type equal to the supplied `dtype`.
         * If the array does not contain the box angles:
 
@@ -303,22 +310,18 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
         raised.
     orthorhombic : bool, optional
         If ``True`` and `with_angles` evaluates to ``True``, all angles
-        of `box` must be 90°.
-
-        .. deprecated:: 0.0.0.dev0
-            This argument will be renamed to `orthogonal` in a future
-            release.
-
+        of `box` must be 90°.  Is ignored if `with_angles` is ``False``
+        or if `box` does not contain angle information.
     allow_negative : bool, optional
         If ``True``, allow negative box lengths (but not zero).
     allow_zero : bool, optional
         If ``True``, allow box lengths to be zero.
     dim : {None, 1, 2}, optional
         The dimension expected for `box`.  Default is ``None``, which
-        means that the dimension of `box` is not checked.  If `box`
-        should contain the box paramaters for only one frame, set `dim`
-        to 1.  If `box` should contain the box paramaters for multiple
-        frames, set `dim` to 2.
+        means that the dimension of `box` must be either 1 or 2.  If
+        `box` should contain the box parameters for only one frame, set
+        `dim` to 1.  If `box` should contain the box parameters for
+        multiple frames, set `dim` to 2.
     dtype : type, optional
         The data type expected for `box`.  Default is ``None``, which
         means that the data type of `box` is not checked.
@@ -353,55 +356,63 @@ def box(box, with_angles=None, orthorhombic=False, allow_negative=False,
         Check if an array is a suitable position array
     """
     box = np.asarray(box)
+    allowed_dims = (1, 2)
     # Check input parameters:
-    if dim is not None and dim not in (1, 2):
-        raise ValueError("'dim' ({}) must be 1 or 2".format(dim))
+    if dim is not None and dim not in allowed_dims:
+        raise ValueError("`dim` ({}) must be in {}".format(dim, allowed_dims))
 
     # Check box array:
+    if box.ndim not in allowed_dims:
+        raise ValueError(
+            "`box` has shape {} but must have shape (3,) or (6,) or (k, 3) or"
+            " (k, 6)".format(box.shape)
+        )
+
     if with_angles is None:
         if box.shape[-1] == 3:
             with_angles = False
         elif box.shape[-1] == 6:
             with_angles = True
         else:
-            raise ValueError("'box' has shape {} but must have shape"
-                             " (3,) or (6,) or (k, 3) or (k, 6)"
-                             .format(box.shape))
+            raise ValueError(
+                "`box` has shape {} but must have shape (3,) or (6,) or (k, 3)"
+                " or (k, 6)".format(box.shape)
+            )
     else:
         if with_angles and box.shape[-1] != 6:
-            raise ValueError("'box' has shape {} but must have shape"
-                             " (6,) or (k, 6)".format(box.shape))
+            raise ValueError(
+                "'box' has shape {} but must have shape (6,) or"
+                " (k, 6)".format(box.shape)
+            )
         if not with_angles and box.shape[-1] != 3:
-            raise ValueError("'box' has shape {} but must have shape"
-                             " (3,) or (k, 3)".format(box.shape))
-    if box.ndim not in (1, 2):
-        raise ValueError("'box' has dimension {} but must have dimension"
-                         " 1 or 2".format(box.ndim))
-
+            raise ValueError(
+                "`box` has shape {} but must have shape (3,) or"
+                " (k, 3)".format(box.shape)
+            )
     if with_angles:
-        slc_angle = [slice(None)] * box.ndim
-        slc_angle[box.ndim - 1] = slice(3, 6)
-        slc_angle = tuple(slc_angle)
-        if np.any(box[slc_angle] <= 0):
-            raise ValueError("At least one angle is less than or equal"
-                             " to zero")
-        if np.any(box[slc_angle] >= 180):
-            raise ValueError("At least one angle is greater than or"
-                             " equal to 180 degrees")
-        if (orthorhombic and
-                not np.all(np.isclose(box[slc_angle], 90, rtol=0))):
-            raise ValueError("At least one angle is not 90 degrees")
+        angles = mdt.nph.take(box, start=3, axis=-1)
+        if np.any(angles <= 0):
+            raise ValueError(
+                "At least one angle is less than or equal to zero"
+            )
+        if np.any(angles >= 180):
+            raise ValueError(
+                "At least one angle is greater than or equal to 180 degrees"
+            )
+        if orthorhombic and not np.allclose(angles, 90, rtol=0):
+            raise ValueError(
+                "`orthorhombic` is True but at least one angle is not 90"
+                " degrees"
+            )
 
-    slc_length = [slice(None)] * box.ndim
-    slc_length[box.ndim - 1] = slice(0, 3)
-    slc_length = tuple(slc_length)
-    if not allow_negative and np.any(box[slc_length] < 0):
-        raise ValueError("At least box length is negative")
-    if not allow_zero and np.any(np.isclose(box[slc_length], 0)):
-        raise ValueError("At least box length is zero")
+    lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
+    if not allow_negative and np.any(lengths < 0):
+        raise ValueError("At least one box length is negative")
+    if not allow_zero and np.any(np.isclose(lengths, 0)):
+        raise ValueError("At least one box length is zero")
 
-    if dim is not None or dtype is not None:
-        array(a=box, dim=dim, dtype=dtype)
+    if any(arg is not None for arg in (dim, dtype)):
+        mdt.check.array(box, dim=dim, dtype=dtype)
     return box
 
 
