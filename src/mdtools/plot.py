@@ -135,7 +135,8 @@ class MidpointNormalize(colors.Normalize):
 
     See `Colormap Normalization`_ for more information.
 
-    .. _Colormap Normalization: https://matplotlib.org/users/colormapnorms.html#custom-normalization-two-linear-ranges
+    .. _Colormap Normalization:
+        https://matplotlib.org/stable/tutorials/colors/colormapnorms.html#custom-normalization-manually-implement-two-linear-ranges
     """  # noqa: W505, E501
 
     def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
@@ -1911,8 +1912,10 @@ def annotate_heatmap(
     See `Creating annotated heatmaps`_ and
     `how to annotate heatmap with text in matplotlib?`_
 
-    .. _Creating annotated heatmaps: https://matplotlib.org/gallery/images_contours_and_fields/image_annotated_heatmap.html#sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
-    .. _how to annotate heatmap with text in matplotlib?: https://stackoverflow.com/questions/11917547/how-to-annotate-heatmap-with-text-in-matplotlib
+    .. _Creating annotated heatmaps:
+        https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
+    .. _how to annotate heatmap with text in matplotlib?:
+        https://stackoverflow.com/questions/11917547/how-to-annotate-heatmap-with-text-in-matplotlib
 
     Parameters
     ----------

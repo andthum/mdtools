@@ -49,15 +49,14 @@ Git and GitHub
 
     * `GitHub Quickstart`_.
 
-    * `GitHub Training`_:
+    * `GitHub Skills`_:
 
         - `Introduction to GitHub`_.
-        - `Communicating using Markdown`_.
-        - `Reviewing pull requests`_.
-        - `Managing merge conflicts`_.
-        - `Create an open source program`_.
-        - `GitHub Actions - Hello World`_.
-        - `GitHub Actions - Continuous Integration`_.
+        - `Communicate using Markdown`_.
+        - `Review pull requests`_.
+        - `Resolve merge conflicts`_.
+        - `Hello GitHub Actions`_.
+        - `Continuous Integration`_.
 
 
 Research software engineering
@@ -153,21 +152,17 @@ already established for research data to research software:
 .. _Pro Git book: https://git-scm.com/book/en/v2
 .. _Learn Git Branching: https://learngitbranching.js.org/
 .. _GitHub Quickstart: https://docs.github.com/en/get-started/quickstart
-.. _GitHub Training: https://lab.github.com/githubtraining
+.. _GitHub Skills: https://skills.github.com/
 .. _Introduction to GitHub:
-    https://lab.github.com/githubtraining/introduction-to-github
-.. _Communicating using Markdown:
-    https://lab.github.com/githubtraining/communicating-using-markdown
-.. _Reviewing pull requests:
-    https://lab.github.com/githubtraining/reviewing-pull-requests
-.. _Managing merge conflicts:
-    https://lab.github.com/githubtraining/managing-merge-conflicts
-.. _Create an open source program:
-    https://lab.github.com/githubtraining/create-an-open-source-program
-.. _GitHub Actions - Hello World:
-    https://lab.github.com/githubtraining/github-actions:-hello-world
-.. _GitHub Actions - Continuous Integration:
-    https://lab.github.com/githubtraining/github-actions:-continuous-integration
+    https://github.com/skills/introduction-to-github
+.. _Communicate using Markdown:
+    https://github.com/skills/communicate-using-markdown
+.. _Review pull requests: https://github.com/skills/review-pull-requests
+.. _Resolve merge conflicts:
+    https://github.com/skills/resolve-merge-conflicts
+.. _Hello GitHub Actions: https://github.com/skills/hello-github-actions
+.. _Continuous Integration:
+    https://github.com/skills/continuous-integration
 .. _The Turing Way: https://the-turing-way.netlify.app/welcome.html
 .. _Open Science Training Handbook:
     https://open-science-training-handbook.gitbook.io/book/

@@ -31,6 +31,9 @@ sensible.  See :ref:`optimized-mode-label` and :ref:`debug-mode-label`.
 Unit tests
 ^^^^^^^^^^
 
+For functions that accept arrays of arbitrary dimensions, write unit
+tests for at least one-, two- and three-dimensional input arrays.
+
 
 Integration tests
 ^^^^^^^^^^^^^^^^^

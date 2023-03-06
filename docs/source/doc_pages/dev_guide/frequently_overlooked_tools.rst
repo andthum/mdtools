@@ -26,6 +26,18 @@ showing the power of the promoted object is welcome.
 Numpy
 -----
 
+:func:`numpy.einsum`
+
+    Evaluate the `Einstein summation convention
+    <https://en.wikipedia.org/wiki/Einstein_notation>`_ on the operands.
+    Using the Einstein summation convention, many common
+    multi-dimensional, linear algebraic array operations can be
+    represented in a simple fashion.  Anything that involves
+    combinations of multiplying and summing axes can be written using
+    :func:`numpy.einsum`!  See :func:`mdtools.box.cart2box` for an
+    example.  See https://stackoverflow.com/a/33641428 for an
+    explanation how to use :func:`numpy.einsum`.
+
 :meth:`numpy.ufunc.at`
 
     Perform fast inplace operations on

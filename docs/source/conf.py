@@ -57,7 +57,9 @@ except ModuleNotFoundError:
     )
 
 # Recursively add all directories containing scripts to sys.path.
-script_path = os.path.abspath("../../scripts/")
+script_path = os.path.abspath("../../")
+sys.path.insert(1, script_path)
+script_path += "/scripts/"
 for root, _dirs, _files in os.walk(script_path):
     if os.path.basename(os.path.normpath(root)) not in ("", "__pycache__"):
         sys.path.insert(1, root)
@@ -470,6 +472,17 @@ text_newlines = "native"
 text_secnumber_suffix = html_secnumber_suffix
 
 
+# -- Options for the linkcheck builder ---------------------------------
+
+# List of regular expressions that match URIs that should not be checked
+# when running `make linkcheck`.
+linkcheck_ignore = [
+    # 403 Client Error: Forbidden for url.
+    r"https://doi.org/10.1021/acs.jctc.2c00327",
+    r"https://doi.org/10.1073/pnas.1900239116",
+]
+
+
 # -- Extension configuration -------------------------------------------
 # -- Options for autodoc extension -------------------------------------
 
@@ -580,7 +593,7 @@ intersphinx_mapping = {
     "psutil": ("https://psutil.readthedocs.io/en/stable/", None),
     "python": ("https://docs.python.org/3/", None),
     "scipy": ("https://scipy.github.io/devdocs/", None),
-    "Sphinx": ("https://www.sphinx-doc.org/en/stable/", None),
+    "Sphinx": ("https://www.sphinx-doc.org/en/master/", None),
 }
 
 # The maximum number of days to cache remote inventories.

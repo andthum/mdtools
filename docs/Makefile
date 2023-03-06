@@ -12,10 +12,10 @@ AUTOSUMDIR         = $(shell find $(SOURCEDIR) -type d -name "$(AUTOSUMDIR_PATTE
 # Put this first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	@echo "  clean          to remove everything under '$(BUILDDIR)'"
 	@echo "  clean_autosum  to remove all '$(AUTOSUMDIR_PATTERN)' directories in '$(SOURCEDIR)'"
+	@echo "  install_mdt    to (re-)install MDTools"
 
-.PHONY: help clean_autosum Makefile
+.PHONY: help clean_autosum install_mdt Makefile
 
 # Custom clean target to remove autosummary generated files. Can be
 # removed when https://github.com/sphinx-doc/sphinx/issues/1999 is
@@ -23,6 +23,9 @@ help:
 clean_autosum:
 	@echo "Removing all '$(AUTOSUMDIR_PATTERN)' directories in '$(SOURCEDIR)' recursively..."
 	@rm -r $(AUTOSUMDIR)
+
+install_mdt:
+	@cd ../ && python3 -m pip install --upgrade --editable . && cd docs/
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

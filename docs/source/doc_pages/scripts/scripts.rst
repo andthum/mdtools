@@ -23,6 +23,8 @@ instead.
 Scripts by Application
 ======================
 
+.. currentmodule:: scripts
+
 .. toctree::
     :name: scripts-toc
     :maxdepth: 1
@@ -34,4 +36,5 @@ Scripts by Application
     gmx
     structure
     templates
+    trajectory
     other

@@ -295,7 +295,8 @@ way down until here!
 .. _project repository: https://github.com/andthum/mdtools
 .. _GitHub Quickstart Guide:
     https://docs.github.com/en/get-started/quickstart
-.. _GitHub Flow: https://guides.github.com/introduction/flow/
+.. _GitHub Flow:
+    https://docs.github.com/en/get-started/quickstart/github-flow
 .. _Contributing to a Project:
     https://git-scm.com/book/en/v2/GitHub-Contributing-to-a-Project
 .. _Contributing to projects:
@@ -303,7 +304,7 @@ way down until here!
 .. _fork:
     https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks
 .. _configure a remote:
-    https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork
+    https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-repository-for-a-fork
 .. _Get the latest changes:
     https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork
 .. _Basic Branching and Merging:

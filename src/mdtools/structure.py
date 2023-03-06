@@ -43,12 +43,7 @@ import mdtools as mdt
 
 
 def wcenter_pos(
-    pos,
-    weights=None,
-    wrap_pos=False,
-    wrap_result=False,
-    box=None,
-    mda_backend=None,
+    pos, weights=None, wrap_pos=False, wrap_result=False, box=None, dtype=None
 ):
     r"""
     Calculate the weighted center of an position array.
@@ -78,11 +73,11 @@ def wcenter_pos(
         cell using :func:`mdtools.box.wrap_pos`.  If ``True``, `box`
         must be provided.
     box : None or array_like, optional
-        See :func:`mdtools.box.wrap_pos`.  Note that the shape of `pos`
-        is interpreted as ``(k, 3)``, if both `pos` and `box` are
-        2-dimensional.
-    mda_backend : {None, 'serial', 'OpenMP'}, optional
-        See :func:`mdtools.box.wrap_pos`.
+        See :func:`mdtools.box.wrap_pos`.  Is ignored if neither
+        `wrap_pos` nor `wrap_result` is ``True``.
+    dtype : type, optional
+        The data type of the output array.  If ``None``, the data type
+        is inferred from the input array(s).
 
     Returns
     -------
@@ -90,7 +85,20 @@ def wcenter_pos(
         The weighted center of all particle positions in `pos` per
         frame.
 
-        .. list-table:: Shapes
+        .. list-table:: Shapes when `box` is ``None``.
+            :align: left
+            :header-rows: 1
+
+            *   - `pos`
+                - `center`
+            *   - ``(3,)``
+                - ``(3,)``
+            *   - ``(n, 3)``
+                - ``(3,)``
+            *   - ``(k, n, 3)``
+                - ``(k, 1, 3)``
+
+        .. list-table:: Shapes when `box` is not ``None``.
             :align: left
             :header-rows: 1
 
@@ -98,20 +106,23 @@ def wcenter_pos(
                 - `box`
                 - `center`
             *   - ``(3,)``
+                - ``(6,)``
                 - ``(3,)``
+            *   - ``(3,)``
+                - ``(k, 6)``
+                - ``(k, 1, 3)``
+            *   - ``(n, 3)``
+                - ``(6,)``
                 - ``(3,)``
             *   - ``(n, 3)``
-                - ``(3,)``
-                - ``(3,)``
-            *   - ``(k, 3)``
-                - ``(k, 3)``
-                - ``(k, 3)``
+                - ``(k, 6)``
+                - ``(k, 1, 3)``
             *   - ``(k, n, 3)``
-                - ``(3,)``
-                - ``(k, 3)``
+                - ``(6,)``
+                - ``(k, 1, 3)``
             *   - ``(k, n, 3)``
-                - ``(k, 3)``
-                - ``(k, 3)``
+                - ``(k, 6)``
+                - ``(k, 1, 3)``
 
         ``n`` particles are lumped into one center for each individual
         frame ``k``.
@@ -148,8 +159,8 @@ def wcenter_pos(
 
     .. math::
 
-        \mathbf{r}_{center} = \frac{1}{\sum_i^N w_i} \
-        \sum_i^N w_i \mathbf{r}_i
+        \mathbf{r}_{center} = \frac{1}{\sum_{i=1}^N w_i} \
+        \sum_{i=1}^N w_i \mathbf{r}_i
 
     where :math:`r_i` is the position vector of the :math:`i`-th
     particle, :math:`w_i` is its weight and :math:`N` is the number of
@@ -164,11 +175,27 @@ def wcenter_pos(
     array([0, 2, 5])
     >>> mdt.strc.wcenter_pos(pos, weights=[3])
     array([0, 2, 5])
-    >>> box = np.array([2, 2, 2, 90, 90, 90])
+    >>> box = np.array([1, 2, 3, 90, 90, 90])
+    >>> mdt.box.wrap_pos(pos, box=box)
+    array([0., 0., 2.])
     >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
-    array([0., 0., 1.], dtype=float32)
+    array([0., 0., 2.])
     >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
-    array([0., 0., 1.], dtype=float32)
+    array([0., 0., 2.])
+    >>> box = np.array([[1, 2, 3, 90, 90, 90],
+    ...                 [2, 3, 4, 90, 90, 90]])
+    >>> mdt.box.wrap_pos(pos, box=box)
+    array([[[0., 0., 2.]],
+    <BLANKLINE>
+           [[0., 2., 1.]]])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([[[0., 0., 2.]],
+    <BLANKLINE>
+           [[0., 2., 1.]]])
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([[[0., 0., 2.]],
+    <BLANKLINE>
+           [[0., 2., 1.]]])
     >>> mdt.strc.wcenter_pos(pos, wrap_result=True)
     Traceback (most recent call last):
     ...
@@ -182,24 +209,30 @@ def wcenter_pos(
     array([0.5, 1. , 3. ])
     >>> mdt.strc.wcenter_pos(pos, weights=[3, 1])
     array([0.25, 1.5 , 4.  ])
+    >>> box = np.array([1, 2, 3, 90, 90, 90])
+    >>> mdt.box.wrap_pos(pos, box=box)
+    array([[0., 0., 2.],
+           [0., 0., 1.]])
     >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
-    array([0.5, 0. , 1. ], dtype=float32)
+    array([0. , 0. , 1.5])
     >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
-    array([0.5, 1. , 1. ], dtype=float32)
-
-    Shape of `pos` is ``(k, 3)``:
-
-    >>> box = np.array([[2, 2, 2, 90, 90, 90],
-    ...                 [2, 1, 4, 90, 90, 90]])
-    >>> mdt.strc.wcenter_pos(pos, box=box)
-    array([[0, 2, 5],
-           [1, 0, 1]])
+    array([0.5, 1. , 0. ])
+    >>> box = np.array([[1, 2, 3, 90, 90, 90],
+    ...                 [2, 3, 4, 90, 90, 90]])
+    >>> mdt.box.wrap_pos(pos, box=box)
+    array([[[0., 0., 2.],
+            [0., 0., 1.]],
+    <BLANKLINE>
+           [[0., 2., 1.],
+            [1., 0., 1.]]])
     >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
-    array([[0., 0., 1.],
-           [1., 0., 1.]], dtype=float32)
+    array([[[0. , 0. , 1.5]],
+    <BLANKLINE>
+           [[0.5, 1. , 1. ]]])
     >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
-    array([[0., 0., 1.],
-           [1., 0., 1.]], dtype=float32)
+    array([[[0.5, 1. , 0. ]],
+    <BLANKLINE>
+           [[0.5, 1. , 3. ]]])
 
     Shape of `pos` is ``(k, n, 3)``:
 
@@ -209,66 +242,82 @@ def wcenter_pos(
     ...                 [[1, 0, 1],
     ...                  [0, 2, 5]]])
     >>> mdt.strc.wcenter_pos(pos)
-    array([[0.5, 1. , 3. ],
-           [0.5, 1. , 3. ]])
+    array([[[0.5, 1. , 3. ]],
+    <BLANKLINE>
+           [[0.5, 1. , 3. ]]])
     >>> mdt.strc.wcenter_pos(pos, weights=[3, 1])
-    array([[0.25, 1.5 , 4.  ],
-           [0.75, 0.5 , 2.  ]])
-    >>> box = np.array([2, 2, 2, 90, 90, 90])
+    array([[[0.25, 1.5 , 4.  ]],
+    <BLANKLINE>
+           [[0.75, 0.5 , 2.  ]]])
+    >>> box = np.array([1, 2, 3, 90, 90, 90])
+    >>> mdt.box.wrap_pos(pos, box=box)
+    array([[[0., 0., 2.],
+            [0., 0., 1.]],
+    <BLANKLINE>
+           [[0., 0., 1.],
+            [0., 0., 2.]]])
     >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
-    array([[0.5, 0. , 1. ],
-           [0.5, 0. , 1. ]], dtype=float32)
+    array([[[0. , 0. , 1.5]],
+    <BLANKLINE>
+           [[0. , 0. , 1.5]]])
     >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
-    array([[0.5, 1. , 1. ],
-           [0.5, 1. , 1. ]], dtype=float32)
-    >>> box = np.array([[2, 2, 2, 90, 90, 90],
-    ...                 [2, 1, 4, 90, 90, 90]])
+    array([[[0.5, 1. , 0. ]],
+    <BLANKLINE>
+           [[0.5, 1. , 0. ]]])
+    >>> box = np.array([[1, 2, 3, 90, 90, 90],
+    ...                 [2, 3, 4, 90, 90, 90]])
+    >>> mdt.box.wrap_pos(pos, box=box)
+    array([[[0., 0., 2.],
+            [0., 0., 1.]],
+    <BLANKLINE>
+           [[1., 0., 1.],
+            [0., 2., 1.]]])
     >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
-    array([[0.5, 0. , 1. ],
-           [0.5, 0. , 1. ]], dtype=float32)
+    array([[[0. , 0. , 1.5]],
+    <BLANKLINE>
+           [[0.5, 1. , 1. ]]])
     >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
-    array([[0.5, 1. , 1. ],
-           [0.5, 0. , 3. ]], dtype=float32)
+    array([[[0.5, 1. , 0. ]],
+    <BLANKLINE>
+           [[0.5, 1. , 3. ]]])
+
+    Triclinic boxes:
+
+    >>> pos = np.array([[0, 2, 5],
+    ...                 [1, 0, 1]])
+    >>> mdt.strc.wcenter_pos(pos)
+    array([0.5, 1. , 3. ])
+    >>> box = np.array([2, 3, 4, 80, 90, 100])
+    >>> mdt.box.wrap_pos(pos, box=box)
+    array([[0.        , 1.29469208, 1.0626734 ],
+           [0.47905547, 2.95442326, 1.        ]])
+    >>> mdt.strc.wcenter_pos(pos, wrap_pos=True, box=box)
+    array([0.23952773, 2.12455767, 1.0313367 ])
+    >>> mdt.strc.wcenter_pos(pos, wrap_result=True, box=box)
+    array([0.5, 1. , 3. ])
     """
     pos = mdt.check.pos_array(pos)
+    pos = np.asarray(pos, dtype=dtype)
     if box is None and (wrap_pos or wrap_result):
         raise ValueError(
             "'box' must be provided if 'wrap_pos' and/or 'wrap_result' is set"
         )
-
     if wrap_pos:
-        pos = mdt.box.wrap_pos(pos=pos, box=box, mda_backend=mda_backend)
-    # The dimension of position arrays can be either 1, 2 or 3 (see
-    # `mdtools.check.pos_array`).  If `ndim` is
-    #     * 1 (single particle), the center is simply the particle
-    #       position.
-    #     * 2 and ``box.ndim`` is 2 (multiple frames, single particles),
-    #       the center is simply the particle position in each frame.
-    #     * 2 and ``box.ndim`` is 1 (single frame, multiple particles),
-    #       the center is the average over all particle positions
-    #       (``axis=0``).
-    #     * 3 (multiple frames), the center is the average over all
-    #       particle positions in each frame (``axis=1``).
+        pos = mdt.box.wrap_pos(pos=pos, box=box)
     if pos.ndim == 1:
+        # `pos` only contains the positions of a single particle => The
+        # center is simply the particle position.
         center = pos
-    elif box is not None and box.ndim == 2 and pos.ndim == 2:
-        if pos.shape[0] != box.shape[0]:
-            raise ValueError(
-                "If 'box' has 2 dimensions, pos.shape[0] ({}) must"
-                " match box.shape[0] ({})".format(pos.shape[0], box.shape[0])
-            )
-        center = pos
-    elif pos.ndim in (2, 3):
-        center = np.average(pos, axis=pos.ndim - 2, weights=weights)
     else:
-        # This else clause should never be entered, because this error
-        # should already be raised by `mdt.check.pos_array(pos)`.
-        raise ValueError(
-            "'pos' has shape {} but must have shape (3,) or (n, 3) or"
-            " (k, n, 3).  This should not have happened".format(pos.shape)
-        )
+        center = np.average(pos, axis=-2, weights=weights)
+        if pos.ndim > 2 and center.ndim != pos.ndim:
+            # `pos` has shape ``(k , n, 3)``.  Applying `np.average` on
+            # `pos` returns an array of shape ``(k, 3)``.  To maintain
+            # the logic explained in the docstring, we must reshape
+            # `pos` back to ``(k , 1, 3)``.
+            center = np.expand_dims(center, axis=-2)
     if wrap_result:
-        center = mdt.box.wrap_pos(pos=center, box=box, mda_backend=mda_backend)
+        center = mdt.box.wrap_pos(pos=center, box=box)
     return center
 
 
@@ -4739,6 +4788,7 @@ def rmsd(  # noqa: C901
     inplace=False,
     xyz=False,
     box=None,
+    out_tmp=None,
 ):
     r"""
     Calculate the Root Mean Square Deviation (RMSD) between two sets of
@@ -4766,8 +4816,10 @@ def rmsd(  # noqa: C901
         contained in the position arrays.  If `weights` is ``None``, all
         particles are assumed to have a weight equal to one.
     center : bool, optional
-        If ``True``, shift the `refpos` and `selpos` by their (weighted)
-        center, respectively, before calculating the RMSD.
+        If ``True``, shift `refpos` and `selpos` by their (weighted)
+        center, respectively, before calculating the RMSD.  Note that no
+        coordinate wrapping is done while calculating the (weighted)
+        centers even if `box` is supplied.
     inplace : bool, optional
         If ``True``, subtract the weighted center from the reference and
         candidate positions in place (i.e. the input arrays will be
@@ -4779,15 +4831,19 @@ def rmsd(  # noqa: C901
         that in this case the square root is not taken, because you
         cannot extract the square root of each summand individually.
     box : None or array_like, optional
-        The unit cell dimensions of the system, which must be orthogonal
-        and provided in the same format as returned by
+        The unit cell dimensions of the system, which can be orthogonal
+        or triclinic and must provided in the same format as returned by
         :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
         ``[lx, ly, lz, alpha, beta, gamma]``.  `box` can also be an
         array of boxes of shape ``(k, 6)``, where ``k`` must match the
         number of frames in `refpos`.  If given, the minimum image
         convention is taken into account when calculating the distance
-        between the reference and candidate positions.  Works currently
-        only for orthogonal boxes.
+        between the reference and candidate positions.
+    out_tmp : None or numpy.ndarray, optional
+        Preallocated array of the given dtype into which temporary
+        result are stored.  If provided, it must have the same shape as
+        the result of ``selpos - refpos``.  Providing `out_tmp` can
+        speed up the calculated if this function is called many times.
 
     Raises
     ------
@@ -4807,12 +4863,12 @@ def rmsd(  # noqa: C901
 
     .. math::
 
-        RMSD = \sqrt{\frac{1}{N} \frac{1}{W} \sum_i^N w_i \
+        RMSD = \sqrt{\frac{1}{N} \frac{1}{W} \sum_{i=1}^N w_i
         \left( \mathbf{r}_i - \mathbf{r}_i^{ref} \right)^2}
 
     where :math:`N` is the number of particles,
     :math:`w_i` is the weight of the :math:`i`-th particle,
-    :math:`W = \sum_i^N w_i` is the sum of particle weights,
+    :math:`W = \sum_{i=1}^N w_i` is the sum of particle weights,
     :math:`\mathbf{r}_i` are the candidate positions and
     :math:`\mathbf{r}_i^{ref}` are the reference positions.
 
@@ -4822,8 +4878,8 @@ def rmsd(  # noqa: C901
 
     .. math::
 
-        \langle \Delta x^2 \rangle = \frac{1}{N} \frac{1}{W} \
-        \sum_i^N w_i \left( x_i - x_i^{ref} \right)^2.
+        \langle \Delta x^2 \rangle = \frac{1}{N} \frac{1}{W}
+        \sum_{i=1}^N w_i \left( x_i - x_i^{ref} \right)^2.
 
     Examples
     --------
@@ -4868,6 +4924,7 @@ def rmsd(  # noqa: C901
     True
     >>> mdt.strc.rmsd(refpos, selpos, xyz=True)
     array([ 4.,  5., 20.])
+    >>> box = np.array([5, 3, 3, 90, 90, 90])
     >>> mdt.strc.rmsd(refpos, selpos, xyz=True, box=box)
     array([4. , 0.5, 0.5])
     >>> weights = np.array([0.575, 0.425])
@@ -4920,6 +4977,7 @@ def rmsd(  # noqa: C901
     >>> mdt.strc.rmsd(refpos, selpos, xyz=True, box=box)
     array([[4. , 0.5, 0.5],
            [0.5, 2.5, 1. ]])
+    >>> weights = np.array([0.575, 0.425])
     >>> rmsd = mdt.strc.rmsd(refpos, selpos, weights=weights)
     >>> rmsd_expected = np.sqrt([16.    , 15.6625])
     >>> np.allclose(rmsd, rmsd_expected, rtol=0)
@@ -4971,6 +5029,7 @@ def rmsd(  # noqa: C901
     >>> mdt.strc.rmsd(refpos, selpos, xyz=True, box=box)
     array([[4. , 0.5, 0.5],
            [0. , 0. , 0. ]])
+    >>> weights = np.array([0.575, 0.425])
     >>> rmsd = mdt.strc.rmsd(refpos, selpos, weights=weights)
     >>> rmsd_expected = np.array([4., 0.])
     >>> np.allclose(rmsd, rmsd_expected, rtol=0)
@@ -4996,23 +5055,14 @@ def rmsd(  # noqa: C901
     selpos = mdt.check.pos_array(selpos)
     if refpos.ndim == 1:
         n_particles = 1
-    elif refpos.ndim in (2, 3):
-        n_particles = refpos.shape[refpos.ndim - 2]
     else:
-        # This else clause should never be entered, because this error
-        # should already be raised by `mdt.check.pos_array(refpos)`.
-        raise ValueError(
-            "The shape of 'refpos' must be either (3,) or (n, 3) or (k, n, 3)"
-            " but is {}.  This should not have happened".format(refpos.shape)
-        )
-    if (
-        (selpos.ndim == 1 and n_particles != 1)
-        or (selpos.ndim == 2 and selpos.shape[0] != n_particles)
-        or (selpos.ndim == 3 and selpos.shape[1] != n_particles)
+        n_particles = refpos.shape[-2]
+    if (selpos.ndim == 1 and n_particles != 1) or (
+        selpos.ndim > 1 and selpos.shape[-2] != n_particles
     ):
         raise ValueError(
-            "'selpos' does not contain the same number of particles as"
-            " 'refpos'.  The shape of 'selpos' is {}.  The shape of 'refpos'"
+            "`selpos` does not contain the same number of particles as"
+            " `refpos`.  The shape of `selpos` is {}, the shape of `refpos`"
             " is {}".format(selpos.shape, refpos.shape)
         )
 
@@ -5020,36 +5070,32 @@ def rmsd(  # noqa: C901
         weights = np.asarray(weights, dtype=np.float64)
         if weights.shape != (n_particles,):
             raise ValueError(
-                "'weights' must have shape {} but has shape"
+                "`weights` must have shape {} but has shape"
                 " {}".format((n_particles,), weights.shape)
             )
         weights_sum = np.sum(weights)
         if weights_sum == 0:
-            raise ValueError("'weights' must not sum up to zero")
+            raise ValueError("`weights` must not sum up to zero")
         weights /= weights_sum
 
     if box is not None:
         box = mdt.check.box(box)
-        if box.ndim == 2:
-            if refpos.ndim != 3:
+        if box.ndim > 1:
+            if refpos.ndim < 3:
                 raise ValueError(
                     "box dimensions given for {} frames, but reference"
                     " positions given for only 1 frame".format(box.shape[0])
                 )
-            if box.shape[0] != refpos.shape[0]:
+            if box.shape[-2] != refpos.shape[-3]:
                 raise ValueError(
-                    "If 'box' has 2 dimensions, box.shape[0] ({}) must match"
-                    " refpos.shape[0]"
-                    " ({})".format(box.shape[0], refpos.shape[0])
+                    "If `box` has more than one dimension, box.shape[-2] ({})"
+                    " must match refpos.shape[-3]"
+                    " ({})".format(box.shape[-2], refpos.shape[-3])
                 )
 
     if center:
-        refcenter = mdt.strc.wcenter_pos(pos=refpos, weights=weights, box=box)
-        if refpos.ndim == 3:
-            refcenter = np.expand_dims(refcenter, axis=1)
-        selcenter = mdt.strc.wcenter_pos(pos=selpos, weights=weights, box=box)
-        if selpos.ndim == 3:
-            selcenter = np.expand_dims(selcenter, axis=1)
+        refcenter = mdt.strc.wcenter_pos(pos=refpos, weights=weights)
+        selcenter = mdt.strc.wcenter_pos(pos=selpos, weights=weights)
         if inplace:
             refpos -= refcenter
             selpos -= selcenter
@@ -5057,68 +5103,27 @@ def rmsd(  # noqa: C901
             refpos = refpos - refcenter
             selpos = selpos - selcenter
 
-    rmsd = mdt.box.vdist(selpos, refpos, box=box)
+    rmsd = mdt.box.vdist(selpos, refpos, box=box, out=out_tmp)
     rmsd **= 2
-    # The dimension of position arrays and thus of `rmsd` can be either
-    # 1, 2 or 3 (see `mdtools.check.pos_array`).  If `xyz` is ``True``
-    # and `ndim` is
-    #     * 1 (single particle), the RMSD is simply the distance between
-    #       the reference and candidate particle.
-    #     * 2 (multiple particles), the RMSD is the sum over all
-    #       reference-candidate distances (``axis=0``).
-    #     * 3 (multiple frames), the RMSD is the sum over all
-    #       reference-candidate distances in each frame (``axis=1``).
-    # If `xyz` is ``False``, the x, y and z component must be summed up.
+    if (rmsd.ndim == 1 and n_particles != 1) or (
+        rmsd.ndim > 1 and rmsd.shape[-2] != n_particles
+    ):
+        raise ValueError(
+            "The shape of `rmsd` ({}) does not match the number of particles"
+            " ({}).  You might want to check the shape of `refpos` ({}) and"
+            " `selpos` ({}) and which shape they broadcast"
+            " to".format(rmsd.shape, n_particles, refpos.shape, selpos.shape)
+        )
     if weights is not None and rmsd.ndim > 1:
         rmsd *= np.expand_dims(weights, axis=1)
-    if rmsd.ndim == 1:
-        if n_particles != 1:
-            raise ValueError(
-                "The shape of 'rmsd' ({}) does not match the number of"
-                " particles ({}).  You might want to check the shape of"
-                " 'refpos' ({}) and 'selpos' ({}) and which shape they"
-                " broadcast to".format(
-                    rmsd.shape, n_particles, refpos.shape, selpos.shape
-                )
-            )
-        if not xyz:
-            rmsd = np.sum(rmsd)
-    elif rmsd.ndim == 2:
-        if rmsd.shape[rmsd.ndim - 2] != n_particles:
-            raise ValueError(
-                "The shape of 'rmsd' ({}) does not match the number of"
-                " particles ({}).  You might want to check the shape of"
-                " 'refpos' ({}) and 'selpos' ({}) and which shape they"
-                " broadcast to".format(
-                    rmsd.shape, n_particles, refpos.shape, selpos.shape
-                )
-            )
-        if xyz:
-            rmsd = np.sum(rmsd, axis=rmsd.ndim - 2)
-        else:
-            rmsd = np.sum(rmsd)
-    elif rmsd.ndim == 3:
-        if rmsd.shape[rmsd.ndim - 2] != n_particles:
-            raise ValueError(
-                "The shape of 'rmsd' ({}) does not match the number of"
-                " particles ({}).  You might want to check the shape of"
-                " 'refpos' ({}) and 'selpos' ({}) and which shape they"
-                " broadcast to".format(
-                    rmsd.shape, n_particles, refpos.shape, selpos.shape
-                )
-            )
-        rmsd = np.sum(rmsd, axis=rmsd.ndim - 2)
-        if not xyz:
-            rmsd = np.sum(rmsd, axis=1)
-    else:
-        raise ValueError(
-            "The shape of 'rmsd' must be either (3,) or (n, 3) or (k, n, 3)"
-            " but is {}.  This should not have happened.  You might want to"
-            " check the shape of 'refpos' ({}) and 'selpos' ({}) and which"
-            " shape they broadcast to".format(
-                rmsd.shape, refpos.shape, selpos.shape
-            )
-        )
+        # If ``rmsd.ndim == 1``, there is only a single particle and
+        # weighting makes no sense.
+    if rmsd.ndim > 1:
+        # Sum over all reference-candidate distances.
+        rmsd = np.sum(rmsd, axis=-2)
+    if not xyz:
+        # Sum over x, y and z component.
+        rmsd = np.sum(rmsd, axis=-1)
     rmsd /= n_particles
     if not xyz:
         rmsd = np.sqrt(rmsd)

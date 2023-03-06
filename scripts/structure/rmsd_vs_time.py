@@ -105,11 +105,15 @@ Options
 --mic       Take the minimum image convention into account when
             calculating the RMSD.  This works also with unwrapped
             trajectories.  The box dimensions are taken from the
-            reference frame.
+            reference frame.  Note that this might not be desireable in
+            simulations where the box size changes (like in NpT
+            simulations).
 --debug     Run in :ref:`debug mode <debug-mode-label>`.
 
 See Also
 --------
+:func:`scripts.structure.rmsd_trj_trj` :
+    Calculate the RMSD between two trajectories for each frame.
 :func:`mdtools.structure.rmsd` :
     The underlying function that is called by this script.
 
@@ -127,20 +131,20 @@ __author__ = "Andreas Thum"
 
 
 # Standard libraries
-import sys
-import os
 import argparse
+import os
+import sys
 from datetime import datetime, timedelta
 
-# Third party libraries
+# Third-party libraries
 import numpy as np
 import psutil
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # noqa: C901
     timer_tot = datetime.now()
     proc = psutil.Process()
     proc.cpu_percent()  # Initiate monitoring of CPU usage
@@ -148,7 +152,7 @@ if __name__ == "__main__":
         description=(
             "Calculate the Root Mean Square Deviation (RMSD) between a"
             " reference frame and all other frames in the trajectory.  For"
-            " more information, refer to the documetation of this script."
+            " more information, refer to the documentation of this script."
         )
     )
     parser.add_argument(
@@ -156,21 +160,21 @@ if __name__ == "__main__":
         dest="TRJFILE",
         type=str,
         required=True,
-        help=("Trajectory file."),
+        help="Trajectory file.",
     )
     parser.add_argument(
         "-s",
         dest="TOPFILE",
         type=str,
         required=True,
-        help=("Topology file."),
+        help="Topology file.",
     )
     parser.add_argument(
         "-o",
         dest="OUTFILE",
         type=str,
         required=True,
-        help=("Output filename."),
+        help="Output filename.",
     )
     parser.add_argument(
         "-b",
@@ -221,7 +225,7 @@ if __name__ == "__main__":
         type=str,
         nargs="+",
         required=True,
-        help=("Selection string."),
+        help="Selection string.",
     )
     parser.add_argument(
         "--cmp",
@@ -296,7 +300,7 @@ if __name__ == "__main__":
         required=False,
         default=False,
         action="store_true",
-        help=("Run in debug mode."),
+        help="Run in debug mode.",
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
@@ -402,7 +406,7 @@ if __name__ == "__main__":
     timer = datetime.now()
     rmsd = np.full((N_FRAMES, 3), np.nan, dtype=np.float64)
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
-    for i, ts in enumerate(trj):
+    for i, _ts in enumerate(trj):
         sel_pos = mdt.strc.center(
             ag=sel,
             center=args.CENTER,
