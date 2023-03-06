@@ -30,6 +30,12 @@ Upcoming release
       :data:`mdtools._metadata.__author__` and in the CITATION.cff file.
     * Andreas Thum
 
+0.0.4.0
+
+    * Andreas Thum
+    * Thanks to Len Kimms for very helpful discussions about trajectory
+      unwrapping!
+
 0.0.3.0
 
     * Andreas Thum
