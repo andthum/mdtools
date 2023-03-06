@@ -112,6 +112,8 @@ Options
 
 See Also
 --------
+:func:`scripts.structure.rmsd_trj_trj` :
+    Calculate the RMSD between two trajectories for each frame.
 :func:`mdtools.structure.rmsd` :
     The underlying function that is called by this script.
 
