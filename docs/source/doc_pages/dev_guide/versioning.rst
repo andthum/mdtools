@@ -147,4 +147,4 @@ Carefully check the automatically generated release notes and make
 changes if necessary.
 
 
-.. _semantic versioning: http://semver.org/
+.. _semantic versioning: https://semver.org/

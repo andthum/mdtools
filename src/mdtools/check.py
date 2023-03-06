@@ -1110,8 +1110,10 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
     not that strict, but to ensure consistent user input for MDTools
     scripts, we have set up the above limitations.
 
-    .. _slicing numpy arrays: https://docs.scipy.org/doc/numpy/reference/arrays.indexing.html
-    .. _slicing MDAnalysis trajectories: https://userguide.mdanalysis.org/stable/trajectories/slicing_trajectories.html
+    .. _slicing numpy arrays:
+        https://numpy.org/doc/stable/reference/arrays.indexing.html
+    .. _slicing MDAnalysis trajectories:
+        https://userguide.mdanalysis.org/stable/trajectories/slicing_trajectories.html
 
     Parameters
     ----------
