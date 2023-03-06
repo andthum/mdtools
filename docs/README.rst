@@ -37,6 +37,8 @@ After installing all requirements, the documentation can be built via
     make html
     # Check if the code examples in the documentation work as expected.
     make doctest
+    # Check for broken links.
+    make linkcheck
     # Deactivate the virtual Python environment.
     deactivate
 
