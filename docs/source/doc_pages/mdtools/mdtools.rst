@@ -42,5 +42,4 @@ Modules
     scipy_helper_functions
     select
     statistics
-    structure
     version
