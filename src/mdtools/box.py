@@ -1278,28 +1278,6 @@ def wrap_pos(pos, box, out=None, dtype=None):
     >>> box = np.array([4, 5, 6, 90, 90, 90])
     >>> mdt.box.wrap_pos(pos, box)
     array([0., 3., 0.])
-    >>> box_mat = np.array([[4, 0, 0],
-    ...                     [0, 5, 0],
-    ...                     [0, 0, 6]])
-    >>> mdt.box.wrap_pos(pos, box_mat)
-    array([0., 3., 0.])
-    >>> box = np.array([[4, 5, 6, 90, 90, 90],
-    ...                 [6, 5, 4, 90, 90, 90]])
-    >>> mdt.box.wrap_pos(pos, box)
-    array([[[0., 3., 0.]],
-    <BLANKLINE>
-           [[0., 3., 2.]]])
-    >>> box_mat = np.array([[[4, 0, 0],
-    ...                      [0, 5, 0],
-    ...                      [0, 0, 6]],
-    ...
-    ...                     [[6, 0, 0],
-    ...                      [0, 5, 0],
-    ...                      [0, 0, 4]]])
-    >>> mdt.box.wrap_pos(pos, box_mat)
-    array([[[0., 3., 0.]],
-    <BLANKLINE>
-           [[0., 3., 2.]]])
 
     pos has shape ``(n, 3)``:
 
@@ -1309,33 +1287,6 @@ def wrap_pos(pos, box, out=None, dtype=None):
     >>> mdt.box.wrap_pos(pos, box)
     array([[0., 3., 0.],
            [1., 0., 1.]])
-    >>> box_mat = np.array([[4, 0, 0],
-    ...                     [0, 5, 0],
-    ...                     [0, 0, 6]])
-    >>> mdt.box.wrap_pos(pos, box_mat)
-    array([[0., 3., 0.],
-           [1., 0., 1.]])
-    >>> box = np.array([[4, 5, 6, 90, 90, 90],
-    ...                 [6, 5, 4, 90, 90, 90]])
-    >>> mdt.box.wrap_pos(pos, box)
-    array([[[0., 3., 0.],
-            [1., 0., 1.]],
-    <BLANKLINE>
-           [[0., 3., 2.],
-            [1., 0., 3.]]])
-    >>> box_mat = np.array([[[4, 0, 0],
-    ...                      [0, 5, 0],
-    ...                      [0, 0, 6]],
-    ...
-    ...                     [[6, 0, 0],
-    ...                      [0, 5, 0],
-    ...                      [0, 0, 4]]])
-    >>> mdt.box.wrap_pos(pos, box_mat)
-    array([[[0., 3., 0.],
-            [1., 0., 1.]],
-    <BLANKLINE>
-           [[0., 3., 2.],
-            [1., 0., 3.]]])
 
     pos has shape ``(k, n, 3)``:
 
@@ -1351,108 +1302,6 @@ def wrap_pos(pos, box, out=None, dtype=None):
     <BLANKLINE>
            [[2., 1., 4.],
             [3., 2., 5.]]])
-    >>> box_mat = np.array([[4, 0, 0],
-    ...                     [0, 5, 0],
-    ...                     [0, 0, 6]])
-    >>> mdt.box.wrap_pos(pos, box_mat)
-    array([[[0., 3., 0.],
-            [1., 0., 1.]],
-    <BLANKLINE>
-           [[2., 1., 4.],
-            [3., 2., 5.]]])
-    >>> box = np.array([[4, 5, 6, 90, 90, 90],
-    ...                 [6, 5, 4, 90, 90, 90]])
-    >>> mdt.box.wrap_pos(pos, box)
-    array([[[0., 3., 0.],
-            [1., 0., 1.]],
-    <BLANKLINE>
-           [[2., 1., 2.],
-            [3., 2., 3.]]])
-    >>> box_mat = np.array([[[4, 0, 0],
-    ...                      [0, 5, 0],
-    ...                      [0, 0, 6]],
-    ...
-    ...                     [[6, 0, 0],
-    ...                      [0, 5, 0],
-    ...                      [0, 0, 4]]])
-    >>> mdt.box.wrap_pos(pos, box_mat)
-    array([[[0., 3., 0.],
-            [1., 0., 1.]],
-    <BLANKLINE>
-           [[2., 1., 2.],
-            [3., 2., 3.]]])
-
-    Triclinic box:
-
-    >>> pos = np.array([[0, 3, 6],
-    ...                 [1, 5, 7]])
-    >>> box = np.array([4, 5, 6, 80, 90, 100])
-    >>> np.round(mdt.box.wrap_pos(pos, box), 3)
-    array([[0.   , 1.942, 0.094],
-           [1.   , 3.942, 1.094]])
-    >>> box_mat = np.array([[1, 0, 0],
-    ...                     [2, 3, 0],
-    ...                     [4, 5, 6]])
-    >>> mdt.box.wrap_pos(pos, box_mat)
-    array([[1., 1., 0.],
-           [3., 3., 1.]])
-
-    `out` argument:
-
-    >>> pos = np.array([0, 3, 6])
-    >>> box = np.array([4, 5, 6, 90, 90, 90])
-    >>> out = np.full_like(box[:3], np.nan, dtype=np.float64)
-    >>> pos_wrapped = mdt.box.wrap_pos(pos, box, out=out)
-    >>> pos_wrapped
-    array([0., 3., 0.])
-    >>> out
-    array([0., 3., 0.])
-    >>> pos_wrapped is out
-    True
-    >>> box_mat = np.array([[4, 0, 0],
-    ...                     [0, 5, 0],
-    ...                     [0, 0, 6]])
-    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
-    >>> pos_wrapped = mdt.box.wrap_pos(pos, box_mat, out=out)
-    >>> pos_wrapped
-    array([0., 3., 0.])
-    >>> out
-    array([0., 3., 0.])
-    >>> pos_wrapped is out
-    True
-    >>> box = np.array([[4, 5, 6, 90, 90, 90],
-    ...                 [6, 5, 4, 90, 90, 90]])
-    >>> out = np.full_like(box[:,:3], np.nan, dtype=np.float64)
-    >>> pos_wrapped = mdt.box.wrap_pos(pos, box, out=out)
-    >>> pos_wrapped
-    array([[[0., 3., 0.]],
-    <BLANKLINE>
-           [[0., 3., 2.]]])
-    >>> out
-    array([[[0., 3., 0.]],
-    <BLANKLINE>
-           [[0., 3., 2.]]])
-    >>> pos_wrapped is out
-    True
-    >>> box_mat = np.array([[[4, 0, 0],
-    ...                      [0, 5, 0],
-    ...                      [0, 0, 6]],
-    ...
-    ...                     [[6, 0, 0],
-    ...                      [0, 5, 0],
-    ...                      [0, 0, 4]]])
-    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
-    >>> pos_wrapped = mdt.box.wrap_pos(pos, box_mat, out=out)
-    >>> pos_wrapped
-    array([[[0., 3., 0.]],
-    <BLANKLINE>
-           [[0., 3., 2.]]])
-    >>> out
-    array([[[0., 3., 0.]],
-    <BLANKLINE>
-           [[0., 3., 2.]]])
-    >>> pos_wrapped is out
-    True
 
     >>> import MDAnalysis.lib.distances as mdadist
     >>> pos = np.array([[0, 3, 6],
@@ -1462,34 +1311,13 @@ def wrap_pos(pos, box, out=None, dtype=None):
     >>> pos_wrapped2 = mdadist.apply_PBC(pos, box)
     >>> np.allclose(pos_wrapped1, pos_wrapped2, rtol=0, atol=1e-6)
     True
-    >>> box = np.array([4, 5, 6, 80, 90, 100])
-    >>> pos_wrapped1 = mdt.box.wrap_pos(pos, box)
-    >>> pos_wrapped2 = mdadist.apply_PBC(pos, box)
-    >>> np.allclose(pos_wrapped1, pos_wrapped2, rtol=0, atol=1e-5)
-    True
     """
-    if box.ndim == 0:
-        raise ValueError(
-            "`box` ({}) must be at least 1-dimensional.".format(box)
-        )
-    elif box.shape[-1] == 6:
-        # Convert length-angle representation to matrix representation.
-        box = mdt.box.triclinic_vectors(box, dtype=dtype)
-    elif box.shape[-1] == 3:
-        # `box` is already given in matrix representation.
-        box = box
-    else:
-        raise ValueError("Invalid box (box.shape = {})".format(box.shape))
-
-    if out is not None and any(arg is out for arg in (pos, box)):
-        raise ValueError("`out` must not point to `pos`")
-
-    # Transform to box coordinates.
-    pos_wrapped = mdt.box.cart2box(pos, box, out=out, dtype=dtype)
-    pos_wrapped = np.floor(pos_wrapped, out=pos_wrapped)
-    # Transform back to the Cartesian coordinate system.
-    pos_wrapped = mdt.box.box2cart(pos_wrapped, box, out=pos_wrapped)
-    pos_wrapped = np.subtract(pos, pos_wrapped, out=pos_wrapped, dtype=dtype)
+    box = mdt.check.box(box, with_angles=True, orthorhombic=True)
+    box_lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
+    pos_wrapped = np.divide(pos, box_lengths, dtype=dtype)
+    pos_wrapped = np.floor(pos_wrapped)
+    pos_wrapped *= box_lengths
+    pos_wrapped = np.subtract(pos, pos_wrapped, dtype=dtype)
     return pos_wrapped
 
 
@@ -1923,31 +1751,6 @@ def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
     >>> box = np.array([3, 2, 2, 90, 90, 90])
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([ 1., -1., -1.])
-    >>> # Shape of box is (3, 3), shape of output is (3,).
-    >>> box_mat = np.array([[3, 0, 0],
-    ...                     [0, 2, 0],
-    ...                     [0, 0, 2]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([ 1., -1., -1.])
-    >>> # Shape of box is (k, 6), shape of output is (k, 1, 3).
-    >>> box = np.array([[3, 2, 2, 90, 90, 90],
-    ...                 [2, 3, 4, 90, 90, 90]])
-    >>> mdt.box.vdist(pos1, pos2, box=box)
-    array([[[ 1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.]]])
-    >>> # Shape of box is (k, 3, 3), shape of output is (k, 1, 3).
-    >>> box_mat = np.array([[[3, 0, 0],
-    ...                      [0, 2, 0],
-    ...                      [0, 0, 2]],
-    ...
-    ...                     [[2, 0, 0],
-    ...                      [0, 3, 0],
-    ...                      [0, 0, 4]]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[[ 1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.]]])
 
     Shape of `pos1` and `pos2` is ``(n, 3)``:
 
@@ -1963,36 +1766,6 @@ def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[ 1., -1., -1.],
            [-1., -1., -1.]])
-    >>> # Shape of box is (3, 3), shape of output is (n, 3).
-    >>> box_mat = np.array([[3, 0, 0],
-    ...                     [0, 2, 0],
-    ...                     [0, 0, 2]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[ 1., -1., -1.],
-           [-1., -1., -1.]])
-    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
-    >>> box = np.array([[3, 2, 2, 90, 90, 90],
-    ...                 [2, 3, 4, 90, 90, 90]])
-    >>> mdt.box.vdist(pos1, pos2, box=box)
-    array([[[ 1., -1., -1.],
-            [-1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.],
-            [-1.,  1.,  1.]]])
-    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
-    >>> box_mat = np.array([[[3, 0, 0],
-    ...                      [0, 2, 0],
-    ...                      [0, 0, 2]],
-    ...
-    ...                     [[2, 0, 0],
-    ...                      [0, 3, 0],
-    ...                      [0, 0, 4]]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[[ 1., -1., -1.],
-            [-1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.],
-            [-1.,  1.,  1.]]])
 
     Shape of `pos1` and `pos2` is ``(k, n, 3)``:
 
@@ -2020,39 +1793,6 @@ def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
     <BLANKLINE>
            [[-1., -1., -1.],
             [ 1., -1., -1.]]])
-    >>> # Shape of box is (3, 3), shape of output is (k, n, 3).
-    >>> box_mat = np.array([[3, 0, 0],
-    ...                     [0, 2, 0],
-    ...                     [0, 0, 2]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[[ 1., -1., -1.],
-            [-1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.],
-            [ 1., -1., -1.]]])
-    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
-    >>> box = np.array([[3, 2, 2, 90, 90, 90],
-    ...                 [2, 3, 4, 90, 90, 90]])
-    >>> mdt.box.vdist(pos1, pos2, box=box)
-    array([[[ 1., -1., -1.],
-            [-1., -1., -1.]],
-    <BLANKLINE>
-           [[-1.,  0.,  1.],
-            [-1.,  0., -1.]]])
-    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
-    >>> box_mat = np.array([[[3, 0, 0],
-    ...                      [0, 2, 0],
-    ...                      [0, 0, 2]],
-    ...
-    ...                     [[2, 0, 0],
-    ...                      [0, 3, 0],
-    ...                      [0, 0, 4]]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[[ 1., -1., -1.],
-            [-1., -1., -1.]],
-    <BLANKLINE>
-           [[-1.,  0.,  1.],
-            [-1.,  0., -1.]]])
 
     Shape of `pos1` is ``(3,)`` and shape of `pos2` is ``(n, 3)``:
 
@@ -2067,36 +1807,6 @@ def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
     >>> mdt.box.vdist(pos1, pos2, box=box)
     array([[ 1., -1., -1.],
            [ 0.,  0.,  0.]])
-    >>> # Shape of box is (3, 3), shape of output is (n, 3).
-    >>> box_mat = np.array([[3, 0, 0],
-    ...                     [0, 2, 0],
-    ...                     [0, 0, 2]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[ 1., -1., -1.],
-           [ 0.,  0.,  0.]])
-    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
-    >>> box = np.array([[3, 2, 2, 90, 90, 90],
-    ...                 [2, 3, 4, 90, 90, 90]])
-    >>> mdt.box.vdist(pos1, pos2, box=box)
-    array([[[ 1., -1., -1.],
-            [ 0.,  0.,  0.]],
-    <BLANKLINE>
-           [[-1., -1., -1.],
-            [ 0.,  0.,  0.]]])
-    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
-    >>> box_mat = np.array([[[3, 0, 0],
-    ...                      [0, 2, 0],
-    ...                      [0, 0, 2]],
-    ...
-    ...                     [[2, 0, 0],
-    ...                      [0, 3, 0],
-    ...                      [0, 0, 4]]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[[ 1., -1., -1.],
-            [ 0.,  0.,  0.]],
-    <BLANKLINE>
-           [[-1., -1., -1.],
-            [ 0.,  0.,  0.]]])
 
     Shape of `pos1` is ``(3,)`` and shape of `pos2` is ``(k, n, 3)``:
 
@@ -2120,39 +1830,6 @@ def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
     <BLANKLINE>
            [[ 1., -1., -1.],
             [-1.,  0.,  0.]]])
-    >>> # Shape of box is (3, 3), shape of output is (k, n, 3).
-    >>> box_mat = np.array([[3, 0, 0],
-    ...                     [0, 2, 0],
-    ...                     [0, 0, 2]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[[ 1., -1., -1.],
-            [ 0.,  0.,  0.]],
-    <BLANKLINE>
-           [[ 1., -1., -1.],
-            [-1.,  0.,  0.]]])
-    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
-    >>> box = np.array([[3, 2, 2, 90, 90, 90],
-    ...                 [2, 3, 4, 90, 90, 90]])
-    >>> mdt.box.vdist(pos1, pos2, box=box)
-    array([[[ 1., -1., -1.],
-            [ 0.,  0.,  0.]],
-    <BLANKLINE>
-           [[-1., -1., -1.],
-            [ 0., -1., -2.]]])
-    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
-    >>> box_mat = np.array([[[3, 0, 0],
-    ...                      [0, 2, 0],
-    ...                      [0, 0, 2]],
-    ...
-    ...                     [[2, 0, 0],
-    ...                      [0, 3, 0],
-    ...                      [0, 0, 4]]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[[ 1., -1., -1.],
-            [ 0.,  0.,  0.]],
-    <BLANKLINE>
-           [[-1., -1., -1.],
-            [ 0., -1., -2.]]])
 
     Shape of `pos1` is ``(n, 3)`` and shape of `pos2` is ``(k, n, 3)``:
 
@@ -2177,136 +1854,6 @@ def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
     <BLANKLINE>
            [[ 1., -1., -1.],
             [ 1., -1., -1.]]])
-    >>> # Shape of box is (3, 3), shape of output is (k, n, 3).
-    >>> box_mat = np.array([[3, 0, 0],
-    ...                     [0, 2, 0],
-    ...                     [0, 0, 2]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[[ 1., -1., -1.],
-            [-1., -1., -1.]],
-    <BLANKLINE>
-           [[ 1., -1., -1.],
-            [ 1., -1., -1.]]])
-    >>> # Shape of box is (k, 6), shape of output is (k, n, 3).
-    >>> box = np.array([[3, 2, 2, 90, 90, 90],
-    ...                 [2, 3, 4, 90, 90, 90]])
-    >>> mdt.box.vdist(pos1, pos2, box=box)
-    array([[[ 1., -1., -1.],
-            [-1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.],
-            [-1.,  0., -1.]]])
-    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
-    >>> box_mat = np.array([[[3, 0, 0],
-    ...                      [0, 2, 0],
-    ...                      [0, 0, 2]],
-    ...
-    ...                     [[2, 0, 0],
-    ...                      [0, 3, 0],
-    ...                      [0, 0, 4]]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[[ 1., -1., -1.],
-            [-1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.],
-            [-1.,  0., -1.]]])
-
-    Triclinic boxes:
-
-    >>> pos1 = np.array([[0, 2, 4],
-    ...                  [5, 3, 1]])
-    >>> pos2 = np.array([[5, 3, 1],
-    ...                  [0, 2, 4]])
-    >>> mdt.box.vdist(pos1, pos2)
-    array([[-5., -1.,  3.],
-           [ 5.,  1., -3.]])
-    >>> box = np.array([3, 2, 2, 80, 90, 100])
-    >>> np.round(mdt.box.vdist(pos1, pos2, box=box), 3)
-    array([[ 0.653,  0.264, -0.937],
-           [-0.653, -0.264,  0.937]])
-    >>> box_mat = np.array([[1, 0, 0],
-    ...                     [2, 3, 0],
-    ...                     [4, 5, 6]])
-    >>> mdt.box.vdist(pos1, pos2, box=box_mat)
-    array([[-2., -3., -3.],
-           [-2., -2., -3.]])
-
-    `out` and `out_tmp` arguments:
-
-    >>> # box is None.
-    >>> pos1 = np.array([0, 2, 4])
-    >>> pos2 = np.array([5, 3, 1])
-    >>> out_tmp = np.full_like(pos1, np.nan, dtype=np.float64)
-    >>> dist_vecs = mdt.box.vdist(pos1, pos2, out_tmp=out_tmp)
-    >>> dist_vecs
-    array([-5., -1.,  3.])
-    >>> out_tmp
-    array([-5., -1.,  3.])
-    >>> dist_vecs is out_tmp
-    True
-    >>> # Shape of box is (6,), shape of output is (3,).
-    >>> box = np.array([3, 2, 2, 90, 90, 90])
-    >>> out = np.full_like(box[:3], np.nan, dtype=np.float64)
-    >>> dist_vecs = mdt.box.vdist(pos1, pos2, box=box, out=out)
-    >>> dist_vecs
-    array([ 1., -1., -1.])
-    >>> out
-    array([ 1., -1., -1.])
-    >>> dist_vecs is out
-    True
-    >>> # Shape of box is (3, 3), shape of output is (3,).
-    >>> box_mat = np.array([[3, 0, 0],
-    ...                     [0, 2, 0],
-    ...                     [0, 0, 2]])
-    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
-    >>> dist_vecs = mdt.box.vdist(pos1, pos2, box=box_mat, out=out)
-    >>> dist_vecs
-    array([ 1., -1., -1.])
-    >>> out
-    array([ 1., -1., -1.])
-    >>> dist_vecs is out
-    True
-    >>> # Shape of box is (k, 6), shape of output is (k, 1, 3).
-    >>> box = np.array([[3, 2, 2, 90, 90, 90],
-    ...                 [2, 3, 4, 90, 90, 90]])
-    >>> out = np.full_like(box[:,:3], np.nan, dtype=np.float64)
-    >>> out_tmp = np.full_like(pos1, np.nan, dtype=np.float64)
-    >>> dist_vecs = mdt.box.vdist(
-    ...     pos1, pos2, box=box, out=out, out_tmp=out_tmp
-    ... )
-    >>> dist_vecs
-    array([[[ 1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.]]])
-    >>> out
-    array([[[ 1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.]]])
-    >>> dist_vecs is out
-    True
-    >>> # Shape of box is (k, 3, 3), shape of output is (k, n, 3).
-    >>> box_mat = np.array([[[3, 0, 0],
-    ...                      [0, 2, 0],
-    ...                      [0, 0, 2]],
-    ...
-    ...                     [[2, 0, 0],
-    ...                      [0, 3, 0],
-    ...                      [0, 0, 4]]])
-    >>> out = np.full(box_mat.shape[:-1], np.nan, dtype=np.float64)
-    >>> out_tmp = np.full_like(pos1, np.nan, dtype=np.float64)
-    >>> dist_vecs = mdt.box.vdist(
-    ...     pos1, pos2, box=box_mat, out=out, out_tmp=out_tmp
-    ... )
-    >>> dist_vecs
-    array([[[ 1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.]]])
-    >>> out
-    array([[[ 1., -1., -1.]],
-    <BLANKLINE>
-           [[-1., -1., -1.]]])
-    >>> dist_vecs is out
-    True
 
     >>> import MDAnalysis.lib.distances as mdadist
     >>> import numpy as np
@@ -2320,12 +1867,6 @@ def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
     >>> dists2 = mdadist.calc_bonds(pos1, pos2, box)
     >>> np.allclose(dists1, dists2, rtol=0, atol=1e-6)
     True
-    >>> box = np.array([3, 2, 2, 80, 90, 100])
-    >>> dist_vecs1 = mdt.box.vdist(pos1, pos2, box)
-    >>> dists1 = np.linalg.norm(dist_vecs1, axis=-1)
-    >>> dists2 = mdadist.calc_bonds(pos1, pos2, box)
-    >>> np.allclose(dists1, dists2, rtol=0, atol=1e-5)
-    True
     """
     if out_tmp is not None and out_tmp is out:
         raise ValueError("`out_tmp` must not point to `out`")
@@ -2333,27 +1874,14 @@ def vdist(pos1, pos2, box=None, out=None, out_tmp=None, dtype=np.float64):
     pos2 = mdt.check.pos_array(pos2)
     dist_vecs = np.subtract(pos1, pos2, out=out_tmp, dtype=dtype)
     if box is not None:
-        if box.ndim == 0:
-            raise ValueError(
-                "`box` ({}) must be at least 1-dimensional.".format(box)
-            )
-        elif box.shape[-1] == 6:
-            # Convert length-angle representation to matrix
-            # representation.
-            box = mdt.box.triclinic_vectors(box, dtype=dtype)
-        elif box.shape[-1] == 3:
-            # `box` is already given in matrix representation.
-            box = box
-        else:
-            raise ValueError("Invalid box (box.shape = {})".format(box.shape))
+        box = mdt.check.box(box, with_angles=True, orthorhombic=True)
+        box_lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
         # Transform to box coordinates.
-        dist_vecs_prime = mdt.box.cart2box(dist_vecs, box, out=out)
+        dist_vecs_prime = np.divide(dist_vecs, box_lengths)
         dist_vecs_prime += 0.5
-        dist_vecs_prime = np.floor(dist_vecs_prime, out=dist_vecs_prime)
+        dist_vecs_prime = np.floor(dist_vecs_prime)
         # Transform back to the Cartesian coordinate system.
-        dist_vecs_prime = mdt.box.box2cart(
-            dist_vecs_prime, box, out=dist_vecs_prime
-        )
+        dist_vecs_prime = np.multiply(dist_vecs_prime, box_lengths)
         if dist_vecs.shape != dist_vecs_prime.shape:
             # `dist_vecs_prime` gets additional axes prepended if `box`
             # had shape ``(k, 6)`` or ``(k, 3, 3)`` but the result of
@@ -3055,142 +2583,6 @@ def unwrap_frame(
     >>> # Note that only the scaling method yields the correct result.
     >>> # Even the hybrid method is wrong in this case, because its
     >>> # condition is violated.
-
-    `out` and `out_tmp` arguments:
-
-    >>> # Test 1 (From Example 3: Changing Box, Stationary Particle)
-    >>> # Previous frame:
-    >>> box_prev = np.array([2, 4, 6, 90, 90, 90])
-    >>> pos_w_prev = np.array([[0, 2, 4],
-    ...                        [1, 3, 5]])
-    >>> translation = np.array([[ 1, -3,  5],
-    ...                         [ 2, -4,  6]])
-    >>> translation *= box_prev[:3]
-    >>> pos_u_prev = pos_w_prev + translation
-    >>> displacement = np.zeros((2, 3))  # Stationary particle.
-    >>> # Current frame:
-    >>> box = np.array([3, 4, 5, 90, 90, 90])  # Changing box.
-    >>> box_scaling = box[:3] / box_prev[:3]
-    >>> box_scaling
-    array([1.5       , 1.        , 0.83333333])
-    >>> pos_w = (pos_w_prev + displacement) * box_scaling
-    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
-    >>> pos_w
-    array([[0.        , 2.        , 3.33333333],
-    ...    [1.5       , 3.        , 4.16666667]])
-    >>> methods = (
-    ...     "scaling", "heuristic", "displacement", "hybrid", "in-house"
-    ... )
-    >>> for method in methods:
-    ...     out = np.full_like(pos_u_prev, np.nan, dtype=np.float64)
-    ...     pos_u = mdt.box.unwrap_frame(
-    ...         pos_w,
-    ...         pos_u_prev,
-    ...         box,
-    ...         box_prev=box_prev,
-    ...         pos_w_prev=pos_w_prev,
-    ...         method=method,
-    ...         out=out,
-    ...     )
-    ...     pos_u
-    ...     out
-    ...     pos_u is out
-    array([[  3.        , -10.        ,  28.33333333],
-           [  7.5       , -13.        ,  34.16666667]])
-    array([[  3.        , -10.        ,  28.33333333],
-           [  7.5       , -13.        ,  34.16666667]])
-    True
-    array([[  3.        , -10.        ,  33.33333333],
-           [  4.5       , -13.        ,  39.16666667]])
-    array([[  3.        , -10.        ,  33.33333333],
-           [  4.5       , -13.        ,  39.16666667]])
-    True
-    array([[  2.        , -10.        ,  33.33333333],
-           [  5.5       , -13.        ,  40.16666667]])
-    array([[  2.        , -10.        ,  33.33333333],
-           [  5.5       , -13.        ,  40.16666667]])
-    True
-    array([[  3.        , -10.        ,  28.33333333],
-           [  7.5       , -13.        ,  34.16666667]])
-    array([[  3.        , -10.        ,  28.33333333],
-           [  7.5       , -13.        ,  34.16666667]])
-    True
-    array([[  2., -10.,  34.],
-           [  5., -13.,  41.]])
-    array([[  2., -10.,  34.],
-           [  5., -13.,  41.]])
-    True
-    >>> # Note that only the scaling and the hybrid method yield the
-    >>> # correct result.
-
-    >>> # Test 2 (From Example 4: Changing Box, Moving Particle)
-    >>> # Previous frame:
-    >>> box_prev = np.array([2, 4, 6, 90, 90, 90])
-    >>> pos_w_prev = np.array([[0, 2, 4],
-    ...                        [1, 3, 5]])
-    >>> translation = np.array([[ 1, -3,  5],
-    ...                         [ 2, -4,  6]])
-    >>> translation *= box_prev[:3]
-    >>> pos_u_prev = pos_w_prev + translation
-    >>> displacement = np.array([[ 0.5 ,  1.  , -2.5 ],
-    ...                          [ 0.75,  1.5 , -2.25]]) # Moving particle.
-    >>> # Current frame:
-    >>> box = np.array([3, 4, 5, 90, 90, 90])  # Changing box.
-    >>> box_scaling = box[:3] / box_prev[:3]
-    >>> box_scaling
-    array([1.5       , 1.        , 0.83333333])
-    >>> pos_w = (pos_w_prev + displacement) * box_scaling
-    >>> pos_w = mdt.box.wrap_pos(pos_w, box)
-    >>> pos_w
-    array([[0.75      , 3.        , 1.25      ],
-    ...    [2.625     , 0.5       , 2.29166667]])
-    >>> methods = (
-    ...     "scaling", "heuristic", "displacement", "hybrid", "in-house"
-    ... )
-    >>> for method in methods:
-    ...     out = np.full_like(pos_u_prev, np.nan, dtype=np.float64)
-    ...     out_tmp = np.full_like(out, np.nan)
-    ...     pos_u = mdt.box.unwrap_frame(
-    ...         pos_w,
-    ...         pos_u_prev,
-    ...         box,
-    ...         box_prev=box_prev,
-    ...         pos_w_prev=pos_w_prev,
-    ...         method=method,
-    ...         out=out,
-    ...         out_tmp=out_tmp,
-    ...     )
-    ...     pos_u
-    ...     out
-    ...     pos_u is out
-    array([[  3.75      ,  -9.        ,  26.25      ],
-           [  8.625     , -11.5       ,  32.29166667]])
-    array([[  3.75      ,  -9.        ,  26.25      ],
-           [  8.625     , -11.5       ,  32.29166667]])
-    True
-    array([[  0.75      ,  -9.        ,  36.25      ],
-           [  5.625     , -11.5       ,  42.29166667]])
-    array([[  0.75      ,  -9.        ,  36.25      ],
-           [  5.625     , -11.5       ,  42.29166667]])
-    True
-    array([[  2.75      ,  -9.        ,  36.25      ],
-           [  3.625     , -11.5       ,  43.29166667]])
-    array([[  2.75      ,  -9.        ,  36.25      ],
-           [  3.625     , -11.5       ,  43.29166667]])
-    True
-    array([[  3.75      ,  -9.        ,  31.25      ],
-           [  5.625     , -11.5       ,  37.29166667]])
-    array([[  3.75      ,  -9.        ,  31.25      ],
-           [  5.625     , -11.5       ,  37.29166667]])
-    True
-    array([[  2.75      ,  -9.        ,  31.91666667],
-           [  6.125     , -11.5       ,  39.125     ]])
-    array([[  2.75      ,  -9.        ,  31.91666667],
-           [  6.125     , -11.5       ,  39.125     ]])
-    True
-    >>> # Note that only the scaling method yields the correct result.
-    >>> # Even the hybrid method is wrong in this case, because its
-    >>> # condition is violated.
     """  # noqa: W505, E501
     method = method.lower()
     pos_u_prev = mdt.check.pos_array(pos_u_prev)
@@ -3209,28 +2601,27 @@ def unwrap_frame(
         raise ValueError("`out_tmp` must not point to any input array")
 
     if method == "scaling":
-        box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
-        box = mdt.box.triclinic_vectors(box, dtype=dtype)
+        box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
+        box_lengths_prev = mdt.nph.take(box_prev, start=0, stop=3, axis=-1)
+        box = mdt.check.box(box, with_angles=True, orthorhombic=True)
+        box_lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
         # Ensure that `pos_w` is wrapped.
-        pos_w = mdt.box.wrap_pos(pos_w, box, out=None, dtype=dtype)
+        pos_w = mdt.box.wrap_pos(pos_w, box, dtype=dtype)
         # Transform to box coordinates.
-        pos_w_box = mdt.box.cart2box(pos_w, box, out=out_tmp, dtype=dtype)
-        pos_u_box_prev = mdt.box.cart2box(
-            pos_u_prev, box_prev, out=out, dtype=dtype
-        )
-        shift = np.subtract(pos_w_box, pos_u_box_prev, out=pos_u_box_prev)
+        pos_w_box = np.divide(pos_w, box_lengths, dtype=dtype)
+        pos_u_box_prev = np.divide(pos_u_prev, box_lengths_prev, dtype=dtype)
+        shift = np.subtract(pos_w_box, pos_u_box_prev)
         shift += 0.5
-        shift = np.floor(shift, out=shift)
+        shift = np.floor(shift)
         # Transform back to the Cartesian coordinate system.
-        shift = mdt.box.box2cart(shift, box, out=shift)
-        pos_u = np.subtract(pos_w, shift, out=shift, dtype=dtype)
+        shift *= box_lengths
+        pos_u = np.subtract(pos_w, shift, dtype=dtype)
     elif method == "heuristic":
         # `box_prev` is only required to check for unwrapping errors.
         box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
         box_lengths_prev = mdt.nph.take(box_prev, start=0, stop=3, axis=-1)
         box = mdt.check.box(box, with_angles=True, orthorhombic=True)
         box_lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
-        box = mdt.box.triclinic_vectors(box, dtype=dtype)
         # `box_change` is only required to check for unwrapping errors.
         box_change = np.abs(box_lengths - box_lengths_prev, dtype=dtype)
         box_change *= 2
@@ -3238,11 +2629,11 @@ def unwrap_frame(
         box_change = np.divide(box_lengths, box_change, where=box_change_mask)
         box_change[~box_change_mask] = np.inf
         # Ensure that `pos_w` is wrapped.
-        pos_w = mdt.box.wrap_pos(pos_w, box, out=out_tmp, dtype=dtype)
-        shift = np.subtract(pos_w, pos_u_prev, out=out, dtype=dtype)
+        pos_w = mdt.box.wrap_pos(pos_w, box, dtype=dtype)
+        shift = np.subtract(pos_w, pos_u_prev, dtype=dtype)
         shift /= box_lengths
         shift += 0.5
-        shift = np.floor(shift, out=shift)
+        shift = np.floor(shift)
         if np.any(shift < 2 - box_change) or np.any(shift > box_change - 1):
             warnings.warn(
                 "At least one particle has traversed so many boxes that"
@@ -3251,7 +2642,7 @@ def unwrap_frame(
                 RuntimeWarning,
             )
         shift *= box_lengths
-        pos_u = np.subtract(pos_w, shift, out=shift, dtype=dtype)
+        pos_u = np.subtract(pos_w, shift, dtype=dtype)
     elif method == "displacement":
         box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
         box = mdt.check.box(box, with_angles=True, orthorhombic=True)
@@ -3261,91 +2652,73 @@ def unwrap_frame(
                 " works if the box does not change".format(method),
                 RuntimeWarning,
             )
-        box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
-        box = mdt.box.triclinic_vectors(box, dtype=dtype)
         if pos_w_prev is None:
             raise ValueError(
                 "`pos_w_prev` must be provided when using the {}"
                 " method".format(method)
             )
         # Ensure that `pos_w_prev` is wrapped.
-        pos_w_prev = mdt.box.wrap_pos(
-            pos_w_prev, box_prev, out=None, dtype=dtype
-        )
+        pos_w_prev = mdt.box.wrap_pos(pos_w_prev, box_prev, dtype=dtype)
         # Ensure that `pos_w` is wrapped.
-        pos_w = mdt.box.wrap_pos(pos_w, box, out=out_tmp, dtype=dtype)
-        shift = mdt.box.vdist(
-            pos_w, pos_w_prev, box=box, out=pos_w, dtype=dtype
-        )
-        pos_u = np.add(pos_u_prev, shift, out=out, dtype=dtype)
+        pos_w = mdt.box.wrap_pos(pos_w, box, dtype=dtype)
+        shift = mdt.box.vdist(pos_w, pos_w_prev, box=box, dtype=dtype)
+        pos_u = np.add(pos_u_prev, shift, dtype=dtype)
     elif method == "hybrid":
         box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
         box_lengths_prev = mdt.nph.take(box_prev, start=0, stop=3, axis=-1)
-        box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
         box = mdt.check.box(box, with_angles=True, orthorhombic=True)
         box_lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
-        box = mdt.box.triclinic_vectors(box, dtype=dtype)
         if pos_w_prev is None:
             raise ValueError(
                 "`pos_w_prev` must be provided when using the {}"
                 " method".format(method)
             )
         # Ensure that `pos_w_prev` is wrapped.
-        pos_w_prev = mdt.box.wrap_pos(
-            pos_w_prev, box_prev, out=None, dtype=dtype
-        )
+        pos_w_prev = mdt.box.wrap_pos(pos_w_prev, box_prev, dtype=dtype)
         # Ensure that `pos_w` is wrapped.
-        pos_w = mdt.box.wrap_pos(pos_w, box, out=out_tmp, dtype=dtype)
-        shift = mdt.box.vdist(
-            pos_w, pos_w_prev, box=box, out=pos_w, dtype=dtype
-        )
-        pos_u = np.add(pos_u_prev, shift, out=shift, dtype=dtype)
-        shift = np.subtract(pos_w_prev, pos_u_prev, out=out, dtype=dtype)
+        pos_w = mdt.box.wrap_pos(pos_w, box, dtype=dtype)
+        shift = mdt.box.vdist(pos_w, pos_w_prev, box=box, dtype=dtype)
+        pos_u = np.add(pos_u_prev, shift, dtype=dtype)
+        shift = np.subtract(pos_w_prev, pos_u_prev, dtype=dtype)
         shift /= box_lengths_prev
         shift += 0.5
-        shift = np.floor(shift, out=shift)
+        shift = np.floor(shift)
         box_diff = np.subtract(box_lengths, box_lengths_prev, dtype=dtype)
         shift *= box_diff
-        pos_u = np.subtract(pos_u, shift, out=shift, dtype=dtype)
+        pos_u = np.subtract(pos_u, shift, dtype=dtype)
     elif method == "in-house":
         box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
+        box_lengths_prev = mdt.nph.take(box_prev, start=0, stop=3, axis=-1)
         box = mdt.check.box(box, with_angles=True, orthorhombic=True)
+        box_lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
         if not np.allclose(box, box_prev):
             warnings.warn(
                 "`box` and `box_prev` are different, but the {} method only"
                 " works if the box does not change".format(method),
                 RuntimeWarning,
             )
-        box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
-        box = mdt.box.triclinic_vectors(box, dtype=dtype)
         if pos_w_prev is None:
             raise ValueError(
                 "`pos_w_prev` must be provided when using the {}"
                 " method".format(method)
             )
-        # Ensure that `pos_w_prev` is indeed wrapped.
-        pos_w_prev = mdt.box.wrap_pos(
-            pos_w_prev, box_prev, out=out_tmp, dtype=dtype
-        )
+        # Ensure that `pos_w_prev` is wrapped.
+        pos_w_prev = mdt.box.wrap_pos(pos_w_prev, box_prev, dtype=dtype)
         # Ensure that `pos_w` is wrapped.
-        pos_w = mdt.box.wrap_pos(pos_w, box, out=None, dtype=dtype)
+        pos_w = mdt.box.wrap_pos(pos_w, box, dtype=dtype)
         # Transform to box coordinates.
-        pos_w_box_prev = mdt.box.cart2box(
-            pos_w_prev, box_prev, out=pos_w_prev, dtype=dtype
-        )
-        pos_w_box = mdt.box.cart2box(pos_w, box, out=None, dtype=dtype)
-        shift = np.subtract(pos_w_box, pos_w_box_prev, out=None)
+        pos_w_box = np.divide(pos_w, box_lengths, dtype=dtype)
+        pos_w_box_prev = np.divide(pos_w_prev, box_lengths_prev, dtype=dtype)
+        shift = np.subtract(pos_w_box, pos_w_box_prev)
         shift += 0.5
-        shift = np.floor(shift, out=shift)
+        shift = np.floor(shift)
         # Transform back to the Cartesian coordinate system.
-        shift = mdt.box.box2cart(shift, box, out=shift)
-        pos_u = np.subtract(pos_u_prev, shift, out=out, dtype=dtype)
+        shift *= box_lengths
+        pos_u = np.subtract(pos_u_prev, shift, dtype=dtype)
         pos_u += pos_w
         # Transform `pos_w_box_prev` to Cartesian coordinates within
         # `box` (not within `box_prev`).
-        pos_w_prev_box_new = mdt.box.box2cart(
-            pos_w_box_prev, box, out=pos_w_box_prev
-        )
+        pos_w_prev_box_new = np.multiply(pos_w_box_prev, box_lengths)
         pos_u -= pos_w_prev_box_new
     else:
         raise ValueError("Unknown method: {}".format(method))
