@@ -270,7 +270,6 @@ if __name__ == "__main__":  # noqa: C901
         "--weights",
         dest="WEIGHTS",
         type=str,
-        nargs=2,
         required=False,
         choices=("masses", "charges"),
         default=None,
@@ -331,13 +330,6 @@ if __name__ == "__main__":  # noqa: C901
                 n_frames_tot=u[i].trajectory.n_frames,
             )
         )
-    if any(fr[-1] != frames[0][-1] for fr in frames):
-        print("\n")
-        for i, fr in enumerate(frames):
-            print("Trajectory {}: {} frames".format(i + 1, fr[-1]))
-        raise ValueError(
-            "You must read the same number of frames from all trajectories."
-        )
 
     if args.WEIGHTS is None:
         weights = None
@@ -354,6 +346,10 @@ if __name__ == "__main__":  # noqa: C901
         print("First frame to read:    {:>8d}".format(fr[0]))
         print("Last frame to read:     {:>8d}".format(fr[1]))
         print("Read every n-th frame:  {:>8d}".format(fr[2]))
+    if any(fr[-1] != frames[0][-1] for fr in frames):
+        raise ValueError(
+            "You must read the same number of frames from all trajectories."
+        )
     timer = datetime.now()
     times = np.full(frames[0][-1], np.nan, dtype=np.float64)
     rmsd = np.full((frames[0][-1], 3), np.nan, dtype=np.float64)
@@ -402,13 +398,13 @@ if __name__ == "__main__":  # noqa: C901
     timer = datetime.now()
     rmsd_tot = np.sqrt(np.sum(rmsd, axis=-1))
     header = (
-        "Root Mean Square Deviation (RMSD) between two trajectories for each"
+        "Root Mean Square Deviation (RMSD) between two trajectories for each\n"
         "frame.  The first trajectory is the reference trajectory.\n"
-        "\n"
         "\n"
     )
     for i, sl in enumerate(SEL):
         header += (
+            "\n"
             "Trajectory {}:"
             "Selection: '{}'\n"
             "Compound:  {}\n".format(i + 1, " ".join(sl), args.CMP[i])
