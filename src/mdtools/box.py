@@ -2420,8 +2420,8 @@ def unwrap_frame(
         be provided in the same format as returned by
         :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
         ``[lx, ly, lz, alpha, beta, gamma]``.
-        The boxes can be orthogonal or triclinic if method is "scaling".
-        For all other methods, the box must be orthogonal.
+        The boxes can be orthogonal or triclinic if `method` is
+        "scaling".  For all other methods, the box must be orthogonal.
         In the formulas below, `box` corresponds to :math:`L_{i+1}` and
         `box_prev` corresponds to :math:`L_i`.
     method : {"scaling", "heuristic", "displacement", "hybrid", "in-house"}, optional
@@ -2437,9 +2437,8 @@ def unwrap_frame(
     out_tmp : None or numpy.ndarray, optional
         Preallocated array of the given dtype and appropriate shape into
         which temporary results are stored.  Providing `out_tmp` can
-        speed up the calculation if this function of called many times.
-        `out_tmp` is ignored if method is "heuristic".  `out_tmp` must
-        not point to any input array.
+        speed up the calculation if this function is called many times.
+        `out_tmp` must not point to any input array.
     dtype : type, optional
         The dtype of the output array.
 
@@ -3059,27 +3058,31 @@ def unwrap_frame(
 
     `out` and `out_tmp` arguments:
 
-    >>> # Test 1 (From Example 1: Constant Box, Stationary Particle)
+    >>> # Test 1 (From Example 3: Changing Box, Stationary Particle)
     >>> # Previous frame:
-    >>> box_prev = np.array([1, 2, 3, 90, 90, 90])
-    >>> pos_w_prev = np.arange(3)
-    >>> translation = np.array([ 0, -2,  4]) * box_prev[:3]
+    >>> box_prev = np.array([2, 4, 6, 90, 90, 90])
+    >>> pos_w_prev = np.array([[0, 2, 4],
+    ...                        [1, 3, 5]])
+    >>> translation = np.array([[ 1, -3,  5],
+    ...                         [ 2, -4,  6]])
+    >>> translation *= box_prev[:3]
     >>> pos_u_prev = pos_w_prev + translation
-    >>> displacement = np.zeros(3)  # Stationary particle.
+    >>> displacement = np.zeros((2, 3))  # Stationary particle.
     >>> # Current frame:
-    >>> box = box_prev  # Constant box.
+    >>> box = np.array([3, 4, 5, 90, 90, 90])  # Changing box.
     >>> box_scaling = box[:3] / box_prev[:3]
     >>> box_scaling
-    array([1., 1., 1.])
+    array([1.5       , 1.        , 0.83333333])
     >>> pos_w = (pos_w_prev + displacement) * box_scaling
     >>> pos_w = mdt.box.wrap_pos(pos_w, box)
     >>> pos_w
-    array([0., 1., 2.])
+    array([[0.        , 2.        , 3.33333333],
+    ...    [1.5       , 3.        , 4.16666667]])
     >>> methods = (
     ...     "scaling", "heuristic", "displacement", "hybrid", "in-house"
     ... )
     >>> for method in methods:
-    ...     out = np.full(3, np.nan, dtype=np.float64)
+    ...     out = np.full_like(pos_u_prev, np.nan, dtype=np.float64)
     ...     pos_u = mdt.box.unwrap_frame(
     ...         pos_w,
     ...         pos_u_prev,
@@ -3092,43 +3095,60 @@ def unwrap_frame(
     ...     pos_u
     ...     out
     ...     pos_u is out
-    array([ 0., -3., 14.])
-    array([ 0., -3., 14.])
+    array([[  3.        , -10.        ,  28.33333333],
+           [  7.5       , -13.        ,  34.16666667]])
+    array([[  3.        , -10.        ,  28.33333333],
+           [  7.5       , -13.        ,  34.16666667]])
     True
-    array([ 0., -3., 14.])
-    array([ 0., -3., 14.])
+    array([[  3.        , -10.        ,  33.33333333],
+           [  4.5       , -13.        ,  39.16666667]])
+    array([[  3.        , -10.        ,  33.33333333],
+           [  4.5       , -13.        ,  39.16666667]])
     True
-    array([ 0., -3., 14.])
-    array([ 0., -3., 14.])
+    array([[  2.        , -10.        ,  33.33333333],
+           [  5.5       , -13.        ,  40.16666667]])
+    array([[  2.        , -10.        ,  33.33333333],
+           [  5.5       , -13.        ,  40.16666667]])
     True
-    array([ 0., -3., 14.])
-    array([ 0., -3., 14.])
+    array([[  3.        , -10.        ,  28.33333333],
+           [  7.5       , -13.        ,  34.16666667]])
+    array([[  3.        , -10.        ,  28.33333333],
+           [  7.5       , -13.        ,  34.16666667]])
     True
-    array([ 0., -3., 14.])
-    array([ 0., -3., 14.])
+    array([[  2., -10.,  34.],
+           [  5., -13.,  41.]])
+    array([[  2., -10.,  34.],
+           [  5., -13.,  41.]])
     True
+    >>> # Note that only the scaling and the hybrid method yield the
+    >>> # correct result.
 
-    >>> # Example 2: Constant Box, Moving Particle
+    >>> # Test 2 (From Example 4: Changing Box, Moving Particle)
     >>> # Previous frame:
-    >>> box_prev = np.array([1, 2, 3, 90, 90, 90])
-    >>> pos_w_prev = np.arange(3)
-    >>> translation = np.array([ 0, -2,  4]) * box_prev[:3]
+    >>> box_prev = np.array([2, 4, 6, 90, 90, 90])
+    >>> pos_w_prev = np.array([[0, 2, 4],
+    ...                        [1, 3, 5]])
+    >>> translation = np.array([[ 1, -3,  5],
+    ...                         [ 2, -4,  6]])
+    >>> translation *= box_prev[:3]
     >>> pos_u_prev = pos_w_prev + translation
-    >>> displacement = np.array([ 0.25,  0.5 , -0.75])  # Moving particle.
+    >>> displacement = np.array([[ 0.5 ,  1.  , -2.5 ],
+    ...                          [ 0.75,  1.5 , -2.25]]) # Moving particle.
     >>> # Current frame:
-    >>> box = box_prev  # Constant box.
+    >>> box = np.array([3, 4, 5, 90, 90, 90])  # Changing box.
     >>> box_scaling = box[:3] / box_prev[:3]
     >>> box_scaling
-    array([1., 1., 1.])
+    array([1.5       , 1.        , 0.83333333])
     >>> pos_w = (pos_w_prev + displacement) * box_scaling
     >>> pos_w = mdt.box.wrap_pos(pos_w, box)
     >>> pos_w
-    array([0.25, 1.5 , 1.25])
+    array([[0.75      , 3.        , 1.25      ],
+    ...    [2.625     , 0.5       , 2.29166667]])
     >>> methods = (
     ...     "scaling", "heuristic", "displacement", "hybrid", "in-house"
     ... )
     >>> for method in methods:
-    ...     out = np.full(3, np.nan, dtype=np.float64)
+    ...     out = np.full_like(pos_u_prev, np.nan, dtype=np.float64)
     ...     out_tmp = np.full_like(out, np.nan)
     ...     pos_u = mdt.box.unwrap_frame(
     ...         pos_w,
@@ -3143,22 +3163,36 @@ def unwrap_frame(
     ...     pos_u
     ...     out
     ...     pos_u is out
-    array([ 0.25, -2.5 , 13.25])
-    array([ 0.25, -2.5 , 13.25])
+    array([[  3.75      ,  -9.        ,  26.25      ],
+           [  8.625     , -11.5       ,  32.29166667]])
+    array([[  3.75      ,  -9.        ,  26.25      ],
+           [  8.625     , -11.5       ,  32.29166667]])
     True
-    array([ 0.25, -2.5 , 13.25])
-    array([ 0.25, -2.5 , 13.25])
+    array([[  0.75      ,  -9.        ,  36.25      ],
+           [  5.625     , -11.5       ,  42.29166667]])
+    array([[  0.75      ,  -9.        ,  36.25      ],
+           [  5.625     , -11.5       ,  42.29166667]])
     True
-    array([ 0.25, -2.5 , 13.25])
-    array([ 0.25, -2.5 , 13.25])
+    array([[  2.75      ,  -9.        ,  36.25      ],
+           [  3.625     , -11.5       ,  43.29166667]])
+    array([[  2.75      ,  -9.        ,  36.25      ],
+           [  3.625     , -11.5       ,  43.29166667]])
     True
-    array([ 0.25, -2.5 , 13.25])
-    array([ 0.25, -2.5 , 13.25])
+    array([[  3.75      ,  -9.        ,  31.25      ],
+           [  5.625     , -11.5       ,  37.29166667]])
+    array([[  3.75      ,  -9.        ,  31.25      ],
+           [  5.625     , -11.5       ,  37.29166667]])
     True
-    array([ 0.25, -2.5 , 13.25])
-    array([ 0.25, -2.5 , 13.25])
+    array([[  2.75      ,  -9.        ,  31.91666667],
+           [  6.125     , -11.5       ,  39.125     ]])
+    array([[  2.75      ,  -9.        ,  31.91666667],
+           [  6.125     , -11.5       ,  39.125     ]])
     True
+    >>> # Note that only the scaling method yields the correct result.
+    >>> # Even the hybrid method is wrong in this case, because its
+    >>> # condition is violated.
     """  # noqa: W505, E501
+    method = method.lower()
     pos_u_prev = mdt.check.pos_array(pos_u_prev)
     out_is_input = any(
         arg is out for arg in (pos_w, pos_w_prev, box, box_prev, out_tmp)
@@ -3174,7 +3208,7 @@ def unwrap_frame(
     if out_tmp is not None and out_tmp_is_input:
         raise ValueError("`out_tmp` must not point to any input array")
 
-    if method.lower() == "scaling":
+    if method == "scaling":
         box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
         box = mdt.box.triclinic_vectors(box, dtype=dtype)
         # Ensure that `pos_w` is wrapped.
@@ -3190,13 +3224,15 @@ def unwrap_frame(
         # Transform back to the Cartesian coordinate system.
         shift = mdt.box.box2cart(shift, box, out=shift)
         pos_u = np.subtract(pos_w, shift, out=shift, dtype=dtype)
-    elif method.lower() == "heuristic":
+    elif method == "heuristic":
+        # `box_prev` is only required to check for unwrapping errors.
         box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
         box_lengths_prev = mdt.nph.take(box_prev, start=0, stop=3, axis=-1)
         box = mdt.check.box(box, with_angles=True, orthorhombic=True)
         box_lengths = mdt.nph.take(box, start=0, stop=3, axis=-1)
         box = mdt.box.triclinic_vectors(box, dtype=dtype)
-        box_change = np.abs(box_lengths - box_lengths_prev)
+        # `box_change` is only required to check for unwrapping errors.
+        box_change = np.abs(box_lengths - box_lengths_prev, dtype=dtype)
         box_change *= 2
         box_change_mask = box_change != 0
         box_change = np.divide(box_lengths, box_change, where=box_change_mask)
@@ -3210,18 +3246,19 @@ def unwrap_frame(
         if np.any(shift < 2 - box_change) or np.any(shift > box_change - 1):
             warnings.warn(
                 "At least one particle has traversed so many boxes that"
-                " unwrapping errors must be expected",
+                " unwrapping errors must be expected.  Consider using the"
+                " scaling method.",
                 RuntimeWarning,
             )
         shift *= box_lengths
         pos_u = np.subtract(pos_w, shift, out=shift, dtype=dtype)
-    elif method.lower() == "displacement":
+    elif method == "displacement":
         box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
         box = mdt.check.box(box, with_angles=True, orthorhombic=True)
         if not np.allclose(box, box_prev):
             warnings.warn(
                 "`box` and `box_prev` are different, but the {} method only"
-                " works if the box does not change".format(method.lower()),
+                " works if the box does not change".format(method),
                 RuntimeWarning,
             )
         box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
@@ -3229,7 +3266,7 @@ def unwrap_frame(
         if pos_w_prev is None:
             raise ValueError(
                 "`pos_w_prev` must be provided when using the {}"
-                " method".format(method.lower())
+                " method".format(method)
             )
         # Ensure that `pos_w_prev` is wrapped.
         pos_w_prev = mdt.box.wrap_pos(
@@ -3241,7 +3278,7 @@ def unwrap_frame(
             pos_w, pos_w_prev, box=box, out=pos_w, dtype=dtype
         )
         pos_u = np.add(pos_u_prev, shift, out=out, dtype=dtype)
-    elif method.lower() == "hybrid":
+    elif method == "hybrid":
         box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
         box_lengths_prev = mdt.nph.take(box_prev, start=0, stop=3, axis=-1)
         box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
@@ -3251,7 +3288,7 @@ def unwrap_frame(
         if pos_w_prev is None:
             raise ValueError(
                 "`pos_w_prev` must be provided when using the {}"
-                " method".format(method.lower())
+                " method".format(method)
             )
         # Ensure that `pos_w_prev` is wrapped.
         pos_w_prev = mdt.box.wrap_pos(
@@ -3270,13 +3307,13 @@ def unwrap_frame(
         box_diff = np.subtract(box_lengths, box_lengths_prev, dtype=dtype)
         shift *= box_diff
         pos_u = np.subtract(pos_u, shift, out=shift, dtype=dtype)
-    elif method.lower() == "in-house":
+    elif method == "in-house":
         box_prev = mdt.check.box(box_prev, with_angles=True, orthorhombic=True)
         box = mdt.check.box(box, with_angles=True, orthorhombic=True)
         if not np.allclose(box, box_prev):
             warnings.warn(
                 "`box` and `box_prev` are different, but the {} method only"
-                " works if the box does not change".format(method.lower()),
+                " works if the box does not change".format(method),
                 RuntimeWarning,
             )
         box_prev = mdt.box.triclinic_vectors(box_prev, dtype=dtype)
@@ -3284,7 +3321,7 @@ def unwrap_frame(
         if pos_w_prev is None:
             raise ValueError(
                 "`pos_w_prev` must be provided when using the {}"
-                " method".format(method.lower())
+                " method".format(method)
             )
         # Ensure that `pos_w_prev` is indeed wrapped.
         pos_w_prev = mdt.box.wrap_pos(
