@@ -52,7 +52,7 @@ graft src
 prune .github
 prune .vscode
 prune docs/buid
-prune **/_sphinx_autosummary
+prune **/_sphinx_autosummary*
 prune misc
 prune **__pycache__
 

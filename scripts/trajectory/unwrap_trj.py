@@ -325,9 +325,9 @@ if __name__ == "__main__":
         )
         sel.positions = pos_w_prev
     else:
-        pos_w_prev = sel.positions
-    pos_u_prev = pos_w_prev
-    box_prev = ts.dimensions
+        pos_w_prev = np.copy(sel.positions)
+    pos_u_prev = np.copy(pos_w_prev)
+    box_prev = np.copy(ts.dimensions)
 
     if args.TOPFILE_OUT is not None:
         mdt.fh.backup(args.TOPFILE_OUT)
@@ -349,11 +349,12 @@ if __name__ == "__main__":
                 method=args.METHOD,
                 out=out,
                 out_tmp=out_tmp,
+                dtype=np.float64,
             )
-            pos_w_prev[:] = sel.positions
+            np.copyto(pos_w_prev, sel.positions)
             sel.positions = pos_u
-            pos_u_prev[:] = pos_u
-            box_prev[:] = ts.dimensions
+            np.copyto(pos_u_prev, pos_u)
+            np.copyto(box_prev, ts.dimensions)
             w.write(sel)
             # ProgressBar update.
             trj.set_postfix_str(
