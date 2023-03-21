@@ -196,7 +196,7 @@ repos:
       - id: "flake8"
         args:
           # See .github/workflows/tests.yml.
-          - "--extend-ignore=S101,D205,D400,E203,W503,S404,S603,N806,N813,W504,F821"
+          - "--extend-ignore=S101,D205,D400,E203,W503,S404,S603,B028,N806,N813,W504,F821"
         additional_dependencies:
           # Required Flake8 plugins.
           # Keep in sync with `requirements-dev.txt` and `.flake8`!
