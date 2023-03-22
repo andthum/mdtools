@@ -112,6 +112,7 @@ CBAR_YAX_VALIGN = "bottom"
 # the default fontsize)
 LEGEND_KWARGS_XSMALL = {
     "fontsize": "x-small",
+    "title_fontsize": "x-small",
     "borderaxespad": 0.8,
     "labelspacing": 0.25,
     "handlelength": 1.35,
