@@ -116,7 +116,7 @@ repos:
       - id: "check-pre-commit-ci-config"
 
   - repo: "https://github.com/python-jsonschema/check-jsonschema"
-    rev: "0.21.0"
+    rev: "0.22.0"
     hooks:
       # Validate Dependabot Config (v2) against the schema provided by
       # SchemaStore.
@@ -177,7 +177,7 @@ repos:
     # to XX but somehow the pre-commit hook has version YY when
     # specifying the hook version without the prefix.  See
     # https://github.com/psf/black/issues/2493#issuecomment-1081987650
-    rev: "refs/tags/23.1.0:refs/tags/23.1.0"
+    rev: "23.3.0"
     hooks:
       # Format Python code with black.
       - id: "black"
@@ -212,7 +212,7 @@ repos:
           - "pep8-naming >=0.1, <1.0"
 
   - repo: "https://github.com/PyCQA/bandit"
-    rev: "1.7.4"
+    rev: "1.7.5"
     hooks:
       # Check code security with bandit.
       - id: "bandit"
@@ -279,7 +279,7 @@ repos:
     # v0.12.0 requires ruby2.7, however openSUSE Leap 15.4 officially
     # only provides ruby2.5 which is also required for texlive
     # => stay at v0.11.0
-    rev: "v0.11.0"
+    rev: "v0.12.0"
     hooks:
       # Lint Markdown files with markdownlint.
       - id: "markdownlint"
