@@ -227,7 +227,7 @@ repos:
           - "--recursive"
         additional_dependencies:
           # Required to read config from pyproject.toml
-          - "toml"
+          - ".[toml]"
 
   ######################################################################
   # Shell / Bash Hooks                                                 #
