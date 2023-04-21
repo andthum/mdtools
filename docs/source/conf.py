@@ -480,7 +480,11 @@ linkcheck_ignore = [
     # 403 Client Error: Forbidden for url.
     r"https://doi.org/10.1021/acs.jctc.2c00327",
     r"https://doi.org/10.1073/pnas.1900239116",
+    r"https://doi.org/10.1063/5.0008316",
+    # 418 Client Error: Unknown for url.
+    r"https://doi.org/10.1109/TSMC.1979.4310076",
 ]
+linkcheck_retries = 2
 
 
 # -- Extension configuration -------------------------------------------
