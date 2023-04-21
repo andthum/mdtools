@@ -5,11 +5,13 @@
     // List of extensions which should be recommended for users of this
     // workspace.
     "recommendations": [
+        "benspaulding.python-manifest-template",
         "bungcip.better-toml",
         "DavidAnson.vscode-markdownlint",
         "eamodio.gitlens",
         "EditorConfig.EditorConfig",
         "foxundermoon.shell-format",
+        "idleberg.badges",
         "KevinRose.vsc-python-indent",
         "lextudio.restructuredtext",
         "ms-python.black-formatter",
