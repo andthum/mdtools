@@ -5,7 +5,7 @@
 # Keep Flake8 plugins in sync with `.pre-commit-config.yaml` and
 # `.flake8`!
 
-bandit >=1.0, <2.0
+bandit[toml] >=1.0, <2.0
 black >=23.0, <24.0
 cffconvert >=2.0, <3.0
 flake8 >=6.0, <7.0
