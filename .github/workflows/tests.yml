@@ -189,8 +189,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}
             ${{ runner.os }}
-      - name: "Install/Upgrade setuptools and wheel"
-        run: "python -m pip install --user --upgrade setuptools wheel"
+      - name: "Install/Upgrade setuptools, wheel and python-dev-tools"
+        # Without `python-dev-tools` the installation of MDAnalysis
+        # fails on MacOS-latest with Python 3.9 while building the wheel
+        # for MDAnalysis.  Strangely, the MDAnalysis wheel is only build
+        # on this OS-Python combination, whereas other OS-Python
+        # combinations fetch a pre-build wheel.
+        run: |
+          python -m pip install --user --upgrade setuptools wheel
+          python -m pip install --user --upgrade python-dev-tools
       - name: "Test installation of MDTools"
         run: |
           python -m pip install --user --upgrade .
