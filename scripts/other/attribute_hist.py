@@ -431,10 +431,12 @@ if __name__ == "__main__":  # noqa: C901
         napc = None
     else:
         napc = mdt.strc.natms_per_cmp(sel, cmp=args.CMP, check_contiguous=True)
-    if args.ATTR in ("velocities", "forces"):
+    if args.ATTR == "forces":
         weights = "total"
-    elif args.ATTR == "positions":
+    elif args.ATTR in ("velocities", "positions"):
         weights = "masses"
+    else:
+        raise ValueError("Unknown --attr: {}".format(args.ATTR))
 
     print("\n")
     print("Inspecting data...")
