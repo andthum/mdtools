@@ -107,9 +107,8 @@ Options
 
 Notes
 -----
-If the selected attribute is 'velocities' or 'forces', all created
-histograms, except the last one (Euclidean norm), are fitted by Gaussian
-distribution functions:
+All created histograms, except the last one (Euclidean norm), are fitted
+by Gaussian distribution functions:
 
 .. math::
 
@@ -679,7 +678,10 @@ if __name__ == "__main__":  # noqa: C901
             aps2ms = 1e2  # Conversion factor [A/ps] -> [m/s].
             ms2aps = 1 / aps2ms  # Conversion factor [m/s] -> [A/ps].
             sigma2_ms = popt[0] * aps2ms**2  # sigma^2 in [(m/s)^2].
-            mass = np.nanmean(sel.masses)  # Mass in [u].
+            mass = mdt.strc.cmp_attr(
+                sel, cmp=args.CMP, attr="masses", weights="total"
+            )
+            mass = np.nanmean(mass)  # Mass in [u].
             mass_kg = mass * constants.atomic_mass  # Mass in [kg].
             temp = mass_kg * sigma2_ms / constants.k  # Temperature in [K].
             v_p = np.sqrt(2 * constants.k * temp / mass_kg)
