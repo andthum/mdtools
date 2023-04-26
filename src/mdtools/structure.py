@@ -2143,6 +2143,25 @@ def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
     >>> np.allclose(com1, com2, rtol=0)
     True
 
+    Center-of-mass velocity.
+
+    >>> com_vel1 = mdt.strc.cmp_attr(
+    ...     ag, cmp="residues", attr="velocities", weights="masses"
+    ... )
+    >>> com_vel2 = [
+    ...     np.sum(
+    ...         np.expand_dims(
+    ...             res.atoms.masses / np.sum(res.atoms.masses),
+    ...             axis=1
+    ...         )
+    ...         * res.atoms.velocities,
+    ...         axis=0
+    ...     )
+    ...     for res in ag.residues
+    ... ]
+    >>> np.allclose(com_vel1, com_vel2)
+    True
+
     Center of charge (the charges of each compound should not sum up to
     zero).
 
@@ -2188,14 +2207,14 @@ def cmp_attr(ag, attr, weights=None, cmp=None, natms_per_cmp=None):
     >>> res_charges2 = [sum(res.atoms.charges) for res in ag.residues]
     >>> np.allclose(res_charges1, res_charges2, rtol=0)
     True
-    >>> # Center-of-mass velocity of each residue.
-    >>> com_vel1 = mdt.strc.cmp_attr(
+    >>> # Total velocity of each residue.
+    >>> res_vel1 = mdt.strc.cmp_attr(
     ...     ag, cmp="residues", attr="velocities", weights="total"
     ... )
-    >>> com_vel2 = [
+    >>> res_vel2 = [
     ...     np.sum(res.atoms.velocities, axis=0) for res in ag.residues
     ... ]
-    >>> np.allclose(com_vel1, com_vel2)
+    >>> np.allclose(res_vel1, res_vel2)
     True
     >>> # Center-of-mass force of each residue.
     >>> com_force1 = mdt.strc.cmp_attr(
