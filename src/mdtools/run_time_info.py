@@ -1,5 +1,5 @@
 # This file is part of MDTools.
-# Copyright (C) 2021, 2022  The MDTools Development Team and all
+# Copyright (C) 2021-2023  The MDTools Development Team and all
 # contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
@@ -22,7 +22,7 @@ Classes and functions for getting run time information.
 This module can be called from :mod:`mdtools` via the shortcut ``rti``::
 
     import mdtools as mdt
-    mdt.rti  # insetad of mdt.run_time_info
+    mdt.rti  # instead of mdt.run_time_info
 
 """
 
@@ -49,7 +49,7 @@ class ProgressBar(ProgressBar):
 
     The :class:`ProgressBar` decorates an iterable object, returning an
     iterator which acts exactly like the original iterable, but prints a
-    dynamically updating progressbar every time a value is requested.
+    dynamically updating progress bar every time a value is requested.
 
     See Also
     --------
@@ -348,7 +348,7 @@ def ag_info_str(ag, indent=0, max_names=10):
         :class:`~MDAnalysis.core.groups.Residue` or
         :class:`~MDAnalysis.core.groups.Atom` names/types to print to
         screen.  If the number of different names/types exceeds
-        `max_names`, the names/types are not separatedly printed to
+        `max_names`, the names/types are not separately printed to
         stdout to avoid overloading the screen.
 
     Returns
