@@ -27,6 +27,7 @@ discrete trajectory must meet the requirements listed in
 
 # Third-party libraries
 import numpy as np
+import psutil
 
 # First-party libraries
 import mdtools as mdt
@@ -803,3 +804,458 @@ mdt.dtrj.trans_per_state_vs_time(
             func1d=mdt.dtrj._histogram, axis=cmp_axis, arr=dtrj_copy, bins=bins
         )
         return hist
+
+
+def remain_prob(  # noqa: C901
+    dtrj,
+    restart=1,
+    continuous=False,
+    discard_neg_start=False,
+    discard_all_neg=False,
+    verbose=False,
+):
+    r"""
+    Calculate the probability that a compound is in the same state as at
+    time :math:`t_0` after a lag time :math:`\Delta t`
+
+    Take a discrete trajectory and calculate the probability to find a
+    compound in the same state as at time :math:`t_0` after a lag time
+    :math:`\Delta t`.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
+        is the number of compounds and ``f`` is the number of frames.
+        The shape can also be ``(f,)``, in which case the array is
+        expanded to shape ``(1, f)``.   The elements of `dtrj` are
+        interpreted as the indices of the states in which a given
+        compound is at a given frame.
+    restart : int, optional
+        Restart every `restart` frames.  Determines how many restarting
+        points :math:`t_0` are used for averaging.
+    continuous : bool, optional
+        If ``True``, compounds must continuously be in the same state
+        without interruption in order to be counted (see notes).
+    discard_neg_start : bool, optional
+        If ``True``, discard all transitions starting from a negative
+        state (see notes).  Must not be used together with
+        `discard_all_neg`.
+    discard_all_neg : bool, optional
+        If ``True``, discard all negative states (see notes).  Must not
+        be used together with `discard_neg_start`.
+    verbose : bool, optional
+        If ``True`` print a progress bar.
+
+    Returns
+    -------
+    prop : numpy.ndarray
+        Array of shape ``(f,)`` containing for all possible lag times
+        the probability that a compound is in the same state as at time
+        :math:`t_0` after a lag time :math:`\Delta t`.
+
+    Notes
+    -----
+    **Continuous and Discontinuous Probability**
+
+    If `continuous` is ``False``, this function calculates the
+    probability to be *still or again* in the same state as at time
+    :math:`t_0` after a lag :math:`\Delta t`:
+
+    .. math::
+
+        p(\xi(t_0 + \Delta t) \in S | \xi(t_0) \in S) =
+        \left\langle
+            \frac{N(t_0, t_0 + \Delta t)}{N(t_0)}
+        \right\rangle_t
+
+    Here, :math:`\xi(t)` is the discretized coordinate and :math:`S` is
+    a given valid discrete state.  :math:`N(t_0)` is the number of
+    compounds that are in a valid state at time :math:`t_0` and
+    :math:`N(t_0, t_0 + \Delta t)` is the number of compounds that are
+    at time :math:`t_0 + \Delta t` *still or again* in the same valid
+    state as at time :math:`t_0`.  The brackets
+    :math:`\langle ... \rangle_t` denote averaging over all given
+    restarting times :math:`t_0`.
+
+    If `continuous` is ``True``, this function calculates the
+    probability to be *still* in the same state as at time :math:`t_0`
+    after a lag time :math:`\Delta t`:
+
+    .. math::
+
+        p(\xi(t) \in S ~\forall t \in [t_0, t_0 + \Delta t]) =
+        \left\langle
+            \frac{N(\{t \in [t_0, t_0 + \Delta t]\})}{N(t_0)}
+        \right\rangle_t
+
+    :math:`N(\{t \in [t_0, t_0 + \Delta t]\})` is the number of
+    compounds that *continuously* stay in their initial valid state
+    *for all times* from :math:`t_0` to :math:`t_0 + \Delta t`.
+
+    **Valid and Invalid States**
+
+    By default, all states in the given discrete trajectory are valid.
+    However, in some cases you might want to treat certain states as
+    invalid, e.g. because you only want to consider specific states.
+    This can be achieved with the arguments `discard_neg_start` or
+    `discard_all_neg` which treat negative states (i.e. states with a
+    negative state number/index) as invalid states.
+
+    .. note::
+
+        If you want to treat states with index zero as invalid, too,
+        simply subtract one from `dtrj`.  If you want to treat all
+        states below a certain cutoff as invalid, subtract this cutoff
+        from `dtrj`.  If you want to treat certain states as invalid,
+        make these states negative, e.g. by multiplying these states
+        with minus one.
+
+    The arguments `discard_neg_start` and `discard_all_neg` affect the
+    counting of compounds in a given state, i.e. they affect
+    :math:`N(t_0)`, :math:`N(t_0, t_0 + \Delta t)` and
+    :math:`N(\{t \in [t_0, t_0 + \Delta t]\})`.  In general, :math:`N`
+    is the sum of compounds that are in a valid state:
+    :math:`N = \sum_i N_i`.  :math:`N_i` is :math:`1` if compound
+    :math:`i` is in a valid state and :math:`0` otherwise.
+    `discard_neg_start` and `discard_all_neg` now affect when a state is
+    considered valid.
+
+    If both, `discard_neg_start` and `discard_all_neg`, are ``False``
+    (the default), all states are valid.
+
+    .. math::
+
+        N_i(t_0) = 1 ~\forall S_i(t_0)
+
+    .. math::
+
+        N_i(t_0, t_0 + \Delta t) =
+        \begin{cases}
+            1 & S_i(t_0 + \Delta t) = S_i(t_0) \\
+            0 & \text{otherwise}
+        \end{cases}
+
+    .. math::
+
+        N_i(\{t \in [t_0, t_0 + \Delta t]\}) =
+        \begin{cases}
+            1 & S_i(t) = S_i(t_0) ~\forall t \in [t_0, t_0 + \Delta t]\\
+            0 & \text{otherwise}
+        \end{cases}
+
+    Here, :math:`S_i(t)` is the state of compound :math:`i` at time
+    :math:`t`.
+
+    If `discard_neg_start` is ``True``, transitions starting from
+    negative states are discarded:
+
+    .. math::
+
+        N_i(t_0) = \begin{cases}
+            1 & S_i(t_0) \geq 0 \\
+            0 & S_i(t_0) < 0
+        \end{cases}
+
+    .. math::
+
+        N_i(t_0, t_0 + \Delta t) =
+        \begin{cases}
+            1 & S_i(t_0) \geq 0 \text{ and } \\
+              & S_i(t_0 + \Delta t) = S_i(t_0) \\
+            0 & \text{otherwise}
+        \end{cases}
+
+    .. math::
+
+        N_i(\{t \in [t_0, t_0 + \Delta t]\}) =
+        \begin{cases}
+            1 & S_i(t_0) \geq 0 \text{ and } \\
+              & S_i(t) = S_i(t_0) ~\forall t \in [t_0, t_0 + \Delta t]\\
+            0 & \text{otherwise}
+        \end{cases}
+
+    Thus, the resulting probability does not contain the probability to
+    stay in a negative state.  However, transitions from positive to
+    negative states are respected.  Hence, the probability to stay in a
+    positive state is decreased if a transition to a negative states
+    occurs (in addition to the decrease caused by transitions to other
+    positive states).
+
+    If `discard_all_neg` is ``True``, all negative states are discarded:
+
+    .. math::
+
+        N_i(t_0) = \begin{cases}
+            1 & S_i(t) \geq 0 ~\forall t \in [t_0, t_0 + \Delta t] \\
+            0 & \text{otherwise}
+        \end{cases}
+
+    .. math::
+
+        N_i(t_0, t_0 + \Delta t) =
+        \begin{cases}
+            1 & S_i(t) \geq 0 ~\forall t \in [t_0, t_0 + \Delta t]
+                \text{ and } \\
+              & S_i(t_0 + \Delta t) = S_i(t_0) \\
+            0 & \text{otherwise}
+        \end{cases}
+
+    .. math::
+
+        N_i(\{t \in [t_0, t_0 + \Delta t]\}) =
+        \begin{cases}
+            1 & S_i(t) \geq 0 ~\forall t \in [t_0, t_0 + \Delta t]
+                \text{ and } \\
+              & S_i(t) = S_i(t_0) ~\forall t \in [t_0, t_0 + \Delta t]\\
+            0 & \text{otherwise}
+        \end{cases}
+
+    This means transitions from or to negative states are completely
+    discarded.  Thus, the resulting probability does neither contain the
+    probability to stay in a negative state nor is it decreased by
+    transitions from positive to negative states.
+
+    **Lifetimes**
+
+    The calculated probabilities can be used to calculate the average
+    lifetime of the valid states, i.e. how long a compounds resides on
+    average in a valid state.  A common approach is to fit the
+    probability with a stretched exponential function :math:`f(t)` (e.g.
+    using :func:`mdtools.functions.fit_kww`) and afterwards calculating
+    the area below the fitted curve: [1]_:sup:`,` [2]_:sup:`,`
+    [3]_:sup:`,` [4]_
+
+    .. math::
+
+        f(t) = \exp{\left[ -\left(\frac{t}{\tau_0}\right)^\beta \right]}
+
+    .. math::
+
+        \tau = \int_0^\infty f(t) \text{ d}t =
+        \frac{\tau_0}{\beta} \Gamma\left(\frac{1}{\beta}\right)
+
+    Here, :math:`\tau_0` and :math:`\beta` are the fit parameters,
+    :math:`\tau` is the average lifetime and :math:`\Gamma(x)` is the
+    gamma function.  For physically meaningful results, :math:`\beta`
+    should be confined to :math:`0 < \beta \leq 1`.  For purely
+    exponential decay (:math:`\beta = 1`), :math:`\tau = \tau_0`
+    applies.  If the calculated probability fully decays to zero within
+    the accessible range of lag times, one can alternatively numerically
+    integrate the calculated probability directly.
+
+    References
+    ----------
+    .. [1] R. Kohlrausch,
+           Theorie des Elektrischen Rückstandes in der Leidener Flasche,
+           Annalen der Physik, 1854, 167, 56-82.
+    .. [2] G. Williams, D. C. Watts,
+           `Non-Symmetrical Dielectric Relaxation Behaviour Arising from
+           a Simple Empirical Decay Function
+           <https://doi.org/10.1039/TF9706600080>`_,
+           Transactions of the Faraday Society, 1970, 66, 80-85.
+    .. [3] M. N. Berberan-Santos, E. N. Bodunov, B. Valeur,
+           `Mathematical Functions for the Analysis of Luminescence
+           Decays with Underlying Distributions 1. Kohlrausch Decay
+           Function (Stretched Exponential)
+           <https://doi.org/10.1016/j.chemphys.2005.04.006>`_,
+           Chemical Physics, 2005, 315, 171-182.
+    .. [4] D. C. Johnston,
+           `Stretched Exponential Relaxation Arising from a Continuous
+           Sum of Exponential Decays
+           <https://doi.org/10.1103/PhysRevB.74.184430>`_,
+           Physical Review B, 2006, 74, 184430.
+
+    Examples
+    --------
+    >>> dtrj = np.array([[2, 2, 3, 3, 3]])
+    >>> mdt.dtrj.remain_prob(dtrj)
+    array([1.        , 0.75      , 0.33333333, 0.        , 0.        ])
+    >>> mdt.dtrj.remain_prob(dtrj, continuous=True)
+    array([1.        , 0.75      , 0.33333333, 0.        , 0.        ])
+    >>> dtrj = np.array([[1, 3, 3, 3, 1]])
+    >>> mdt.dtrj.remain_prob(dtrj)
+    array([1.        , 0.5       , 0.33333333, 0.        , 1.        ])
+    >>> mdt.dtrj.remain_prob(dtrj, continuous=True)
+    array([1.        , 0.5       , 0.33333333, 0.        , 0.        ])
+
+    The following examples were not checked to be mathematically
+    correct!
+
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> mdt.dtrj.remain_prob(dtrj)
+    array([1.        , 0.6       , 0.3       , 0.06666667, 0.        ,
+           0.        ])
+    >>> mdt.dtrj.remain_prob(dtrj, restart=3)
+    array([1. , 0.5, 0.2, 0. , 0. , 0. ])
+    >>> mdt.dtrj.remain_prob(dtrj, continuous=True)
+    array([1.        , 0.6       , 0.3       , 0.06666667, 0.        ,
+           0.        ])
+    >>> mdt.dtrj.remain_prob(dtrj, discard_neg_start=True)
+    array([1.        , 0.57894737, 0.375     , 0.09090909, 0.        ,
+           0.        ])
+    >>> mdt.dtrj.remain_prob(
+    ...     dtrj, discard_neg_start=True, continuous=True
+    ... )
+    array([1.        , 0.57894737, 0.375     , 0.09090909, 0.        ,
+           0.        ])
+    >>> mdt.dtrj.remain_prob(dtrj, discard_all_neg=True)
+    array([1.        , 0.73333333, 0.6       , 0.2       , 0.        ,
+                  nan])
+    >>> mdt.dtrj.remain_prob(
+    ...     dtrj, discard_all_neg=True, continuous=True
+    ... )
+    array([1.        , 0.73333333, 0.6       , 0.2       , 0.        ,
+                  nan])
+
+    >>> dtrj = dtrj.T
+    >>> mdt.dtrj.remain_prob(dtrj)
+    array([1.        , 0.375     , 0.11111111, 0.16666667, 0.16666667])
+    >>> mdt.dtrj.remain_prob(dtrj, restart=2)
+    array([1.        , 0.58333333, 0.        , 0.33333333, 0.16666667])
+    >>> mdt.dtrj.remain_prob(dtrj, continuous=True)
+    array([1.        , 0.375     , 0.05555556, 0.        , 0.        ])
+    >>> mdt.dtrj.remain_prob(dtrj, discard_neg_start=True)
+    array([1.        , 0.375     , 0.16666667, 0.25      , 0.25      ])
+    >>> mdt.dtrj.remain_prob(
+    ...     dtrj, discard_neg_start=True, continuous=True
+    ... )
+    array([1.        , 0.375     , 0.08333333, 0.        , 0.        ])
+    >>> mdt.dtrj.remain_prob(dtrj, discard_all_neg=True)
+    array([1.        , 0.46153846, 0.28571429, 0.33333333, 0.        ])
+    >>> mdt.dtrj.remain_prob(
+    ...     dtrj, discard_all_neg=True, continuous=True
+    ... )
+    array([1.        , 0.46153846, 0.14285714, 0.        , 0.        ])
+    """
+    dtrj = mdt.check.dtrj(dtrj)
+    n_cmps, n_frames = dtrj.shape
+    dtrj = np.asarray(dtrj.T, order="C")
+    if discard_neg_start and discard_all_neg:
+        raise ValueError(
+            "`discard_neg_start` and `discard_all_neg are` mutually exclusive"
+        )
+
+    prob = np.zeros(n_frames, dtype=np.uint32)
+    if discard_neg_start:
+        valid = np.zeros(n_cmps, dtype=bool)
+        norm = np.zeros(n_frames, dtype=np.uint32)
+    elif discard_all_neg:
+        dtrj_valid = dtrj >= 0
+        norm = np.zeros(n_frames, dtype=np.uint32)
+    else:
+        remain = np.zeros(n_cmps, dtype=bool)
+
+    restarts = (t0 for t0 in range(0, n_frames - 1, restart))
+    if verbose:
+        proc = psutil.Process()
+        restarts = mdt.rti.ProgressBar(restarts, total=n_frames - 2)
+    for t0 in restarts:
+        # When trying to understand the following code, read the "else"
+        # parts fist.  Those are the simpler cases upon which the other
+        # cases are built.
+        if discard_neg_start:
+            np.greater_equal(dtrj[t0], 0, out=valid)
+            n_valid = np.count_nonzero(valid)
+            if n_valid == 0:
+                continue
+            norm[1 : n_frames - t0] += n_valid
+            dtrj_t0 = dtrj[t0][valid]
+            if continuous:
+                stay = np.ones(n_valid, dtype=bool)
+                remain = np.zeros(n_valid, dtype=bool)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtrj_t0, dtrj[t0 + lag][valid], out=remain)
+                    stay &= remain
+                    n_stay = np.count_nonzero(stay)
+                    if n_stay == 0:
+                        break
+                    prob[lag] += n_stay
+            else:
+                remain = np.zeros(n_valid, dtype=bool)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtrj_t0, dtrj[t0 + lag][valid], out=remain)
+                    prob[lag] += np.count_nonzero(remain)
+        elif discard_all_neg:
+            valid = dtrj_valid[t0]  # This is a view, not a copy!
+            if not np.any(valid):
+                continue
+            if continuous:
+                stay = np.ones(n_cmps, dtype=bool)
+                remain = np.zeros(n_cmps, dtype=bool)
+                for lag in range(1, n_frames - t0):
+                    valid &= dtrj_valid[t0 + lag]
+                    n_valid = np.count_nonzero(valid)
+                    if n_valid == 0:
+                        continue
+                    norm[lag] += n_valid
+                    np.equal(dtrj[t0], dtrj[t0 + lag], out=remain)
+                    stay &= remain
+                    stay &= valid
+                    prob[lag] += np.count_nonzero(stay)
+                    # This loop must not be broken upon n_stay == 0,
+                    # because otherwise the norm will be incorrect.
+            else:
+                for lag in range(1, n_frames - t0):
+                    valid &= dtrj_valid[t0 + lag]
+                    n_valid = np.count_nonzero(valid)
+                    if n_valid == 0:
+                        continue
+                    norm[lag] += n_valid
+                    remain = dtrj[t0][valid] == dtrj[t0 + lag][valid]
+                    prob[lag] += np.count_nonzero(remain)
+        else:
+            if continuous:
+                stay = np.ones(n_cmps, dtype=bool)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtrj[t0], dtrj[t0 + lag], out=remain)
+                    stay &= remain
+                    n_stay = np.count_nonzero(stay)
+                    if n_stay == 0:
+                        break
+                    prob[lag] += n_stay
+            else:
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtrj[t0], dtrj[t0 + lag], out=remain)
+                    prob[lag] += np.count_nonzero(remain)
+        if verbose:
+            restarts.set_postfix_str(
+                "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
+            )
+
+    if discard_neg_start or discard_all_neg:
+        if norm[0] != 0:
+            raise ValueError(
+                "The first element of norm is not zero but {}.  This should"
+                " not have happened".format(norm[0])
+            )
+        norm[0] = 1
+        valid = norm > 0
+        prob = np.divide(prob, norm, where=valid)
+        prob[~valid] = np.nan
+    else:
+        prob = prob / n_cmps
+        prob /= mdt.dyn.n_restarts(n_frames=n_frames, restart=restart)
+
+    if prob[0] != 0:
+        raise ValueError(
+            "The first element of p is not zero but {}.  This should not have"
+            " happened".format(prob[0])
+        )
+    prob[0] = 1
+    if np.any(prob > 1):
+        raise ValueError(
+            "At least one element of p is greater than one.  This should not"
+            " have happened"
+        )
+    if np.any(prob < 0):
+        raise ValueError(
+            "At least one element of p is less than zero.  This should not"
+            " have happened"
+        )
+
+    return prob
