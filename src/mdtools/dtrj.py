@@ -1,5 +1,5 @@
 # This file is part of MDTools.
-# Copyright (C) 2021, 2022  The MDTools Development Team and all
+# Copyright (C) 2021-2023  The MDTools Development Team and all
 # contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
@@ -103,7 +103,7 @@ iterable of ints, optional
         evaluating the transition type, i.e. when evaluating whether the
         transition was in positive direction (to a higher state) or in
         negative direction (to a lower state).  Has no effect if
-        `trans_type` is ``None``.  This option could be usefull, when
+        `trans_type` is ``None``.  This option could be useful, when
         the states have periodic boundary conditions, for instance
         because the states are position bins along a box dimension with
         periodic boundary conditions.  In this case, the states should
@@ -327,9 +327,9 @@ def trans_per_state(dtrj, **kwargs):
     hist_start : numpy.ndarray or tuple
         1d array or tuple of 1d arrays (if `trans_type` is ``'both'`` or
         an iterable of ints).  The histogram counts how many state
-        transitions started from a given state, i.e. how many transitons
-        led out of a given state.  Is not returned if `pin` is
-        ``"end"``.
+        transitions started from a given state, i.e. how many
+        transitions led out of a given state.  Is not returned if `pin`
+        is ``"end"``.
     hist_end : numpy.ndarray or tuple
         1d array or tuple of 1d arrays (if `trans_type` is ``'both'`` or
         an iterable of ints).  The histogram counts how many state
@@ -444,7 +444,7 @@ mdt.dtrj.trans_per_state(
     >>> hist_end_tfft_tlft
     array([4, 4, 4])
 
-    Iterprete first dimension as frames and second dimension as
+    Interpret first dimension as frames and second dimension as
     compounds:
 
     >>> hist_start, hist_end = mdt.dtrj.trans_per_state(
@@ -635,7 +635,7 @@ def trans_per_state_vs_time(dtrj, time_axis=-1, cmp_axis=0, **kwargs):
         2d array or tuple of 2d arrays (if `trans_type` is ``'both'`` or
         an iterable of ints) containing one histogram for each frame in
         dtrj.  The histograms count how many state transitions started
-        from a given state, i.e. how many transitons led out of a given
+        from a given state, i.e. how many transitions led out of a given
         state.  Is not returned if `pin` is ``"end"``.
     hist_end : numpy.ndarray
         2d array or tuple of 2d arrays (if `trans_type` is ``'both'`` or
