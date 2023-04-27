@@ -854,8 +854,21 @@ def remain_prob(  # noqa: C901
         the probability that a compound is in the same state as at time
         :math:`t_0` after a lag time :math:`\Delta t`.
 
+    See Also
+    --------
+    :func:`mdtools.dtrj.remain_prob_discrete` :
+        Calculate the probability that a compound is in the same state
+        as at time :math:`t_0` after a lag time :math:`\Delta t`
+        resolved with respect to the states in second discrete
+        trajectory.
+
     Notes
     -----
+    If you want to compute the probability to stay in the same state for
+    each individual state in a discrete trajectory, use
+    :func:`mdtools.dtrj.remain_prob_discrete` and parse the same
+    discrete trajectory to `dtrj1` and `dtrj2`.
+
     **Continuous and Discontinuous Probability**
 
     If `continuous` is ``False``, this function calculates the
@@ -1245,6 +1258,388 @@ def remain_prob(  # noqa: C901
         raise ValueError(
             "The first element of p is not zero but {}.  This should not have"
             " happened".format(prob[0])
+        )
+    prob[0] = 1
+    if np.any(prob > 1):
+        raise ValueError(
+            "At least one element of p is greater than one.  This should not"
+            " have happened"
+        )
+    if np.any(prob < 0):
+        raise ValueError(
+            "At least one element of p is less than zero.  This should not"
+            " have happened"
+        )
+
+    return prob
+
+
+def remain_prob_discrete(  # noqa: C901
+    dtrj1,
+    dtrj2,
+    restart=1,
+    continuous=False,
+    discard_neg_start=False,
+    discard_all_neg=False,
+    verbose=False,
+):
+    r"""
+    Calculate the probability that a compound is in the same state as at
+    time :math:`t_0` after a lag time :math:`\Delta t` resolved with
+    respect to the states in second discrete trajectory.
+
+    Take a discrete trajectory and calculate the probability to find a
+    compound in the same state as at time :math:`t_0` after a lag time
+    :math:`\Delta t` given that the compound was in a specific state of
+    another discrete trajectory at time :math:`t_0`.
+
+    Parameters
+    ----------
+    dtrj1, dtrj2 : array_like
+        The discrete trajectories.  Arrays of shape ``(n, f)``, where
+        ``n`` is the number of compounds and ``f`` is the number of
+        frames.   The shape can also be ``(f,)``, in which case the
+        array is expanded to shape ``(1, f)``.  Both arrays must have
+        the same shape.   The elements of the arrays are interpreted as
+        the indices of the states in which a given compound is at a
+        given frame.
+    restart : int, optional
+        Restart every `restart` frames.  Determines how many restarting
+        points :math:`t_0` are used for averaging.
+    continuous : bool, optional
+        If ``True``, compounds must continuously be in the same state
+        without interruption in order to be counted (see notes of
+        :func:`mdtools.dtrj.remain_prob`).
+    discard_neg_start : bool, optional
+        If ``True``, discard all transitions starting from a negative
+        state (see notes of :func:`mdtools.dtrj.remain_prob`).  Must not
+        be used together with `discard_all_neg`.
+    discard_all_neg : bool, optional
+        If ``True``, discard all negative states (see notes of
+        :func:`mdtools.dtrj.remain_prob`).  Must not be used together
+        with `discard_neg_start`.
+    verbose : bool, optional
+        If ``True`` print a progress bar.
+
+    Returns
+    -------
+    prop : numpy.ndarray
+        Array of shape ``(f, m)``, where ``m`` is the number of states
+        in the second discrete trajectory.  The `ij`-th element of
+        `prob` is the probability that a compound is in the same state
+        of the first discrete trajectory as at time :math:`t_0` after a
+        lag time of `i` frames given that the compound was in state `j`
+        of the second discrete trajectory at time :math:`t_0`.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is in the same state
+        as at time :math:`t_0` after a lag time :math:`\Delta t`
+
+    Notes
+    -----
+    See :func:`mdtools.dtrj.remain_prob` for more details about the
+    calculation of the probability to stay in the same state and about
+    the meaning of the `continuous`, `discard_neg_start` and
+    `discard_all_neg` arguments.
+
+    If you parse the same discrete trajectory to `dtrj1` and `dtrj2` you
+    will get the probability to stay in the same state for each
+    individual state of the input trajectory.  If you want the average
+    probability over all states, use :func:`mdtools.dtrj.remain_prob`.
+
+    Examples
+    --------
+    >>> dtrj = np.array([[2, 2, 3, 3, 3]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj)
+    array([[1. , 1. ],
+           [0.5, 1. ],
+           [0. , 1. ],
+           [0. , nan],
+           [0. , nan]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[1. , 1. ],
+           [0.5, 1. ],
+           [0. , 1. ],
+           [0. , nan],
+           [0. , nan]])
+    >>> dtrj = np.array([[1, 3, 3, 3, 1]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj)
+    array([[1.        , 1.        ],
+           [0.        , 0.66666667],
+           [0.        , 0.5       ],
+           [0.        , 0.        ],
+           [1.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[1.        , 1.        ],
+           [0.        , 0.66666667],
+           [0.        , 0.5       ],
+           [0.        , 0.        ],
+           [0.        ,        nan]])
+
+    The following examples were not checked to be mathematically
+    correct!
+
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> # States of the discrete trajectory:
+    >>> # [-2         ,-1         , 1         , 2         , 3         ]
+    >>> # Because the first and second discrete trajectories are the
+    >>> # same in this example, the resulting array contains as columns
+    >>> # the probability to stay in the respective state as function of
+    >>> # the lag time.
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj)
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [0.66666667,        nan, 0.        , 0.72727273, 0.75      ],
+           [0.        ,        nan, 0.        , 0.44444444, 0.66666667],
+           [0.        ,        nan, 0.        , 0.        , 0.5       ],
+           [0.        ,        nan, 0.        , 0.        , 0.        ],
+           [0.        ,        nan, 0.        , 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj, restart=3)
+    array([[1.  , 1.  , 1.  , 1.  , 1.  ],
+           [1.  ,  nan, 0.  , 0.75, 1.  ],
+           [0.  ,  nan, 0.  , 0.5 , 0.  ],
+           [0.  ,  nan, 0.  , 0.  ,  nan],
+           [0.  ,  nan, 0.  , 0.  ,  nan],
+           [0.  ,  nan, 0.  , 0.  ,  nan]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [0.66666667,        nan, 0.        , 0.72727273, 0.75      ],
+           [0.        ,        nan, 0.        , 0.44444444, 0.66666667],
+           [0.        ,        nan, 0.        , 0.        , 0.5       ],
+           [0.        ,        nan, 0.        , 0.        , 0.        ],
+           [0.        ,        nan, 0.        , 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(
+    ...     dtrj, dtrj, discard_neg_start=True
+    ... )
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [       nan,        nan, 0.        , 0.72727273, 0.75      ],
+           [       nan,        nan, 0.        , 0.44444444, 0.66666667],
+           [       nan,        nan, 0.        , 0.        , 0.5       ],
+           [       nan,        nan, 0.        , 0.        , 0.        ],
+           [       nan,        nan, 0.        , 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(
+    ...     dtrj, dtrj, discard_neg_start=True, continuous=True
+    ... )
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [       nan,        nan, 0.        , 0.72727273, 0.75      ],
+           [       nan,        nan, 0.        , 0.44444444, 0.66666667],
+           [       nan,        nan, 0.        , 0.        , 0.5       ],
+           [       nan,        nan, 0.        , 0.        , 0.        ],
+           [       nan,        nan, 0.        , 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj, discard_all_neg=True)
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [       nan,        nan, 0.        , 0.8       , 1.        ],
+           [       nan,        nan, 0.        , 0.66666667, 1.        ],
+           [       nan,        nan, 0.        , 0.        , 1.        ],
+           [       nan,        nan, 0.        ,        nan,        nan],
+           [       nan,        nan,        nan,        nan,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(
+    ...     dtrj, dtrj, discard_all_neg=True, continuous=True
+    ... )
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [       nan,        nan, 0.        , 0.8       , 1.        ],
+           [       nan,        nan, 0.        , 0.66666667, 1.        ],
+           [       nan,        nan, 0.        , 0.        , 1.        ],
+           [       nan,        nan, 0.        ,        nan,        nan],
+           [       nan,        nan,        nan,        nan,        nan]])
+
+    >>> dtrj = dtrj.T
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj)
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [0.375     ,        nan, 0.25      , 0.41666667,        nan],
+           [0.        ,        nan, 0.        , 0.22222222,        nan],
+           [0.        ,        nan, 0.5       , 0.16666667,        nan],
+           [0.        ,        nan, 1.        , 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj, restart=2)
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [0.75      ,        nan, 0.        , 0.66666667,        nan],
+           [0.        ,        nan, 0.        , 0.        ,        nan],
+           [0.        ,        nan, 1.        , 0.33333333,        nan],
+           [0.        ,        nan, 1.        , 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [0.375     ,        nan, 0.25      , 0.41666667,        nan],
+           [0.        ,        nan, 0.        , 0.11111111,        nan],
+           [0.        ,        nan, 0.        , 0.        ,        nan],
+           [0.        ,        nan, 0.        , 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(
+    ...     dtrj, dtrj, discard_neg_start=True
+    ... )
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [       nan,        nan, 0.25      , 0.41666667,        nan],
+           [       nan,        nan, 0.        , 0.22222222,        nan],
+           [       nan,        nan, 0.5       , 0.16666667,        nan],
+           [       nan,        nan, 1.        , 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(
+    ...     dtrj, dtrj, discard_neg_start=True, continuous=True
+    ... )
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [       nan,        nan, 0.25      , 0.41666667,        nan],
+           [       nan,        nan, 0.        , 0.11111111,        nan],
+           [       nan,        nan, 0.        , 0.        ,        nan],
+           [       nan,        nan, 0.        , 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(dtrj, dtrj, discard_all_neg=True)
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [       nan,        nan, 0.5       , 0.45454545,        nan],
+           [       nan,        nan, 0.        , 0.33333333,        nan],
+           [       nan,        nan,        nan, 0.33333333,        nan],
+           [       nan,        nan,        nan, 0.        ,        nan]])
+    >>> mdt.dtrj.remain_prob_discrete(
+    ...     dtrj, dtrj, discard_all_neg=True, continuous=True
+    ... )
+    array([[1.        , 1.        , 1.        , 1.        , 1.        ],
+           [       nan,        nan, 0.5       , 0.45454545,        nan],
+           [       nan,        nan, 0.        , 0.16666667,        nan],
+           [       nan,        nan,        nan, 0.        ,        nan],
+           [       nan,        nan,        nan, 0.        ,        nan]])
+    """  # noqa: W505
+    dtrj1 = mdt.check.dtrj(dtrj1)
+    dtrj2 = mdt.check.dtrj(dtrj2)
+    n_cmps, n_frames = dtrj1.shape
+    if dtrj1.shape != dtrj2.shape:
+        raise ValueError("Both trajectories must have the same shape")
+    dtrj1 = np.asarray(dtrj1.T, order="C")
+    dtrj2 = np.asarray(dtrj2.T, order="C")
+    if discard_neg_start and discard_all_neg:
+        raise ValueError(
+            "`discard_neg_start` and `discard_all_neg are` mutually exclusive"
+        )
+
+    # Reorder the states in the second trajectory such that they start
+    # at zero and no intermediate states are missing.
+    dtrj2 = mdt.nph.sequenize(dtrj2, step=np.uint8(1), start=np.uint8(0))
+    n_states = np.max(dtrj2) + 1
+    if np.min(dtrj2) != 0:
+        raise ValueError(
+            "The minimum of the reordered second trajectory is not zero.  This"
+            " should not have happened"
+        )
+
+    prob = np.zeros((n_frames, n_states), dtype=np.uint32)
+    norm = np.zeros((n_frames, n_states), dtype=np.uint32)
+    if discard_neg_start:
+        valid = np.zeros(n_cmps, dtype=bool)
+    elif discard_all_neg:
+        dtrj1_valid = dtrj1 >= 0
+    else:
+        remain = np.zeros(n_cmps, dtype=bool)
+
+    restarts = (t0 for t0 in range(0, n_frames - 1, restart))
+    if verbose:
+        proc = psutil.Process()
+        restarts = mdt.rti.ProgressBar(restarts, total=n_frames - 2)
+    for t0 in restarts:
+        # When trying to understand the following code, read the "else"
+        # parts fist.  Those are the simpler cases upon which the other
+        # cases are built.  Also look at the code of the function
+        # `mdtools.dtrj.remain_prob`.
+        if discard_neg_start:
+            np.greater_equal(dtrj1[t0], 0, out=valid)
+            n_valid = np.count_nonzero(valid)
+            if n_valid == 0:
+                continue
+            dtrj1_t0 = dtrj1[t0][valid]
+            dtrj2_t0 = dtrj2[t0][valid]
+            bin_ix_u, counts = np.unique(dtrj2_t0, return_counts=True)
+            masks = dtrj2_t0 == bin_ix_u[:, None]
+            norm[1 : n_frames - t0][:, bin_ix_u] += counts.astype(np.uint32)
+            if continuous:
+                stay = np.ones(n_valid, dtype=bool)
+                remain = np.zeros(n_valid, dtype=bool)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtrj1_t0, dtrj1[t0 + lag][valid], out=remain)
+                    stay &= remain
+                    if not np.any(stay):
+                        break
+                    for i, b in enumerate(bin_ix_u):
+                        prob[lag][b] += np.count_nonzero(stay[masks[i]])
+            else:
+                remain = np.zeros(n_valid, dtype=bool)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtrj1_t0, dtrj1[t0 + lag][valid], out=remain)
+                    for i, b in enumerate(bin_ix_u):
+                        prob[lag][b] += np.count_nonzero(remain[masks[i]])
+        elif discard_all_neg:
+            valid = dtrj1_valid[t0]  # This is a view, not a copy!
+            if not np.any(valid):
+                continue
+            if continuous:
+                stay = np.ones(n_cmps, dtype=bool)
+                remain = np.zeros(n_cmps, dtype=bool)
+                mask = np.zeros(n_cmps, dtype=bool)
+                for lag in range(1, n_frames - t0):
+                    valid &= dtrj1_valid[t0 + lag]
+                    if not np.any(valid):
+                        continue
+                    bin_ix_u, counts = np.unique(
+                        dtrj2[t0][valid], return_counts=True
+                    )
+                    np.equal(dtrj1[t0], dtrj1[t0 + lag], out=remain)
+                    stay &= remain
+                    stay &= valid
+                    # This loop must not be broken upon n_stay == 0,
+                    # because otherwise the norm will be incorrect.
+                    for i, b in enumerate(bin_ix_u):
+                        np.equal(dtrj2[t0], b, out=mask)
+                        prob[lag][b] += np.count_nonzero(stay[mask])
+                        norm[lag][b] += counts[i]
+            else:
+                for lag in range(1, n_frames - t0):
+                    valid &= dtrj1_valid[t0 + lag]
+                    n_valid = np.count_nonzero(valid)
+                    if n_valid == 0:
+                        continue
+                    bin_ix_u, counts = np.unique(
+                        dtrj2[t0][valid], return_counts=True
+                    )
+                    mask = np.zeros(n_valid, dtype=bool)
+                    remain = dtrj1[t0][valid] == dtrj1[t0 + lag][valid]
+                    for i, b in enumerate(bin_ix_u):
+                        np.equal(dtrj2[t0][valid], b, out=mask)
+                        prob[lag][b] += np.count_nonzero(remain[mask])
+                        norm[lag][b] += counts[i]
+        else:
+            bin_ix_u, counts = np.unique(dtrj2[t0], return_counts=True)
+            masks = dtrj2[t0] == bin_ix_u[:, None]
+            norm[1 : n_frames - t0][:, bin_ix_u] += counts.astype(np.uint32)
+            if continuous:
+                stay = np.ones(n_cmps, dtype=bool)
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtrj1[t0], dtrj1[t0 + lag], out=remain)
+                    stay &= remain
+                    if not np.any(stay):
+                        break
+                    for i, b in enumerate(bin_ix_u):
+                        prob[lag][b] += np.count_nonzero(stay[masks[i]])
+            else:
+                for lag in range(1, n_frames - t0):
+                    np.equal(dtrj1[t0], dtrj1[t0 + lag], out=remain)
+                    for i, b in enumerate(bin_ix_u):
+                        prob[lag][b] += np.count_nonzero(remain[masks[i]])
+        if verbose:
+            restarts.set_postfix_str(
+                "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
+            )
+
+    if np.any(norm[0] != 0):
+        raise ValueError(
+            "At least one element in the first row of norm is not zero.  This"
+            " should not have happened"
+        )
+    norm[0] = 1
+    valid = norm > 0
+    prob = np.divide(prob, norm, where=valid)
+    prob[~valid] = np.nan
+
+    if np.any(prob[0] != 0):
+        raise ValueError(
+            "At least one element in the first row of p is not zero.  This"
+            " should not have happened"
         )
     prob[0] = 1
     if np.any(prob > 1):
