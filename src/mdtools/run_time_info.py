@@ -30,7 +30,6 @@ This module can be called from :mod:`mdtools` via the shortcut ``rti``::
 # Standard libraries
 import os
 import sys
-import warnings
 from datetime import datetime
 
 # Third-party libraries
@@ -416,21 +415,24 @@ def dtrj_trans_info(dtrj):
     Returns
     -------
     n_stay : int
-        Number of compounds that are in the same state in all frames.
+        Number of compounds that stay in the same state during the
+        entire trajectory.
     always_neg : int
-        Number of compounds that are in a negative state in all frames.
+        Number of compounds that are always in a negative state during
+        the entire trajectory.
     never_neg : int
-        Number of compounds that are not in a negative state in any
-        frame.
+        Number of compounds that are never in a negative state during
+        the entire trajectory.
     n_frames_neg : int
         Total number of frames with negative states (summed over all
         compounds).
     n_trans : int
-        Total number of state transitions.
+        Total number of state transitions (summed over all compounds).
     pos2pos : int
-        Total number of Positive -> Positive transitions (transitions
-        from one state with a positive/zero state index to another state
-        with a positive/zero state index).
+        Total number of Positive -> Positive transitions, i.e.
+        transitions from a state with a positive or zero state index to
+        another state with a positive or zero state index  (summed over
+        all compounds).
     pos2neg : int
         Number of Positive -> Negative transitions.
     neg2pos : int
@@ -449,34 +451,39 @@ def dtrj_trans_info(dtrj):
     Positive states are states with a state index equal(!) to or greater
     than zero.  Negative states are states with a state index less than
     zero.
-    """
-    dtrj = np.asarray(dtrj)
-    dtrj = np.asarray(dtrj.T, order="C")
-    if dtrj.ndim == 1:
-        dtrj = np.expand_dims(dtrj, axis=0)
-    elif dtrj.ndim > 2:
-        raise ValueError(
-            "The discrete trajectory must have one or two dimensions"
-        )
-    if np.any(np.modf(dtrj)[0] != 0):
-        warnings.warn(
-            "At least one element of the discrete trajectory is not an"
-            " integer",
-            RuntimeWarning,
-        )
 
-    n_stay = np.count_nonzero(np.all(dtrj == dtrj[0], axis=0))
+    Examples
+    --------
+    >>> dtrj = np.array([[ 1,  2,  2,  3,  3,  3],
+    ...                  [-2, -2, -3, -3, -3, -1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [-1,  3,  3,  3, -2, -2],
+    ...                  [ 6,  6,  6,  6,  6,  6]])
+    >>> mdt.rti.dtrj_trans_info(dtrj)
+    (1, 1, 2, 11, 8, 3, 2, 1, 2)
+    >>> mdt.rti.dtrj_trans_info(dtrj.T)
+    (0, 0, 0, 11, 20, 4, 7, 7, 2)
+    """
+    dtrj = mdt.check.dtrj(dtrj)
+
+    dtrj_t0 = mdt.nph.take(dtrj, start=0, stop=1, axis=-1)
+    n_stay = np.count_nonzero(np.all(dtrj == dtrj_t0, axis=-1))
     dtrj_neg = dtrj < 0
-    always_neg = np.count_nonzero(np.all(dtrj_neg, axis=0))
-    never_neg = np.count_nonzero(~np.any(dtrj_neg, axis=0))
+    always_neg = np.count_nonzero(np.all(dtrj_neg, axis=-1))
+    never_neg = np.count_nonzero(~np.any(dtrj_neg, axis=-1))
     n_frames_neg = np.count_nonzero(dtrj_neg)
     del dtrj_neg
 
-    N_CMPS = dtrj.shape[1]
-    transitions = np.diff(dtrj, axis=0) != 0
-    trans_init = np.vstack([transitions, np.zeros(N_CMPS, dtype=bool)])
-    trans_final = np.insert(transitions, 0, np.zeros(N_CMPS), axis=0)
+    # `np.diff` keeps the dtype of the input array => If the dtype of
+    # the input array is an unsigned integer type, negative differences
+    # are not possible.
+    transitions = np.diff(dtrj.astype(np.float64, casting="safe"), axis=-1)
+    transitions = transitions != 0
     n_trans = np.count_nonzero(transitions)
+    end_points = np.zeros_like(dtrj_t0, dtype=bool)
+    trans_init = np.concatenate([transitions, end_points], axis=-1)
+    trans_final = np.concatenate([end_points, transitions], axis=-1)
+    del end_points
     if np.count_nonzero(trans_init) != n_trans:
         raise ValueError(
             "The number of transitions in trans_init is not the same as in"
