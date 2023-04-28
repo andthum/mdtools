@@ -37,6 +37,7 @@ Scripts that process discretized trajectories
     :nosignatures:
 
     state_lifetime
+    state_lifetime_discrete
 
 
 Plot scripts
