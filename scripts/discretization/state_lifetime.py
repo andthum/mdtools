@@ -58,6 +58,12 @@ Options
     Number of frames between restarting points for calculating the
     remain probability.  Must be an integer multiple of \--every.
     Default: ``100``.
+--intermittency
+    Maximum number of frames a compound is allowed to leave its state
+    whilst still being considered to be in this state provided that it
+    returns to this state after the given number of frames.  In other
+    words, a compound is only considered to have left its state if it
+    has left it for at least the given number of frames.
 --continuous
     If given, compounds must continuously be in the same state without
     interruption in order to be counted (see notes section of
@@ -193,6 +199,18 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--intermittency",
+        dest="INTERMITTENCY",
+        type=int,
+        required=False,
+        default=0,
+        help=(
+            "Maximum number of frames a compound is allowed to leave its state"
+            " whilst still being considered to be in this state provided that"
+            " it returns to this state after the given number of frames."
+        ),
+    )
+    parser.add_argument(
         "--continuous",
         dest="CONTINUOUS",
         required=False,
@@ -246,6 +264,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
+    if args.INTERMITTENCY < 0:
+        raise ValueError(
+            "--intermittency ({}) must be equal to or greater than"
+            " zero".format(args.INTERMITTENCY)
+        )
 
     print("\n")
     print("Loading trajectory...")
@@ -272,6 +295,14 @@ if __name__ == "__main__":
     )
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
+
+    if args.INTERMITTENCY > 0:
+        print("\n")
+        print("Correcting for intermittency...")
+        dtrj = mdt.dyn.correct_intermittency(
+            dtrj.T, args.INTERMITTENCY, inplace=True, verbose=True
+        )
+        dtrj = dtrj.T
 
     print("\n")
     print("Calculating remain probability...")
@@ -352,6 +383,7 @@ if __name__ == "__main__":
         "Average lifetime of all valid discrete states in the given discrete\n"
         + "trajectory\n"
         + "\n\n"
+        + "intermittency:     {}\n".format(args.INTERMITTENCY)
         + "continuous:        {}\n".format(args.CONTINUOUS)
         + "discard_neg_start: {}\n".format(args.DISCARD_NEG_START)
         + "discard_all_neg:   {}\n".format(args.DISCARD_ALL_NEG)
