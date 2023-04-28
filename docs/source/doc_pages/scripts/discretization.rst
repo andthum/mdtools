@@ -36,6 +36,8 @@ Scripts that process discretized trajectories
     :recursive:
     :nosignatures:
 
+    state_lifetime
+
 
 Plot scripts
 ------------
