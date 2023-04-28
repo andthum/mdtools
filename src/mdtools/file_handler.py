@@ -1,5 +1,5 @@
 # This file is part of MDTools.
-# Copyright (C) 2021, 2022  The MDTools Development Team and all
+# Copyright (C) 2021-2023  The MDTools Development Team and all
 # contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
@@ -22,7 +22,7 @@ Functions for file input/output handling
 This module can be called from :mod:`mdtools` via the shortcut ``fh``::
 
     import mdtools as mdt
-    mdt.fh  # insetad of mdt.file_handler
+    mdt.fh  # instead of mdt.file_handler
 
 """
 
@@ -127,7 +127,7 @@ optional
         file is treated as uncompressed file.
     rename : bool, optional
         If ``True`` and a file called `fname` already exists and the
-        file is opended in writing mode, rename the existing file to
+        file is opened in writing mode, rename the existing file to
         ``'fname.bak_timestamp'``.  See
         :func:`mdtools.file_handler.backup` for more details.
     kwargs : dict, optional
@@ -257,7 +257,7 @@ def tail(fname, n, **kwargs):
     if n <= 0:
         return lines
     # Step width by which to move the cursor (the given value was an
-    # emprically determined to give best performance and might be
+    # empirically determined to give best performance and might be
     # further optimized).
     step_width = max(10 * n, 1)
     kwargs.setdefault("mode", "rt")
@@ -265,7 +265,7 @@ def tail(fname, n, **kwargs):
         file.seek(0, 2)  # Set cursor to end of file.
         pos = file.tell()  # Get current cursor position.
         # Move cursor backwards until the n-th last line is reached.
-        # Termination criterium must be n+1 to get the entire n-th last
+        # Termination criterion must be n+1 to get the entire n-th last
         # line and not just a part of it.
         while len(lines) < n + 1:
             pos -= min(step_width, pos)
@@ -472,7 +472,7 @@ def savetxt_matrix(
     data : array_like
         2-dimensional array of data to be saved.  Must be of shape
         ``(n, m)``, where ``n`` is the number of samples of the first
-        independent variable (depicted row wise) and ``m`` is the mumber
+        independent variable (depicted row wise) and ``m`` is the number
         of samples of the second independent variable (depicted column
         wise).
     var1, var2 : array_like
@@ -573,7 +573,7 @@ def write_matrix_block(
     data : array_like
         2-dimensional array of data to write to file.  Must be of shape
         ``(n, m)``, where ``n`` is the number of samples of the first
-        independent variable (depicted row wise) and ``m`` is the mumber
+        independent variable (depicted row wise) and ``m`` is the number
         of samples of the second independent variable (depicted column
         wise).
     var1, var2 : array_like
@@ -751,7 +751,7 @@ def save_dtrj(fname, dtrj):
     -----
     This function simply checks whether `dtrj` is a suitable discrete
     trajectory and then saves it to file using
-    :func:`numpy.savez_compressed`.  Insise the created :file:`.npz`
+    :func:`numpy.savez_compressed`.  Inside the created :file:`.npz`
     archive, the discrete trajectory is stored in the file
     :file:`dtrj.npy`.
     """
@@ -780,20 +780,24 @@ def load_dtrj(fname, **kwargs):
         Name of the file containing the discrete trajectory.  The
         discrete trajectory must be stored as :class:`numpy.ndarray`
         either in a binary NumPy |npy_file| or in a (compressed) NumPy
-        |npz_archive|.  If loading from an :file:`.npz` archive, it is
-        first tried to read the discrete trajectory from the file
-        "dtrj.npy".  If this file is not present in the archive, the
-        discrete trajectory is read from the first file in the archive.
+        |npz_archive|.  If loading from an :file:`.npz` archive, this
+        function first tries to read the discrete trajectory from the
+        file "dtrj.npy".  If this file is not present in the archive,
+        the discrete trajectory is read from the first file in the
+        archive.
+
         The discrete trajectory must be of shape ``(n, f)``, where ``n``
         is the number of compounds and ``f`` is the number of frames.
         The shape can also be ``(f,)``, in which case the array is
-        expanded to shape ``(1, f)``.  The array must only contain
-        integers or floats whose fractional part is zero, because, the
-        elements of a discrete trajectory are interpreted as the indices
-        of the states in which a given compound is at a given frame.
+        expanded to shape ``(1, f)``.
+
+        The array must only contain integers or floats whose fractional
+        part is zero, because the elements of a discrete trajectory are
+        interpreted as the indices of the states in which a given
+        compound is at a given frame.
     kwargs : dict, optional
         Additional keyword arguments to parse to :func:`numpy.load`.
-        See there for posible arguments and their description.  By
+        See there for possible arguments and their description.  By
         default, `allow_pickle` is set to ``False``.
 
     Returns
@@ -826,7 +830,7 @@ def load_dtrj(fname, **kwargs):
         dtrj = dtrj_loaded
     else:
         raise TypeError(
-            "Unkown type of the loaded data: {}".format(type(dtrj_loaded))
+            "Unknown type of the loaded data: {}".format(type(dtrj_loaded))
         )
     fh.close()
     return mdt.check.dtrj(dtrj)

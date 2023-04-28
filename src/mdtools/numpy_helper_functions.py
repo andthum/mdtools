@@ -4425,6 +4425,56 @@ def sequenize(a, step=1, start=0):
         A 'sequenized' version of `a`. When calling ``numpy.unique`` on
         `b`, the returned array will be a contiguous sequence with step
         width `step`.
+
+    Examples
+    --------
+    >>> a = np.array([-5, -3, -1,  2,  4,  6])
+    >>> mdt.nph.sequenize(a)
+    array([0, 1, 2, 3, 4, 5])
+    >>> mdt.nph.sequenize(a, step=3)
+    array([ 0,  3,  6,  9, 12, 15])
+    >>> mdt.nph.sequenize(a, step=-3)
+    array([  0,  -3,  -6,  -9, -12, -15])
+    >>> mdt.nph.sequenize(a, start=-(a.size - 1))
+    array([-5, -4, -3, -2, -1,  0])
+
+    >>> a = np.array([[-5, -3, -1],
+    ...               [ 2,  4,  6]])
+    >>> mdt.nph.sequenize(a)
+    array([[0, 1, 2],
+           [3, 4, 5]])
+    >>> mdt.nph.sequenize(a, step=3)
+    array([[ 0,  3,  6],
+           [ 9, 12, 15]])
+    >>> mdt.nph.sequenize(a, step=-3)
+    array([[  0,  -3,  -6],
+           [ -9, -12, -15]])
+    >>> mdt.nph.sequenize(a, start=-(a.size - 1))
+    array([[-5, -4, -3],
+           [-2, -1,  0]])
+
+    >>> a = np.arange(6)
+    >>> np.all(mdt.nph.sequenize(a) == a)
+    True
+    >>> mdt.nph.sequenize(a, step=2)
+    array([ 0,  2,  4,  6,  8, 10])
+    >>> mdt.nph.sequenize(a, step=-2)
+    array([  0,  -2,  -4,  -6,  -8, -10])
+    >>> mdt.nph.sequenize(a, start=-(a.size - 1))
+    array([-5, -4, -3, -2, -1,  0])
+
+    >>> a = np.arange(6).reshape(2, 3)
+    >>> np.all(mdt.nph.sequenize(a) == a)
+    True
+    >>> mdt.nph.sequenize(a, step=2)
+    array([[ 0,  2,  4],
+           [ 6,  8, 10]])
+    >>> mdt.nph.sequenize(a, step=-2)
+    array([[  0,  -2,  -4],
+           [ -6,  -8, -10]])
+    >>> mdt.nph.sequenize(a, start=-(a.size - 1))
+    array([[-5, -4, -3],
+           [-2, -1,  0]])
     """
     a = np.asarray(a)
     u, ix = np.unique(a, return_inverse=True)
