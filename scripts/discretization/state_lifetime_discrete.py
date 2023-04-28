@@ -60,6 +60,15 @@ Options
     Number of frames between restarting points for calculating the
     remain probability.  Must be an integer multiple of \--every.
     Default: ``100``.
+--intermittency1
+    Allowed intermittency for the first discrete trajectory:  Maximum
+    number of frames a compound is allowed to leave its state whilst
+    still being considered to be in this state provided that it returns
+    to this state after the given number of frames.  In other words, a
+    compound is only considered to have left its state if it has left it
+    for at least the given number of frames.
+--intermittency2
+    Allowed intermittency for the second discrete trajectory.
 --continuous
     If given, compounds must continuously be in the same state without
     interruption in order to be counted (see notes section of
@@ -197,6 +206,27 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--intermittency1",
+        dest="INTERMITTENCY1",
+        type=int,
+        required=False,
+        default=0,
+        help=(
+            "Allowed intermittency for the first discrete trajectory:  Maximum"
+            " number of frames a compound is allowed to leave its state whilst"
+            " still being considered to be in this state provided that it"
+            " returns to this state after the given number of frames."
+        ),
+    )
+    parser.add_argument(
+        "--intermittency2",
+        dest="INTERMITTENCY2",
+        type=int,
+        required=False,
+        default=0,
+        help="Allowed intermittency for the second discrete trajectory",
+    )
+    parser.add_argument(
         "--continuous",
         dest="CONTINUOUS",
         required=False,
@@ -250,6 +280,16 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
+    if args.INTERMITTENCY1 < 0:
+        raise ValueError(
+            "--intermittency1 ({}) must be equal to or greater than"
+            " zero".format(args.INTERMITTENCY1)
+        )
+    if args.INTERMITTENCY2 < 0:
+        raise ValueError(
+            "--intermittency2 ({}) must be equal to or greater than"
+            " zero".format(args.INTERMITTENCY2)
+        )
 
     print("\n")
     print("Loading trajectory...")
@@ -273,10 +313,25 @@ if __name__ == "__main__":
     dtrj1 = dtrj1[:, BEGIN:END:EVERY]
     dtrj2 = dtrj2[:, BEGIN:END:EVERY]
     dtrj1_trans_info = mdt.rti.dtrj_trans_info_str(dtrj1)
-    dtrj2_states = np.unique(dtrj2)
-    dtrj2_n_states = len(dtrj2_states)
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
+
+    if args.INTERMITTENCY1 > 0:
+        print("\n")
+        print("Correcting the first discrete trajectory for intermittency...")
+        dtrj1 = mdt.dyn.correct_intermittency(
+            dtrj1.T, args.INTERMITTENCY1, inplace=True, verbose=True
+        )
+        dtrj1 = dtrj1.T
+    if args.INTERMITTENCY2 > 0:
+        print("\n")
+        print("Correcting the second discrete trajectory for intermittency...")
+        dtrj2 = mdt.dyn.correct_intermittency(
+            dtrj2.T, args.INTERMITTENCY2, inplace=True, verbose=True
+        )
+        dtrj2 = dtrj2.T
+    dtrj2_states = np.unique(dtrj2)
+    dtrj2_n_states = len(dtrj2_states)
 
     print("\n")
     print("Calculating remain probability...")
@@ -333,6 +388,8 @@ if __name__ == "__main__":
         "Average lifetime of all valid discrete states in the given discrete\n"
         + "trajectory as function of another set of discrete states\n"
         + "\n\n"
+        + "intermittency1:    {}\n".format(args.INTERMITTENCY1)
+        + "intermittency2:    {}\n".format(args.INTERMITTENCY2)
         + "continuous:        {}\n".format(args.CONTINUOUS)
         + "discard_neg_start: {}\n".format(args.DISCARD_NEG_START)
         + "discard_all_neg:   {}\n".format(args.DISCARD_ALL_NEG)
