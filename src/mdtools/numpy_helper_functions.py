@@ -4484,6 +4484,9 @@ def get_const_seqs(x, tol=1e-08, sort=False):
     --------
     :func:`split_into_contig_seqs` :
         Split an array into subarrays of contiguous sequences.
+    :func:`find_const_seq_n` :
+        Find the first sequence of at least `n` constant values in an
+        array
 
     Examples
     --------
@@ -4502,6 +4505,55 @@ def get_const_seqs(x, tol=1e-08, sort=False):
     seq_lengths = np.array([len(seq) for seq in seqs])
     seq_starts = np.insert(seq_starts, 0, 0)
     return seq_starts, seq_lengths, vals
+
+
+def find_const_seq_n(x, n, tol=1e-08, sort=False):
+    """
+    Find the first sequence of at least `n` constant values in an array.
+
+    Parameters
+    ----------
+    x : array_like
+        1-dimensional array in which to find the first sequence of at
+        least `n` constant values.
+    tol : scalar, optional
+        Tolerance value within which consecutive elements of `x` are
+        considered to be equal.
+    sort : bool, optional
+        If ``True``, sort `x` before searching for sequences of constant
+        values.
+
+    Returns
+    -------
+    start_ix : int
+        Index indicating the start of the first sequence of at least `n`
+        constant values in `x`.
+    length : int
+        The actual length of this sequence.
+    val : scalar
+        The value of this sequence.  Because consecutive values can
+        differ by `tol`, this is the mean value of the sequence.
+
+    See Also
+    --------
+    :func:`get_const_seqs` :
+        Get all sequences of constant values in an array
+
+    Examples
+    --------
+    >>> a = np.array([0, 4, 4, 4, 2, 2])
+    >>> mdt.nph.find_const_seq_n(a, n=2)
+    (1, 3, 4.0)
+    >>> mdt.nph.find_const_seq_n(a, n=2, sort=True)
+    (1, 2, 2.0)
+    >>> np.sort(a)
+    array([0, 2, 2, 4, 4, 4])
+    """
+    seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
+        x, tol=tol, sort=sort
+    )
+    ix = np.argmax(np.flatnonzero(seq_lengths >= n))
+    return seq_starts[ix], seq_lengths[ix], vals[ix]
 
 
 def sequenize(a, step=1, start=0):
