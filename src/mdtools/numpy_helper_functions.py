@@ -4394,6 +4394,11 @@ def split_into_contig_seqs(
         Array of indices at which `a` was split.  If `sort` is ``True``,
         these are the indices at which the sorted input array was split.
 
+    See Also
+    --------
+    :func:`get_const_seqs` :
+        Get all sequences of constant values in an array
+
     References
     ----------
     Adapted from https://stackoverflow.com/a/7353335.
@@ -4444,6 +4449,59 @@ def split_into_contig_seqs(
         return contiguous_seqs, ix_split
     else:
         return contiguous_seqs
+
+
+def get_const_seqs(x, tol=1e-08, sort=False):
+    """
+    Get all sequences of constant values in an array.
+
+    Parameters
+    ----------
+    x : array_like
+        1-dimensional array for which to get all sequences of constant
+        values.
+    tol : scalar, optional
+        Tolerance value within which consecutive elements of `x` are
+        considered to be equal.
+    sort : bool, optional
+        If ``True``, sort `x` before searching for sequences of constant
+        values.
+
+    Returns
+    -------
+    seq_starts : numpy.ndarray
+        Index array indicating the start of each constant sequence in
+        `x`.
+    eq_lengths : numpy.ndarray
+        The length (i.e. the number of values) of each constant
+        sequence.
+    vals : numpy.ndarray
+        The value of each constant sequence.  Because consecutive values
+        can differ by `tol`, this is the mean value of each constant
+        sequence.
+
+    See Also
+    --------
+    :func:`split_into_contig_seqs` :
+        Split an array into subarrays of contiguous sequences.
+
+    Examples
+    --------
+    >>> a = np.array([0, 2, 2, 4, 4, 4, 3, 3, 1])
+    >>> mdt.nph.get_const_seqs(a)
+    (array([0, 1, 3, 6, 8]), array([1, 2, 3, 2, 1]), array([0., 2., 4., 3., 1.]))
+    >>> mdt.nph.get_const_seqs(a, sort=True)
+    (array([0, 1, 2, 4, 6]), array([1, 1, 2, 2, 3]), array([0., 1., 2., 3., 4.]))
+    >>> np.sort(a)
+    array([0, 1, 2, 2, 3, 3, 4, 4, 4])
+    """  # noqa: E501, W505
+    seqs, seq_starts = mdt.nph.split_into_contig_seqs(
+        x, step=0, step_tol=tol, sort=sort, return_ix=True
+    )
+    vals = np.array([np.mean(seq) for seq in seqs])
+    seq_lengths = np.array([len(seq) for seq in seqs])
+    seq_starts = np.insert(seq_starts, 0, 0)
+    return seq_starts, seq_lengths, vals
 
 
 def sequenize(a, step=1, start=0):
