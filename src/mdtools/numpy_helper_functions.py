@@ -4487,6 +4487,8 @@ def get_const_seqs(x, tol=1e-08, sort=False):
     :func:`find_const_seq_n` :
         Find the first sequence of at least `n` constant values in an
         array
+    :func:`find_const_seq_long` :
+        Find the longest sequence of constant values in an array
 
     Examples
     --------
@@ -4538,6 +4540,8 @@ def find_const_seq_n(x, n, tol=1e-08, sort=False):
     --------
     :func:`get_const_seqs` :
         Get all sequences of constant values in an array
+    :func:`find_const_seq_long` :
+        Find the longest sequence of constant values in an array
 
     Examples
     --------
@@ -4553,6 +4557,61 @@ def find_const_seq_n(x, n, tol=1e-08, sort=False):
         x, tol=tol, sort=sort
     )
     ix = np.argmax(np.flatnonzero(seq_lengths >= n))
+    return seq_starts[ix], seq_lengths[ix], vals[ix]
+
+
+def find_const_seq_long(x, tol=1e-08, sort=False):
+    """
+    Find the longest sequence of constant values in an array.
+
+    If there exist multiple sequences with the longest length, the first
+    of them is returned.
+
+    Parameters
+    ----------
+    x : array_like
+        1-dimensional array in which to find the longest sequence of
+        constant values.
+    tol : scalar, optional
+        Tolerance value within which consecutive elements of `x` are
+        considered to be equal.
+    sort : bool, optional
+        If ``True``, sort `x` before searching for sequences of constant
+        values.
+
+    Returns
+    -------
+    start_ix : int
+        Index indicating the start of the longest sequence of constant
+        values in `x`.
+    length : int
+        The actual length of this sequence.
+    val : scalar
+        The value of this sequence.  Because consecutive values can
+        differ by `tol`, this is the mean value of the sequence.
+
+    See Also
+    --------
+    :func:`get_const_seqs` :
+        Get all sequences of constant values in an array.
+    :func:`find_const_seq_n`
+        Find the first sequence of at least `n` constant values in an
+        array
+
+    Examples
+    --------
+    >>> a = np.array([0, 4, 4, 4, 2, 2])
+    >>> mdt.nph.find_const_seq_long(a)
+    (1, 3, 4.0)
+    >>> mdt.nph.find_const_seq_long(a, sort=True)
+    (3, 3, 4.0)
+    >>> np.sort(a)
+    array([0, 2, 2, 4, 4, 4])
+    """
+    seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
+        x, tol=tol, sort=sort
+    )
+    ix = np.argmax(seq_lengths)
     return seq_starts[ix], seq_lengths[ix], vals[ix]
 
 
