@@ -4361,36 +4361,89 @@ def digitize_dd(
         )
 
 
-def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
+def split_into_contig_seqs(
+    a, step=1, step_tol=1e-08, sort=False, return_ix=False
+):
     """
-    Split an array into its subarrays of consecutive numbers.
+    Split an array into subarrays of contiguous sequences.
 
     Parameters
     ----------
     a : array_like
-        1-dimensional array which to split into subarrays of consecutive
-        numbers with stepsize `step`.
+        1-dimensional array which to split into subarrays of contiguous
+        sequences with step size `step`.
     step : scalar, optional
-        The stepsize defining the contiguous sequence.
+        The step size defining the contiguous sequence.
+    step_tol : scalar, optional
+        A tolerance value for the step size.  Values in `a` are
+        considered to form a contiguous sequence if their difference
+        lies within ``step +/- step_tol``.
     sort : bool, optional
-        Sort `a` before searching for contiguous sequences.
-    debug : bool, optional
-        If ``True``, check the input arguments.
+        If ``True``, sort `a` before searching for contiguous sequences.
+    return_ix : bool, optional
+        If ``True``, return the indices where `a` was split to create
+        the subarrays.  If `sort` is ``True``, these are the indices
+        where the sorted input array was split.
 
     Returns
     -------
-    consecutive_subarrays : list
+    contig_seqs : list
         List of subarrays, one for each contiguous sequence of numbers
-        with stepsize `step` in `a`.
+        with step size `step` in `a`.
+    ix_split : numpy.ndarray
+        Array of indices at which `a` was split.  If `sort` is ``True``,
+        these are the indices at which the sorted input array was split.
+
+    References
+    ----------
+    Adapted from https://stackoverflow.com/a/7353335.
+
+    Examples
+    --------
+    >>> a = np.array([-3, -2,  0,  3,  2,  4])
+    >>> contig_seqs, ix_split = mdt.nph.split_into_contig_seqs(
+    ...     a, return_ix=True
+    ... )
+    >>> contig_seqs
+    [array([-3, -2]), array([0]), array([3]), array([2]), array([4])]
+    >>> ix_split
+    array([2, 3, 4, 5])
+    >>> contig_seqs, ix_split = mdt.nph.split_into_contig_seqs(
+    ...     a, sort=True, return_ix=True
+    ... )
+    >>> contig_seqs
+    [array([-3, -2]), array([0]), array([2, 3, 4])]
+    >>> ix_split
+    array([2, 3])
+
+    >>> a = np.array([0, 1, 2, 5, 7, 9])
+    >>> mdt.nph.split_into_contig_seqs(a, step=2)
+    [array([0]), array([1]), array([2]), array([5, 7, 9])]
+    >>> a = np.array([0, 1, 2, 2, 1, 0])
+    >>> mdt.nph.split_into_contig_seqs(a, step=-1)
+    [array([0]), array([1]), array([2]), array([2, 1, 0])]
+    >>> a = np.array([1, 2, 2, 3, 3, 3])
+    >>> mdt.nph.split_into_contig_seqs(a, step=0)
+    [array([1]), array([2, 2]), array([3, 3, 3])]
     """
     a = np.asarray(a)
-    if debug:
-        mdt.check.array(a, dim=1)
+    if a.ndim != 1:
+        raise ValueError(
+            "`a` has {} dimension(s) but must be 1-dimensional".format(a.ndim)
+        )
 
     if sort:
         a = np.sort(a)
 
-    return np.split(a, np.flatnonzero((np.diff(a) != step)) + 1)
+    is_contiguous = np.isclose(np.diff(a), step, rtol=0, atol=step_tol)
+    np.bitwise_not(is_contiguous, out=is_contiguous)
+    ix_split = np.flatnonzero(is_contiguous)
+    ix_split += 1
+    contiguous_seqs = np.split(a, ix_split)
+    if return_ix:
+        return contiguous_seqs, ix_split
+    else:
+        return contiguous_seqs
 
 
 def sequenize(a, step=1, start=0):
