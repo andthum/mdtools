@@ -23,7 +23,7 @@ general mathematical functions.
 This module can be called from :mod:`mdtools` via the shortcut ``nph``::
 
     import mdtools as mdt
-    mdt.nph  # insetad of mdt.numpy_helper_functions
+    mdt.nph  # instead of mdt.numpy_helper_functions
 
 .. todo::
 
@@ -340,7 +340,7 @@ def take(a, start=None, stop=None, step=None, axis=None):
 
 def ix_along_axis_to_global_ix(ix, axis):
     """
-    Construnct a tuple of index arrays suitable to directly index an
+    Construct a tuple of index arrays suitable to directly index an
     array `a` from an array of indices along an axis of `a`.
 
     Parameters
@@ -378,7 +378,7 @@ def ix_along_axis_to_global_ix(ix, axis):
     array can generally **not** be used to get the minimum or maximum
     values of `a` by simply doing ``a[ix]``.  Rather, you have to do
     ``np.squeeze(numpy.take_along_axis(a, numpy.expand_dims(ix, axis=axis), axis=axis))``
-    (in this expample, you can of course also use :func:`numpy.amin` and
+    (in this example, you can of course also use :func:`numpy.amin` and
     :func:`numpy.amax`).  But sometimes, the indices themselves, which
     would make ``a[ix]`` possible, are required.
     :func:`numpy.take_along_axis` and :func:`numpy.expand_dims` do not
@@ -945,7 +945,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
         periodic boundary conditions.  Consequently, if the first and
         the last element of `a` do not match, this is interpreted as
         item change and the position (index) of this item change is
-        regared as zero.
+        regarded as zero.
     prepend_zero : bool, optional
         If ``True``, regard the first element of `a` along the given
         axis as item change and prepend a ``0`` to the returned array of
@@ -1024,7 +1024,7 @@ def ix_of_item_change(a, axis=-1, wrap=False, prepend_zero=False):
     >>> mdt.nph.ix_of_item_change(d, axis=ax, prepend_zero=True)
     (array([0, 0, 1, 1, 1, 2, 2, 2]), array([0, 1, 0, 1, 2, 0, 2, 3]))
 
-    3-dimensional expample:
+    3-dimensional example:
 
     >>> e = np.array([[[1, 2, 2],
     ...                [2, 2, 1]],
@@ -1134,7 +1134,7 @@ def subtract_mic(x1, x2, amin=None, amax=None, **kwargs):
         respectively.  If `amin` and/or `amax` is an array, they must be
         broadcastable to a common shape and the difference
         ``amax - amin`` must be broadcastable to the shape of
-        ``npumpy.subtract(x1, x2, **kwargs)``.  `amin` must be smaller
+        ``numpy.subtract(x1, x2, **kwargs)``.  `amin` must be smaller
         than `amax`.  If the difference between the `x1` and `x2` is
         larger than ``0.5 * (amax - amin)``, it is wrapped back to lie
         within that range (see Notes section).
@@ -1169,8 +1169,8 @@ def subtract_mic(x1, x2, amin=None, amax=None, **kwargs):
     function always has dtype ``numpy.float64``.
 
     If you want to calculate distance vectors between particle
-    positions, use :func:`mdtools.box.vdist`, because this funtion
-    interpretes position and box arrays correctly.
+    positions, use :func:`mdtools.box.vdist`, because this function
+    interprets position and box arrays correctly.
 
     References
     ----------
@@ -1367,7 +1367,7 @@ def diff_mic(a, amin=None, amax=None, **kwargs):
         respectively.  If `amin` and/or `amax` is an array, they must be
         broadcastable to a common shape and the difference
         ``amax - amin`` must be broadcastable to the shape of
-        ``npumpy.diff(a, **kwargs)``.  `amin` must be smaller than
+        ``numpy.diff(a, **kwargs)``.  `amin` must be smaller than
         `amax`.  If the difference between two elements in `a` is larger
         than ``0.5 * (amax - amin)``, it is wrapped back to lie within
         that range (see Notes section).
@@ -1562,7 +1562,7 @@ def locate_item_change(  # noqa: C901
         Array for which to get the positions where its elements change.
     axis : int, optional
         The axis along which to search for changing elements.  By
-        default, the search is perfomed along the last axis.
+        default, the search is performed along the last axis.
     pin : {"after", "before", "both"}
         Whether to return the last position ``"before"`` an item change
         or the first position ``"after"`` an item change.  If set to
@@ -1597,7 +1597,7 @@ iterable of floats, optional
         the last element of `a` do not match, this is interpreted as
         item change.  In this case, the last element of `a` is
         considered to be the last position before an item change and the
-        first element of `a` is considered to be the first posistion
+        first element of `a` is considered to be the first position
         after an item change.
     tfic : bool, optional
         Treat First Item as Change.  If ``True``, treat the first item
@@ -1656,7 +1656,7 @@ iterable of floats, optional
     function, you can use
     :func:`mdtools.numpy_helper_functions.item_change_ix` instead.
 
-    If `mic` is ``True``, this functionen uses
+    If `mic` is ``True``, this function uses
     :func:`mdtools.numpy_helper_functions.diff_mic` to calculate the
     difference between consecutive array elements.  Otherwise,
     :func:`numpy.diff` is used.
@@ -2076,7 +2076,7 @@ mdt.nph.locate_item_change(
            [ True,  True,  True, False],
            [ True, False,  True,  True]])
 
-    3-dimensional expample:
+    3-dimensional example:
 
     >>> a = np.array([[[1, 2, 2],
     ...                [2, 2, 1]],
@@ -2880,7 +2880,7 @@ def item_change_ix(a, axis=-1, *args, **kwargs):
         Array for which to get all indices where its elements change.
     axis : int, optional
         The axis along which to search for changing elements.  By
-        default, the search is perfomed along the last axis.
+        default, the search is performed along the last axis.
     kwargs : tuple, optional
         Additional keyword arguments to parse to
         :func:`mdtools.numpy_helper_functions.locate_item_change`.  See
@@ -3287,7 +3287,7 @@ mdt.nph.item_change_ix(
     >>> after_tfic_tlic
     (array([0, 0, 1, 1, 1, 2, 2, 2]), array([0, 1, 0, 1, 2, 0, 2, 3]))
 
-    3-dimensional expample:
+    3-dimensional example:
 
     >>> a = np.array([[[1, 2, 2],
     ...                [2, 2, 1]],
@@ -3806,7 +3806,7 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     >>> mdt.nph.item_change_ix(d, axis=ax, pin="after", tfic=True)
     (array([0, 0, 1, 1, 1, 2, 2, 2]), array([0, 1, 0, 1, 2, 0, 2, 3]))
 
-    3-dimensional expample:
+    3-dimensional example:
 
     >>> e = np.array([[[1, 2, 2],
     ...                [2, 2, 1]],
@@ -3924,7 +3924,7 @@ def argmin_last(a, axis=None, out=None):
     See Also
     --------
     :func:`numpy.argmin` :
-        Returns indices of the first occurence of the minium value
+        Returns indices of the first occurrence of the minium value
     :func:`argmax_last` :
         Same as :func:`argmin_last` but for maximum values
     :func:`numpy.unravel_index` :
@@ -4022,7 +4022,7 @@ def argmax_last(a, axis=None, out=None):
     See Also
     --------
     :func:`numpy.argmax` :
-        Returns indices of the first occurence of the maximum value
+        Returns indices of the first occurrence of the maximum value
     :func:`argmin_last` :
         Same as :func:`argmax_last` but for minimum values
     :func:`numpy.unravel_index` :
@@ -4099,7 +4099,7 @@ def ceil_divide(x1, x2, **kwargs):
 
     Return the smallest integer greater or equal to the division of the
     inputs.  It is equivalent to ``-(-x1 // x2)`` and can bee regarded
-    as the oppoiste of :func:`numpy.floor_divide`.
+    as the opposite of :func:`numpy.floor_divide`.
 
     Parameters
     ----------
@@ -4205,7 +4205,7 @@ def digitize_dd(
         right-open: [a, b) -> a <= x < b.  See :func:`numpy.digitize`
         for more details.
     expand_binnumbers : bool, optional
-        If ``True``, the returned index array is unravled into an array
+        If ``True``, the returned index array is unraveled into an array
         of shape ``(D, N)`` where each row gives the bin numbers
         of the elements of `sample` along the corresponding dimension.
         If ``False``, the returned index array has shape ``(N,)`` and
@@ -4361,36 +4361,258 @@ def digitize_dd(
         )
 
 
-def split_into_consecutive_subarrays(a, step=1, sort=True, debug=False):
+def split_into_contig_seqs(
+    a, step=1, step_tol=1e-08, sort=False, return_ix=False
+):
     """
-    Split an array into its subarrays of consecutive numbers.
+    Split an array into subarrays of contiguous sequences.
 
     Parameters
     ----------
     a : array_like
-        1-dimensional array which to split into subarrays of consecutive
-        numbers with stepsize `step`.
+        1-dimensional array which to split into subarrays of contiguous
+        sequences with step size `step`.
     step : scalar, optional
-        The stepsize defining the contiguous sequence.
+        The step size defining the contiguous sequence.
+    step_tol : scalar, optional
+        A tolerance value for the step size.  Values in `a` are
+        considered to form a contiguous sequence if their difference
+        lies within ``step +/- step_tol``.
     sort : bool, optional
-        Sort `a` before searching for contiguous sequences.
-    debug : bool, optional
-        If ``True``, check the input arguments.
+        If ``True``, sort `a` before searching for contiguous sequences.
+    return_ix : bool, optional
+        If ``True``, return the indices where `a` was split to create
+        the subarrays.  If `sort` is ``True``, these are the indices
+        where the sorted input array was split.
 
     Returns
     -------
-    consecutive_subarrays : list
+    contig_seqs : list
         List of subarrays, one for each contiguous sequence of numbers
-        with stepsize `step` in `a`.
+        with step size `step` in `a`.
+    ix_split : numpy.ndarray
+        Array of indices at which `a` was split.  If `sort` is ``True``,
+        these are the indices at which the sorted input array was split.
+
+    See Also
+    --------
+    :func:`get_const_seqs` :
+        Get all sequences of constant values in an array
+
+    References
+    ----------
+    Adapted from https://stackoverflow.com/a/7353335.
+
+    Examples
+    --------
+    >>> a = np.array([-3, -2,  0,  3,  2,  4])
+    >>> contig_seqs, ix_split = mdt.nph.split_into_contig_seqs(
+    ...     a, return_ix=True
+    ... )
+    >>> contig_seqs
+    [array([-3, -2]), array([0]), array([3]), array([2]), array([4])]
+    >>> ix_split
+    array([2, 3, 4, 5])
+    >>> contig_seqs, ix_split = mdt.nph.split_into_contig_seqs(
+    ...     a, sort=True, return_ix=True
+    ... )
+    >>> contig_seqs
+    [array([-3, -2]), array([0]), array([2, 3, 4])]
+    >>> ix_split
+    array([2, 3])
+
+    >>> a = np.array([0, 1, 2, 5, 7, 9])
+    >>> mdt.nph.split_into_contig_seqs(a, step=2)
+    [array([0]), array([1]), array([2]), array([5, 7, 9])]
+    >>> a = np.array([0, 1, 2, 2, 1, 0])
+    >>> mdt.nph.split_into_contig_seqs(a, step=-1)
+    [array([0]), array([1]), array([2]), array([2, 1, 0])]
+    >>> a = np.array([1, 2, 2, 3, 3, 3])
+    >>> mdt.nph.split_into_contig_seqs(a, step=0)
+    [array([1]), array([2, 2]), array([3, 3, 3])]
     """
     a = np.asarray(a)
-    if debug:
-        mdt.check.array(a, dim=1)
+    if a.ndim != 1:
+        raise ValueError(
+            "`a` has {} dimension(s) but must be 1-dimensional".format(a.ndim)
+        )
 
     if sort:
         a = np.sort(a)
 
-    return np.split(a, np.flatnonzero((np.diff(a) != step)) + 1)
+    is_contiguous = np.isclose(np.diff(a), step, rtol=0, atol=step_tol)
+    np.bitwise_not(is_contiguous, out=is_contiguous)
+    ix_split = np.flatnonzero(is_contiguous)
+    ix_split += 1
+    contiguous_seqs = np.split(a, ix_split)
+    if return_ix:
+        return contiguous_seqs, ix_split
+    else:
+        return contiguous_seqs
+
+
+def get_const_seqs(x, tol=1e-08, sort=False):
+    """
+    Get all sequences of constant values in an array.
+
+    Parameters
+    ----------
+    x : array_like
+        1-dimensional array for which to get all sequences of constant
+        values.
+    tol : scalar, optional
+        Tolerance value within which consecutive elements of `x` are
+        considered to be equal.
+    sort : bool, optional
+        If ``True``, sort `x` before searching for sequences of constant
+        values.
+
+    Returns
+    -------
+    seq_starts : numpy.ndarray
+        Index array indicating the start of each constant sequence in
+        `x`.
+    eq_lengths : numpy.ndarray
+        The length (i.e. the number of values) of each constant
+        sequence.
+    vals : numpy.ndarray
+        The value of each constant sequence.  Because consecutive values
+        can differ by `tol`, this is the mean value of each constant
+        sequence.
+
+    See Also
+    --------
+    :func:`split_into_contig_seqs` :
+        Split an array into subarrays of contiguous sequences.
+    :func:`find_const_seq_n` :
+        Find the first sequence of at least `n` constant values in an
+        array
+    :func:`find_const_seq_long` :
+        Find the longest sequence of constant values in an array
+
+    Examples
+    --------
+    >>> a = np.array([0, 2, 2, 4, 4, 4, 3, 3, 1])
+    >>> mdt.nph.get_const_seqs(a)
+    (array([0, 1, 3, 6, 8]), array([1, 2, 3, 2, 1]), array([0., 2., 4., 3., 1.]))
+    >>> mdt.nph.get_const_seqs(a, sort=True)
+    (array([0, 1, 2, 4, 6]), array([1, 1, 2, 2, 3]), array([0., 1., 2., 3., 4.]))
+    >>> np.sort(a)
+    array([0, 1, 2, 2, 3, 3, 4, 4, 4])
+    """  # noqa: E501, W505
+    seqs, seq_starts = mdt.nph.split_into_contig_seqs(
+        x, step=0, step_tol=tol, sort=sort, return_ix=True
+    )
+    vals = np.array([np.mean(seq) for seq in seqs])
+    seq_lengths = np.array([len(seq) for seq in seqs])
+    seq_starts = np.insert(seq_starts, 0, 0)
+    return seq_starts, seq_lengths, vals
+
+
+def find_const_seq_n(x, n, tol=1e-08, sort=False):
+    """
+    Find the first sequence of at least `n` constant values in an array.
+
+    Parameters
+    ----------
+    x : array_like
+        1-dimensional array in which to find the first sequence of at
+        least `n` constant values.
+    tol : scalar, optional
+        Tolerance value within which consecutive elements of `x` are
+        considered to be equal.
+    sort : bool, optional
+        If ``True``, sort `x` before searching for sequences of constant
+        values.
+
+    Returns
+    -------
+    start_ix : int
+        Index indicating the start of the first sequence of at least `n`
+        constant values in `x`.
+    length : int
+        The actual length of this sequence.
+    val : scalar
+        The value of this sequence.  Because consecutive values can
+        differ by `tol`, this is the mean value of the sequence.
+
+    See Also
+    --------
+    :func:`get_const_seqs` :
+        Get all sequences of constant values in an array
+    :func:`find_const_seq_long` :
+        Find the longest sequence of constant values in an array
+
+    Examples
+    --------
+    >>> a = np.array([0, 4, 4, 4, 2, 2])
+    >>> mdt.nph.find_const_seq_n(a, n=2)
+    (1, 3, 4.0)
+    >>> mdt.nph.find_const_seq_n(a, n=2, sort=True)
+    (1, 2, 2.0)
+    >>> np.sort(a)
+    array([0, 2, 2, 4, 4, 4])
+    """
+    seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
+        x, tol=tol, sort=sort
+    )
+    ix = np.argmax(np.flatnonzero(seq_lengths >= n))
+    return seq_starts[ix], seq_lengths[ix], vals[ix]
+
+
+def find_const_seq_long(x, tol=1e-08, sort=False):
+    """
+    Find the longest sequence of constant values in an array.
+
+    If there exist multiple sequences with the longest length, the first
+    of them is returned.
+
+    Parameters
+    ----------
+    x : array_like
+        1-dimensional array in which to find the longest sequence of
+        constant values.
+    tol : scalar, optional
+        Tolerance value within which consecutive elements of `x` are
+        considered to be equal.
+    sort : bool, optional
+        If ``True``, sort `x` before searching for sequences of constant
+        values.
+
+    Returns
+    -------
+    start_ix : int
+        Index indicating the start of the longest sequence of constant
+        values in `x`.
+    length : int
+        The actual length of this sequence.
+    val : scalar
+        The value of this sequence.  Because consecutive values can
+        differ by `tol`, this is the mean value of the sequence.
+
+    See Also
+    --------
+    :func:`get_const_seqs` :
+        Get all sequences of constant values in an array.
+    :func:`find_const_seq_n`
+        Find the first sequence of at least `n` constant values in an
+        array
+
+    Examples
+    --------
+    >>> a = np.array([0, 4, 4, 4, 2, 2])
+    >>> mdt.nph.find_const_seq_long(a)
+    (1, 3, 4.0)
+    >>> mdt.nph.find_const_seq_long(a, sort=True)
+    (3, 3, 4.0)
+    >>> np.sort(a)
+    array([0, 2, 2, 4, 4, 4])
+    """
+    seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
+        x, tol=tol, sort=sort
+    )
+    ix = np.argmax(seq_lengths)
+    return seq_starts[ix], seq_lengths[ix], vals[ix]
 
 
 def sequenize(a, step=1, start=0):
@@ -4835,7 +5057,7 @@ def cross_section(z, x, y, line, num=None, order=1):
         `y`.
     num : int, optional
         Number of points to use for sampling the cross section along the
-        given line. If ``None`` (default), approximatly as many sample
+        given line. If ``None`` (default), approximately as many sample
         points are used as real data points are on the line.
     order : int, optional
         Interpolation order.
@@ -4973,7 +5195,7 @@ def cross_section2d(z, ax, x=None, y=None, width=1, mean="arithmetic"):
     if width == 0 and mean != "arithmetic":
         print("Setting mean to 'arithmetic', because width is zero")
     if mean != "arithmetic" and mean != "integral":
-        raise ValueError("mean must be eithe 'arithmetic' or 'integral'")
+        raise ValueError("mean must be either 'arithmetic' or 'integral'")
 
     width2 = width / 2
     cross_sec = np.full(z.shape[zax], np.nan, dtype=np.float64)
@@ -5145,7 +5367,7 @@ def find_linear_region(
         (ideally) preserving the true signal.
     polyorder : int, optional
         The order of the polynomial used to fit the samples. `polyorder`
-        must be less than `window_length` but at least two. Kepp in mind
+        must be less than `window_length` but at least two. Keep in mind
         that you are fitting `window_length` data points with a
         polynomial of order `polyorder`. Thus, in order to avoid
         overfitting, `polyorder` should in fact be considerably smaller
