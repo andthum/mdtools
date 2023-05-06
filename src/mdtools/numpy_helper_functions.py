@@ -4430,6 +4430,12 @@ def split_into_contig_seqs(
     >>> a = np.array([1, 2, 2, 3, 3, 3])
     >>> mdt.nph.split_into_contig_seqs(a, step=0)
     [array([1]), array([2, 2]), array([3, 3, 3])]
+
+    Edge cases:
+
+    >>> a = np.array([])
+    >>> mdt.nph.split_into_contig_seqs(a, sort=True, return_ix=True)
+    ([array([], dtype=float64)], array([], dtype=int64))
     """
     a = np.asarray(a)
     if a.ndim != 1:
