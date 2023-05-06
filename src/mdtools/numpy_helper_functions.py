@@ -4505,13 +4505,22 @@ def get_const_seqs(x, tol=1e-08, sort=False):
     (array([0, 1, 2, 4, 6]), array([1, 1, 2, 2, 3]), array([0., 1., 2., 3., 4.]))
     >>> np.sort(a)
     array([0, 1, 2, 2, 3, 3, 4, 4, 4])
+
+    Edge cases:
+
+    >>> a = np.array([])
+    >>> mdt.nph.get_const_seqs(a, sort=True)
+    (array([], dtype=int64), array([0]), array([], dtype=float64))
     """  # noqa: E501, W505
     seqs, seq_starts = mdt.nph.split_into_contig_seqs(
         x, step=0, step_tol=tol, sort=sort, return_ix=True
     )
-    vals = np.array([np.mean(seq) for seq in seqs])
     seq_lengths = np.array([len(seq) for seq in seqs])
-    seq_starts = np.insert(seq_starts, 0, 0)
+    if len(seq_starts) > 0:
+        seq_starts = np.insert(seq_starts, 0, 0)
+        vals = np.array([np.mean(seq) for seq in seqs])
+    else:
+        vals = seqs[0]
     return seq_starts, seq_lengths, vals
 
 
