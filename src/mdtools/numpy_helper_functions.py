@@ -4561,7 +4561,7 @@ def find_const_seq_n(x, n, tol=1e-08, sort=False):
     Notes
     -----
     If the array does not contain a sequence of at least `n` constant
-    values, ``(np.array([], dtype=np.int64), 0, None)`` is returned.
+    values, `(array([]), 0, array([]))`` is returned.
 
     Examples
     --------
@@ -4587,19 +4587,27 @@ def find_const_seq_n(x, n, tol=1e-08, sort=False):
 
     >>> a = np.array([1, 2, 2, 3, 3, 3])
     >>> mdt.nph.find_const_seq_n(a, n=4)
-    (array([], dtype=int64), 0, None)
+    (array([], dtype=int64), 0, array([], dtype=float64))
     >>> mdt.nph.find_const_seq_n(a, n=0)
     (0, 1, 1.0)
     >>> mdt.nph.find_const_seq_n(a, n=-1)
     (0, 1, 1.0)
+
+    >>> a = np.array([])
+    >>> mdt.nph.find_const_seq_n(a, n=1, sort=True)
+    (array([], dtype=int64), 0, array([], dtype=float64))
     """
     seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
         x, tol=tol, sort=sort
     )
-    ix = np.argmax(seq_lengths >= n)
+    if len(seq_starts) == 0:
+        return seq_starts, seq_lengths[0], vals
+    else:
+        ix = np.argmax(seq_lengths >= n)
     if seq_lengths[ix] < n:
-        # This means ``not np.any(seq_lengths >= n)``.
-        return (np.array([], dtype=np.int64), 0, None)
+        # This means the array does not contain a sequence of at least
+        # `n` constant values, i.e. ``not np.any(seq_lengths >= n)``.
+        return np.array([], dtype=np.int64), 0, np.array([], dtype=vals.dtype)
     else:
         return seq_starts[ix], seq_lengths[ix], vals[ix]
 
