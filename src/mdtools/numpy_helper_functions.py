@@ -4659,12 +4659,21 @@ def find_const_seq_long(x, tol=1e-08, sort=False):
     (3, 3, 4.0)
     >>> np.sort(a)
     array([0, 2, 2, 4, 4, 4])
+
+    Edge cases:
+
+    >>> a = np.array([])
+    >>> mdt.nph.find_const_seq_long(a, sort=True)
+    (array([], dtype=int64), 0, array([], dtype=float64))
     """
     seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
         x, tol=tol, sort=sort
     )
-    ix = np.argmax(seq_lengths)
-    return seq_starts[ix], seq_lengths[ix], vals[ix]
+    if len(seq_starts) == 0:
+        return seq_starts, seq_lengths[0], vals
+    else:
+        ix = np.argmax(seq_lengths)
+        return seq_starts[ix], seq_lengths[ix], vals[ix]
 
 
 def sequenize(a, step=1, start=0):
