@@ -4430,6 +4430,12 @@ def split_into_contig_seqs(
     >>> a = np.array([1, 2, 2, 3, 3, 3])
     >>> mdt.nph.split_into_contig_seqs(a, step=0)
     [array([1]), array([2, 2]), array([3, 3, 3])]
+
+    Edge cases:
+
+    >>> a = np.array([])
+    >>> mdt.nph.split_into_contig_seqs(a, sort=True, return_ix=True)
+    ([array([], dtype=float64)], array([], dtype=int64))
     """
     a = np.asarray(a)
     if a.ndim != 1:
@@ -4499,13 +4505,22 @@ def get_const_seqs(x, tol=1e-08, sort=False):
     (array([0, 1, 2, 4, 6]), array([1, 1, 2, 2, 3]), array([0., 1., 2., 3., 4.]))
     >>> np.sort(a)
     array([0, 1, 2, 2, 3, 3, 4, 4, 4])
+
+    Edge cases:
+
+    >>> a = np.array([])
+    >>> mdt.nph.get_const_seqs(a, sort=True)
+    (array([], dtype=int64), array([0]), array([], dtype=float64))
     """  # noqa: E501, W505
     seqs, seq_starts = mdt.nph.split_into_contig_seqs(
         x, step=0, step_tol=tol, sort=sort, return_ix=True
     )
-    vals = np.array([np.mean(seq) for seq in seqs])
     seq_lengths = np.array([len(seq) for seq in seqs])
-    seq_starts = np.insert(seq_starts, 0, 0)
+    if len(seq_starts) > 0:
+        seq_starts = np.insert(seq_starts, 0, 0)
+        vals = np.array([np.mean(seq) for seq in seqs])
+    else:
+        vals = seqs[0]
     return seq_starts, seq_lengths, vals
 
 
@@ -4543,6 +4558,11 @@ def find_const_seq_n(x, n, tol=1e-08, sort=False):
     :func:`find_const_seq_long` :
         Find the longest sequence of constant values in an array
 
+    Notes
+    -----
+    If the array does not contain a sequence of at least `n` constant
+    values, `(array([]), 0, array([]))`` is returned.
+
     Examples
     --------
     >>> a = np.array([0, 4, 4, 4, 2, 2])
@@ -4552,12 +4572,44 @@ def find_const_seq_n(x, n, tol=1e-08, sort=False):
     (1, 2, 2.0)
     >>> np.sort(a)
     array([0, 2, 2, 4, 4, 4])
+
+    >>> a = np.array([0, 2, 2, 4, 4, 4, 2, 2, 0])
+    >>> mdt.nph.find_const_seq_n(a, n=2)
+    (1, 2, 2.0)
+    >>> mdt.nph.find_const_seq_n(a, n=3)
+    (3, 3, 4.0)
+    >>> mdt.nph.find_const_seq_n(a, n=2, sort=True)
+    (0, 2, 0.0)
+    >>> np.sort(a)
+    array([0, 0, 2, 2, 2, 2, 4, 4, 4])
+
+    Edge cases:
+
+    >>> a = np.array([1, 2, 2, 3, 3, 3])
+    >>> mdt.nph.find_const_seq_n(a, n=4)
+    (array([], dtype=int64), 0, array([], dtype=float64))
+    >>> mdt.nph.find_const_seq_n(a, n=0)
+    (0, 1, 1.0)
+    >>> mdt.nph.find_const_seq_n(a, n=-1)
+    (0, 1, 1.0)
+
+    >>> a = np.array([])
+    >>> mdt.nph.find_const_seq_n(a, n=1, sort=True)
+    (array([], dtype=int64), 0, array([], dtype=float64))
     """
     seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
         x, tol=tol, sort=sort
     )
-    ix = np.argmax(np.flatnonzero(seq_lengths >= n))
-    return seq_starts[ix], seq_lengths[ix], vals[ix]
+    if len(seq_starts) == 0:
+        return seq_starts, seq_lengths[0], vals
+    else:
+        ix = np.argmax(seq_lengths >= n)
+    if seq_lengths[ix] < n:
+        # This means the array does not contain a sequence of at least
+        # `n` constant values, i.e. ``not np.any(seq_lengths >= n)``.
+        return np.array([], dtype=np.int64), 0, np.array([], dtype=vals.dtype)
+    else:
+        return seq_starts[ix], seq_lengths[ix], vals[ix]
 
 
 def find_const_seq_long(x, tol=1e-08, sort=False):
@@ -4607,12 +4659,21 @@ def find_const_seq_long(x, tol=1e-08, sort=False):
     (3, 3, 4.0)
     >>> np.sort(a)
     array([0, 2, 2, 4, 4, 4])
+
+    Edge cases:
+
+    >>> a = np.array([])
+    >>> mdt.nph.find_const_seq_long(a, sort=True)
+    (array([], dtype=int64), 0, array([], dtype=float64))
     """
     seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
         x, tol=tol, sort=sort
     )
-    ix = np.argmax(seq_lengths)
-    return seq_starts[ix], seq_lengths[ix], vals[ix]
+    if len(seq_starts) == 0:
+        return seq_starts, seq_lengths[0], vals
+    else:
+        ix = np.argmax(seq_lengths)
+        return seq_starts[ix], seq_lengths[ix], vals[ix]
 
 
 def sequenize(a, step=1, start=0):
