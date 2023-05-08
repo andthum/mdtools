@@ -168,7 +168,6 @@ def _fit_gaussian(xdata, ydata, p0=None):
             p0=p0,
             bounds=[(-np.inf, 0), (np.inf, np.inf)],
         )
-        perr = np.sqrt(np.diag(pcov))
     except (ValueError, RuntimeError) as err:
         print("An error has occurred during fitting:")
         print("{}".format(err), flush=True)
@@ -177,20 +176,46 @@ def _fit_gaussian(xdata, ydata, p0=None):
         popt = np.full(2, np.nan)
         perr = np.full_like(popt, np.nan)
     else:
+        perr = np.sqrt(np.diag(pcov))
         fit = mdt.stats.gaussian(xdata, *popt)
     return fit, popt, perr
 
 
-def _fit_mb(xdata, ydata):
-    """Fit the given data by a Maxwell-Boltzmann speed distribution."""
+def _fit_mb(xdata, ydata, temp=None, mass=None):
+    r"""
+    Fit the given data by a Maxwell-Boltzmann speed distribution.
+
+    Parameters
+    ----------
+    xdata, ydata : array_like
+        The data to fit.
+    temp : float, optional
+        Temperature of the system in Kelvin.  Used for an initial guess
+        of :math:`\sigma^2 = kT/m`.
+    mass : float, optional
+        Mass of the compound in kilograms.  Used for an initial guess of
+        :math:`\sigma^2 = kT/m`.
+
+    Returns
+    -------
+    fit : numpy.ndarray
+        The y values of the fit.
+    popt : numpy.ndarray
+        The fit parameters.
+    perr : numpy.ndarray
+        The standard deviation of the fit parameters.
+    """
     func = lambda v, var, drift: mdt.stats.mb_dist(  # noqa: E731
         v=v, var=var, drift=drift
     )
+    if temp is None:
+        temp = 273.15 + 25.0  # Default temperature in K.
+    if mass is None:
+        mass = 12 * constants.atomic_mass  # Default mass in kg.
+    # Initial guess for `var`: var = kT/m.  The factor 1e-4 comes from
+    # the conversion of (m/s)^2 to (A/ps)^2.
+    var_guess = 1e-4 * constants.k * temp / mass
     try:
-        # Initial guess for `var` is kT/m with T = 273 K and m = 12 u.
-        # The factor 1e-4 comes from the conversion of (m/s)^2 to
-        # (A/ps)^2.
-        var_guess = constants.k * 273 / (12 * constants.atomic_mass) * 1e-4
         popt, pcov = optimize.curve_fit(
             func,
             xdata=xdata,
@@ -198,7 +223,6 @@ def _fit_mb(xdata, ydata):
             p0=(var_guess, 0),
             bounds=[(0, 0), (np.inf, np.inf)],
         )
-        perr = np.sqrt(np.diag(pcov))
     except (ValueError, RuntimeError) as err:
         print("An error has occurred during fitting:")
         print("{}".format(err), flush=True)
@@ -207,6 +231,7 @@ def _fit_mb(xdata, ydata):
         popt = np.full(2, np.nan)
         perr = np.full_like(popt, np.nan)
     else:
+        perr = np.sqrt(np.diag(pcov))
         fit = func(xdata, *popt)
     return fit, popt, perr
 
@@ -672,19 +697,20 @@ if __name__ == "__main__":  # noqa: C901
                 + "{:<14s} {:>50.9e}\n".format("Fit param StD:", perr[1])
             )
         elif i == N_HISTS - 1 and args.ATTR == "velocities":
-            # Fit histogram of the Euclidean norm by a Maxwell-Boltzmann
-            # speed distribution.
-            # `bin_mids` is given in [A/ps].
-            fit, popt, perr = _fit_mb(xdata=bin_mids, ydata=hist_normed)
-            data = np.column_stack([data, fit])
-            aps2ms = 1e2  # Conversion factor [A/ps] -> [m/s].
-            ms2aps = 1 / aps2ms  # Conversion factor [m/s] -> [A/ps].
-            sigma2_ms = popt[0] * aps2ms**2  # sigma^2 in [(m/s)^2].
             mass = mdt.strc.cmp_attr(
                 sel, cmp=args.CMP, attr="masses", weights="total"
             )
             mass = np.nanmean(mass)  # Mass in [u].
             mass_kg = mass * constants.atomic_mass  # Mass in [kg].
+            # Fit histogram of the Euclidean norm by a Maxwell-Boltzmann
+            # speed distribution.  `bin_mids` is given in [A/ps].
+            fit, popt, perr = _fit_mb(
+                xdata=bin_mids, ydata=hist_normed, mass=mass_kg
+            )
+            data = np.column_stack([data, fit])
+            aps2ms = 1e2  # Conversion factor [A/ps] -> [m/s].
+            ms2aps = 1 / aps2ms  # Conversion factor [m/s] -> [A/ps].
+            sigma2_ms = popt[0] * aps2ms**2  # sigma^2 in [(m/s)^2].
             temp = mass_kg * sigma2_ms / constants.k  # Temperature in [K].
             v_p = np.sqrt(2 * constants.k * temp / mass_kg)
             v_p *= ms2aps  # Most probable speed in [A/ps].
