@@ -4676,11 +4676,15 @@ def find_const_seq_long(x, tol=1e-08, sort=False):
     >>> a = np.array([])
     >>> mdt.nph.find_const_seq_long(a, sort=True)
     (array([], dtype=int64), 0, array([], dtype=float64))
+    >>> a = np.ones(3)
+    >>> mdt.nph.find_const_seq_long(a, sort=True)
+    (0, 3, 1.0)
     """
+    x = np.asarray(x)
     seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
         x, tol=tol, sort=sort
     )
-    if len(seq_starts) == 0:
+    if x.size == 0:
         return seq_starts, seq_lengths[0], vals
     else:
         ix = np.argmax(seq_lengths)
