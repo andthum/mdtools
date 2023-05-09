@@ -4436,6 +4436,9 @@ def split_into_contig_seqs(
     >>> a = np.array([])
     >>> mdt.nph.split_into_contig_seqs(a, sort=True, return_ix=True)
     ([array([], dtype=float64)], array([], dtype=int64))
+    >>> a = np.arange(3)
+    >>> mdt.nph.split_into_contig_seqs(a, sort=True, return_ix=True)
+    ([array([0, 1, 2])], array([], dtype=int64))
     """
     a = np.asarray(a)
     if a.ndim != 1:
@@ -4511,12 +4514,16 @@ def get_const_seqs(x, tol=1e-08, sort=False):
     >>> a = np.array([])
     >>> mdt.nph.get_const_seqs(a, sort=True)
     (array([], dtype=int64), array([0]), array([], dtype=float64))
+    >>> a = np.ones(3)
+    >>> mdt.nph.get_const_seqs(a, sort=True)
+    (array([0]), array([3]), array([1.]))
     """  # noqa: E501, W505
+    x = np.asarray(x)
     seqs, seq_starts = mdt.nph.split_into_contig_seqs(
         x, step=0, step_tol=tol, sort=sort, return_ix=True
     )
     seq_lengths = np.array([len(seq) for seq in seqs])
-    if len(seq_starts) > 0:
+    if x.size > 0:
         seq_starts = np.insert(seq_starts, 0, 0)
         vals = np.array([np.mean(seq) for seq in seqs])
     else:
@@ -4596,11 +4603,15 @@ def find_const_seq_n(x, n, tol=1e-08, sort=False):
     >>> a = np.array([])
     >>> mdt.nph.find_const_seq_n(a, n=1, sort=True)
     (array([], dtype=int64), 0, array([], dtype=float64))
+    >>> a = np.ones(3)
+    >>> mdt.nph.find_const_seq_n(a, n=1, sort=True)
+    (0, 3, 1.0)
     """
+    x = np.asarray(x)
     seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
         x, tol=tol, sort=sort
     )
-    if len(seq_starts) == 0:
+    if x.size == 0:
         return seq_starts, seq_lengths[0], vals
     else:
         ix = np.argmax(seq_lengths >= n)
@@ -4665,11 +4676,15 @@ def find_const_seq_long(x, tol=1e-08, sort=False):
     >>> a = np.array([])
     >>> mdt.nph.find_const_seq_long(a, sort=True)
     (array([], dtype=int64), 0, array([], dtype=float64))
+    >>> a = np.ones(3)
+    >>> mdt.nph.find_const_seq_long(a, sort=True)
+    (0, 3, 1.0)
     """
+    x = np.asarray(x)
     seq_starts, seq_lengths, vals = mdt.nph.get_const_seqs(
         x, tol=tol, sort=sort
     )
-    if len(seq_starts) == 0:
+    if x.size == 0:
         return seq_starts, seq_lengths[0], vals
     else:
         ix = np.argmax(seq_lengths)
