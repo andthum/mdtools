@@ -1224,7 +1224,8 @@ def exp_dist_log(x, rate):
 
 def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
     r"""
-    Maxwell-Boltzmann speed distribution in d-dimensional space. [#]_
+    Maxwell-Boltzmann speed distribution in :math:`d`-dimensional space.
+    [#]_
 
     .. math::
 
@@ -1267,7 +1268,7 @@ def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
     v : array_like
         Array of speed values for which to evaluate :math:`p(v)`.
     temp : scalar or None, optional
-        Temperature of the particles.  Must be provided if `var` is
+        Temperature of the system.  Must be provided if `var` is
         ``None``.
     mass : scalar or None, optional
         Mass of the particles.  Must be provided if `var` is ``None``.
@@ -1286,6 +1287,11 @@ def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
     -------
     p : scalar or array_like
         The function values :math:`p(v)` at the given :math:`v` values.
+
+    See Also
+    --------
+    :func:`mdtools.statistics.ekin_dist` :
+        Distribution of kinetic energies in :math:`d`-dimensional space
 
     Notes
     -----
@@ -1399,6 +1405,129 @@ def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
     sd /= special.gamma(d / 2)
     dist *= sd
     dist /= (2 * np.pi * var) ** ((d - 1) / 2)
+    return dist
+
+
+def ekin_dist(ekin, temp, d=3):
+    r"""
+    Distribution of kinetic energies in :math:`d`-dimensional space.
+    [#]_
+
+    Maxwell-Boltzmann distribution of the kinetic energies of the
+    particles in a canonical (:math:`NVT`) ensemble:
+
+    .. math::
+
+        p(E) = \frac{S_d}{2} (\pi k_B T)^{-\frac{d}{2}}
+        E^{-\frac{d-2}{2}}
+        \exp{\left( -\frac{E}{k_B T} \right)}
+
+    With the kinetic energy :math:`E`, the Boltzmann constant
+    :math:`k_B`, the temperature of the system :math:`T` and the surface
+    area of a :math:`d`-dimensional unit sphere [#]_
+
+    .. math::
+
+        S_d = \frac{2\pi^{\frac{d}{2}}}{\Gamma\left(\frac{d}{2}\right)}
+            =
+            \begin{cases}
+                2      , & d = 1\\
+                2\pi   , & d = 2\\
+                4\pi   , & d = 3\\
+                2\pi^2 , & d = 4\\
+                \vdots &
+            \end{cases}
+
+    where :math:`\Gamma` is the `gamma function
+    <https://en.wikipedia.org/wiki/Gamma_function>`_.
+
+    Parameters
+    ----------
+    ekin : array_like
+        Array of kinetic energy values :math:`E` for which to evaluate
+        :math:`p(E)`.
+    temp : scalar
+        Temperature of the system.
+    d : int, optional
+        Number of spatial dimensions in which the particles can move.
+
+    Returns
+    -------
+    p : scalar or array_like
+        The function values :math:`p(E)` at the given :math:`E` values.
+
+    See Also
+    --------
+    :func:`mdtools.statistics.mb_dist` :
+        Maxwell-Boltzmann speed distribution in :math:`d`-dimensional
+        space
+
+    Notes
+    -----
+    Be aware of the units of your input values!  The unit of the
+    Boltzmann constant :math:`k_B` is J/K.  Thus, temperatures must
+    be given in K and energy values must be given in J.
+
+    Note that all arguments should be positive to get a physically
+    meaningful output.  However, it is also possible to parse negative
+    values to all input arguments.
+
+    The distribution of the kinetic energies :math:`p(E) \text{ d}E` can
+    be derived from the Maxwell-Boltzmann speed distribution
+
+    .. math::
+
+        p(v) \text{ d}v = S_d v^{d-1}
+        \left( \frac{m}{2 \pi k_B T} \right)^{-\frac{d}{2}}
+        \exp{\left( -\frac{mv^2}{2k_B T} \right)} \text{ d}v
+
+    by substituting :math:`E = \frac{1}{2} mv^2`.
+
+    References
+    ----------
+    .. [#] Wikipedia `Maxwell-Boltzmann distribution § In n-dimensional
+        space
+        <https://en.wikipedia.org/wiki/Maxwell%E2%80%93Boltzmann_distribution#Distribution_for_the_energy>`_
+    .. [#] Wikipedia `n-sphere § Closed forms
+        <https://en.wikipedia.org/wiki/N-sphere#Closed_forms>`_
+
+    Examples
+    --------
+    >>> from scipy import constants
+    >>> temp = 1 / constants.k  # Set thermal energy kT to 1
+    >>> x = np.linspace(0, 3, 5)
+    >>> mdt.stats.ekin_dist(x, temp)
+    array([0.        , 0.46159897, 0.30836066, 0.17839543, 0.09730435])
+    >>> mdt.stats.ekin_dist(x, temp, d=1)
+    array([       inf, 0.30773265, 0.10278689, 0.03964343, 0.01621739])
+    >>> mdt.stats.ekin_dist(x, temp, d=2)
+    array([1.        , 0.47236655, 0.22313016, 0.10539922, 0.04978707])
+    >>> mdt.stats.ekin_dist(x, temp, d=4)
+    array([0.        , 0.35427491, 0.33469524, 0.23714826, 0.14936121])
+
+    The area below the distribution is one:
+
+    >>> x = np.linspace(0, 20, 200)
+    >>> # In the 1-dimensional case, the distribution goes to infinity
+    >>> # for E->0 and therefore cannot be integrated numerically.
+    >>> for d in range(2, 6):
+    ...     dist = mdt.stats.ekin_dist(x, temp, d)
+    ...     integral = np.trapz(dist, x)
+    ...     np.isclose(integral, 1, rtol=0, atol=1e-2)
+    True
+    True
+    True
+    True
+    """
+    # Surface area of a d-dimensional unit sphere divided by 2.
+    sd = np.pi ** (d / 2)
+    sd /= special.gamma(d / 2)
+    # Pre-factor
+    pre = sd * (np.pi * constants.k * temp) ** (-d / 2)
+    # Distribution
+    dist = ekin ** ((d - 2) / 2)
+    dist *= np.exp(-ekin / (constants.k * temp))
+    dist *= pre
     return dist
 
 
