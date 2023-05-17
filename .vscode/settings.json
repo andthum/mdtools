@@ -97,6 +97,7 @@
         "dtype",
         "edgecolor",
         "einsum",
+        "ekin",
         "endfit",
         "errorbar",
         "ezavod",
