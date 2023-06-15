@@ -1281,7 +1281,9 @@ def discrete_pos_trj(  # noqa: C901
         bins = np.linspace(START, STOP, NUM + 1)
     else:
         bins = np.unique(bins) / lbox
-    mdt.check.bin_edges(bins=bins, amin=0, amax=1, tol=tol, verbose=verbose)
+    bins = mdt.check.bin_edges(
+        bins=bins, amin=0, amax=1, tol=tol, verbose=verbose
+    )
     if verbose:
         print("Elapsed time:         {}".format(datetime.now() - timer))
         print(
