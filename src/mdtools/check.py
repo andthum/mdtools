@@ -18,7 +18,7 @@
 
 """
 Functions for debugging and checking user input or arguments parsed to
-other functions, clases, etc.
+other functions, classes, etc.
 """
 
 
@@ -644,9 +644,9 @@ def list_of_cms(
         :class:`NumPy arrays <numpy.ndarray>` and
         :mod:`SciPy sparse matrices <scipy.sparse>` is not permitted.
     shape : tuple, optional
-        The shape expected for the arrays in `cms`.  Default is ``None``,
-        which means that it is only checked whether all arrays in `cms`
-        have the same shape, but not what shape that is.
+        The shape expected for the arrays in `cms`.  Default is
+        ``None``, which means that it is only checked whether all arrays
+        in `cms` have the same shape, but not what shape that is.
     dim : int, optional
         The dimension expected for the arrays in `cms`.  If ``None``,
         the dimension is not checked.
@@ -674,7 +674,8 @@ def list_of_cms(
         `dim` is not ``None`` and the dimension of the arrays in `cms`
         is not `dim`;
         The arrays in `cms` contain elements that are less than `amin`;
-        The arrays in `cms` contain elements that are greater than `amax`.
+        The arrays in `cms` contain elements that are greater than
+        `amax`.
 
         Or if
         the given combination of `shape` and `dim` is not satisfiable by
@@ -991,7 +992,7 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     ----------
     bins : array_like
         Array containing the bin edges.  The bin edges are sorted and
-        dublicates are removed.
+        duplicates are removed.
     amin : scalar, optional
         A minimum value that the first bin edge must not undermine.
     amax : scalar, optional
@@ -1097,7 +1098,7 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
     """
     Check if the input parameters are suitable for slicing |MDA_trjs|.
 
-    Bassically, the same rules as for `slicing numpy arrays`_ apply with
+    Basically, the same rules as for `slicing numpy arrays`_ apply with
     the following limitations:
 
         * `start` must be positive or zero, but smaller than `stop`.
@@ -1211,7 +1212,8 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
 
 def block_averaging(n_blocks, n_frames, check_CPUs=False, verbose=True):
     """
-    Check if the number of blocks for block averaging is chosen properly.
+    Check if the number of blocks for block averaging is chosen
+    properly.
 
     The number of blocks must be greater than zero, but less than the
     number of available frames.
@@ -1248,7 +1250,8 @@ def block_averaging(n_blocks, n_frames, check_CPUs=False, verbose=True):
     See Also
     --------
     :func:`mdtools.check.frame_slicing` :
-        Check if the input parameters are suitable for slicing |MDA_trjs|
+        Check if the input parameters are suitable for slicing
+        |MDA_trjs|
     :func:`mdtools.check.frame_lag` :
         Check if a frame lag ('lag time') is chosen properly
     :func:`mdtools.check.time_step` :
@@ -1298,7 +1301,7 @@ def restarts(
 
     .. deprecated:: 0.0.dev0
         :func:`mdtools.check.restarts` might be removed in a future
-        version due to dublicate functionality.  Use
+        version due to duplicate functionality.  Use
         :func:`mdtools.check.frame_lag` instead.
 
     Different restarting points are usually used when calculating time
@@ -1337,7 +1340,8 @@ def restarts(
     :func:`mdtools.check.frame_lag` :
         Check if a frame lag ('lag time') is chosen properly
     :func:`mdtools.check.frame_slicing` :
-        Check if the input parameters are suitable for slicing |MDA_trjs|
+        Check if the input parameters are suitable for slicing
+        |MDA_trjs|
     :func:`mdtools.check.block_averaging` :
         Check if the number of blocks for block averaging is chosen
         properly
@@ -1420,7 +1424,8 @@ def frame_lag(
     See Also
     --------
     :func:`mdtools.check.frame_slicing` :
-        Check if the input parameters are suitable for slicing |MDA_trjs|
+        Check if the input parameters are suitable for slicing
+        |MDA_trjs|
     :func:`mdtools.check.block_averaging` :
         Check if the number of blocks for block averaging is chosen
         properly
@@ -1474,7 +1479,8 @@ def time_step(trj, verbose=True):
 
     Parameters
     ----------
-    trj : MDAnalysis.coordinates.base.ReaderBase or MDAnalysis.coordinates.base.FrameIteratorBase
+    trj : MDAnalysis.coordinates.base.ReaderBase or \
+        MDAnalysis.coordinates.base.FrameIteratorBase
         The |MDA_trj| to check.
     verbose : bool, optional
         If ``True``, print progress information to standard output.
@@ -1516,7 +1522,8 @@ def masses(ag, flash_test=True):
     masses before calculating mass dependent quantities like the center
     of mass.
 
-    .. _MDAnalysis always guesses atom masses: https://userguide.mdanalysis.org/formats/guessing.html
+    .. _MDAnalysis always guesses atom masses:
+        https://userguide.mdanalysis.org/formats/guessing.html
 
     Parameters
     ----------
@@ -1582,7 +1589,8 @@ def masses_new(ag, verbose=False):
     of masses before calculating mass dependent quantities like the
     center of mass.
 
-    .. _MDAnalysis always guesses atom masses: https://userguide.mdanalysis.org/formats/guessing.html
+    .. _MDAnalysis always guesses atom masses:
+        https://userguide.mdanalysis.org/formats/guessing.html
 
     Parameters
     ----------
