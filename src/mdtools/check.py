@@ -991,8 +991,8 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     Parameters
     ----------
     bins : array_like
-        Array containing the bin edges.  The bin edges are sorted and
-        duplicates are removed.
+        Array containing the bin edges.  The bin edges are sorted in
+        ascending order and duplicates are removed.
     amin : scalar, optional
         A minimum value that the first bin edge must not undermine.
     amax : scalar, optional
@@ -1032,8 +1032,10 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     ------
     ValueError
         If ``len(bins)`` is zero;
-        ``bins[0]`` is less than ``amin - tol``;
-        ``bins[-1]`` is greater than ``amax + tol``.
+        ``bins[0]`` is less than `amin` or ``amin - tol`` (if `right` is
+        ``False`` or ``True``);
+        ``bins[-1]`` is greater than ``amax + tol`` or `amax` (if
+        `right` is ``False`` or ``True``).
 
     See Also
     --------
@@ -1056,8 +1058,9 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     if len(bins) == 0:
         raise ValueError("The number of bin edges is zero")
     if amax <= amin:
-        raise ValueError("'amax' ({}) must be greater than 'amin' ({})"
-                         .format(amax, amin))
+        raise ValueError(
+            "`amax` ({}) must be greater than `amin` ({})".format(amax, amin)
+        )
     if right:
         first_bin_edge = amin - tol
         last_bin_edge = amax
@@ -1067,30 +1070,40 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     if np.isclose(bins[0], amin, rtol=0, atol=tol):
         bins[0] = first_bin_edge
         if verbose:
-            print("'mdtools.check.bin_edges()' set 'bins[0]' to {}"
-                  .format(bins[0]))
+            print(
+                "`mdtools.check.bin_edges()` set `bins[0]` to"
+                " {}".format(bins[0])
+            )
     elif bins[0] > amin:
         bins = np.insert(bins, 0, first_bin_edge)
         if verbose:
-            print("'mdtools.check.bin_edges()' prepended 'bins' with {}"
-                  .format(bins[0]))
+            print(
+                "`mdtools.check.bin_edges()` prepended `bins` with"
+                " {}".format(bins[0])
+            )
     elif bins[0] < amin:
-        raise ValueError("The first bin edge ({}) must not be less than"
-                         " 'amin-tol' ({})".format(bins[0], amin - tol))
+        raise ValueError(
+            "The first bin edge ({}) must not be less than `amin - tol`"
+            " ({})".format(bins[0], amin - tol)
+        )
     if np.isclose(bins[-1], amax, rtol=0, atol=tol):
         bins[-1] = last_bin_edge
         if verbose:
-            print("'mdtools.check.bin_edges()' set 'bins[-1]' to {}"
-                  .format(bins[-1]))
+            print(
+                "`mdtools.check.bin_edges()` set `bins[-1]` to"
+                " {}".format(bins[-1])
+            )
     elif bins[-1] < amax:
         bins = np.append(bins, last_bin_edge)
         if verbose:
-            print("'mdtools.check.bin_edges()' appended 'bins' with {}"
-                  .format(bins[-1]))
+            print(
+                "`mdtools.check.bin_edges()` appended `bins` with"
+                " {}".format(bins[-1])
+            )
     elif bins[-1] > amax:
-        raise ValueError("The last bin edge ({}) must not be greater"
-                         " than 'amax+tol' ({})"
-                         .format(bins[-1], amax + tol))
+        raise ValueError(
+            "The last bin edge ({}) must not be greater than `amax + tol`"
+            " ({})".format(bins[-1], amax + tol))
     return bins
 
 
