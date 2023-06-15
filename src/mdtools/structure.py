@@ -1015,7 +1015,7 @@ def discrete_pos_trj(  # noqa: C901
     """
     Create a discrete position trajectory.
 
-    Discretize the positions of compounds of a MDAnalysis
+    Discretize the positions of compounds of an MDAnalysis
     :class:`~MDAnalysis.core.groups.AtomGroup` in a given spatial
     direction.
 
@@ -1028,7 +1028,7 @@ def discrete_pos_trj(  # noqa: C901
     sel : MDAnalysis.core.groups.AtomGroup or str
         'Selection group': Either a MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` (if `trj` is not
-        ``None``) or a selection string for creating a MDAnalysis
+        ``None``) or a selection string for creating an MDAnalysis
         :class:`~MDAnalysis.core.groups.AtomGroup` (if `trj` is
         ``None``).  See MDAnalysis' |selection_syntax| for possible
         choices of selection strings.
@@ -1039,14 +1039,14 @@ def discrete_pos_trj(  # noqa: C901
         created from `topfile` and `trjfile`.
     topfile : str, optional
         Topology file.  See |supported_topology_formats| of MDAnalysis.
-        Ignored if `trj` is not ``None``.
+        Ignored if `trj` is given.
     trjfile : str
         Trajectory file.  See |supported_coordinate_formats| of
-        MDAnalysis.  Ignored if `trj` is not ``None``.
+        MDAnalysis.  Ignored if `trj` is given.
     begin : int, optional
         First frame to read from a newly created trajectory.  Frame
-        numbering starts at zero.  Ignored if `trj` is not ``None``.  If
-        you want to use only specific frames from an already existing
+        numbering starts at zero.  Ignored if `trj` is given.  If you
+        want to use only specific frames from an already existing
         trajectory, slice the existing trajectory accordingly and parse
         it as :class:`MDAnalysis.coordinates.base.FrameIteratorSliced`
         object to the `trj` argument.
@@ -1054,10 +1054,10 @@ def discrete_pos_trj(  # noqa: C901
         Last frame to read from a newly created trajectory.  This is
         exclusive, i.e. the last frame read is actually ``end - 1``.  A
         value of ``-1`` means to read the very last frame.  Ignored if
-        `trj` is not ``None``.
+        `trj` is given.
     every : int, optional
         Read every n-th frame from the newly created trajectory.
-        Ignored if `trj` is not ``None``.
+        Ignored if `trj` is given.
     compound : {'atoms', 'group', 'segments', 'residues', \
         'fragments'}, optional
         The compounds of the selection group whose center of mass
@@ -1111,8 +1111,10 @@ def discrete_pos_trj(  # noqa: C901
     bins : array_like, optional
         Array of custom bin edges.  Bins do not need to be equidistant.
         All bin edges must lie within the simulation box as obtained
-        from the first frame read.  If `bins` is given, it takes
-        precedence over all other bin arguments.
+        from the first frame read.  The given bin edges are sorted
+        ascending order and and duplicate bin edges are removed.  If
+        `bins` is given, it takes precedence over all other bin
+        arguments.
     tol : scalar, optional
         The tolerance value added to ``lbox`` to account for the
         right-open bin interval of the last bin.
@@ -1142,7 +1144,7 @@ def discrete_pos_trj(  # noqa: C901
         create an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup`,
         the number of compounds in this
         :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` must stay
-        constant.  Ignored if `trj` is not ``None``.
+        constant.  Ignored if `trj` is given.
 
     Returns
     -------
@@ -1184,7 +1186,7 @@ def discrete_pos_trj(  # noqa: C901
     length in the given spatial direction.  Doing so accounts for
     possible fluctuations of the simulation box (e.g. due to pressure
     scaling).  Note that MDAnalysis always sets the origin of the
-    simulation box to the origin of the cartesian coordinate system.
+    simulation box to the origin of the Cartesian coordinate system.
 
     All bin intervals are left-closed and right-open, i.e. [a, b) ->
     a <= x < b.  The first bin edge is always zero.  The last bin edge
@@ -1201,7 +1203,7 @@ def discrete_pos_trj(  # noqa: C901
     if verbose:
         timer_tot = datetime.now()
         proc = psutil.Process()
-        proc.cpu_percent()  # Initiate monitoring of CPU usage
+        proc.cpu_percent()  # Initiate monitoring of CPU usage.
         print("Running mdtools.structure.discrete_pos_trj()...")
     if trj is None and (topfile is None or trjfile is None):
         raise ValueError(
@@ -1281,7 +1283,9 @@ def discrete_pos_trj(  # noqa: C901
         bins = np.linspace(START, STOP, NUM + 1)
     else:
         bins = np.unique(bins) / lbox
-    mdt.check.bin_edges(bins=bins, amin=0, amax=1, tol=tol, verbose=verbose)
+    bins = mdt.check.bin_edges(
+        bins=bins, amin=0, amax=1, tol=tol, verbose=verbose
+    )
     if verbose:
         print("Elapsed time:         {}".format(datetime.now() - timer))
         print(
@@ -1328,7 +1332,7 @@ def discrete_pos_trj(  # noqa: C901
         print("Time step last frame:   {:>12.3f} (ps)".format(trj[END - 1].dt))
         timer = datetime.now()
         trj = mdt.rti.ProgressBar(trj)
-    lbox_av = 0  # Average box length in the given direction
+    lbox_av = 0  # Average box length in the given direction.
     for i, ts in enumerate(trj):
         mdt.check.box(
             box=ts.dimensions, with_angles=True, orthorhombic=True, dim=1

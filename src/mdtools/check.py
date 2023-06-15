@@ -18,7 +18,7 @@
 
 """
 Functions for debugging and checking user input or arguments parsed to
-other functions, clases, etc.
+other functions, classes, etc.
 """
 
 
@@ -644,9 +644,9 @@ def list_of_cms(
         :class:`NumPy arrays <numpy.ndarray>` and
         :mod:`SciPy sparse matrices <scipy.sparse>` is not permitted.
     shape : tuple, optional
-        The shape expected for the arrays in `cms`.  Default is ``None``,
-        which means that it is only checked whether all arrays in `cms`
-        have the same shape, but not what shape that is.
+        The shape expected for the arrays in `cms`.  Default is
+        ``None``, which means that it is only checked whether all arrays
+        in `cms` have the same shape, but not what shape that is.
     dim : int, optional
         The dimension expected for the arrays in `cms`.  If ``None``,
         the dimension is not checked.
@@ -674,7 +674,8 @@ def list_of_cms(
         `dim` is not ``None`` and the dimension of the arrays in `cms`
         is not `dim`;
         The arrays in `cms` contain elements that are less than `amin`;
-        The arrays in `cms` contain elements that are greater than `amax`.
+        The arrays in `cms` contain elements that are greater than
+        `amax`.
 
         Or if
         the given combination of `shape` and `dim` is not satisfiable by
@@ -737,8 +738,16 @@ def list_of_cms(
     return cms
 
 
-def bins(start, stop, step=None, num=None, amin=0, amax=None,
-         precision=9, verbose=True):
+def bins(  # noqa: C901
+    start,
+    stop,
+    step=None,
+    num=None,
+    amin=0,
+    amax=None,
+    precision=9,
+    verbose=True,
+):
     """
     Check if start point, end point and step width or number of bins are
     chosen properly for creating bin edges.
@@ -815,11 +824,14 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
     """
     # Check input parameters:
     if step is None and num is None:
-        raise ValueError("Either 'step' ({}) or 'num' ({}) or both of"
-                         " them must be given".format(step, num))
+        raise ValueError(
+            "Either `step` ({}) or `num` ({}) or both of them must be"
+            " given".format(step, num)
+        )
     if amin is not None and amax is not None and amax <= amin:
-        raise ValueError("amax ({}) must be greater than amin ({})"
-                         .format(amax, amin))
+        raise ValueError(
+            "`amax` ({}) must be greater than `amin` ({})".format(amax, amin)
+        )
     # Setting precision for floating point comparison:
     digits = int(max(len(str(int(start))), len(str(int(stop)))))
     if step is not None:
@@ -849,16 +861,15 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
     if num is not None and int(num) != num:
         num = int(num)
         if verbose:
-            print("'mdtools.check.bins()' set 'num' to {}".format(num))
+            print("`mdtools.check.bins()` set `num` to {}".format(num))
     if amin is not None and start < amin:
         start = amin
         if verbose:
-            print("'mdtools.check.bins()' set 'start' to {}"
-                  .format(start))
+            print("`mdtools.check.bins()` set `start` to {}".format(start))
     if amax is not None and stop > amax:
         stop = amax
         if verbose:
-            print("'mdtools.check.bins()' set 'stop' to {}".format(stop))
+            print("`mdtools.check.bins()` set `stop` to {}".format(stop))
     if stop <= start:
         if amax is not None and step is not None:
             if start + step <= amax:
@@ -870,25 +881,27 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
         elif amax is None and step is not None:
             stop = start + step
         elif amax is None and step is None:
-            raise ValueError("stop ({}) is equal to or less than start"
-                             " ({})".format(stop, start))
+            raise ValueError(
+                "`stop` ({}) is equal to or less than `start`"
+                " ({})".format(stop, start)
+            )
         if verbose:
-            print("'mdtools.check.bins()' set 'stop' to {}".format(stop))
-    if step is not None and step > stop - start or step <= 0:
+            print("`mdtools.check.bins()` set `stop` to {}".format(stop))
+    if step is not None and (step > stop - start or step <= 0):
         if num is not None:
             step = (stop - start) / num
         else:
             step = stop - start
         if verbose:
-            print("'mdtools.check.bins()' set 'step' to {}".format(step))
+            print("`mdtools.check.bins()` set `step` to {}".format(step))
     elif step is None:
         step = (stop - start) / num
         if verbose:
-            print("'mdtools.check.bins()' set 'step' to {}".format(step))
+            print("`mdtools.check.bins()` set `step` to {}".format(step))
     if num is None or num != (stop - start) / step:
         num = round((stop - start) / step)
         if verbose:
-            print("'mdtools.check.bins()' set 'num' to {}".format(num))
+            print("`mdtools.check.bins()` set `num` to {}".format(num))
     return float(start), float(stop), float(step), int(num)
 
 
@@ -990,8 +1003,8 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     Parameters
     ----------
     bins : array_like
-        Array containing the bin edges.  The bin edges are sorted and
-        dublicates are removed.
+        Array containing the bin edges.  The bin edges are sorted in
+        ascending order and duplicates are removed.
     amin : scalar, optional
         A minimum value that the first bin edge must not undermine.
     amax : scalar, optional
@@ -1031,8 +1044,10 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     ------
     ValueError
         If ``len(bins)`` is zero;
-        ``bins[0]`` is less than ``amin - tol``;
-        ``bins[-1]`` is greater than ``amax + tol``.
+        ``bins[0]`` is less than `amin` or ``amin - tol`` (if `right` is
+        ``False`` or ``True``);
+        ``bins[-1]`` is greater than ``amax + tol`` or `amax` (if
+        `right` is ``False`` or ``True``).
 
     See Also
     --------
@@ -1055,8 +1070,9 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     if len(bins) == 0:
         raise ValueError("The number of bin edges is zero")
     if amax <= amin:
-        raise ValueError("'amax' ({}) must be greater than 'amin' ({})"
-                         .format(amax, amin))
+        raise ValueError(
+            "`amax` ({}) must be greater than `amin` ({})".format(amax, amin)
+        )
     if right:
         first_bin_edge = amin - tol
         last_bin_edge = amax
@@ -1066,30 +1082,40 @@ def bin_edges(bins, amin=0, amax=1, right=False, tol=1e-6, verbose=True):
     if np.isclose(bins[0], amin, rtol=0, atol=tol):
         bins[0] = first_bin_edge
         if verbose:
-            print("'mdtools.check.bin_edges()' set 'bins[0]' to {}"
-                  .format(bins[0]))
+            print(
+                "`mdtools.check.bin_edges()` set `bins[0]` to"
+                " {}".format(bins[0])
+            )
     elif bins[0] > amin:
         bins = np.insert(bins, 0, first_bin_edge)
         if verbose:
-            print("'mdtools.check.bin_edges()' prepended 'bins' with {}"
-                  .format(bins[0]))
+            print(
+                "`mdtools.check.bin_edges()` prepended `bins` with"
+                " {}".format(bins[0])
+            )
     elif bins[0] < amin:
-        raise ValueError("The first bin edge ({}) must not be less than"
-                         " 'amin-tol' ({})".format(bins[0], amin - tol))
+        raise ValueError(
+            "The first bin edge ({}) must not be less than `amin - tol`"
+            " ({})".format(bins[0], amin - tol)
+        )
     if np.isclose(bins[-1], amax, rtol=0, atol=tol):
         bins[-1] = last_bin_edge
         if verbose:
-            print("'mdtools.check.bin_edges()' set 'bins[-1]' to {}"
-                  .format(bins[-1]))
+            print(
+                "`mdtools.check.bin_edges()` set `bins[-1]` to"
+                " {}".format(bins[-1])
+            )
     elif bins[-1] < amax:
         bins = np.append(bins, last_bin_edge)
         if verbose:
-            print("'mdtools.check.bin_edges()' appended 'bins' with {}"
-                  .format(bins[-1]))
+            print(
+                "`mdtools.check.bin_edges()` appended `bins` with"
+                " {}".format(bins[-1])
+            )
     elif bins[-1] > amax:
-        raise ValueError("The last bin edge ({}) must not be greater"
-                         " than 'amax+tol' ({})"
-                         .format(bins[-1], amax + tol))
+        raise ValueError(
+            "The last bin edge ({}) must not be greater than `amax + tol`"
+            " ({})".format(bins[-1], amax + tol))
     return bins
 
 
@@ -1097,7 +1123,7 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
     """
     Check if the input parameters are suitable for slicing |MDA_trjs|.
 
-    Bassically, the same rules as for `slicing numpy arrays`_ apply with
+    Basically, the same rules as for `slicing numpy arrays`_ apply with
     the following limitations:
 
         * `start` must be positive or zero, but smaller than `stop`.
@@ -1211,7 +1237,8 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
 
 def block_averaging(n_blocks, n_frames, check_CPUs=False, verbose=True):
     """
-    Check if the number of blocks for block averaging is chosen properly.
+    Check if the number of blocks for block averaging is chosen
+    properly.
 
     The number of blocks must be greater than zero, but less than the
     number of available frames.
@@ -1248,7 +1275,8 @@ def block_averaging(n_blocks, n_frames, check_CPUs=False, verbose=True):
     See Also
     --------
     :func:`mdtools.check.frame_slicing` :
-        Check if the input parameters are suitable for slicing |MDA_trjs|
+        Check if the input parameters are suitable for slicing
+        |MDA_trjs|
     :func:`mdtools.check.frame_lag` :
         Check if a frame lag ('lag time') is chosen properly
     :func:`mdtools.check.time_step` :
@@ -1298,7 +1326,7 @@ def restarts(
 
     .. deprecated:: 0.0.dev0
         :func:`mdtools.check.restarts` might be removed in a future
-        version due to dublicate functionality.  Use
+        version due to duplicate functionality.  Use
         :func:`mdtools.check.frame_lag` instead.
 
     Different restarting points are usually used when calculating time
@@ -1337,7 +1365,8 @@ def restarts(
     :func:`mdtools.check.frame_lag` :
         Check if a frame lag ('lag time') is chosen properly
     :func:`mdtools.check.frame_slicing` :
-        Check if the input parameters are suitable for slicing |MDA_trjs|
+        Check if the input parameters are suitable for slicing
+        |MDA_trjs|
     :func:`mdtools.check.block_averaging` :
         Check if the number of blocks for block averaging is chosen
         properly
@@ -1420,7 +1449,8 @@ def frame_lag(
     See Also
     --------
     :func:`mdtools.check.frame_slicing` :
-        Check if the input parameters are suitable for slicing |MDA_trjs|
+        Check if the input parameters are suitable for slicing
+        |MDA_trjs|
     :func:`mdtools.check.block_averaging` :
         Check if the number of blocks for block averaging is chosen
         properly
@@ -1474,7 +1504,8 @@ def time_step(trj, verbose=True):
 
     Parameters
     ----------
-    trj : MDAnalysis.coordinates.base.ReaderBase or MDAnalysis.coordinates.base.FrameIteratorBase
+    trj : MDAnalysis.coordinates.base.ReaderBase or \
+        MDAnalysis.coordinates.base.FrameIteratorBase
         The |MDA_trj| to check.
     verbose : bool, optional
         If ``True``, print progress information to standard output.
@@ -1516,7 +1547,8 @@ def masses(ag, flash_test=True):
     masses before calculating mass dependent quantities like the center
     of mass.
 
-    .. _MDAnalysis always guesses atom masses: https://userguide.mdanalysis.org/formats/guessing.html
+    .. _MDAnalysis always guesses atom masses:
+        https://userguide.mdanalysis.org/formats/guessing.html
 
     Parameters
     ----------
@@ -1582,7 +1614,8 @@ def masses_new(ag, verbose=False):
     of masses before calculating mass dependent quantities like the
     center of mass.
 
-    .. _MDAnalysis always guesses atom masses: https://userguide.mdanalysis.org/formats/guessing.html
+    .. _MDAnalysis always guesses atom masses:
+        https://userguide.mdanalysis.org/formats/guessing.html
 
     Parameters
     ----------
