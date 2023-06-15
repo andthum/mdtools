@@ -109,8 +109,13 @@ Options
     Text file containing custom bin edges (in Angstrom).  Bin edges are
     read from the first column, characters following a '#' are ignored.
     Bins do not need to be equidistant.  All bin edges must lie within
-    the simulation box as obtained from the first frame read.  If
-    \--bins is given, it takes precedence over all other \--bin* flags.
+    the simulation box as obtained from the first frame read.  The given
+    bin edges are sorted in ascending order and and duplicate bin edges
+    are removed.  If \--bins is given, it takes precedence over all
+    other \--bin* flags.
+--tol
+    The tolerance value added to ``lbox`` to account for the right-open
+    bin interval of the last bin.  Default: ``1e-6``.
 --debug
     Run in :ref:`debug mode <debug-mode-label>`.
 
@@ -294,6 +299,17 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--tol",
+        dest="TOL",
+        type=float,
+        required=False,
+        default=1e-6,
+        help=(
+            "The tolerance value added to lbox to account for the right-open"
+            " bin interval of the last bin.  Default: %(default)s."
+        ),
+    )
+    parser.add_argument(
         "--debug",
         dest="DEBUG",
         required=False,
@@ -307,6 +323,8 @@ if __name__ == "__main__":
         bins = None
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
+    if args.TOL < 0:
+        raise ValueError("--tol ({}) must not be negative.".format(args.TOL))
 
     print("\n")
     dtrj, bins, lbox_av, time_step = mdt.strc.discrete_pos_trj(
@@ -322,6 +340,7 @@ if __name__ == "__main__":
         bin_stop=args.STOP,
         bin_num=args.NUM,
         bins=bins,
+        tol=args.TOL,
         return_bins=True,
         return_lbox=True,
         return_dt=True,
