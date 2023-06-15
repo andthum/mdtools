@@ -715,7 +715,7 @@ def write_matrix_block(
             outfile.write("\n")
 
 
-def save_dtrj(fname, dtrj):
+def save_dtrj(fname, dtrj, rename=True):
     """
     Save a discrete trajectory to file.
 
@@ -739,6 +739,10 @@ def save_dtrj(fname, dtrj):
         given in :func:`mdtools.check.dtrj`.  Note that the shape of
         `dtrj` is expanded to ``(1, f)`` if it is only of shape
         ``(f,)``.
+    rename : bool, optional
+        If ``True`` and a file called `fname` already exists, rename it
+        to ``'fname.bak_timestamp'``.  See
+        :func:`mdtools.file_handler.backup` for more details.
 
     See Also
     --------
@@ -763,6 +767,8 @@ def save_dtrj(fname, dtrj):
             "{}".format(err),
             UserWarning,
         )
+    if rename:
+        mdt.fh.backup(fname)
     with mdt.fh.xopen(fname, "wb") as fh:
         np.savez_compressed(fh, dtrj=dtrj)
 
