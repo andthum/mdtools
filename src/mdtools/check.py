@@ -887,7 +887,7 @@ def bins(  # noqa: C901
             )
         if verbose:
             print("`mdtools.check.bins()` set `stop` to {}".format(stop))
-    if step is not None and step > stop - start or step <= 0:
+    if step is not None and (step > stop - start or step <= 0):
         if num is not None:
             step = (stop - start) / num
         else:
