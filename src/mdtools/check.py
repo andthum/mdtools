@@ -738,8 +738,16 @@ def list_of_cms(
     return cms
 
 
-def bins(start, stop, step=None, num=None, amin=0, amax=None,
-         precision=9, verbose=True):
+def bins(  # noqa: C901
+    start,
+    stop,
+    step=None,
+    num=None,
+    amin=0,
+    amax=None,
+    precision=9,
+    verbose=True,
+):
     """
     Check if start point, end point and step width or number of bins are
     chosen properly for creating bin edges.
@@ -816,11 +824,14 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
     """
     # Check input parameters:
     if step is None and num is None:
-        raise ValueError("Either 'step' ({}) or 'num' ({}) or both of"
-                         " them must be given".format(step, num))
+        raise ValueError(
+            "Either `step` ({}) or `num` ({}) or both of them must be"
+            " given".format(step, num)
+        )
     if amin is not None and amax is not None and amax <= amin:
-        raise ValueError("amax ({}) must be greater than amin ({})"
-                         .format(amax, amin))
+        raise ValueError(
+            "`amax` ({}) must be greater than `amin` ({})".format(amax, amin)
+        )
     # Setting precision for floating point comparison:
     digits = int(max(len(str(int(start))), len(str(int(stop)))))
     if step is not None:
@@ -850,16 +861,15 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
     if num is not None and int(num) != num:
         num = int(num)
         if verbose:
-            print("'mdtools.check.bins()' set 'num' to {}".format(num))
+            print("`mdtools.check.bins()` set `num` to {}".format(num))
     if amin is not None and start < amin:
         start = amin
         if verbose:
-            print("'mdtools.check.bins()' set 'start' to {}"
-                  .format(start))
+            print("`mdtools.check.bins()` set `start` to {}".format(start))
     if amax is not None and stop > amax:
         stop = amax
         if verbose:
-            print("'mdtools.check.bins()' set 'stop' to {}".format(stop))
+            print("`mdtools.check.bins()` set `stop` to {}".format(stop))
     if stop <= start:
         if amax is not None and step is not None:
             if start + step <= amax:
@@ -871,25 +881,27 @@ def bins(start, stop, step=None, num=None, amin=0, amax=None,
         elif amax is None and step is not None:
             stop = start + step
         elif amax is None and step is None:
-            raise ValueError("stop ({}) is equal to or less than start"
-                             " ({})".format(stop, start))
+            raise ValueError(
+                "`stop` ({}) is equal to or less than `start`"
+                " ({})".format(stop, start)
+            )
         if verbose:
-            print("'mdtools.check.bins()' set 'stop' to {}".format(stop))
+            print("`mdtools.check.bins()` set `stop` to {}".format(stop))
     if step is not None and step > stop - start or step <= 0:
         if num is not None:
             step = (stop - start) / num
         else:
             step = stop - start
         if verbose:
-            print("'mdtools.check.bins()' set 'step' to {}".format(step))
+            print("`mdtools.check.bins()` set `step` to {}".format(step))
     elif step is None:
         step = (stop - start) / num
         if verbose:
-            print("'mdtools.check.bins()' set 'step' to {}".format(step))
+            print("`mdtools.check.bins()` set `step` to {}".format(step))
     if num is None or num != (stop - start) / step:
         num = round((stop - start) / step)
         if verbose:
-            print("'mdtools.check.bins()' set 'num' to {}".format(num))
+            print("`mdtools.check.bins()` set `num` to {}".format(num))
     return float(start), float(stop), float(step), int(num)
 
 
