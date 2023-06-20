@@ -29,4 +29,4 @@ information.
 
 #: Release version of MDTools in MAJOR-CORE.MAJOR-SCRIPTS.MINOR.PATCH
 #: format.
-__version__ = "0.0.5.0"
+__version__ = "0.0.6.0"
