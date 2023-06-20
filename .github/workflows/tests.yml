@@ -191,15 +191,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}
             ${{ runner.os }}
-      - name: "Install libbz2-dev"
-        # MacOS-latest with Python 3.7 fails with:
-        # ModuleNotFoundError: No module named '_bz2'
-        # Installing bzip2 should fix this.
-        if: "${{ runner.os == 'MacOS' && matrix.python-version == '3.7' }}"
-        run: |
-          brew install bzip2
-          echo 'LDFLAGS="-L/usr/local/opt/bzip2/lib"' >> "${GITHUB_ENV}"
-          echo 'CPPFLAGS="-I/usr/local/opt/bzip2/include"' >> "${GITHUB_ENV}"
       - name: "Install/Upgrade setuptools, wheel and python-dev-tools"
         # Without `python-dev-tools` the installation of MDAnalysis
         # fails on MacOS-latest with Python 3.9 while building the wheel
