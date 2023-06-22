@@ -335,6 +335,12 @@ if __name__ == "__main__":
 
     print("\n")
     print("Calculating remain probability...")
+    print("Number of compounds:    {:>8d}".format(N_CMPS))
+    print("Total number of frames: {:>8d}".format(N_FRAMES_TOT))
+    print("Frames to read:         {:>8d}".format(N_FRAMES))
+    print("First frame to read:    {:>8d}".format(BEGIN))
+    print("Last frame to read:     {:>8d}".format(END - 1))
+    print("Read every n-th frame:  {:>8d}".format(EVERY))
     timer = datetime.now()
     prob = mdt.dtrj.remain_prob_discrete(
         dtrj1=dtrj1,
