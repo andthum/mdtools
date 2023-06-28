@@ -99,7 +99,7 @@ def array(
         Or if
         the given combination of `shape`, `dim` and `axis` is invalid;
         `amax` is less than `amin`.
-    :exc:`numpy.AxisError`
+    :exc:`numpy.exceptions.AxisError`
         If `axis` is not ``None`` and the axis is out of bounds for `a`.
     TypeError
         If `dtype` is not ``None`` and the data type of `a` is not

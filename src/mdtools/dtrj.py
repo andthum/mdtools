@@ -1167,7 +1167,9 @@ def remain_prob(  # noqa: C901
     if verbose:
         proc = psutil.Process()
         n_restarts = int(np.ceil(n_frames / restart))
-        restarts = mdt.rti.ProgressBar(restarts, total=n_restarts)
+        restarts = mdt.rti.ProgressBar(
+            restarts, total=n_restarts, unit="restarts"
+        )
     for t0 in restarts:
         # When trying to understand the following code, read the "else"
         # parts fist.  Those are the simpler cases upon which the other
@@ -1534,7 +1536,9 @@ def remain_prob_discrete(  # noqa: C901
     if verbose:
         proc = psutil.Process()
         n_restarts = int(np.ceil(n_frames / restart))
-        restarts = mdt.rti.ProgressBar(restarts, total=n_restarts)
+        restarts = mdt.rti.ProgressBar(
+            restarts, total=n_restarts, unit="restarts"
+        )
     for t0 in restarts:
         # When trying to understand the following code, read the "else"
         # parts fist.  Those are the simpler cases upon which the other

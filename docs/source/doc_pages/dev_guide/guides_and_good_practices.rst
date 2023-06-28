@@ -162,7 +162,7 @@ already established for research data to research software:
     https://github.com/skills/resolve-merge-conflicts
 .. _Hello GitHub Actions: https://github.com/skills/hello-github-actions
 .. _Continuous Integration:
-    https://github.com/skills/continuous-integration
+    https://github.com/skills/test-with-actions
 .. _The Turing Way: https://the-turing-way.netlify.app/index.html
 .. _Open Science Training Handbook:
     https://open-science-training-handbook.gitbook.io/book/
