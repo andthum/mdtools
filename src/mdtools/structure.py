@@ -3065,14 +3065,14 @@ def contact_matrices(  # noqa: C901
         created from `topfile` and `trjfile`.
     topfile : str, optional
         Topology file.  See |supported_topology_formats| of MDAnalysis.
-        Ignored if `trj` is not ``None``.
+        Ignored if `trj` is given.
     trjfile : str, optional
         Trajectory file.  See |supported_coordinate_formats| of
-        MDAnalysis.  Ignored if `trj` is not ``None``.
+        MDAnalysis.  Ignored if `trj` is given.
     begin : int, optional
         First frame to read from a newly created trajectory.  Frame
-        numbering starts at zero.  Ignored if `trj` is not ``None``.  If
-        you want to use only specific frames from an already existing
+        numbering starts at zero.  Ignored if `trj` is given.  If you
+        want to use only specific frames from an already existing
         trajectory, slice the existing trajectory accordingly and parse
         it as :class:`MDAnalysis.coordinates.base.FrameIteratorSliced`
         object to the `trj` argument.
@@ -3080,21 +3080,23 @@ def contact_matrices(  # noqa: C901
         Last frame to read from a newly created trajectory.  This is
         exclusive, i.e. the last frame read is actually ``end - 1``.  A
         value of ``-1`` means to read the very last frame.  Ignored if
-        `trj` is not ``None``.
+        `trj` is given.
     every : int, optional
         Read every n-th frame from the newly created trajectory.
-        Ignored if `trj` is not ``None``.
+        Ignored if `trj` is given.
     updating_ref, updating_sel : bool, optional
-        Use an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` for a
-        newly created reference/selection group.  Selection expressions
-        of :class:`UpdatingAtomGroups
+        If `trj` is not given, indicate that the provided
+        reference/selection group is an
+        :class:`~MDAnalysis.core.groups.UpdatingAtomGroup`.  If `trj` is
+        given, use an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup`
+        for the newly created reference/selection group.  Selection
+        expressions of :class:`UpdatingAtomGroups
         <MDAnalysis.core.groups.UpdatingAtomGroup>` are re-evaluated
         every time step.  For instance, this is useful for
         position-based selections like 'type Li and prop z <= 2.0'.
         Note that the contact matrices for different frames might have
         different shapes when using :class:`UpdatingAtomGroups
-        <MDAnalysis.core.groups.UpdatingAtomGroup>`.  Ignored if `trj`
-        is not ``None``.
+        <MDAnalysis.core.groups.UpdatingAtomGroup>`.
     compound : {'atoms', 'group', 'segments', 'residues', \
         'fragments'}, optional
         The compounds of `ref` and `sel` for which to calculate the
@@ -3221,9 +3223,14 @@ def contact_matrices(  # noqa: C901
     else:
         N_FRAMES_TOT = len(trj)
         BEGIN, END, EVERY, N_FRAMES = (0, len(trj), 1, len(trj))
+        if isinstance(ref, str):
+            raise ValueError(
+                "`ref` is a string, but if `trj` is given, `ref` must"
+                " be a MDAnalysis.core.groups.AtomGroup instance"
+            )
         if isinstance(sel, str):
             raise ValueError(
-                "'sel' is a string, but if 'trj' is given, 'sel' must"
+                "`sel` is a string, but if `trj` is given, `sel` must"
                 " be a MDAnalysis.core.groups.AtomGroup instance"
             )
 
@@ -3243,6 +3250,7 @@ def contact_matrices(  # noqa: C901
     else:
         dist_array_tmp = None
 
+    # Read trajectory:
     if verbose:
         print()
         print("Reading trajectory...")
@@ -3251,10 +3259,12 @@ def contact_matrices(  # noqa: C901
         print("First frame to read:    {:>8d}".format(BEGIN))
         print("Last frame to read:     {:>8d}".format(END - 1))
         print("Read every n-th frame:  {:>8d}".format(EVERY))
-        print("Time first frame:       {:>12.3f} (ps)".format(trj[0].time))
-        print("Time last frame:        {:>12.3f} (ps)".format(trj[-1].time))
-        print("Time step first frame:  {:>12.3f} (ps)".format(trj[0].dt))
-        print("Time step last frame:   {:>12.3f} (ps)".format(trj[-1].dt))
+        print("Time first frame:       {:>12.3f} (ps)".format(trj[BEGIN].time))
+        print(
+            "Time last frame:        {:>12.3f} (ps)".format(trj[END - 1].time)
+        )
+        print("Time step first frame:  {:>12.3f} (ps)".format(trj[BEGIN].dt))
+        print("Time step last frame:   {:>12.3f} (ps)".format(trj[END - 1].dt))
         timer = datetime.now()
         trj = mdt.rti.ProgressBar(trj)
     for i, ts in enumerate(trj):
