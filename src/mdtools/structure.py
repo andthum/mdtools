@@ -2964,6 +2964,12 @@ def contact_matrix(
                 "The {} group must not contain duplicate"
                 " atoms".format(ag_names[i])
             )
+    if debug:
+        warnings.warn(
+            "The `debug` argument is deprecated and will be removed in a"
+            " future release.",
+            DeprecationWarning,
+        )
 
     for ag in ags:
         if ag.n_atoms == 0:
