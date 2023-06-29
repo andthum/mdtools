@@ -1290,7 +1290,7 @@ def discrete_pos_trj(  # noqa: C901
         print("Elapsed time:         {}".format(datetime.now() - timer))
         print(
             "Current memory usage: {:.2f}"
-            " MiB".format(proc.memory_info().rss / 2**20)
+            " MiB".format(mdt.rti.mem_usage(proc))
         )
 
     # Prepare discrete trajectory:
@@ -1354,9 +1354,8 @@ def discrete_pos_trj(  # noqa: C901
             mdt.check.array(pos, shape=(N_CMPS,), amin=0, amax=1)
         dtrj[i] = np.digitize(pos, bins=bins)
         if verbose:
-            progress_bar_mem = proc.memory_info().rss / 2**20
             trj.set_postfix_str(
-                "{:>7.2f}MiB".format(progress_bar_mem), refresh=False
+                "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
             )
     del pos
     # Discrete trajectories are returned in a format consistent with
@@ -1371,7 +1370,7 @@ def discrete_pos_trj(  # noqa: C901
         print("Elapsed time:         {}".format(datetime.now() - timer))
         print(
             "Current memory usage: {:.2f}"
-            " MiB".format(proc.memory_info().rss / 2**20)
+            " MiB".format(mdt.rti.mem_usage(proc))
         )
 
     # Internal consistency check
@@ -1390,7 +1389,7 @@ def discrete_pos_trj(  # noqa: C901
         print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
         print(
             "Current memory usage: {:.2f}"
-            " MiB".format(proc.memory_info().rss / 2**20)
+            " MiB".format(mdt.rti.mem_usage(proc))
         )
 
     if not np.any([return_bins, return_lbox, return_dt]):
@@ -1793,7 +1792,7 @@ def natms_per_cmp(
         compounds as assigned by MDAnalysis.  If `cmp` is e.g.
         ``'residues'``, this is ``np.unique(ag.resindices)``.
     check_contiguous : bool, optional
-        If ``True`` (default), check if
+        If ``True``, check if
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the
         same compound form a contiguous set in the input
         :class:`~MDAnalysis.core.groups.AtomGroup`.  This is e.g.
@@ -2964,6 +2963,12 @@ def contact_matrix(
                 "The {} group must not contain duplicate"
                 " atoms".format(ag_names[i])
             )
+    if debug:
+        warnings.warn(
+            "The `debug` argument is deprecated and will be removed in a"
+            " future release.",
+            DeprecationWarning,
+        )
 
     for ag in ags:
         if ag.n_atoms == 0:
@@ -3059,14 +3064,14 @@ def contact_matrices(  # noqa: C901
         created from `topfile` and `trjfile`.
     topfile : str, optional
         Topology file.  See |supported_topology_formats| of MDAnalysis.
-        Ignored if `trj` is not ``None``.
+        Ignored if `trj` is given.
     trjfile : str, optional
         Trajectory file.  See |supported_coordinate_formats| of
-        MDAnalysis.  Ignored if `trj` is not ``None``.
+        MDAnalysis.  Ignored if `trj` is given.
     begin : int, optional
         First frame to read from a newly created trajectory.  Frame
-        numbering starts at zero.  Ignored if `trj` is not ``None``.  If
-        you want to use only specific frames from an already existing
+        numbering starts at zero.  Ignored if `trj` is given.  If you
+        want to use only specific frames from an already existing
         trajectory, slice the existing trajectory accordingly and parse
         it as :class:`MDAnalysis.coordinates.base.FrameIteratorSliced`
         object to the `trj` argument.
@@ -3074,21 +3079,23 @@ def contact_matrices(  # noqa: C901
         Last frame to read from a newly created trajectory.  This is
         exclusive, i.e. the last frame read is actually ``end - 1``.  A
         value of ``-1`` means to read the very last frame.  Ignored if
-        `trj` is not ``None``.
+        `trj` is given.
     every : int, optional
         Read every n-th frame from the newly created trajectory.
-        Ignored if `trj` is not ``None``.
+        Ignored if `trj` is given.
     updating_ref, updating_sel : bool, optional
-        Use an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup` for a
-        newly created reference/selection group.  Selection expressions
-        of :class:`UpdatingAtomGroups
+        If `trj` is not given, indicate that the provided
+        reference/selection group is an
+        :class:`~MDAnalysis.core.groups.UpdatingAtomGroup`.  If `trj` is
+        given, use an :class:`~MDAnalysis.core.groups.UpdatingAtomGroup`
+        for the newly created reference/selection group.  Selection
+        expressions of :class:`UpdatingAtomGroups
         <MDAnalysis.core.groups.UpdatingAtomGroup>` are re-evaluated
         every time step.  For instance, this is useful for
         position-based selections like 'type Li and prop z <= 2.0'.
         Note that the contact matrices for different frames might have
         different shapes when using :class:`UpdatingAtomGroups
-        <MDAnalysis.core.groups.UpdatingAtomGroup>`.  Ignored if `trj`
-        is not ``None``.
+        <MDAnalysis.core.groups.UpdatingAtomGroup>`.
     compound : {'atoms', 'group', 'segments', 'residues', \
         'fragments'}, optional
         The compounds of `ref` and `sel` for which to calculate the
@@ -3215,9 +3222,14 @@ def contact_matrices(  # noqa: C901
     else:
         N_FRAMES_TOT = len(trj)
         BEGIN, END, EVERY, N_FRAMES = (0, len(trj), 1, len(trj))
+        if isinstance(ref, str):
+            raise ValueError(
+                "`ref` is a string, but if `trj` is given, `ref` must"
+                " be a MDAnalysis.core.groups.AtomGroup instance"
+            )
         if isinstance(sel, str):
             raise ValueError(
-                "'sel' is a string, but if 'trj' is given, 'sel' must"
+                "`sel` is a string, but if `trj` is given, `sel` must"
                 " be a MDAnalysis.core.groups.AtomGroup instance"
             )
 
@@ -3237,6 +3249,7 @@ def contact_matrices(  # noqa: C901
     else:
         dist_array_tmp = None
 
+    # Read trajectory:
     if verbose:
         print()
         print("Reading trajectory...")
@@ -3245,10 +3258,12 @@ def contact_matrices(  # noqa: C901
         print("First frame to read:    {:>8d}".format(BEGIN))
         print("Last frame to read:     {:>8d}".format(END - 1))
         print("Read every n-th frame:  {:>8d}".format(EVERY))
-        print("Time first frame:       {:>12.3f} (ps)".format(trj[0].time))
-        print("Time last frame:        {:>12.3f} (ps)".format(trj[-1].time))
-        print("Time step first frame:  {:>12.3f} (ps)".format(trj[0].dt))
-        print("Time step last frame:   {:>12.3f} (ps)".format(trj[-1].dt))
+        print("Time first frame:       {:>12.3f} (ps)".format(trj[BEGIN].time))
+        print(
+            "Time last frame:        {:>12.3f} (ps)".format(trj[END - 1].time)
+        )
+        print("Time step first frame:  {:>12.3f} (ps)".format(trj[BEGIN].dt))
+        print("Time step last frame:   {:>12.3f} (ps)".format(trj[END - 1].dt))
         timer = datetime.now()
         trj = mdt.rti.ProgressBar(trj)
     for i, ts in enumerate(trj):
@@ -4062,7 +4077,11 @@ def contact_hist_refcmp_same_selcmp(
         # selcmp/refcmp
         hist[n] = np.count_nonzero(any_pair_has_n_contacts)
     if zero_contacts_exist:
-        hist[0] = cm.shape[0]
+        # Zero contacts must be treated separately, because most of the
+        # matrix elements are usually zero.  Therefore, the number of
+        # reference compounds that have no contact with any reference
+        # compound cannot be calculated by the algorithm above.
+        hist[0] = cm.shape[0]  # Total number of reference compounds.
         np.greater(cm, 0, out=pair_has_n_contacts)
         np.any(pair_has_n_contacts, axis=1, out=any_pair_has_n_contacts)
         hist[0] -= np.count_nonzero(any_pair_has_n_contacts)
