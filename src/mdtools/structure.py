@@ -1793,7 +1793,7 @@ def natms_per_cmp(
         compounds as assigned by MDAnalysis.  If `cmp` is e.g.
         ``'residues'``, this is ``np.unique(ag.resindices)``.
     check_contiguous : bool, optional
-        If ``True`` (default), check if
+        If ``True``, check if
         :class:`Atoms <MDAnalysis.core.groups.Atom>` belonging to the
         same compound form a contiguous set in the input
         :class:`~MDAnalysis.core.groups.AtomGroup`.  This is e.g.
