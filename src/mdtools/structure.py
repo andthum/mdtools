@@ -4077,7 +4077,11 @@ def contact_hist_refcmp_same_selcmp(
         # selcmp/refcmp
         hist[n] = np.count_nonzero(any_pair_has_n_contacts)
     if zero_contacts_exist:
-        hist[0] = cm.shape[0]
+        # Zero contacts must be treated separately, because most of the
+        # matrix elements are usually zero.  Therefore, the number of
+        # reference compounds that have no contact with any reference
+        # compound cannot be calculated by the algorithm above.
+        hist[0] = cm.shape[0]  # Total number of reference compounds.
         np.greater(cm, 0, out=pair_has_n_contacts)
         np.any(pair_has_n_contacts, axis=1, out=any_pair_has_n_contacts)
         hist[0] -= np.count_nonzero(any_pair_has_n_contacts)
