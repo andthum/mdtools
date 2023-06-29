@@ -1290,7 +1290,7 @@ def discrete_pos_trj(  # noqa: C901
         print("Elapsed time:         {}".format(datetime.now() - timer))
         print(
             "Current memory usage: {:.2f}"
-            " MiB".format(proc.memory_info().rss / 2**20)
+            " MiB".format(mdt.rti.mem_usage(proc))
         )
 
     # Prepare discrete trajectory:
@@ -1354,9 +1354,8 @@ def discrete_pos_trj(  # noqa: C901
             mdt.check.array(pos, shape=(N_CMPS,), amin=0, amax=1)
         dtrj[i] = np.digitize(pos, bins=bins)
         if verbose:
-            progress_bar_mem = proc.memory_info().rss / 2**20
             trj.set_postfix_str(
-                "{:>7.2f}MiB".format(progress_bar_mem), refresh=False
+                "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
             )
     del pos
     # Discrete trajectories are returned in a format consistent with
@@ -1371,7 +1370,7 @@ def discrete_pos_trj(  # noqa: C901
         print("Elapsed time:         {}".format(datetime.now() - timer))
         print(
             "Current memory usage: {:.2f}"
-            " MiB".format(proc.memory_info().rss / 2**20)
+            " MiB".format(mdt.rti.mem_usage(proc))
         )
 
     # Internal consistency check
@@ -1390,7 +1389,7 @@ def discrete_pos_trj(  # noqa: C901
         print("CPU usage:            {:.2f} %".format(proc.cpu_percent()))
         print(
             "Current memory usage: {:.2f}"
-            " MiB".format(proc.memory_info().rss / 2**20)
+            " MiB".format(mdt.rti.mem_usage(proc))
         )
 
     if not np.any([return_bins, return_lbox, return_dt]):
