@@ -748,9 +748,9 @@ if __name__ == '__main__':
         # Axes with 30° and 150° to x axis
         for j, hex_face in enumerate(hex_face_col):
             for k, hex_ax_slope in enumerate(hex_ax_slopes):
-                hex_ax = mdt.func.g(x=pos[:, 0],
-                                    m=hex_ax_slope,
-                                    c=hex_ax_intercepts[j][k])
+                hex_ax = mdt.func.line(
+                    x=pos[:, 0], m=hex_ax_slope, c=hex_ax_intercepts[j][k]
+                )
                 # Minimum y distance to sampling axis
                 dist_ax = pos[:, 1] - hex_ax
                 dist_ax -= np.floor(dist_ax / ly + 0.5) * ly  # MIC

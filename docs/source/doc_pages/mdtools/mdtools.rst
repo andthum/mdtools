@@ -35,6 +35,7 @@ Modules
     dtrj
     dynamics
     file_handler
+    functions
     numpy_helper_functions
     parallel
     plot
