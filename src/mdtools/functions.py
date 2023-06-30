@@ -57,7 +57,7 @@ def line(x, m=1, c=0):
 
     See Also
     --------
-    :func:`mdtools.functions.g_inverse` :
+    :func:`mdtools.functions.line_inv` :
         Inverse of a straight line
 
     Notes
@@ -68,7 +68,7 @@ def line(x, m=1, c=0):
     return m * x + c
 
 
-def g_inverse(y, m=1, c=0):
+def line_inv(y, m=1, c=0):
     r"""
     Inverse of a straight line:
 
