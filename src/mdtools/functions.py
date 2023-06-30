@@ -19,9 +19,17 @@
 """General mathematical and physical functions."""
 
 
+# Standard libraries
 import warnings
+
+# Third-party libraries
 import numpy as np
 from scipy import optimize
+
+
+# `scipy.optimize.curve_fit` can not handle zero standard deviations.
+# Therefore, replace zeros with a very small value.
+CURVE_FIT_ZERO_SD = 1e-30
 
 
 def g(x, m=1, c=0):
@@ -221,32 +229,40 @@ def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
     ydata = np.asarray(ydata)
     valid = np.isfinite(ydata) & (ydata > 0) & (ydata <= 1)
     if not np.all(valid):
-        warnings.warn("{} elements of ydata do not fulfill the"
-                      " requirement 0 < ydata <= 1 and are discarded for"
-                      " fitting"
-                      .format(len(valid) - np.count_nonzero(valid)),
-                      RuntimeWarning)
+        warnings.warn(
+            "{} elements of ydata do not fulfill the requirement"
+            " 0 < ydata <= 1 and are discarded for"
+            " fitting".format(len(valid) - np.count_nonzero(valid)),
+            RuntimeWarning,
+        )
     if not np.any(valid):
-        warnings.warn("None of the y-data fulfills the requirement"
-                      " 0 < ydata <= 1. Setting fit parameters to"
-                      " numpy.nan", RuntimeWarning)
+        warnings.warn(
+            "None of the y-data fulfills the requirement 0 < ydata <= 1."
+            "  Setting fit parameters to numpy.nan",
+            RuntimeWarning,
+        )
         if return_valid:
             return np.array([np.nan]), np.array([np.nan]), valid
         else:
             return np.array([np.nan]), np.array([np.nan])
     if ysd is not None:
         ysd = ysd[valid]
-        ysd /= ydata[valid]  # Propagation of uncertainty when taking the logarithm of the data
-        ysd[ysd == 0] = 1e-20  # SciPy's curve_fit can not handle zero standard deviations
+        # Propagation of uncertainty when taking the logarithm of the
+        # data.  See
+        # https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae
+        ysd /= ydata[valid]
+        ysd[ysd == 0] = CURVE_FIT_ZERO_SD
 
     try:
-        popt, pcov = optimize.curve_fit(f=exp_decay_log,
-                                        xdata=xdata[valid],
-                                        ydata=np.log(ydata[valid]),
-                                        sigma=ysd,
-                                        absolute_sigma=True,
-                                        p0=1 / (len(ydata) * np.mean(ydata)),
-                                        bounds=(0, np.inf))
+        popt, pcov = optimize.curve_fit(
+            f=exp_decay_log,
+            xdata=xdata[valid],
+            ydata=np.log(ydata[valid]),
+            sigma=ysd,
+            absolute_sigma=True,
+            p0=1 / (len(ydata) * np.mean(ydata)),
+            bounds=(0, np.inf),
+        )
     except (ValueError, RuntimeError) as err:
         print(flush=True)
         print("An error has occurred during fitting:", flush=True)
@@ -321,8 +337,7 @@ def kww(t, tau=1, beta=1):
     If more than one input argument is an array, all arrays must be
     broadcastable.
     """
-
-    return np.exp(-(t / tau)**beta)
+    return np.exp(-((t / tau) ** beta))
 
 
 def fit_kww(xdata, ydata, ysd=None, return_valid=False):
@@ -373,31 +388,38 @@ def fit_kww(xdata, ydata, ysd=None, return_valid=False):
     ydata = np.asarray(ydata)
     valid = np.isfinite(ydata) & (ydata > 0) & (ydata <= 1)
     if not np.all(valid):
-        warnings.warn("{} elements of ydata do not fulfill the"
-                      " requirement 0 < ydata <= 1 and are discarded for"
-                      " fitting"
-                      .format(len(valid) - np.count_nonzero(valid)),
-                      RuntimeWarning)
+        warnings.warn(
+            "{} elements of ydata do not fulfill the requirement"
+            " 0 < ydata <= 1 and are discarded for"
+            " fitting".format(len(valid) - np.count_nonzero(valid)),
+            RuntimeWarning,
+        )
     if not np.any(valid):
-        warnings.warn("None of the y-data fulfills the requirement"
-                      " 0 < ydata <= 1. Setting fit parameters to"
-                      " numpy.nan", RuntimeWarning)
+        warnings.warn(
+            "None of the y-data fulfills the requirement 0 < ydata <= 1."
+            "  Setting fit parameters to numpy.nan",
+            RuntimeWarning,
+        )
         if return_valid:
             return np.full(2, np.nan), np.full(2, np.nan), valid
         else:
             return np.full(2, np.nan), np.full(2, np.nan)
     if ysd is not None:
         ysd = ysd[valid]
-        ysd[ysd == 0] = 1e-20  # SciPy's curve_fit can not handle zero standard deviations
+        # `scipy.optimize.curve_fit` can not handle zero standard
+        # deviations.  Therefore, replace zeros with a very small value.
+        ysd[ysd == 0] = CURVE_FIT_ZERO_SD
 
     try:
-        popt, pcov = optimize.curve_fit(f=kww,
-                                        xdata=xdata[valid],
-                                        ydata=ydata[valid],
-                                        sigma=ysd,
-                                        absolute_sigma=True,
-                                        p0=[len(ydata) * np.mean(ydata), 1],
-                                        bounds=([0, 0], [np.inf, 1]))
+        popt, pcov = optimize.curve_fit(
+            f=kww,
+            xdata=xdata[valid],
+            ydata=ydata[valid],
+            sigma=ysd,
+            absolute_sigma=True,
+            p0=[len(ydata) * np.mean(ydata), 1],
+            bounds=([0, 0], [np.inf, 1]),
+        )
     except (ValueError, RuntimeError) as err:
         print(flush=True)
         print("An error has occurred during fitting:", flush=True)
