@@ -84,6 +84,7 @@ jobs:
           src/mdtools/box.py \
           src/mdtools/dtrj.py \
           src/mdtools/file_handler.py \
+          src/mdtools/functions.py \
           src/mdtools/numpy_helper_functions.py \
           src/mdtools/plot.py \
           src/mdtools/run_time_info.py \
