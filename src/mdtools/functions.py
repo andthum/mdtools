@@ -32,7 +32,7 @@ from scipy import optimize
 CURVE_FIT_ZERO_SD = 1e-30
 
 
-def g(x, m=1, c=0):
+def line(x, m=1, c=0):
     """
     Straight line:
 
@@ -93,7 +93,7 @@ def g_inverse(y, m=1, c=0):
 
     See Also
     --------
-    :func:`mdtools.functions.g_inverse` :
+    :func:`mdtools.functions.line` :
         Straight line
 
     Notes
