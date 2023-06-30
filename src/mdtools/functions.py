@@ -176,7 +176,7 @@ def exp_decay_log(t, k=1):
     return -k * t
 
 
-def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
+def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False, **kwargs):
     r"""
     Fit an exponential decay function to `ydata` using
     :func:`scipy.optimize.curve_fit`.
@@ -187,8 +187,6 @@ def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
     .. math::
 
         f(t) = -k \cdot t
-
-    :math:`k` is bound to :math:`[0, \infty)`.
 
     Parameters
     ----------
@@ -205,6 +203,12 @@ def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
         If ``True``, return a boolean array of the same shape as `ydata`
         that indicates which elements of `ydata` meet the requirements
         given above.
+    kwargs : dict, optional
+        Additional keyword arguments (besides `xdata`, `ydata` and
+        `sigma`) to parse to :func:`scipy.optimize.curve_fit`.  See
+        there for possible options.  By default, `absolute_sigma` is set
+        to ``True``, `p0` is set to ``1 / (len(ydata) *
+        np.mean(ydata))`` and `bounds` is set to ``(0, np.inf)``.
 
     Returns
     -------
@@ -227,7 +231,9 @@ def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
         Logarithm of an exponential decay function
     """
     ydata = np.asarray(ydata)
-    valid = np.isfinite(ydata) & (ydata > 0) & (ydata <= 1)
+    valid = np.isfinite(ydata)
+    valid &= ydata > 0
+    valid &= ydata <= 1
     if not np.all(valid):
         warnings.warn(
             "{} elements of ydata do not fulfill the requirement"
@@ -253,30 +259,32 @@ def fit_exp_decay_log(xdata, ydata, ysd=None, return_valid=False):
         ysd /= ydata[valid]
         ysd[ysd == 0] = CURVE_FIT_ZERO_SD
 
+    kwargs.setdefault("absolute_sigma", True)
+    kwargs.setdefault("p0", 1 / (len(ydata) * np.mean(ydata)))
+    kwargs.setdefault("bounds", (0, np.inf))
+
     try:
         popt, pcov = optimize.curve_fit(
             f=exp_decay_log,
             xdata=xdata[valid],
             ydata=np.log(ydata[valid]),
             sigma=ysd,
-            absolute_sigma=True,
-            p0=1 / (len(ydata) * np.mean(ydata)),
-            bounds=(0, np.inf),
+            **kwargs,
         )
     except (ValueError, RuntimeError) as err:
-        print(flush=True)
-        print("An error has occurred during fitting:", flush=True)
-        print("{}".format(err), flush=True)
-        print("Setting fit parameters to numpy.nan", flush=True)
-        print(flush=True)
+        print()
+        print("An error has occurred during fitting:")
+        print("{}".format(err))
+        print("Setting fit parameters to `numpy.nan`")
+        print()
         if return_valid:
             return np.array([np.nan]), np.array([np.nan]), valid
         else:
             return np.array([np.nan]), np.array([np.nan])
     except optimize.OptimizeWarning as warn:
-        print(flush=True)
-        print("A warning has occurred during fitting:", flush=True)
-        print("{}".format(warn), flush=True)
+        print()
+        print("A warning has occurred during fitting:")
+        print("{}".format(warn))
         perr = np.sqrt(np.diag(pcov))
     else:
         perr = np.sqrt(np.diag(pcov))
