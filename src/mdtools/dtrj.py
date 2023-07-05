@@ -539,7 +539,7 @@ mdt.dtrj.trans_per_state(
     try:
         (i for i in trans_type)
         trans_type_is_iterable = True
-    except TypeError:  # change_type is not iterable
+    except TypeError:  # `trans_type` is not iterable.
         trans_type_is_iterable = False
     if pin == "both" and (trans_type == "both" or trans_type_is_iterable):
         hist = [[None for tr in trns] for trns in trans]
@@ -806,6 +806,96 @@ mdt.dtrj.trans_per_state_vs_time(
         return hist
 
 
+def lifetimes(dtrj, return_cmp_ix=False):
+    r"""
+    Calculate the lifetimes for all compounds in all states of a
+    discrete trajectory by simply counting the number of frames a given
+    compound stays in a given state.
+
+    Note that lifetimes calculated in this way can at maximum be as long
+    as the trajectory and are usually biased to lower values because of
+    edge effects:  At the beginning and end of the trajectory it is
+    impossible to say how long a compound has already been it's initial
+    state or how long it will stay in it's final state.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
+        is the number of compounds and ``f`` is the number of frames.
+        The shape can also be ``(f,)``, in which case the array is
+        expanded to shape ``(1, f)``.   The elements of `dtrj` are
+        interpreted as the indices of the states in which a given
+        compound is at a given frame.
+    return_cmp_ix : bool, optional
+        If ``True``, return the compound indices associated with the
+        returned lifetimes.
+
+    Returns
+    -------
+    lt : numpy.ndarray
+        1-dimensional array containing the lifetimes for all compounds
+        in all states.
+    cmp_ix : numpy.ndarray
+        1-dimensional array containing the corresponding compound
+        indices.  Only returned if `return_cmp_ix` is ``True``.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is in the same state
+        as at time :math:`t_0` after a lag time :math:`\Delta t`
+
+    Examples
+    --------
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> lt, cmp_ix = mdt.dtrj.lifetimes(dtrj, return_cmp_ix=True)
+    >>> lt
+    array([1, 2, 3, 2, 3, 1, 3, 1, 2, 1, 3, 2])
+    >>> cmp_ix
+    array([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+    >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
+    [array([1, 2, 3]), array([2, 3, 1]), array([3, 1, 2]), array([1, 3, 2])]
+    >>> np.mean(lt)
+    2.0
+    >>> np.std(lt, ddof=1)
+    0.8528028654224418
+    """  # noqa: W505
+    dtrj = mdt.check.dtrj(dtrj)
+    ax = -1
+    n_frames = dtrj.shape[ax]
+
+    # Ensure that the last frame is treated as the start of a state
+    # transition by adding new state to the end of `dtrj`.
+    dtrj = np.insert(dtrj, n_frames, np.max(dtrj) + 1, axis=ax)
+    trans_ix = mdt.dtrj.trans_ix(dtrj, axis=ax, pin="end")
+    if return_cmp_ix:
+        cmp_ix = trans_ix[0]
+    trans_ix = trans_ix[ax]
+    del dtrj
+
+    # Ensure that the first frame is treated as the end of a state
+    # transition by inserting a zero at the beginning of `trans_ix` for
+    # each compound.
+    t0_ix = np.flatnonzero(trans_ix == n_frames)
+    t0_ix += 1
+    t0_ix[1:] = t0_ix[:-1]
+    t0_ix[0] = 0
+    trans_ix = np.insert(trans_ix, t0_ix, 0)
+
+    # Calculate lifetimes.
+    lt = np.diff(trans_ix)
+    lt = lt[lt > 0]
+
+    if return_cmp_ix:
+        return lt, cmp_ix
+    else:
+        return lt
+
+
 def remain_prob(  # noqa: C901
     dtrj,
     restart=1,
@@ -816,7 +906,7 @@ def remain_prob(  # noqa: C901
 ):
     r"""
     Calculate the probability that a compound is in the same state as at
-    time :math:`t_0` after a lag time :math:`\Delta t`
+    time :math:`t_0` after a lag time :math:`\Delta t`.
 
     Take a discrete trajectory and calculate the probability to find a
     compound in the same state as at time :math:`t_0` after a lag time
@@ -861,6 +951,10 @@ def remain_prob(  # noqa: C901
         as at time :math:`t_0` after a lag time :math:`\Delta t`
         resolved with respect to the states in second discrete
         trajectory.
+    :func:`mdtools.dtrj.lifetimes` :
+        Calculate the lifetimes for all compounds in all states of a
+        discrete trajectory by simply counting the number of frames a
+        given compound stays in a given state
 
     Notes
     -----
