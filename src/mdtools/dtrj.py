@@ -842,6 +842,10 @@ def lifetimes(dtrj, return_cmp_ix=False):
 
     See Also
     --------
+    :func:`mdtools.dtrj.lifetimes_per_state` :
+        Calculate the lifetime of each state in a discrete trajectory by
+        simply counting the number of frames a given compound stays in a
+        given state
     :func:`mdtools.dtrj.remain_prob` :
         Calculate the probability that a compound is in the same state
         as at time :math:`t_0` after a lag time :math:`\Delta t`
@@ -894,6 +898,183 @@ def lifetimes(dtrj, return_cmp_ix=False):
         return lt, cmp_ix
     else:
         return lt
+
+
+def lifetimes_per_state(
+    dtrj,
+    return_states=False,
+    return_avg=False,
+    kwargs_avg=None,
+    return_std=False,
+    kwargs_std=None,
+):
+    r"""
+    Calculate the lifetime of each state in a discrete trajectory by
+    simply counting the number of frames a given compound stays in a
+    given state.
+
+    Note that lifetimes calculated in this way can at maximum be as long
+    as the trajectory and are usually biased to lower values because of
+    edge effects:  At the beginning and end of the trajectory it is
+    impossible to say how long a compound has already been it's initial
+    state or how long it will stay in it's final state.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
+        is the number of compounds and ``f`` is the number of frames.
+        The shape can also be ``(f,)``, in which case the array is
+        expanded to shape ``(1, f)``.   The elements of `dtrj` are
+        interpreted as the indices of the states in which a given
+        compound is at a given frame.
+    return_states : bool, optional
+        If ``True``, return the state indices associated with the
+        returned lifetimes.
+    return_avg : bool, optional
+        If ``True``, return the average lifetime of each state.
+    kwargs_avg : dict, optional
+        Keyword arguments to parse to :func:`numpy.mean` for calculating
+        the average lifetimes.  See there for possible options.
+    return_std : bool, optional
+        If ``True``, return the standard deviation of the lifetimes of
+        each state.
+    kwargs_std : dict, optional
+        Keyword arguments to parse to :func:`numpy.std` for calculating
+        the standard deviation of the lifetimes.  See there for possible
+        options.
+
+    Returns
+    -------
+    lt : list of 1D numpy.ndarray
+        List of 1-dimensional arrays.  Each arrays contains the
+        lifetimes of one state.
+    states : numpy.ndarray
+        1-dimensional array containing the corresponding state indices.
+        Only returned if `return_states` is ``True``.
+    lt_avg : numpy.ndarray
+        1-dimensional array containing the average lifetime of each
+        state.  Only returned if `return_avg` is ``True``.
+    lt_std : numpy.ndarray
+        1-dimensional array containing the standard deviation of the
+        lifetimes of each state.  Only returned if `return_std` is
+        ``True``.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.lifetimes` :
+        Calculate the lifetimes for all compounds in all states of a
+        discrete trajectory by simply counting the number of frames a
+        given compound stays in a given state
+    :func:`mdtools.dtrj.remain_prob_discrete` :
+        Calculate the probability that a compound is in the same state
+        as at time :math:`t_0` after a lag time :math:`\Delta t`
+        resolved with respect to the states in second discrete
+        trajectory
+
+    Examples
+    --------
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> lt, states, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj, return_states=True, return_avg=True, return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([2, 2, 2, 2]), array([3, 3, 3, 3])]
+    >>> states
+    array([1, 2, 3])
+    >>> lt_avg
+    array([1., 2., 3.])
+    >>> lt_std
+    array([0., 0., 0.])
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [6, 6, 6, 1, 4, 4],
+    ...                  [1, 6, 6, 6, 4, 4]])
+    >>> lt, states, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj, return_states=True, return_avg=True, return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([2, 2]), array([3, 3]), array([2, 2]), array([3, 3])]
+    >>> states
+    array([1, 2, 3, 4, 6])
+    >>> lt_avg
+    array([1., 2., 3., 2., 3.])
+    >>> lt_std
+    array([0., 0., 0., 0., 0.])
+
+    >>> dtrj = np.array([[ 1,  2,  2,  1,  1,  1],
+    ...                  [ 2,  2,  3,  3,  3,  2],
+    ...                  [-3, -3, -3, -1,  2,  2],
+    ...                  [ 2,  3,  3,  3, -2, -2]])
+    >>> lt, states, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj, return_states=True, return_avg=True, return_std=True,
+    ... )
+    >>> lt
+    [array([3]), array([2]), array([1]), array([1, 3]), array([2, 2, 1, 2, 1]), array([3, 3])]
+    >>> states
+    array([-3, -2, -1,  1,  2,  3])
+    >>> lt_avg
+    array([3. , 2. , 1. , 2. , 1.6, 3. ])
+    >>> lt_std
+    array([0.        , 0.        , 0.        , 1.        , 0.48989795,
+           0.        ])
+    """  # noqa: E501, W505
+    dtrj = mdt.check.dtrj(dtrj)
+    ax = -1
+    n_frames = dtrj.shape[ax]
+
+    # Ensure that the last frame is treated as the start of a state
+    # transition by adding new state to the end of `dtrj`.
+    dtrj = np.insert(dtrj, n_frames, np.max(dtrj) + 1, axis=ax)
+    trans_ix = mdt.dtrj.trans_ix(dtrj, axis=ax, pin="end")
+    trans_ix_ax = trans_ix[ax]
+
+    # Ensure that the first frame is treated as the end of a state
+    # transition by inserting a zero at the beginning of `trans_ix` for
+    # each compound.
+    t0_ix = np.flatnonzero(trans_ix_ax == n_frames)
+    t0_ix += 1
+    t0_ix[1:] = t0_ix[:-1]
+    t0_ix[0] = 0
+    trans_ix_ax = np.insert(trans_ix_ax, t0_ix, 0)
+
+    # Calculate lifetimes.
+    lt = np.diff(trans_ix_ax)
+    lt = lt[lt > 0]
+    del trans_ix_ax
+    if lt.shape != trans_ix[ax].shape:
+        raise ValueError(
+            "`lt` ({}) and `trans_ix[ax]` ({}) don't have the same shape."
+            "  This should not have"
+            " happened".format(lt.shape, trans_ix[ax].shape)
+        )
+
+    # Get state indices corresponding to each lifetime.
+    trans_ix_start = (trans_ix[0], trans_ix[ax] - 1)
+    states = dtrj[trans_ix_start]
+    del dtrj
+    states, lt = mdt.nph.group_by(states, lt, return_keys=True)
+
+    ret = (lt,)
+    if return_states:
+        ret += (states,)
+    if return_avg:
+        if kwargs_avg is None:
+            kwargs_avg = {}
+        lt_avg = np.array([np.mean(lt_state, **kwargs_avg) for lt_state in lt])
+        ret += (lt_avg,)
+    if return_std:
+        if kwargs_std is None:
+            kwargs_std = {}
+        lt_std = np.array([np.std(lt_state, **kwargs_std) for lt_state in lt])
+        ret += (lt_std,)
+    if len(ret) == 1:
+        ret = ret[0]
+    return ret
 
 
 def remain_prob(  # noqa: C901
@@ -1433,6 +1614,10 @@ def remain_prob_discrete(  # noqa: C901
     :func:`mdtools.dtrj.remain_prob` :
         Calculate the probability that a compound is in the same state
         as at time :math:`t_0` after a lag time :math:`\Delta t`
+    :func:`mdtools.dtrj.lifetimes_per_state` :
+        Calculate the lifetime of each state in a discrete trajectory by
+        simply counting the number of frames a given compound stays in a
+        given state
 
     Notes
     -----
