@@ -4792,17 +4792,26 @@ def group_by(
     Parameters
     ----------
     keys : array_like
-        1-dimensional array of keys used to group the element of
+        1-dimensional array of keys used to group the elements of
         `values`.
     values : array_like
-        The values (elements) to be grouped by `keys`.
+        The values (elements) to be grouped by `keys`.  `values` must be
+        convertible to a :class:`numpy.ndarray` and it must have the
+        same length as `keys`.
     assume_sorted : bool, optional
         If ``True``, the key-value pairs are assumed to be sorted with
-        respect to the keys, which can speed up the calculation.
+        respect to the keys, which can speed up the calculation.  If
+        ``False``, `keys` and `values` are sorted by `keys` using
+        :func:`numpy.argsort` with ``kind='stable'``.
     return_keys : bool, optional
         If ``True``, return the unique, sorted keys.
     debug : bool, optional
         If ``True``, check the input arguments.
+
+        .. deprecated:: 0.0.6.0
+
+            This argument is without functionality and will be removed
+            in a future release.
 
     Returns
     -------
@@ -4811,18 +4820,48 @@ def group_by(
         ``True``.
     grouped_values : list of numpy.ndarrays
         List of numpy.ndarrays, one array for all elements of `values`
-        belonging to the same key. The arrays in the list are sorted
+        belonging to the same key.  The arrays in the list are sorted
         according to the unique, sorted keys.
+
+    Examples
+    --------
+    >>> keys = ["a", "b", "c", "c", "b", "c"]
+    >>> values = [1, 2, 3, 3, 2, 3]
+    >>> k, v = mdt.nph.group_by(keys, values, return_keys=True)
+    >>> k
+    array(['a', 'b', 'c'], dtype='<U1')
+    >>> v
+    [array([1]), array([2, 2]), array([3, 3, 3])]
+    >>> {k: v for k, v in zip(k, v)}
+    {'a': array([1]), 'b': array([2, 2]), 'c': array([3, 3, 3])}
+
+    >>> keys = [2, 1, 2]
+    >>> values = [np.array([0, 0]), np.array([1, 1]), np.array([2, 2])]
+    >>> k, v = mdt.nph.group_by(keys, values, return_keys=True)
+    >>> k
+    array([1, 2])
+    >>> v
+    [array([[1, 1]]), array([[0, 0],
+           [2, 2]])]
+    >>> {k: v for k, v in zip(k, v)}
+    {1: array([[1, 1]]), 2: array([[0, 0],
+           [2, 2]])}
     """
     keys = np.asarray(keys)
     values = np.asarray(values)
-    if debug:
-        mdt.check.array(keys, dim=1)
-        if len(keys) != len(values):
-            raise ValueError("keys and values must have the same length")
+    if keys.ndim != 1:
+        raise ValueError(
+            "`keys` has {} dimension(s) but must be"
+            " 1-dimensional".format(keys.ndim)
+        )
+    if len(values) != len(keys):
+        raise ValueError(
+            "`values` ({}) must have the same length as `keys`"
+            " ({})".format(len(values), len(keys))
+        )
 
     if not assume_sorted:
-        ix_sort = np.argsort(keys)
+        ix_sort = np.argsort(keys, kind="stable")
         keys = keys[ix_sort]
         values = values[ix_sort]
 
