@@ -1320,17 +1320,46 @@ def remain_prob(  # noqa: C901
 
     .. math::
 
-        \tau = \int_0^\infty f(t) \text{ d}t =
+        \langle \tau \rangle = \int_0^\infty f(t) \text{ d}t =
         \frac{\tau_0}{\beta} \Gamma\left(\frac{1}{\beta}\right)
 
     Here, :math:`\tau_0` and :math:`\beta` are the fit parameters,
-    :math:`\tau` is the average lifetime and :math:`\Gamma(x)` is the
-    gamma function.  For physically meaningful results, :math:`\beta`
-    should be confined to :math:`0 < \beta \leq 1`.  For purely
-    exponential decay (:math:`\beta = 1`), :math:`\tau = \tau_0`
-    applies.  If the calculated probability fully decays to zero within
-    the accessible range of lag times, one can alternatively numerically
-    integrate the calculated probability directly.
+    :math:`\langle \tau \rangle` is the average lifetime and
+    :math:`\Gamma(x)` is the gamma function.  For physically meaningful
+    results, :math:`\beta` should be confined to :math:`0 < \beta \leq
+    1`.  For purely exponential decay (:math:`\beta = 1`), :math:`\tau =
+    \tau_0` applies.  If the calculated probability :math:`p(\Delta t)`
+    fully decays to zero within the accessible range of lag times, one
+    can alternatively numerically integrate the calculated probability
+    directly, instead of the fit :math:`f(t)`.
+
+    In general, the n-th moment of the underlying distribution of
+    lifetimes is given by: [3]_:sup:`,` [4]_:sup:`,` [5]_
+
+    .. math::
+
+        \langle \tau^n \rangle
+        = \frac{1}{(n-1)!} \int_0^\infty t^{n-1} f(t) \text{ d}t
+        = \frac{\tau_0^n}{\beta}
+        \frac{\Gamma\left(\frac{n}{\beta}\right)}{\Gamma(n)}
+
+    Moreover, the time-averaged lifetime is given by: [3]_
+
+    .. math::
+
+        \bar{\tau^n}
+        = \frac{
+            \int_0^\infty t^n f(t) \text{ d}t
+        }{
+            \int_0^\infty f(t) \text{ d}t
+        }
+        = \frac{\langle \tau^{n+1} \rangle}{\langle \tau \rangle} n!
+        = \tau_0^n
+        \frac{
+            \Gamma\left(\frac{n+1}{\beta}\right)
+        }{
+            \Gamma\left(\frac{1}{\beta}\right)
+        }
 
     References
     ----------
@@ -1353,6 +1382,11 @@ def remain_prob(  # noqa: C901
            Sum of Exponential Decays
            <https://doi.org/10.1103/PhysRevB.74.184430>`_,
            Physical Review B, 2006, 74, 184430.
+    .. [5] I. S. Gradshteyn, I. M. Ryzhik,
+           `Table of Integrals, Series, and Products
+           <https://archive.org/details/GradshteinI.S.RyzhikI.M.TablesOfIntegralsSeriesAndProducts>`_,
+           Academic Press, 2007, 7th edition, p. 370, Integral 3.478
+           (1.).
 
     Examples
     --------
