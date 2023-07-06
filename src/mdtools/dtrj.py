@@ -1703,7 +1703,7 @@ def remain_prob_discrete(  # noqa: C901
     ...                  [ 1,  3,  3,  3, -2, -2],
     ...                  [ 1,  4,  4,  4,  4, -1]])
     >>> # States of the discrete trajectory:
-    >>> # [-2         ,-1         , 1         , 2         , 3         ]
+    >>> # [-2         ,-1         , 1         , 3         , 4         ]
     >>> # Because the first and second discrete trajectories are the
     >>> # same in this example, the resulting array contains as columns
     >>> # the probability to stay in the respective state as function of
