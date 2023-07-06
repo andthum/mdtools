@@ -1399,68 +1399,13 @@ def lifetimes_per_state(
     >>> lt_std
     array([0., 0.])
     """  # noqa: E501, W505
-    dtrj = mdt.check.dtrj(dtrj)
-    ax_cmp = 0  # Compound axis of `dtrj``.
-    ax_fr = 1  # Frame axis of `dtrj`.
-    n_frames = dtrj.shape[ax_fr]
-
-    # Ensure that the last frame is treated as the start of a state
-    # transition by adding new state to the end of `dtrj`.
-    dtrj = np.insert(dtrj, n_frames, np.max(dtrj) + 1, axis=ax_fr)
-    trans_ix = mdt.dtrj.trans_ix(dtrj, axis=ax_fr, pin="end")
-
-    # Ensure that the first frame is treated as the end of a state
-    # transition by inserting a zero at the beginning of `trans_ix` for
-    # each compound.  Therefore, create an index array, `t0_ix`, that
-    # indicates the start of a new compound trajectory.
-    trans_ix_ax_fr = trans_ix[ax_fr]
-    t0_ix = np.flatnonzero(trans_ix_ax_fr == n_frames)  # Trj ends.
-    t0_ix += 1  # Trajectory starts.
-    t0_ix[1:] = t0_ix[:-1]  # Roll start after the last trj to the front
-    t0_ix[0] = 0
-    trans_ix_ax_fr = np.insert(trans_ix_ax_fr, t0_ix, 0)
-
-    # Calculate lifetimes.
-    lt = np.diff(trans_ix_ax_fr)
-    # Negative `lt` indicate the start of a new compound trajectory and
-    # are therefore not of physical relevance and should be removed.
-    lt = lt[lt > 0]
-    del trans_ix_ax_fr
-    if lt.shape != trans_ix[ax_fr].shape:
-        raise ValueError(
-            "`lt` ({}) and `trans_ix[ax_fr]` ({}) don't have the same shape."
-            "  This should not have"
-            " happened".format(lt.shape, trans_ix[ax_fr].shape)
-        )
-
-    # Get state indices corresponding to each lifetime.
-    trans_ix_start = (trans_ix[ax_cmp], trans_ix[ax_fr] - 1)
-    states = dtrj[trans_ix_start]
-    cmp_ix = trans_ix[ax_cmp]
-    if discard_neg_start or discard_all_neg:
-        # Only keep lifetimes of positive states.
-        valid = states >= 0
-        if discard_all_neg:
-            # Discard the lifetimes of positive states that are followed
-            # by a negative state (i.e. discard all states that do not
-            # have a valid follower state).  States at the end of a
-            # compound trajectory do not have any follower state and are
-            # therefore always valid (except if they are negative).
-            # Therefore, set negative states at the beginning of a
-            # compound trajectory to ``True`` to prevent discarding a
-            # valid final state from the preceding compound trajectory.
-            valid_follower = np.copy(valid)
-            valid_follower[t0_ix] = True
-            # Get the indices of all states that are followed by a
-            # negative state.
-            invalid = np.flatnonzero(~valid_follower[1:])
-            valid_follower[:] = True
-            valid_follower[invalid] = False
-            valid &= valid_follower
-        states = states[valid]
-        lt = lt[valid]
-        cmp_ix = cmp_ix[valid]
-    del dtrj
+    lt, states, cmp_ix = mdt.dtrj.lifetimes(
+        dtrj,
+        discard_neg_start=discard_neg_start,
+        discard_all_neg=discard_all_neg,
+        return_states=True,
+        return_cmp_ix=True,
+    )
     states_uniq, lt = mdt.nph.group_by(states, lt, return_keys=True)
 
     ret = (lt,)
