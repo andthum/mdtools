@@ -33,6 +33,84 @@ import psutil
 import mdtools as mdt
 
 
+def get_ax(ax_cmp=None, ax_fr=None):
+    """
+    Return the frame/compound axis for a discrete trajectory given its
+    compound/frame axis.
+
+    Parameters
+    ----------
+    ax_cmp : {-2, -1, 0, 1} or None, optional
+        Compound axis.  Either `ax_cmp` or `ax_fr` must be given.
+    ax_fr : {-2, -1, 0, 1} or None, optional
+        Frame axis.  Either `ax_cmp` or `ax_fr` must be given.
+
+    Returns
+    -------
+    ax_cmp : int
+        The compound axis for a discrete trajectory.
+    ax_fr : int
+        The frame axis for a discrete trajectory.
+
+    Raises
+    ------
+    :exc:`numpy.exceptions.AxisError` :
+        If the given compound/frame axis is out of bounds for a discrete
+        trajectory with two dimensions.
+
+    Notes
+    -----
+    All returned axis indices will be positive.
+
+    Examples
+    --------
+    >>> mdt.dtrj.get_ax(ax_cmp=0)
+    (0, 1)
+    >>> mdt.dtrj.get_ax(ax_cmp=1)
+    (1, 0)
+    >>> mdt.dtrj.get_ax(ax_cmp=-1)
+    (1, 0)
+    >>> mdt.dtrj.get_ax(ax_cmp=-2)
+    (0, 1)
+
+    >>> mdt.dtrj.get_ax(ax_fr=0)
+    (1, 0)
+    >>> mdt.dtrj.get_ax(ax_fr=1)
+    (0, 1)
+    >>> mdt.dtrj.get_ax(ax_fr=-1)
+    (0, 1)
+    >>> mdt.dtrj.get_ax(ax_fr=-2)
+    (1, 0)
+    """
+    ax_is_none = [ax is None for ax in (ax_cmp, ax_fr)]
+    if all(ax_is_none) or not any(ax_is_none):
+        raise ValueError(
+            "Either `ax_fr` ({}) or `ax_cmp` ({}) must be"
+            " given".format(ax_fr, ax_cmp)
+        )
+
+    dtrj_ndim = 2
+    axis = ax_cmp if ax_cmp is not None else ax_fr
+    if axis >= dtrj_ndim or axis < -dtrj_ndim:
+        raise np.AxisError(
+            axis=axis, ndim=dtrj_ndim, msg_prefix="Discrete trajectory"
+        )
+
+    dtrj_axes = list(range(dtrj_ndim))
+    if ax_cmp is not None:
+        compound_axis = dtrj_axes.pop(ax_cmp)
+        frame_axis = dtrj_axes[0]
+    elif ax_fr is not None:
+        frame_axis = dtrj_axes.pop(ax_fr)
+        compound_axis = dtrj_axes[0]
+    else:
+        raise ValueError(
+            "Either `ax_fr` ({}) or `ax_cmp` ({}) must be"
+            " given".format(ax_fr, ax_cmp)
+        )
+    return compound_axis, frame_axis
+
+
 def locate_trans(
     dtrj,
     axis=-1,
