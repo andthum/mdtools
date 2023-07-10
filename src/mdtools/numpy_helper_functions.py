@@ -2873,7 +2873,7 @@ array([], shape=(2, 0), dtype=bool))
     return item_change_before, item_change_after
 
 
-def item_change_ix(a, axis=-1, *args, **kwargs):
+def item_change_ix(a, discard_neg=None, **kwargs):
     """
     Get the indices of item changes in an array.
 
@@ -2881,14 +2881,24 @@ def item_change_ix(a, axis=-1, *args, **kwargs):
     ----------
     a : array_like
         Array for which to get all indices where its elements change.
-    axis : int, optional
-        The axis along which to search for changing elements.  By
-        default, the search is performed along the last axis.
+    discard_neg : {None, "start", "end", "both"}, optional
+        Whether to respect all item changes (``None``) or whether to
+        discard item changes starting from a negative item (``"start"``)
+        or ending at a negative item (``"end"``).  If set to ``"both"``,
+        all item changes starting from or ending at a negative item will
+        be discarded.  Must not be used together with the keyword
+        arguments `wrap`, `tfic` or `tlic`.
+
+        .. todo::
+
+            Allow to use `discard_neg` together with `wrap`.
+
     kwargs : tuple, optional
         Additional keyword arguments to parse to
         :func:`mdtools.numpy_helper_functions.locate_item_change`.  See
-        there for possible choices.  Note that by default `pin` is set
-        to ``"after"`` and `change_type` is set to ``None``.
+        there for possible choices.  By default `axis` is set to ``-1``,
+        `pin` is set to ``"after"`` and `change_type` is set to
+        ``None``.
 
     Returns
     -------
@@ -2912,8 +2922,8 @@ def item_change_ix(a, axis=-1, *args, **kwargs):
 
     Notes
     -----
-    This function only applies :func:`numpy.nonzero` to the output of
-    :func:`mdtools.numpy_helper_functions.locate_item_change`.
+    This function basically just applies :func:`numpy.nonzero` to the
+    output of :func:`mdtools.numpy_helper_functions.locate_item_change`.
 
     Examples
     --------
@@ -3065,7 +3075,7 @@ mdt.nph.item_change_ix(
     >>> after_wrap
     (array([1, 3, 6]),)
     >>> before_type_wrap, after_type_wrap = mdt.nph.item_change_ix(
-    ...     a, pin="both", change_type="both"
+    ...     a, pin="both", change_type="both", wrap=True
     ... )
     >>> before_type_wrap[0]
     (array([0, 2]),)
@@ -3603,10 +3613,206 @@ array([0, 2, 1, 2, 1, 2, 0, 2]))
 array([0, 0, 1, 1, 0, 0, 1, 1]), \
 array([0, 1, 0, 2, 0, 2, 0, 1]))
 
+    Examples for using `discard_neg`:
+
+    >>> a = np.array([ 1, -2, -2,  3,  3,  3])
+    >>> before_disc_start, after_disc_start = mdt.nph.item_change_ix(
+    ...     a, discard_neg="start", pin="both"
+    ... )
+    >>> before_disc_start
+    (array([0]),)
+    >>> after_disc_start
+    (array([1]),)
+    >>> before_disc_end, after_disc_end = mdt.nph.item_change_ix(
+    ...     a, discard_neg="end", pin="both"
+    ... )
+    >>> before_disc_end
+    (array([2]),)
+    >>> after_disc_end
+    (array([3]),)
+    >>> before_disc_both, after_disc_both = mdt.nph.item_change_ix(
+    ...     a, discard_neg="both", pin="both"
+    ... )
+    >>> before_disc_both
+    (array([], dtype=int64),)
+    >>> after_disc_both
+    (array([], dtype=int64),)
+    >>> before_disc_start = mdt.nph.item_change_ix(
+    ...     a, discard_neg="start", pin="before"
+    ... )
+    >>> before_disc_start
+    (array([0]),)
+    >>> after_disc_end = mdt.nph.item_change_ix(
+    ...     a, discard_neg="end", pin="after"
+    ... )
+    >>> after_disc_end
+    (array([3]),)
+
+    >>> a = np.array([ 1, -2, -2,  3,  3,  3,  1])
+    >>> before_start, after_start = mdt.nph.item_change_ix(
+    ...     a, discard_neg="start", pin="both"
+    ... )
+    >>> before_start
+    (array([0, 5]),)
+    >>> after_start
+    (array([1, 6]),)
+    >>> before_end_type, after_end_type = mdt.nph.item_change_ix(
+    ...     a, discard_neg="end", pin="both", change_type="both"
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    (array([2]),)
+    >>> before_end_type[1]  # Changes to lower values
+    (array([5]),)
+    >>> after_end_type[0]
+    (array([3]),)
+    >>> after_end_type[1]
+    (array([6]),)
+
+    2-dimensional example for using `discard_neg`:
+
+    >>> a = np.array([[-1,  3,  3,  3],
+    ...               [ 3, -1,  3,  3],
+    ...               [ 3,  3, -1,  3]])
+    >>> ax = 0
+    >>> before_start, after_start = mdt.nph.item_change_ix(
+    ...     a, axis=ax, discard_neg="start", pin="both"
+    ... )
+    >>> before_start
+    (array([0, 1]), array([1, 2]))
+    >>> after_start
+    (array([1, 2]), array([1, 2]))
+    >>> before_end_type, after_end_type = mdt.nph.item_change_ix(
+    ...     a,
+    ...     axis=ax,
+    ...     discard_neg="end",
+    ...     pin="both",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    (array([0, 1]), array([0, 1]))
+    >>> before_end_type[1]  # Changes to lower values
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after_end_type[0]
+    (array([1, 2]), array([0, 1]))
+    >>> after_end_type[1]
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> ax = 1
+    >>> before_start, after_start = mdt.nph.item_change_ix(
+    ...     a, axis=ax, discard_neg="start", pin="both"
+    ... )
+    >>> before_start
+    (array([1, 2]), array([0, 1]))
+    >>> after_start
+    (array([1, 2]), array([1, 2]))
+    >>> before_end_type, after_end_type = mdt.nph.item_change_ix(
+    ...     a,
+    ...     axis=ax,
+    ...     discard_neg="end",
+    ...     pin="both",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    (array([0, 1, 2]), array([0, 1, 2]))
+    >>> before_end_type[1]  # Changes to lower values
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after_end_type[0]
+    (array([0, 1, 2]), array([1, 2, 3]))
+    >>> after_end_type[1]
+    (array([], dtype=int64), array([], dtype=int64))
+
+    3-dimensional example for using `discard_neg`:
+
+    >>> a = np.array([[[-1,  2,  2],
+    ...                [ 2,  2,  1]],
+    ...
+    ...               [[ 2,  2,  1],
+    ...                [-1,  2,  2]]])
+    >>> ax = 0
+    >>> before_start, after_start = mdt.nph.item_change_ix(
+    ...     a, axis=ax, discard_neg="start", pin="both"
+    ... )
+    >>> before_start
+    (array([0, 0, 0]), array([0, 1, 1]), array([2, 0, 2]))
+    >>> after_start
+    (array([1, 1, 1]), array([0, 1, 1]), array([2, 0, 2]))
+    >>> before_end_type, after_end_type = mdt.nph.item_change_ix(
+    ...     a,
+    ...     axis=ax,
+    ...     discard_neg="end",
+    ...     pin="both",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    (array([0, 0]), array([0, 1]), array([0, 2]))
+    >>> before_end_type[1]  # Changes to lower values
+    (array([0]), array([0]), array([2]))
+    >>> after_end_type[0]
+    (array([1, 1]), array([0, 1]), array([0, 2]))
+    >>> after_end_type[1]
+    (array([1]), array([0]), array([2]))
+    >>> ax = 1
+    >>> before_start, after_start = mdt.nph.item_change_ix(
+    ...     a, axis=ax, discard_neg="start", pin="both"
+    ... )
+    >>> before_start
+    (array([0, 1, 1]), array([0, 0, 0]), array([2, 0, 2]))
+    >>> after_start
+    (array([0, 1, 1]), array([1, 1, 1]), array([2, 0, 2]))
+    >>> before_end_type, after_end_type = mdt.nph.item_change_ix(
+    ...     a,
+    ...     axis=ax,
+    ...     discard_neg="end",
+    ...     pin="both",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    (array([0, 1]), array([0, 0]), array([0, 2]))
+    >>> before_end_type[1]  # Changes to lower values
+    (array([0]), array([0]), array([2]))
+    >>> after_end_type[0]
+    (array([0, 1]), array([1, 1]), array([0, 2]))
+    >>> after_end_type[1]
+    (array([0]), array([1]), array([2]))
+    >>> ax = 2
+    >>> before_start, after_start = mdt.nph.item_change_ix(
+    ...     a, axis=ax, discard_neg="start", pin="both"
+    ... )
+    >>> before_start
+    (array([0, 1]), array([1, 0]), array([1, 1]))
+    >>> after_start
+    (array([0, 1]), array([1, 0]), array([2, 2]))
+    >>> before_end_type, after_end_type = mdt.nph.item_change_ix(
+    ...     a,
+    ...     axis=ax,
+    ...     discard_neg="end",
+    ...     pin="both",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    (array([0, 1]), array([0, 1]), array([0, 0]))
+    >>> before_end_type[1]  # Changes to lower values
+    (array([0, 1]), array([1, 0]), array([1, 1]))
+    >>> after_end_type[0]
+    (array([0, 1]), array([0, 1]), array([1, 1]))
+    >>> after_end_type[1]
+    (array([0, 1]), array([1, 0]), array([2, 2]))
+
     Edge cases:
 
     >>> a = np.array([[1, 2, 2]])
     >>> ax = 0
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> before, after = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after
+    (array([], dtype=int64), array([], dtype=int64))
     >>> before_type, after_type = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", change_type="both"
     ... )
@@ -3633,6 +3839,18 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     >>> after_tfic_tlic
     (array([0, 0, 0]), array([0, 1, 2]))
     >>> ax = 1
+    >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([0]), array([0]))
+    >>> after
+    (array([0]), array([1]))
+    >>> before, after = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before
+    (array([0]), array([0]))
+    >>> after
+    (array([0]), array([1]))
     >>> before_type, after_type = mdt.nph.item_change_ix(
     ...     a, axis=ax, pin="both", change_type="both"
     ... )
@@ -3660,6 +3878,13 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     >>> a = np.array([]).reshape(2,0)
     >>> ax = 0
     >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> before, after = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
     >>> before
     (array([], dtype=int64), array([], dtype=int64))
     >>> after
@@ -3698,6 +3923,13 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     (array([], dtype=int64), array([], dtype=int64))
     >>> ax = 1
     >>> before, after = mdt.nph.item_change_ix(a, axis=ax, pin="both")
+    >>> before
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> after
+    (array([], dtype=int64), array([], dtype=int64))
+    >>> before, after = mdt.nph.item_change_ix(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
     >>> before
     (array([], dtype=int64), array([], dtype=int64))
     >>> after
@@ -3882,22 +4114,96 @@ array([0, 1, 0, 2, 0, 2, 0, 1]))
     ...
     ValueError: The dimension of a must be greater than zero
     """
-    pin = kwargs.setdefault("pin", "after")
+    a = np.asarray(a)
+    if discard_neg not in (None, "start", "end", "both"):
+        return ValueError(
+            "`discard_neg` must be either None, 'start', 'end' or 'both' but"
+            " you gave '{}'".format(discard_neg)
+        )
+
+    kwargs.setdefault("axis", -1)
+    pin = kwargs.setdefault("pin", "after")  # Given or default `pin`.
+    pin_intern = "both"  # Internally used `pin`.
+    kwargs["pin"] = pin_intern
     change_type = kwargs.setdefault("change_type", None)
     try:
         (i for i in change_type)
         ct_is_iterable = True
-    except TypeError:  # change_type is not iterable
+    except TypeError:  # `change_type` is not iterable.
         ct_is_iterable = False
-    item_changes = mdt.nph.locate_item_change(a, axis=axis, **kwargs)
-    if pin == "both" and (change_type == "both" or ct_is_iterable):
-        return tuple(
-            tuple(np.nonzero(ic) for ic in ics) for ics in item_changes
+
+    item_change_before, item_change_after = mdt.nph.locate_item_change(
+        a, **kwargs
+    )
+    if change_type == "both" or ct_is_iterable:
+        ix_before = tuple(np.nonzero(icb) for icb in item_change_before)
+        ix_after = tuple(np.nonzero(ica) for ica in item_change_after)
+    else:
+        ix_before = np.nonzero(item_change_before)
+        ix_after = np.nonzero(item_change_after)
+    del item_change_before, item_change_after
+
+    if discard_neg is not None:
+        if (
+            kwargs.pop("wrap", False)
+            or kwargs.pop("tfic", False)
+            or kwargs.pop("tlic", False)
+        ):
+            raise ValueError(
+                "`discard_neg` must not be used together with `wrap`, `tfic`"
+                " or `tlic`"
+            )
+        if change_type != "both" and not ct_is_iterable:
+            # Expand `ix_before` and `ix_after` to the same shape that
+            # they would have when `change_type` would be "both" or
+            # iterable.
+            ix_before = (ix_before,)
+            ix_after = (ix_after,)
+        if discard_neg in ("start", "both"):
+            # Get all item changes starting from a positive item.
+            valid_start = [None for ixb in ix_before]
+            for i, ixb in enumerate(ix_before):
+                valid_start[i] = a[ixb] >= 0
+            if discard_neg == "start":
+                valid = valid_start
+        if discard_neg in ("end", "both"):
+            # Get all item changes ending at a positive item.
+            valid_end = [None for ixa in ix_after]
+            for i, ixa in enumerate(ix_after):
+                valid_end[i] = a[ixa] >= 0
+            if discard_neg == "end":
+                valid = valid_end
+        if discard_neg == "both":
+            # Get all item changes starting from and ending at a
+            # positive item.
+            valid = [None for valid_st in valid_start]
+            for i, valid_st in enumerate(valid_start):
+                valid[i] = valid_st & valid_end[i]
+        # TODO: Allow to use `discard_neg` together with `wrap`.
+        # Therefore, `valid` must be changed accordingly at the
+        # trajectory boundaries.
+        ix_before = tuple(
+            tuple(ib[valid[i]] for ib in ixb)
+            for i, ixb in enumerate(ix_before)
         )
-    elif pin == "both" or change_type == "both" or ct_is_iterable:
-        return tuple(np.nonzero(ic) for ic in item_changes)
-    else:  # pin != "both" and change_type != "both" and not iterable
-        return np.nonzero(item_changes)
+        ix_after = tuple(
+            tuple(ia[valid[i]] for ia in ixa) for i, ixa in enumerate(ix_after)
+        )
+        if change_type != "both" and not ct_is_iterable:
+            # Reduce `ix_before` and `ix_after` to their original shape.
+            ix_before = ix_before[0]
+            ix_after = ix_after[0]
+
+    if pin == "both":
+        return ix_before, ix_after
+    elif pin == "before":
+        return ix_before
+    elif pin == "after":
+        return ix_after
+    return ValueError(
+        "`pin` must be either 'after', 'before' or 'both' but you gave"
+        " '{}'".format(pin)
+    )
 
 
 def argmin_last(a, axis=None, out=None):
