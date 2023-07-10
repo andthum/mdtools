@@ -2723,16 +2723,16 @@ array([], shape=(2, 0), dtype=bool))
     if tfic or tlic:
         if change_type is not None:
             raise ValueError(
-                "'tfic' and 'tlic' must not be used together with"
-                " 'change_type'"
+                "`tfic` and `tlic` must not be used together with"
+                " `change_type`"
             )
         if wrap:
             raise ValueError(
-                "'tfic' and 'tlic' must not be used together with 'wrap'"
+                "`tfic` and `tlic` must not be used together with `wrap`"
             )
         if mic:
             raise ValueError(
-                "'tfic' and 'tlic' must not be used together with 'mic'"
+                "`tfic` and `tlic` must not be used together with `mic`"
             )
 
     if mic:
@@ -2761,7 +2761,7 @@ array([], shape=(2, 0), dtype=bool))
         operators = (np.greater, np.less)
     elif isinstance(change_type, str):
         raise ValueError(
-            "'change_type' must be either None, 'higher', 'lower', 'both', a"
+            "`change_type` must be either None, 'higher', 'lower', 'both', a"
             " float or an iterable of floats, but you gave"
             " '{}'".format(change_type)
         )
@@ -2773,7 +2773,7 @@ array([], shape=(2, 0), dtype=bool))
             )
             if len(operators) == 0:
                 raise IndexError(
-                    "'change_type' ({}) must not be an empty"
+                    "`change_type` ({}) must not be an empty"
                     " iterable".format(change_type)
                 )
         except TypeError:  # change_type is not iterable
@@ -2864,8 +2864,8 @@ array([], shape=(2, 0), dtype=bool))
             return item_change_after
     else:
         return ValueError(
-            "'pin' must be either 'after', 'before' or 'both' but you gave"
-            " {}".format(pin)
+            "`pin` must be either 'after', 'before' or 'both' but you gave"
+            " '{}'".format(pin)
         )
     return item_change_before, item_change_after
 
