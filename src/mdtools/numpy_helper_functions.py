@@ -2736,26 +2736,27 @@ array([], shape=(2, 0), dtype=bool))
             )
 
     if mic:
-        # Boundaries for the minimum image convention
-        # (Don't remove, also needed further below)
+        # Boundaries for the minimum image convention.
+        # (Don't remove, also needed further below.)
         amin = np.min(a) if amin is None else amin
         amax = np.max(a) if amax is None else amax
-        # Item differences according to the minimum image convention
+        # Item differences according to the minimum image convention.
         item_diffs = mdt.nph.diff_mic(a, amin=amin, amax=amax, axis=axis)
     else:
         if change_type is not None and np.issubdtype(
             a.dtype, np.unsignedinteger
         ):
-            # np.diff keeps the dtype of the input array => If the dtype
-            # of the input array is an unsigned integer type, negative
-            # differences are not possible.
+            # `np.diff` keeps the dtype of the input array => If the
+            # dtype of the input array is an unsigned integer type,
+            # negative differences are not possible.
             a = a.astype(np.int64, casting="safe")
+        # Simple item differences.
         item_diffs = np.diff(a, axis=axis)
-    if change_type is None:  # All changes
+    if change_type is None:  # All changes.
         operators = (np.not_equal,)
-    elif change_type == "higher":  # Changes to higher values
+    elif change_type == "higher":  # Changes to higher values.
         operators = (np.greater,)
-    elif change_type == "lower":  # Changes to lower values
+    elif change_type == "lower":  # Changes to lower values.
         operators = (np.less,)
     elif change_type == "both":  # Changes to higher and to lower values
         operators = (np.greater, np.less)
@@ -2776,26 +2777,28 @@ array([], shape=(2, 0), dtype=bool))
                     "`change_type` ({}) must not be an empty"
                     " iterable".format(change_type)
                 )
-        except TypeError:  # change_type is not iterable
+        except TypeError:  # `change_type` is not iterable.
             operators = (lambda x, _: np.isclose(x, change_type, rtol, atol),)
+    # Tuple of boolean arrays that indicate the positions of item
+    # changes.
     items_changed = tuple(op(item_diffs, 0) for op in operators)
 
-    # Only index `a.shape` with `axis` after np.diff(a, axis) to get a
-    # proper numpy.AxisError if `axis` is out of bounds (instead of an
-    # IndexError)
+    # Only index `a.shape` with `axis` after `np.diff(a, axis)` to get a
+    # proper `numpy.AxisError`` if `axis` is out of bounds (instead of
+    # an `IndexError`).
     if a.shape[axis] == 0:
         item_change = np.zeros_like(a, dtype=bool)
         if len(items_changed) > 1:
             item_change = tuple(item_change for itm_chngd in items_changed)
-        if pin == "both":  # equivalent to `pin` = before *and* after
+        if pin == "both":  # equivalent to `pin` = before *and* after.
             return item_change, item_change
-        else:  # `pin` = before *or* after
+        else:  # `pin` = before *or* after.
             return item_change
 
     # Construct an insertion array which will be inserted after or
-    # before `items_changed` to bring `items_changed` to the same shape
-    # as `a` and make `items_changed` a mask for items of `a` which are
-    # right before or right after an item change.
+    # before the arrays in `items_changed` to bring them to the same
+    # shape as the input array `a` and make them a mask for items of `a`
+    # which are right before or right after an item change.
     shape = list(item_diffs.shape)
     shape[axis] = 1
     shape = tuple(shape)
@@ -2833,7 +2836,7 @@ array([], shape=(2, 0), dtype=bool))
     del item_diffs, operators
 
     if pin in ("before", "both"):
-        # Items of `a` right before an item change
+        # Items of `a` right before an item change.
         item_change_before = [
             np.zeros(a.shape, dtype=bool) for itm_chngd in items_changed
         ]
@@ -2848,7 +2851,7 @@ array([], shape=(2, 0), dtype=bool))
         if pin == "before":
             return item_change_before
     if pin in ("after", "both"):
-        # Items of `a` right after an item change
+        # Items of `a` right after an item change.
         item_change_after = [
             np.zeros(a.shape, dtype=bool) for itm_chngd in items_changed
         ]
