@@ -1514,6 +1514,7 @@ def locate_item_change(  # noqa: C901
     a,
     axis=-1,
     pin="after",
+    discard_neg=None,
     change_type=None,
     rtol=1e-05,
     atol=1e-08,
@@ -1568,6 +1569,12 @@ def locate_item_change(  # noqa: C901
         or the first position ``"after"`` an item change.  If set to
         ``"both"``, two output arrays will be returned, one for
         ``"before"`` and one for ``"after"``.
+    discard_neg : {None, "start", "end", "both"}, optional
+        Whether to locate all item changes (``None``) or whether to
+        discard item changes starting from a negative item (``"start"``)
+        or ending at a negative item (``"end"``).  If set to ``"both"``,
+        all item changes starting from or ending at a negative item will
+        be discarded.
     change_type : {None, "higher", "lower", "both"} or float or \
 iterable of floats, optional
         Whether to locate all item changes without discriminating
@@ -1603,12 +1610,12 @@ iterable of floats, optional
         Treat First Item as Change.  If ``True``, treat the first item
         as the first position after an item change.  Has no effect if
         `pin` is set to ``"before"``.  Must not be used together with
-        `change_type`, `wrap` or `mic`.
+        `discard_neg`, `change_type`, `wrap` or `mic`.
     tlic : bool, optional
         Treat Last Item as Change.  If ``True``, treat the last item as
         the last position before an item change.  Has no effect if `pin`
         is set to ``"after"``.  Must not be used together with
-        `change_type`, `wrap` or `mic`.
+        `discard_neg`, `change_type`, `wrap` or `mic`.
     mic : bool, optional
         If ``True``, respect the Minimum Image Convention when
         calculating the difference between the elements of `a`.  Has no
@@ -2582,10 +2589,654 @@ mdt.nph.locate_item_change(
            [[ True, False,  True],
             [ True,  True, False]]])
 
+    Examples for using `discard_neg`:
+
+    >>> a = np.array([ 1, -2, -2,  3,  3,  3])
+    >>> before_start, after_start = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="start"
+    ... )
+    >>> before_start
+    array([ True, False, False, False, False, False])
+    >>> after_start
+    array([False,  True, False, False, False, False])
+    >>> before_end, after_end = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="end"
+    ... )
+    >>> before_end
+    array([False, False,  True, False, False, False])
+    >>> after_end
+    array([False, False, False,  True, False, False])
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([False, False, False, False, False, False])
+    >>> after_both
+    array([False, False, False, False, False, False])
+    >>> before_start = mdt.nph.locate_item_change(
+    ...     a, pin="before", discard_neg="start"
+    ... )
+    >>> before_start
+    array([ True, False, False, False, False, False])
+    >>> after_end = mdt.nph.locate_item_change(
+    ...     a, pin="after", discard_neg="end"
+    ... )
+    >>> after_end
+    array([False, False, False,  True, False, False])
+    >>> before_end_type, after_end_type = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="end", change_type="both"
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    array([False, False,  True, False, False, False])
+    >>> before_end_type[1]  # Changes to lower values
+    array([False, False, False, False, False, False])
+    >>> after_end_type[0]  # Changes to higher values
+    array([False, False, False,  True, False, False])
+    >>> after_end_type[1]  # Changes to lower values
+    array([False, False, False, False, False, False])
+    >>> before_strt_wrap, after_strt_wrap = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="start", wrap=True
+    ... )
+    >>> before_strt_wrap
+    array([ True, False, False, False, False,  True])
+    >>> after_strt_wrap
+    array([ True,  True, False, False, False, False])
+    >>> before_end_typ_w, after_end_typ_w = mdt.nph.locate_item_change(
+    ...     a,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ...     wrap=True,
+    ... )
+    >>> before_end_typ_w[0]  # Changes to higher values
+    array([False, False,  True, False, False, False])
+    >>> before_end_typ_w[1]  # Changes to lower values
+    array([False, False, False, False, False,  True])
+    >>> after_end_typ_w[0]  # Changes to higher values
+    array([False, False, False,  True, False, False])
+    >>> after_end_typ_w[1]  # Changes to lower values
+    array([ True, False, False, False, False, False])
+    >>> before_both_wrap, after_both_wrap = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="both", wrap=True
+    ... )
+    >>> before_both_wrap
+    array([False, False, False, False, False,  True])
+    >>> after_both_wrap
+    array([ True, False, False, False, False, False])
+
+    >>> a = np.array([ 1, -2, -2,  3,  3,  3,  1])
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([False, False, False, False, False,  True, False])
+    >>> after_both
+    array([False, False, False, False, False, False,  True])
+    >>> before_end_type, after_end_type = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="end", change_type="both"
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    array([False, False,  True, False, False, False, False])
+    >>> before_end_type[1]  # Changes to lower values
+    array([False, False, False, False, False,  True, False])
+    >>> after_end_type[0]  # Changes to higher values
+    array([False, False, False,  True, False, False, False])
+    >>> after_end_type[1]  # Changes to lower values
+    array([False, False, False, False, False, False,  True])
+    >>> before_strt_wrap, after_strt_wrap = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="start", wrap=True
+    ... )
+    >>> before_strt_wrap
+    array([ True, False, False, False, False,  True, False])
+    >>> after_strt_wrap
+    array([False,  True, False, False, False, False,  True])
+    >>> before_end_typ_w, after_end_typ_w = mdt.nph.locate_item_change(
+    ...     a,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ...     wrap=True,
+    ... )
+    >>> before_end_typ_w[0]  # Changes to higher values
+    array([False, False,  True, False, False, False, False])
+    >>> before_end_typ_w[1]  # Changes to lower values
+    array([False, False, False, False, False,  True, False])
+    >>> after_end_typ_w[0]  # Changes to higher values
+    array([False, False, False,  True, False, False, False])
+    >>> after_end_typ_w[1]  # Changes to lower values
+    array([False, False, False, False, False, False,  True])
+    >>> before_both_wrap, after_both_wrap = mdt.nph.locate_item_change(
+    ...     a, pin="both", discard_neg="both", wrap=True
+    ... )
+    >>> before_both_wrap
+    array([False, False, False, False, False,  True, False])
+    >>> after_both_wrap
+    array([False, False, False, False, False, False,  True])
+
+    2-dimensional example for using `discard_neg`:
+
+    >>> a = np.array([[-1,  3,  3,  3],
+    ...               [ 3, -1,  3,  3],
+    ...               [ 3,  3, -1,  3]])
+    >>> ax = 0
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> after_both
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> before_end_type, after_end_type = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    array([[ True, False, False, False],
+           [False,  True, False, False],
+           [False, False, False, False]])
+    >>> before_end_type[1]  # Changes to lower values
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> after_end_type[0]  # Changes to higher values
+    array([[False, False, False, False],
+           [ True, False, False, False],
+           [False,  True, False, False]])
+    >>> after_end_type[1]  # Changes to lower values
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> before_strt_wrap, after_strt_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="start", wrap=True
+    ... )
+    >>> before_strt_wrap
+    array([[False,  True, False, False],
+           [False, False,  True, False],
+           [ True, False, False, False]])
+    >>> after_strt_wrap
+    array([[ True, False, False, False],
+           [False,  True, False, False],
+           [False, False,  True, False]])
+    >>> before_end_typ_w, after_end_typ_w = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ...     wrap=True,
+    ... )
+    >>> before_end_typ_w[0]  # Changes to higher values
+    array([[ True, False, False, False],
+           [False,  True, False, False],
+           [False, False,  True, False]])
+    >>> before_end_typ_w[1]  # Changes to lower values
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> after_end_typ_w[0]  # Changes to higher values
+    array([[False, False,  True, False],
+           [ True, False, False, False],
+           [False,  True, False, False]])
+    >>> after_end_typ_w[1]  # Changes to lower values
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> before_both_wrap, after_both_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both", wrap=True
+    ... )
+    >>> before_both_wrap
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> after_both_wrap
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+
+    >>> ax = 1
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> after_both
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> before_end_type, after_end_type = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    array([[ True, False, False, False],
+           [False,  True, False, False],
+           [False, False,  True, False]])
+    >>> before_end_type[1]  # Changes to lower values
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> after_end_type[0]  # Changes to higher values
+    array([[False,  True, False, False],
+           [False, False,  True, False],
+           [False, False, False,  True]])
+    >>> after_end_type[1]  # Changes to lower values
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> before_strt_wrap, after_strt_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="start", wrap=True
+    ... )
+    >>> before_strt_wrap
+    array([[False, False, False,  True],
+           [ True, False, False, False],
+           [False,  True, False, False]])
+    >>> after_strt_wrap
+    array([[ True, False, False, False],
+           [False,  True, False, False],
+           [False, False,  True, False]])
+    >>> before_end_typ_w, after_end_typ_w = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ...     wrap=True,
+    ... )
+    >>> before_end_typ_w[0]  # Changes to higher values
+    array([[ True, False, False, False],
+           [False,  True, False, False],
+           [False, False,  True, False]])
+    >>> before_end_typ_w[1]  # Changes to lower values
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> after_end_typ_w[0]  # Changes to higher values
+    array([[False,  True, False, False],
+           [False, False,  True, False],
+           [False, False, False,  True]])
+    >>> after_end_typ_w[1]  # Changes to lower values
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> before_both_wrap, after_both_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both", wrap=True
+    ... )
+    >>> before_both_wrap
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+    >>> after_both_wrap
+    array([[False, False, False, False],
+           [False, False, False, False],
+           [False, False, False, False]])
+
+    3-dimensional example for using `discard_neg`:
+
+    >>> a = np.array([[[-1,  2,  2],
+    ...                [ 2,  2,  1]],
+    ...
+    ...               [[ 2,  2,  1],
+    ...                [-1,  2,  2]]])
+    >>> ax = 0
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([[[False, False,  True],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False, False]]])
+    >>> after_both
+    array([[[False, False, False],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False,  True]]])
+    >>> before_end_type, after_end_type = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    array([[[ True, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False, False]]])
+    >>> before_end_type[1]  # Changes to lower values
+    array([[[False, False,  True],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False, False]]])
+    >>> after_end_type[0]  # Changes to higher values
+    array([[[False, False, False],
+            [False, False, False]],
+    <BLANKLINE>
+           [[ True, False, False],
+            [False, False,  True]]])
+    >>> after_end_type[1]  # Changes to lower values
+    array([[[False, False, False],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False, False]]])
+    >>> before_strt_wrap, after_strt_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="start", wrap=True
+    ... )
+    >>> before_strt_wrap
+    array([[[False, False,  True],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [False, False,  True]]])
+    >>> after_strt_wrap
+    array([[[ True, False,  True],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [ True, False,  True]]])
+    >>> before_end_typ_w, after_end_typ_w = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ...     wrap=True,
+    ... )
+    >>> before_end_typ_w[0]  # Changes to higher values
+    array([[[ True, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [ True, False, False]]])
+    >>> before_end_typ_w[1]  # Changes to lower values
+    array([[[False, False,  True],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False,  True]]])
+    >>> after_end_typ_w[0]  # Changes to higher values
+    array([[[False, False,  True],
+            [ True, False, False]],
+    <BLANKLINE>
+           [[ True, False, False],
+            [False, False,  True]]])
+    >>> after_end_typ_w[1]  # Changes to lower values
+    array([[[False, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False, False]]])
+    >>> before_both_wrap, after_both_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both", wrap=True
+    ... )
+    >>> before_both_wrap
+    array([[[False, False,  True],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False,  True]]])
+    >>> after_both_wrap
+    array([[[False, False,  True],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False,  True]]])
+
+    >>> ax = 1
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([[[False, False,  True],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False, False]]])
+    >>> after_both
+    array([[[False, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False,  True]]])
+    >>> before_end_type, after_end_type = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    array([[[ True, False, False],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False, False]]])
+    >>> before_end_type[1]  # Changes to lower values
+    array([[[False, False,  True],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False, False]]])
+    >>> after_end_type[0]  # Changes to higher values
+    array([[[False, False, False],
+            [ True, False, False]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False,  True]]])
+    >>> after_end_type[1]  # Changes to lower values
+    array([[[False, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False, False]]])
+    >>> before_strt_wrap, after_strt_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="start", wrap=True
+    ... )
+    >>> before_strt_wrap
+    array([[[False, False,  True],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [False, False,  True]]])
+    >>> after_strt_wrap
+    array([[[ True, False,  True],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [ True, False,  True]]])
+    >>> before_end_typ_w, after_end_typ_w = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ...     wrap=True,
+    ... )
+    >>> before_end_typ_w[0]  # Changes to higher values
+    array([[[ True, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [ True, False, False]]])
+    >>> before_end_typ_w[1]  # Changes to lower values
+    array([[[False, False,  True],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False, False,  True]]])
+    >>> after_end_typ_w[0]  # Changes to higher values
+    array([[[False, False,  True],
+            [ True, False, False]],
+    <BLANKLINE>
+           [[ True, False, False],
+            [False, False,  True]]])
+    >>> after_end_typ_w[1]  # Changes to lower values
+    array([[[False, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False, False]]])
+    >>> before_both_wrap, after_both_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both", wrap=True
+    ... )
+    >>> before_both_wrap
+    array([[[False, False,  True],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False,  True]]])
+    >>> after_both_wrap
+    array([[[False, False,  True],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False,  True]]])
+
+    >>> ax = 2
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([[[False, False, False],
+            [False,  True, False]],
+    <BLANKLINE>
+           [[False,  True, False],
+            [False, False, False]]])
+    >>> after_both
+    array([[[False, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False, False]]])
+    >>> before_end_type, after_end_type = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ... )
+    >>> before_end_type[0]  # Changes to higher values
+    array([[[ True, False, False],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False, False],
+            [ True, False, False]]])
+    >>> before_end_type[1]  # Changes to lower values
+    array([[[False, False, False],
+            [False,  True, False]],
+    <BLANKLINE>
+           [[False,  True, False],
+            [False, False, False]]])
+    >>> after_end_type[0]  # Changes to higher values
+    array([[[False,  True, False],
+            [False, False, False]],
+    <BLANKLINE>
+           [[False, False, False],
+            [False,  True, False]]])
+    >>> after_end_type[1]  # Changes to lower values
+    array([[[False, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False, False]]])
+    >>> before_strt_wrap, after_strt_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="start", wrap=True
+    ... )
+    >>> before_strt_wrap
+    array([[[False, False,  True],
+            [False,  True,  True]],
+    <BLANKLINE>
+           [[False,  True,  True],
+            [False, False,  True]]])
+    >>> after_strt_wrap
+    array([[[ True, False, False],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [ True, False, False]]])
+    >>> before_end_typ_w, after_end_typ_w = mdt.nph.locate_item_change(
+    ...     a,
+    ...     axis=ax,
+    ...     pin="both",
+    ...     discard_neg="end",
+    ...     change_type="both",
+    ...     wrap=True,
+    ... )
+    >>> before_end_typ_w[0]  # Changes to higher values
+    array([[[ True, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [ True, False, False]]])
+    >>> before_end_typ_w[1]  # Changes to lower values
+    array([[[False, False, False],
+            [False,  True, False]],
+    <BLANKLINE>
+           [[False,  True, False],
+            [False, False, False]]])
+    >>> after_end_typ_w[0]  # Changes to higher values
+    array([[[False,  True, False],
+            [ True, False, False]],
+    <BLANKLINE>
+           [[ True, False, False],
+            [False,  True, False]]])
+    >>> after_end_typ_w[1]  # Changes to lower values
+    array([[[False, False, False],
+            [False, False,  True]],
+    <BLANKLINE>
+           [[False, False,  True],
+            [False, False, False]]])
+    >>> before_both_wrap, after_both_wrap = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both", wrap=True
+    ... )
+    >>> before_both_wrap
+    array([[[False, False, False],
+            [False,  True,  True]],
+    <BLANKLINE>
+           [[False,  True,  True],
+            [False, False, False]]])
+    >>> after_both_wrap
+    array([[[False, False, False],
+            [ True, False,  True]],
+    <BLANKLINE>
+           [[ True, False,  True],
+            [False, False, False]]])
+
     Edge cases:
 
     >>> a = np.array([[1, 2, 2]])
     >>> ax = 0
+    >>> before, after = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both"
+    ... )
+    >>> before
+    array([[False, False, False]])
+    >>> after
+    array([[False, False, False]])
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([[False, False, False]])
+    >>> after_both
+    array([[False, False, False]])
     >>> before_type, after_type = mdt.nph.locate_item_change(
     ...     a, axis=ax, pin="both", change_type="both"
     ... )
@@ -2605,6 +3256,20 @@ mdt.nph.locate_item_change(
     ... )
     (array([[ True,  True,  True]]), array([[ True,  True,  True]]))
     >>> ax = 1
+    >>> before, after = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both"
+    ... )
+    >>> before
+    array([[ True, False, False]])
+    >>> after
+    array([[False,  True, False]])
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([[ True, False, False]])
+    >>> after_both
+    array([[False,  True, False]])
     >>> before_type, after_type = mdt.nph.locate_item_change(
     ...     a, axis=ax, pin="both", change_type="both"
     ... )
@@ -2623,6 +3288,13 @@ mdt.nph.locate_item_change(
     ...     a, axis=ax, pin="both", tfic=True, tlic=True
     ... )
     (array([[ True, False,  True]]), array([[ True,  True, False]]))
+    >>> before_tfic_tlic, after_tfic_tlic = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", tfic=True, tlic=True
+    ... )
+    >>> before_tfic_tlic
+    array([[ True, False,  True]])
+    >>> after_tfic_tlic
+    array([[ True,  True, False]])
 
     >>> a = np.array([]).reshape(2,0)
     >>> ax = 0
@@ -2632,6 +3304,13 @@ mdt.nph.locate_item_change(
     >>> before
     array([], shape=(2, 0), dtype=bool)
     >>> after
+    array([], shape=(2, 0), dtype=bool)
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([], shape=(2, 0), dtype=bool)
+    >>> after_both
     array([], shape=(2, 0), dtype=bool)
     >>> before_type, after_type = mdt.nph.locate_item_change(
     ...     a, axis=ax, pin="both", change_type="both"
@@ -2672,6 +3351,13 @@ array([], shape=(2, 0), dtype=bool))
     >>> before
     array([], shape=(2, 0), dtype=bool)
     >>> after
+    array([], shape=(2, 0), dtype=bool)
+    >>> before_both, after_both = mdt.nph.locate_item_change(
+    ...     a, axis=ax, pin="both", discard_neg="both"
+    ... )
+    >>> before_both
+    array([], shape=(2, 0), dtype=bool)
+    >>> after_both
     array([], shape=(2, 0), dtype=bool)
     >>> before_type, after_type = mdt.nph.locate_item_change(
     ...     a, axis=ax, pin="both", change_type="both"
@@ -2720,7 +3406,22 @@ array([], shape=(2, 0), dtype=bool))
     a = np.asarray(a)
     if a.ndim == 0:
         raise ValueError("The input array must be at least 1-dimensional")
+    if pin not in ("before", "after", "both"):
+        raise ValueError(
+            "`pin` must be either 'after', 'before' or 'both' but you gave"
+            " '{}'".format(pin)
+        )
+    if discard_neg not in (None, "start", "end", "both"):
+        raise ValueError(
+            "`discard_neg` must be either None, 'start', 'end' or 'both' but"
+            " you gave '{}'".format(discard_neg)
+        )
     if tfic or tlic:
+        if discard_neg is not None:
+            raise ValueError(
+                "`tfic` and `tlic` must not be used together with"
+                " `discard_neg`"
+            )
         if change_type is not None:
             raise ValueError(
                 "`tfic` and `tlic` must not be used together with"
@@ -2737,7 +3438,7 @@ array([], shape=(2, 0), dtype=bool))
 
     if mic:
         # Boundaries for the minimum image convention.
-        # (Don't remove, also needed further below.)
+        # (Don't delete, also needed further below.)
         amin = np.min(a) if amin is None else amin
         amax = np.max(a) if amax is None else amax
         # Item differences according to the minimum image convention.
@@ -2752,6 +3453,8 @@ array([], shape=(2, 0), dtype=bool))
             a = a.astype(np.int64, casting="safe")
         # Simple item differences.
         item_diffs = np.diff(a, axis=axis)
+
+    # Get the positions of item changes.
     if change_type is None:  # All changes.
         operators = (np.not_equal,)
     elif change_type == "higher":  # Changes to higher values.
@@ -2784,16 +3487,28 @@ array([], shape=(2, 0), dtype=bool))
     items_changed = tuple(op(item_diffs, 0) for op in operators)
 
     # Only index `a.shape` with `axis` after `np.diff(a, axis)` to get a
-    # proper `numpy.AxisError`` if `axis` is out of bounds (instead of
-    # an `IndexError`).
+    # proper `numpy.AxisError` if `axis` is out of bounds (instead of an
+    # `IndexError`).
     if a.shape[axis] == 0:
         item_change = np.zeros_like(a, dtype=bool)
         if len(items_changed) > 1:
-            item_change = tuple(item_change for itm_chngd in items_changed)
+            item_change = tuple(item_change for itc in items_changed)
         if pin == "both":  # equivalent to `pin` = before *and* after.
             return item_change, item_change
         else:  # `pin` = before *or* after.
             return item_change
+
+    if discard_neg is not None:
+        valid = a >= 0
+        if discard_neg in ("start", "both"):
+            valid_start = mdt.nph.take(valid, start=0, stop=-1, axis=axis)
+            items_changed = tuple(itc & valid_start for itc in items_changed)
+            del valid_start
+        if discard_neg in ("end", "both"):
+            valid_end = mdt.nph.take(valid, start=1, stop=None, axis=axis)
+            items_changed = tuple(itc & valid_end for itc in items_changed)
+            del valid_end
+        del valid
 
     # Construct an insertion array which will be inserted after or
     # before the arrays in `items_changed` to bring them to the same
@@ -2803,17 +3518,30 @@ array([], shape=(2, 0), dtype=bool))
     shape[axis] = 1
     shape = tuple(shape)
     if wrap:
+        a_start = np.take(a, 0, axis=axis)
+        a_end = np.take(a, -1, axis=axis)
         if mic:
             item_diffs = mdt.nph.subtract_mic(
-                a.take(0, axis=axis),
-                a.take(-1, axis=axis),
-                amin=amin,
-                amax=amax,
+                a_start, a_end, amin=amin, amax=amax
             )
         else:
-            item_diffs = a.take(0, axis=axis) - a.take(-1, axis=axis)
+            item_diffs = a_start - a_end
+        insertion_before = tuple(op(item_diffs, 0) for op in operators)
+        if discard_neg in ("start", "both"):
+            valid_start = a_end >= 0
+            insertion_before = tuple(
+                inb & valid_start for inb in insertion_before
+            )
+            del valid_start
+        if discard_neg in ("end", "both"):
+            valid_end = a_start >= 0
+            insertion_before = tuple(
+                inb & valid_end for inb in insertion_before
+            )
+            del valid_end
+        del a_start, a_end
         insertion_before = tuple(
-            op(item_diffs, 0).reshape(shape) for op in operators
+            inb.reshape(shape) for inb in insertion_before
         )
         insertion_after = insertion_before
     else:
@@ -2837,39 +3565,24 @@ array([], shape=(2, 0), dtype=bool))
 
     if pin in ("before", "both"):
         # Items of `a` right before an item change.
-        item_change_before = [
-            np.zeros(a.shape, dtype=bool) for itm_chngd in items_changed
-        ]
-        for i, itm_chngd in enumerate(items_changed):
-            item_change_before[i] = np.concatenate(
-                (itm_chngd, insertion_before[i]), axis=axis
-            )
-        if len(item_change_before) > 1:
-            item_change_before = tuple(item_change_before)
-        else:
+        item_change_before = tuple(
+            np.concatenate([itc, insertion_before[i]], axis=axis)
+            for i, itc in enumerate(items_changed)
+        )
+        if len(item_change_before) == 1:
             item_change_before = item_change_before[0]
         if pin == "before":
             return item_change_before
     if pin in ("after", "both"):
         # Items of `a` right after an item change.
-        item_change_after = [
-            np.zeros(a.shape, dtype=bool) for itm_chngd in items_changed
-        ]
-        for i, itm_chngd in enumerate(items_changed):
-            item_change_after[i] = np.concatenate(
-                (insertion_after[i], itm_chngd), axis=axis
-            )
-        if len(item_change_after) > 1:
-            item_change_after = tuple(item_change_after)
-        else:
+        item_change_after = tuple(
+            np.concatenate([insertion_after[i], itc], axis=axis)
+            for i, itc in enumerate(items_changed)
+        )
+        if len(item_change_after) == 1:
             item_change_after = item_change_after[0]
         if pin == "after":
             return item_change_after
-    else:
-        return ValueError(
-            "`pin` must be either 'after', 'before' or 'both' but you gave"
-            " '{}'".format(pin)
-        )
     return item_change_before, item_change_after
 
 
