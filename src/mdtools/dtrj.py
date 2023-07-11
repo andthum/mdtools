@@ -214,6 +214,7 @@ def trans_ix(
     dtrj,
     axis=-1,
     pin="end",
+    discard_neg=None,
     trans_type=None,
     wrap=False,
     tfft=False,
@@ -233,6 +234,8 @@ def trans_ix(
     axis : int
         See :func:`mdtools.dtrj.locate_trans`.
     pin : {"end", "start", "both"}
+        See :func:`mdtools.dtrj.locate_trans`.
+    discard_neg : {None, "start", "end", "both"}, optional
         See :func:`mdtools.dtrj.locate_trans`.
     trans_type : {None, "higher", "lower", "both"} or int or \
 iterable of ints, optional
@@ -301,6 +304,7 @@ iterable of ints, optional
         a=dtrj,
         axis=axis,
         pin=pin,
+        discard_neg=discard_neg,
         change_type=trans_type,
         rtol=0,
         atol=0,
