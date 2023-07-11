@@ -896,50 +896,29 @@ mdt.dtrj.trans_per_state_vs_time(
         return hist
 
 
-def trans_rate(
-    dtrj,
-    axis=-1,
-    discard_neg_start=False,
-    discard_all_neg=False,
-    return_cmp_ix=False,
-):
+def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
     """
-    Calculate the transition rate for each compound in a discrete
-    trajectory averaged over all states.
+    Count the number of state transitions for each compound.
 
     Parameters
     ----------
     dtrj : array_like
-        The discrete trajectory for which to calculate the transition
-        rates.
-    axis : int
-        The axis along which to search for state transitions.  For
-        ordinary discrete trajectories with shape ``(n, f)`` or
-        ``(f,)``, where ``n`` is the number of compounds and ``f`` is
-        the number of frames, set `axis` to ``-1``.  If you parse a
-        transposed discrete trajectory of shape ``(f, n)``, set `axis`
-        to ``0``.
-    discard_neg_start : bool, optional
-        If ``True``, discard all transitions starting from a negative
-        state (see notes).  This is equivalent to discarding the
-        lifetimes of all negative states when calculating state
-        lifetimes with :func:`mdtools.dtrj.lifetimes`.  Has no effect if
-        `discard_all_neg` is ``True``.
-    discard_all_neg : bool, optional
-        If ``True``, discard all transitions starting from or ending in
-        a negative state (see notes).  This is equivalent to discarding
-        the lifetimes of all negative states and of all states that are
-        followed by a negative state when calculating state lifetimes
-        with :func:`mdtools.dtrj.lifetimes`.
+        Array containing the discrete trajectory.
     return_cmp_ix : bool, optional
         If ``True``, return the compound indices associated with the
         returned transition rates.
+    kwargs : dict, optional
+        Additional keyword arguments to parse to
+        :func:`mdtools.dtrj.trans_ix`.  See there for possible options.
+        By default, `axis` is set to ``-1`` and `pin` is set to
+        ``"end"``.  Note that it does not matter whether `pin` is set to
+        ``"start"`` or ``"end"``, but it must not be set to ``"both"``.
 
     Returns
     -------
-    trans_rate : numpy.ndarray
+    trans_rates : numpy.ndarray
         1-dimensional array containing the transition rate for each
-        averaged over all states.
+        compound averaged over all states.
     cmp_ix : numpy.ndarray
         1-dimensional array of the same shape as `trans_rate` containing
         the corresponding compound indices.  Only returned if
@@ -948,7 +927,10 @@ def trans_rate(
     Notes
     -----
     Transitions rates are calculated by simply counting the number of
-    transitions and dividing by the total number of frames.
+    transitions and dividing by the total number of frames.  If
+    `discard_neg` is not ``None``, the total number of frames is reduced
+    by the number of frames that a given compound stays in a negative
+    state.
 
     The inverse of the transition rate gives an estimate for the average
     state lifetime.  In contrast to calculating the average lifetime by
@@ -962,52 +944,134 @@ def trans_rate(
     ...                  [2, 2, 3, 3, 3, 1],
     ...                  [3, 3, 3, 1, 2, 2],
     ...                  [1, 3, 3, 3, 2, 2]])
-    >>> rate = mdt.dtrj.trans_rate(dtrj)
-    0.3333333333333333  # 4 * 2 / (4 * 6)
+    >>> rates, cmp_ix = mdt.dtrj.trans_rate(dtrj, return_cmp_ix=True)
+    >>> rates  # 2 transitions / 6 frames for each compound.
+    array([0.33333333, 0.33333333, 0.33333333, 0.33333333])
+    >>> cmp_ix
+    array([0, 1, 2, 3])
+    >>> rates, cmp_ix = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=0, return_cmp_ix=True
+    ... )
+    >>> rates
+    array([0.75, 0.25, 0.25, 0.5 , 0.25, 0.5 ])
+    >>> cmp_ix
+    array([0, 1, 2, 3, 4, 5])
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [6, 6, 6, 6, 6, 6]])
+    >>> rates, cmp_ix = mdt.dtrj.trans_rate(dtrj, return_cmp_ix=True)
+    >>> rates
+    array([0.33333333, 0.33333333, 0.33333333, 0.33333333, 0.        ])
+    >>> cmp_ix
+    array([0, 1, 2, 3, 4])
+    >>> rates, cmp_ix = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=0, return_cmp_ix=True
+    ... )
+    >>> rates
+    array([0.8, 0.4, 0.4, 0.6, 0.4, 0.6])
+    >>> cmp_ix
+    array([0, 1, 2, 3, 4, 5])
 
     >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
     ...                  [-2, -2,  3,  3,  3,  1],
-    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 3,  3,  3,  1,  2,  2],
     ...                  [ 1,  3,  3,  3, -2, -2],
-    ...                  [ 1,  4,  4,  4,  4, -1]])
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [-6, -6, -6, -6, -6, -6],
+    ...                  [ 6,  6,  6,  6,  6,  6]])
+    >>> ax = -1
+    >>> rates_start, cmp_ix_start = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="start"
+    ... )
+    >>> rates_start
+    array([0.25      , 0.25      , 0.33333333, 0.5       , 0.4       ,
+           0.        ])
+    >>> cmp_ix_start
+    array([0, 1, 2, 3, 4, 6])
+    >>> rates_end, cmp_ix_end = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="end"
+    ... )
+    >>> rates_end
+    array([0.25      , 0.5       , 0.33333333, 0.25      , 0.2       ,
+           0.        ])
+    >>> cmp_ix_end
+    array([0, 1, 2, 3, 4, 6])
+    >>> rates_both, cmp_ix_both = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="both"
+    ... )
+    >>> rates_both  # TODO: Gives wrong result!
+    array([0.        , 0.25      , 0.33333333, 0.25      , 0.2       ,
+           0.        ])
+    >>> cmp_ix_both  # TODO: Gives wrong result!
+    array([0, 1, 2, 3, 4, 6])
+    >>> ax = 0
+    >>> rates_start, cmp_ix_start = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="start"
+    ... )
+    >>> rates_start
+    array([0.6       , 0.5       , 0.4       , 0.66666667, 0.6       ,
+           0.75      ])
+    >>> cmp_ix_start
+    array([0, 1, 2, 3, 4, 5])
+    >>> rates_end, cmp_ix_end = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="end"
+    ... )
+    >>> rates_end
+    array([0.6       , 0.75      , 0.6       , 0.66666667, 0.6       ,
+           0.75      ])
+    >>> cmp_ix_end
+    array([0, 1, 2, 3, 4, 5])
+    >>> rates_both, cmp_ix_both = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="both"
+    ... )
+    >>> rates_both
+    array([0.2 , 0.25, 0.2 , 0.5 , 0.2 , 0.5 ])
+    >>> cmp_ix_both
+    array([0, 1, 2, 3, 4, 5])
     """
-    dtrj = mdt.check.dtrj(dtrj)
+    dtrj = np.asarray(dtrj)
+
+    # Get all state transitions.
+    axis = kwargs.setdefault("axis", -1)
+    pin = kwargs.setdefault("pin", "end")
+    discard_neg = kwargs.setdefault("discard_neg", None)
+    if pin == "both":
+        raise ValueError("`pin` must bot be 'both'")
+    trans_ix = mdt.dtrj.trans_ix(dtrj, **kwargs)
+
     ax_cmp, ax_fr = mdt.dtrj.get_ax(ax_fr=axis)
-    n_frames = dtrj.shape[ax_fr]
+    n_cmps, n_frames = dtrj.shape[ax_cmp], dtrj.shape[ax_fr]
 
     # Get compounds that never leave their state.
     dtrj_t0 = mdt.nph.take(dtrj, start=0, stop=1, axis=ax_fr)
     cmp_ix_stay = np.flatnonzero(np.all(dtrj == dtrj_t0, axis=ax_fr))
-    del dtrj_t0
-
-    # Get all state transitions.
-    trans_ix_start = mdt.dtrj.trans_ix(dtrj, axis=ax_fr, pin="start")
-    if discard_neg_start:
-        valid = dtrj[trans_ix_start] >= 0
-        if discard_all_neg:
-            trans_ix_end = np.copy(trans_ix_start)
-            trans_ix_end[ax_fr] += 1
-            trans_ix_end = tuple(trans_ix_end)
-            valid &= dtrj[trans_ix_end] >= 0
-            del trans_ix_end
-        trans_ix_start = tuple(t_ix[valid] for t_ix in trans_ix_start)
+    if discard_neg is not None:
+        invalid = dtrj < 0
         # Remove compounds that are always in a negative state from the
         # list of compounds that never leave their state.
-        cmp_ix_always_neg = np.flatnonzero(np.all(dtrj < 0, axis=ax_fr))
+        cmp_ix_always_neg = np.flatnonzero(np.all(invalid, axis=ax_fr))
         cmp_ix_stay = np.setdiff1d(
             cmp_ix_stay, cmp_ix_always_neg, assume_unique=True
         )
-        del cmp_ix_always_neg
-    del dtrj
+        # Number of "valid" frames for each compound, i.e. number of
+        # frames in which the compound resides in a positive state.
+        n_frames = np.count_nonzero(~invalid, axis=ax_fr)
+        del invalid, cmp_ix_always_neg
+    else:
+        n_frames = np.full(n_cmps, n_frames)
+    del dtrj_t0, dtrj
 
     # Get number of transitions per compound.
     cmp_ix, trans_per_cmp = mdt.nph.group_by(
-        trans_ix_start[ax_cmp], trans_ix_start[ax_fr], return_keys=True
+        trans_ix[ax_cmp], trans_ix[ax_fr], return_keys=True
     )
     if np.any(np.isin(cmp_ix_stay, cmp_ix, assume_unique=True)):
         raise ValueError(
-            "At least one compound changes and stays in its state at the same"
-            " time.  This should not have happened."
+            "At least one compound is listed in `cmp_ix_stay` and in `cmp_ix`."
+            "  This should not have happened."
         )
     cmp_ix = np.append(cmp_ix, cmp_ix_stay)
     trans_per_cmp = np.array([len(trans_ix) for trans_ix in trans_per_cmp])
@@ -1019,6 +1083,7 @@ def trans_rate(
     trans_per_cmp = trans_per_cmp[sort_ix]
 
     # Calculate transition rates.
+    n_frames = n_frames[cmp_ix]
     trans_rate_per_cmp = trans_per_cmp / n_frames
     if return_cmp_ix:
         return trans_rate_per_cmp, cmp_ix
