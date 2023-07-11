@@ -37,6 +37,7 @@ def locate_trans(
     dtrj,
     axis=-1,
     pin="end",
+    discard_neg=None,
     trans_type=None,
     wrap=False,
     tfft=False,
@@ -55,7 +56,7 @@ def locate_trans(
     ----------
     dtrj : array_like
         Array containing the discrete trajectory.
-    axis : int
+    axis : int, optional
         The axis along which to search for state transitions.  For
         ordinary discrete trajectories with shape ``(n, f)`` or
         ``(f,)``, where ``n`` is the number of compounds and ``f`` is
@@ -68,6 +69,12 @@ def locate_trans(
         where a given compound is in the next state) of the state
         transitions.  If set to ``"both"``, two output arrays will be
         returned, one for ``"start"`` and one for ``"end"``.
+    discard_neg : {None, "start", "end", "both"}, optional
+        Whether to locate all state transitions (``None``) or whether to
+        discard state transitions starting from a negative state
+        (``"start"``) or ending in a negative state (``"end"``).  If set
+        to ``"both"``, all state transitions starting from or ending in
+        a negative state will be discarded.
     trans_type : {None, "higher", "lower", "both"} or int or \
 iterable of ints, optional
         Whether to locate all state transitions without discriminating
@@ -93,12 +100,12 @@ iterable of ints, optional
         Treat First Frame as Transition.  If ``True``, treat the first
         frame as the end of a state transition.  Has no effect if `pin`
         is set to ``"start"``.  Must not be used together with
-        `trans_type`, `wrap` or `mic`.
+        `discard_neg`, `trans_type`, `wrap` or `mic`.
     tlft : bool, optional
         Treat Last Frame as Transition.  If ``True``, treat the last
         frame as the start of a state transition.  Has no effect if
         `pin` is set to ``"end"``.  Must not be used together with
-        `trans_type`, `wrap` or `mic`.
+        `discard_neg`, `trans_type`, `wrap` or `mic`.
     mic : bool, optional
         If ``True``, respect the Minimum Image Convention when
         evaluating the transition type, i.e. when evaluating whether the
@@ -190,6 +197,7 @@ iterable of ints, optional
         a=dtrj,
         axis=axis,
         pin=pin,
+        discard_neg=discard_neg,
         change_type=trans_type,
         rtol=0,
         atol=0,
