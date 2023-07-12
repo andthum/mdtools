@@ -931,7 +931,7 @@ def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
         Calculate the probability that a compound is in the same state
         as at time :math:`t_0` after a lag time :math:`\Delta t`
     :func:`mdtools.dtrj.lifetimes` :
-        Calculate the state lifetimes for all compounds
+        Calculate the state lifetimes for each compound
 
     Notes
     -----
@@ -1093,15 +1093,7 @@ def lifetimes(
     return_cmp_ix=False,
 ):
     r"""
-    Calculate the lifetimes for all compounds in all states of a
-    discrete trajectory by simply counting the number of frames a given
-    compound stays in a given state.
-
-    Note that lifetimes calculated in this way can at maximum be as long
-    as the trajectory and are usually biased to lower values because of
-    edge effects:  At the beginning and end of the trajectory it is
-    impossible to say how long a compound has already been it's initial
-    state or how long it will stay in it's final state.
+    Calculate the state lifetimes for each compound.
 
     Parameters
     ----------
@@ -1162,6 +1154,16 @@ def lifetimes(
 
     Notes
     -----
+    State lifetimes are calculated by simply counting the number of
+    frames a given compound stays in a given state.  Note that lifetimes
+    calculated in this way can at maximum be as long as the trajectory
+    and are usually biased to lower values because of edge effects:  At
+    the beginning and end of the trajectory it is impossible to say how
+    long a compound has already been it's initial state or how long it
+    will stay in it's final state.  For unbiased estimates of the
+    average state lifetime use :func:`mdtools.dtrj.trans_rate` or
+    :func:`mdtools.dtrj.remain_prob`.
+
     **Valid and Invalid States**
 
     (See also the notes of :func:`mdtools.dtrj.remain_prob`.)
@@ -1507,9 +1509,7 @@ def lifetimes_per_state(
     See Also
     --------
     :func:`mdtools.dtrj.lifetimes` :
-        Calculate the lifetimes for all compounds in all states of a
-        discrete trajectory by simply counting the number of frames a
-        given compound stays in a given state
+        Calculate the state lifetimes for each compound
     :func:`mdtools.dtrj.trans_rate_per_state` :
         Calculate the transition rate for each state averaged over all
         compounds
@@ -1790,9 +1790,7 @@ def remain_prob(  # noqa: C901
         Calculate the transition rate for each compound averaged over
         all states
     :func:`mdtools.dtrj.lifetimes` :
-        Calculate the lifetimes for all compounds in all states of a
-        discrete trajectory by simply counting the number of frames a
-        given compound stays in a given state
+        Calculate the state lifetimes for each compound
 
     Notes
     -----
