@@ -1958,7 +1958,7 @@ def remain_prob(  # noqa: C901
 
     This means transitions from or to negative states are completely
     discarded.  Thus, the resulting probability does neither contain the
-    probability to stay in a negative state nor is it decreased by
+    probability to stay in a negative state nor is it affected by
     transitions from positive to negative states.
 
     **Lifetimes**
