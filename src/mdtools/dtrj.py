@@ -1142,9 +1142,7 @@ def lifetimes(
     See Also
     --------
     :func:`mdtools.dtrj.lifetimes_per_state` :
-        Calculate the lifetime of each state in a discrete trajectory by
-        simply counting the number of frames a given compound stays in a
-        given state
+        Calculate the state lifetimes for each state
     :func:`mdtools.dtrj.trans_rate` :
         Calculate the transition rate for each compound averaged over
         all states
@@ -1430,15 +1428,7 @@ def lifetimes_per_state(
     kwargs_std=None,
 ):
     r"""
-    Calculate the lifetime of each state in a discrete trajectory by
-    simply counting the number of frames a given compound stays in a
-    given state.
-
-    Note that lifetimes calculated in this way can at maximum be as long
-    as the trajectory and are usually biased to lower values because of
-    edge effects:  At the beginning and end of the trajectory it is
-    impossible to say how long a compound has already been it's initial
-    state or how long it will stay in it's final state.
+    Calculate the state lifetimes for each state.
 
     Parameters
     ----------
@@ -1521,6 +1511,16 @@ def lifetimes_per_state(
 
     Notes
     -----
+    State lifetimes are calculated by simply counting the number of
+    frames a given compound stays in a given state.  Note that lifetimes
+    calculated in this way can at maximum be as long as the trajectory
+    and are usually biased to lower values because of edge effects:  At
+    the beginning and end of the trajectory it is impossible to say how
+    long a compound has already been it's initial state or how long it
+    will stay in it's final state.  For unbiased estimates of the
+    average state lifetime use :func:`mdtools.dtrj.trans_rate_per_state`
+    or :func:`mdtools.dtrj.remain_prob_discrete`.
+
     See :func:`mdtools.dtrj.lifetimes` for details about valid and
     invalid states (`discard_neg_start` and `discard_all_neg`).
 
@@ -2316,9 +2316,7 @@ def remain_prob_discrete(  # noqa: C901
         Calculate the transition rate for each state averaged over all
         compounds
     :func:`mdtools.dtrj.lifetimes_per_state` :
-        Calculate the lifetime of each state in a discrete trajectory by
-        simply counting the number of frames a given compound stays in a
-        given state
+        Calculate the state lifetimes for each state
 
     Notes
     -----
