@@ -897,8 +897,9 @@ mdt.dtrj.trans_per_state_vs_time(
 
 
 def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
-    """
-    Count the number of state transitions for each compound.
+    r"""
+    Calculate the transition rate for each compound averaged over all
+    states.
 
     Parameters
     ----------
@@ -924,13 +925,22 @@ def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
         the corresponding compound indices.  Only returned if
         `return_cmp_ix` is ``True``.
 
+    See Also
+    --------
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is in the same state
+        as at time :math:`t_0` after a lag time :math:`\Delta t`
+    :func:`mdtools.dtrj.lifetimes` :
+        Calculate the state lifetimes for all compounds
+
     Notes
     -----
     Transitions rates are calculated by simply counting the number of
-    transitions and dividing by the total number of frames.  If
-    `discard_neg` is not ``None``, the total number of frames is reduced
-    by the number of frames that a given compound stays in a negative
-    state.
+    state transitions for each compound and dividing this number by the
+    total number of frames.  If `discard_neg` is not ``None``, the total
+    number of frames is reduced by the number of frames that a given
+    compound stays in a negative state and compounds that are always in
+    a negative state are removed.
 
     The inverse of the transition rate gives an estimate for the average
     state lifetime.  In contrast to calculating the average lifetime by
@@ -1002,10 +1012,10 @@ def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
     >>> rates_both, cmp_ix_both = mdt.dtrj.trans_rate(
     ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="both"
     ... )
-    >>> rates_both  # TODO: Gives wrong result!
+    >>> rates_both
     array([0.        , 0.25      , 0.33333333, 0.25      , 0.2       ,
            0.        ])
-    >>> cmp_ix_both  # TODO: Gives wrong result!
+    >>> cmp_ix_both
     array([0, 1, 2, 3, 4, 6])
     >>> ax = 0
     >>> rates_start, cmp_ix_start = mdt.dtrj.trans_rate(
@@ -1040,52 +1050,36 @@ def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
     discard_neg = kwargs.setdefault("discard_neg", None)
     if pin == "both":
         raise ValueError("`pin` must bot be 'both'")
-    trans_ix = mdt.dtrj.trans_ix(dtrj, **kwargs)
+    trans = mdt.dtrj.locate_trans(dtrj, **kwargs)
 
     ax_cmp, ax_fr = mdt.dtrj.get_ax(ax_fr=axis)
     n_cmps, n_frames = dtrj.shape[ax_cmp], dtrj.shape[ax_fr]
 
-    # Get compounds that never leave their state.
-    dtrj_t0 = mdt.nph.take(dtrj, start=0, stop=1, axis=ax_fr)
-    cmp_ix_stay = np.flatnonzero(np.all(dtrj == dtrj_t0, axis=ax_fr))
     if discard_neg is not None:
-        invalid = dtrj < 0
+        valid = dtrj >= 0
         # Remove compounds that are always in a negative state from the
-        # list of compounds that never leave their state.
-        cmp_ix_always_neg = np.flatnonzero(np.all(invalid, axis=ax_fr))
-        cmp_ix_stay = np.setdiff1d(
-            cmp_ix_stay, cmp_ix_always_neg, assume_unique=True
-        )
-        # Number of "valid" frames for each compound, i.e. number of
-        # frames in which the compound resides in a positive state.
-        n_frames = np.count_nonzero(~invalid, axis=ax_fr)
-        del invalid, cmp_ix_always_neg
+        # transition array.
+        cmp_ix_always_neg = np.flatnonzero(np.all(~valid, axis=ax_fr))
+        trans = np.delete(trans, cmp_ix_always_neg, axis=ax_cmp)
+        valid = np.delete(valid, cmp_ix_always_neg, axis=ax_cmp)
+        # Get the number of "valid" frames for each compound, i.e. the
+        # number of frames in which a compound resides in a positive
+        # state.
+        n_frames = np.count_nonzero(valid, axis=ax_fr)
+        del valid
     else:
+        cmp_ix_always_neg = np.array([], dtype=int)
         n_frames = np.full(n_cmps, n_frames)
-    del dtrj_t0, dtrj
+    del dtrj
 
-    # Get number of transitions per compound.
-    cmp_ix, trans_per_cmp = mdt.nph.group_by(
-        trans_ix[ax_cmp], trans_ix[ax_fr], return_keys=True
-    )
-    if np.any(np.isin(cmp_ix_stay, cmp_ix, assume_unique=True)):
-        raise ValueError(
-            "At least one compound is listed in `cmp_ix_stay` and in `cmp_ix`."
-            "  This should not have happened."
-        )
-    cmp_ix = np.append(cmp_ix, cmp_ix_stay)
-    trans_per_cmp = np.array([len(trans_ix) for trans_ix in trans_per_cmp])
-    trans_per_cmp = np.append(trans_per_cmp, [0 for cmp_stay in cmp_ix_stay])
+    # Number of transitions per compound.
+    n_trans_per_cmp = np.count_nonzero(trans, axis=ax_fr)
 
-    # Sort by compound index.
-    sort_ix = np.argsort(cmp_ix)
-    cmp_ix = cmp_ix[sort_ix]
-    trans_per_cmp = trans_per_cmp[sort_ix]
-
-    # Calculate transition rates.
-    n_frames = n_frames[cmp_ix]
-    trans_rate_per_cmp = trans_per_cmp / n_frames
+    # Transition rates.
+    trans_rate_per_cmp = n_trans_per_cmp / n_frames
     if return_cmp_ix:
+        cmp_ix = np.arange(n_cmps)
+        cmp_ix = np.delete(cmp_ix, cmp_ix_always_neg)
         return trans_rate_per_cmp, cmp_ix
     else:
         return trans_rate_per_cmp
@@ -1159,6 +1153,9 @@ def lifetimes(
         Calculate the lifetime of each state in a discrete trajectory by
         simply counting the number of frames a given compound stays in a
         given state
+    :func:`mdtools.dtrj.trans_rate` :
+        Calculate the transition rate for each compound averaged over
+        all states
     :func:`mdtools.dtrj.remain_prob` :
         Calculate the probability that a compound is in the same state
         as at time :math:`t_0` after a lag time :math:`\Delta t`
@@ -1783,6 +1780,9 @@ def remain_prob(  # noqa: C901
         as at time :math:`t_0` after a lag time :math:`\Delta t`
         resolved with respect to the states in second discrete
         trajectory.
+    :func:`mdtools.dtrj.trans_rate` :
+        Calculate the transition rate for each compound averaged over
+        all states
     :func:`mdtools.dtrj.lifetimes` :
         Calculate the lifetimes for all compounds in all states of a
         discrete trajectory by simply counting the number of frames a
