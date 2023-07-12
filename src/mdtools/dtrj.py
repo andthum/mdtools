@@ -1448,18 +1448,21 @@ def lifetimes_per_state(
         interpreted as the indices of the states in which a given
         compound is at a given frame.
     discard_neg_start : bool, optional
-        If ``True``, discard the lifetimes of all negative states.  This
-        is equivalent to discarding all transitions starting from a
-        negative state when calculating the remain probability with
-        :func:`mdtools.dtrj.remain_prob` or
-        :func:`mdtools.dtrj.remain_prob_discrete`.  Has no effect if
-        `discard_all_neg` is ``True``.
+        If ``True``, discard the lifetimes of all negative states (see
+        notes of :func:`mdtools.dtrj.lifetimes`).  This is equivalent to
+        discarding all transitions starting from a negative state when
+        calculating transition rates with
+        :func:`mdtools.dtrj.trans_rate_per_state` or remain
+        probabilities with :func:`mdtools.dtrj.remain_prob_discrete`.
+        Has no effect if `discard_all_neg` is ``True``.
     discard_all_neg : bool, optional
         If ``True``, discard the lifetimes of all negative states and of
-        all states that are followed by a negative state.  This is
-        equivalent to discarding all negative states when calculating
-        the remain probability with :func:`mdtools.dtrj.remain_prob` or
-        :func:`mdtools.dtrj.remain_prob_discrete`.
+        all states that are followed by a negative state (see notes of
+        :func:`mdtools.dtrj.lifetimes`).  This is equivalent to
+        discarding all transitions starting from or ending in a negative
+        state when calculating transition rates with
+        :func:`mdtools.dtrj.trans_rate_per_state` or remain
+        probabilities with :func:`mdtools.dtrj.remain_prob_discrete`.
     return_states : bool, optional
         If ``True``, return the state indices associated with the
         returned lifetimes.
@@ -1507,6 +1510,9 @@ def lifetimes_per_state(
         Calculate the lifetimes for all compounds in all states of a
         discrete trajectory by simply counting the number of frames a
         given compound stays in a given state
+    :func:`mdtools.dtrj.trans_rate_per_state` :
+        Calculate the transition rate for each state averaged over all
+        compounds
     :func:`mdtools.dtrj.remain_prob_discrete` :
         Calculate the probability that a compound is in the same state
         as at time :math:`t_0` after a lag time :math:`\Delta t`
@@ -2277,12 +2283,19 @@ def remain_prob_discrete(  # noqa: C901
         :func:`mdtools.dtrj.remain_prob`).
     discard_neg_start : bool, optional
         If ``True``, discard all transitions starting from a negative
-        state (see notes of :func:`mdtools.dtrj.remain_prob`).  Must not
-        be used together with `discard_all_neg`.
+        state (see notes of :func:`mdtools.dtrj.remain_prob`).  This is
+        equivalent to discarding the lifetimes of all negative states
+        when calculating state lifetimes with
+        :func:`mdtools.dtrj.lifetimes_per_state`.  Must not be used
+        together with `discard_all_neg`.
     discard_all_neg : bool, optional
-        If ``True``, discard all negative states (see notes of
-        :func:`mdtools.dtrj.remain_prob`).  Must not be used together
-        with `discard_neg_start`.
+        If ``True``, discard all transitions starting from or ending in
+        a negative state (see notes of
+        :func:`mdtools.dtrj.remain_prob`).  This is equivalent to
+        discarding the lifetimes of all negative states and of all
+        states that are followed by a negative state when calculating
+        state lifetimes with :func:`mdtools.dtrj.lifetimes_per_state`.
+        Must not be used together with `discard_neg_start`.
     verbose : bool, optional
         If ``True`` print a progress bar.
 
@@ -2301,6 +2314,9 @@ def remain_prob_discrete(  # noqa: C901
     :func:`mdtools.dtrj.remain_prob` :
         Calculate the probability that a compound is in the same state
         as at time :math:`t_0` after a lag time :math:`\Delta t`
+    :func:`mdtools.dtrj.trans_rate_per_state` :
+        Calculate the transition rate for each state averaged over all
+        compounds
     :func:`mdtools.dtrj.lifetimes_per_state` :
         Calculate the lifetime of each state in a discrete trajectory by
         simply counting the number of frames a given compound stays in a
