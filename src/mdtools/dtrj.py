@@ -896,7 +896,13 @@ mdt.dtrj.trans_per_state_vs_time(
         return hist
 
 
-def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
+def trans_rate(
+    dtrj,
+    axis=-1,
+    discard_neg_start=False,
+    discard_all_neg=False,
+    return_cmp_ix=False,
+):
     r"""
     Calculate the transition rate for each compound averaged over all
     states.
@@ -905,15 +911,28 @@ def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
     ----------
     dtrj : array_like
         Array containing the discrete trajectory.
+    axis : int, optional
+        The axis along which to search for state transitions.  For
+        ordinary discrete trajectories with shape ``(n, f)`` or
+        ``(f,)``, where ``n`` is the number of compounds and ``f`` is
+        the number of frames, set `axis` to ``-1``.  If you parse a
+        transposed discrete trajectory of shape ``(f, n)``, set `axis`
+        to ``0``.
+    discard_neg_start : bool, optional
+        If ``True``, discard all transitions starting from a negative
+        state (see notes).  This is equivalent to discarding the
+        lifetimes of all negative states when calculating state
+        lifetimes with :func:`mdtools.dtrj.lifetimes`.  Has no effect if
+        `discard_all_neg` is ``True`` .
+    discard_all_neg : bool, optional
+        If ``True``, discard all transitions starting from or ending in
+        a negative state (see notes).  This is equivalent to discarding
+        the lifetimes of all negative states and of all states that are
+        followed by a negative state when calculating state lifetimes
+        with :func:`mdtools.dtrj.lifetimes`.
     return_cmp_ix : bool, optional
         If ``True``, return the compound indices associated with the
         returned transition rates.
-    kwargs : dict, optional
-        Additional keyword arguments to parse to
-        :func:`mdtools.dtrj.trans_ix`.  See there for possible options.
-        By default, `axis` is set to ``-1`` and `pin` is set to
-        ``"end"``.  Note that it does not matter whether `pin` is set to
-        ``"start"`` or ``"end"``, but it must not be set to ``"both"``.
 
     Returns
     -------
@@ -936,17 +955,51 @@ def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
     Notes
     -----
     Transitions rates are calculated by simply counting the number of
-    state transitions for each compound and dividing this number by the
-    total number of frames.  If `discard_neg` is not ``None``, the total
-    number of frames is reduced by the number of frames that a given
-    compound stays in a negative state and compounds that are always in
-    a negative state are removed.
+    valid state transitions for each compound and dividing this number
+    by the number of valid frames.
 
     The inverse of the transition rate gives an estimate for the average
     state lifetime.  In contrast to calculating the average lifetime by
     simply counting how many frames a given compound stays in a given
     state (as done by :func:`mdtools.dtrj.lifetimes`), this method is
     not biased to lower lifetimes.
+
+    **Valid and Invalid States**
+
+    By default, all states in the given discrete trajectory are valid.
+    However, in some cases you might want to treat certain states as
+    invalid, e.g. because you only want to consider specific states.
+    This can be achieved with the arguments `discard_neg_start` or
+    `discard_all_neg` which treat negative states (i.e. states with a
+    negative state number/index) as invalid states.
+
+    .. note::
+
+        If you want to treat states with index zero as invalid, too,
+        simply subtract one from `dtrj`.  If you want to treat all
+        states below a certain cutoff as invalid, subtract this cutoff
+        from `dtrj`.  If you want to treat certain states as invalid,
+        make these states negative, e.g. by multiplying these states
+        with minus one.
+
+    The arguments `discard_neg_start` and `discard_all_neg` affect the
+    counting of state transitions and frames.
+
+    If both, `discard_neg_start` and `discard_all_neg`, are ``False``
+    (the default), all state state transitions are counted and divided
+    by the total number of frames.
+
+    If `discard_neg_start` is ``True``, transitions starting from
+    negative states are discarded and the total number of frames is
+    reduced by the number of frames that a given compound resides in
+    negative states.
+
+    If `discard_all_neg` is ``True``, all negative states are discarded,
+    i.e. transitions starting from or ending in a negative state are
+    discarded.  The total number of frames is reduced by the number of
+    frames that a given compound resides in negative states and by the
+    number of frames that a given compound resides in positive states
+    that are followed by negative states.
 
     Examples
     --------
@@ -993,93 +1046,151 @@ def trans_rate(dtrj, return_cmp_ix=False, **kwargs):
     ...                  [-6, -6, -6, -6, -6, -6],
     ...                  [ 6,  6,  6,  6,  6,  6]])
     >>> ax = -1
+    >>> rates, cmp_ix = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, return_cmp_ix=True
+    ... )
+    >>> rates
+    array([0.33333333, 0.33333333, 0.33333333, 0.33333333, 0.33333333,
+           0.        , 0.        ])
+    >>> cmp_ix
+    array([0, 1, 2, 3, 4, 5, 6])
     >>> rates_start, cmp_ix_start = mdt.dtrj.trans_rate(
-    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="start"
+    ...     dtrj, axis=ax, discard_neg_start=True, return_cmp_ix=True
     ... )
     >>> rates_start
     array([0.25      , 0.25      , 0.33333333, 0.5       , 0.4       ,
            0.        ])
     >>> cmp_ix_start
     array([0, 1, 2, 3, 4, 6])
-    >>> rates_end, cmp_ix_end = mdt.dtrj.trans_rate(
-    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="end"
+    >>> rates_all, cmp_ix_all = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, discard_all_neg=True, return_cmp_ix=True
     ... )
-    >>> rates_end
-    array([0.25      , 0.5       , 0.33333333, 0.25      , 0.2       ,
+    >>> rates_all
+    array([0.        , 0.25      , 0.33333333, 1.        , 1.        ,
            0.        ])
-    >>> cmp_ix_end
+    >>> cmp_ix_all
     array([0, 1, 2, 3, 4, 6])
-    >>> rates_both, cmp_ix_both = mdt.dtrj.trans_rate(
-    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="both"
-    ... )
-    >>> rates_both
-    array([0.        , 0.25      , 0.33333333, 0.25      , 0.2       ,
-           0.        ])
-    >>> cmp_ix_both
-    array([0, 1, 2, 3, 4, 6])
+
     >>> ax = 0
+    >>> rates, cmp_ix = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, return_cmp_ix=True
+    ... )
+    >>> rates
+    array([0.71428571, 0.57142857, 0.57142857, 0.71428571, 0.71428571,
+           0.85714286])
+    >>> cmp_ix
+    array([0, 1, 2, 3, 4, 5])
     >>> rates_start, cmp_ix_start = mdt.dtrj.trans_rate(
-    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="start"
+    ...     dtrj, axis=ax, discard_neg_start=True, return_cmp_ix=True
     ... )
     >>> rates_start
     array([0.6       , 0.5       , 0.4       , 0.66666667, 0.6       ,
            0.75      ])
     >>> cmp_ix_start
     array([0, 1, 2, 3, 4, 5])
-    >>> rates_end, cmp_ix_end = mdt.dtrj.trans_rate(
-    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="end"
+    >>> rates_all, cmp_ix_all = mdt.dtrj.trans_rate(
+    ...     dtrj, axis=ax, discard_all_neg=True, return_cmp_ix=True
     ... )
-    >>> rates_end
-    array([0.6       , 0.75      , 0.6       , 0.66666667, 0.6       ,
-           0.75      ])
-    >>> cmp_ix_end
-    array([0, 1, 2, 3, 4, 5])
-    >>> rates_both, cmp_ix_both = mdt.dtrj.trans_rate(
-    ...     dtrj, axis=ax, return_cmp_ix=True, discard_neg="both"
-    ... )
-    >>> rates_both
-    array([0.2 , 0.25, 0.2 , 0.5 , 0.2 , 0.5 ])
-    >>> cmp_ix_both
+    >>> rates_all
+    array([0.5       , 0.33333333, 0.25      , 0.6       , 0.33333333,
+           0.66666667])
+    >>> cmp_ix_all
     array([0, 1, 2, 3, 4, 5])
     """
-    dtrj = np.asarray(dtrj)
-
-    # Get all state transitions.
-    axis = kwargs.setdefault("axis", -1)
-    pin = kwargs.setdefault("pin", "end")
-    discard_neg = kwargs.setdefault("discard_neg", None)
-    if pin == "both":
-        raise ValueError("`pin` must bot be 'both'")
-    trans = mdt.dtrj.locate_trans(dtrj, **kwargs)
-
+    dtrj = mdt.check.dtrj(dtrj)
     ax_cmp, ax_fr = mdt.dtrj.get_ax(ax_fr=axis)
     n_cmps, n_frames = dtrj.shape[ax_cmp], dtrj.shape[ax_fr]
 
-    if discard_neg is not None:
-        valid = dtrj >= 0
-        # Remove compounds that are always in a negative state from the
-        # transition array.
-        cmp_ix_always_neg = np.flatnonzero(np.all(~valid, axis=ax_fr))
-        trans = np.delete(trans, cmp_ix_always_neg, axis=ax_cmp)
-        valid = np.delete(valid, cmp_ix_always_neg, axis=ax_cmp)
+    # Get all state transitions.
+    trans_ix = mdt.dtrj.trans_ix(dtrj, axis=ax_fr, pin="start")
+
+    if discard_all_neg and ax_cmp != 0:
+        # Sort position of state transitions by compound indices.
+        ix_sort = np.argsort(trans_ix[ax_cmp], kind="stable")
+        trans_ix = tuple(tix[ix_sort] for tix in trans_ix)
+        del ix_sort
+
+    # Get all compounds that undergo state transitions.
+    cmp_ix_trans = trans_ix[ax_cmp]
+    if discard_neg_start or discard_all_neg:
+        # Discard all transitions starting from a negative state.
+        valid = dtrj[trans_ix] >= 0  # Valid initial states.
         # Get the number of "valid" frames for each compound, i.e. the
         # number of frames in which a compound resides in a positive
         # state.
-        n_frames = np.count_nonzero(valid, axis=ax_fr)
+        n_frames = np.count_nonzero(dtrj >= 0, axis=ax_fr)
+        # Get compounds that are always in a negative state.
+        cmp_ix_always_neg = np.flatnonzero(n_frames == 0)
+        if discard_all_neg:
+            # Discard all transition ending in a negative state.
+            trans_ix_end = list(trans_ix)
+            trans_ix_end[ax_fr] += 1
+            trans_ix_end = tuple(trans_ix_end)
+            valid_end = dtrj[trans_ix_end] >= 0
+            # Remove frames in which a compound resides in a positive
+            # state that if followed by a negative state from the number
+            # of valid frames:
+            # Start points of single compound trajectories.
+            trj_starts = np.diff(trans_ix[ax_cmp])
+            trj_starts = np.insert(trj_starts, 0, 1)
+            trj_starts = np.flatnonzero(trj_starts)
+            # Frame indices at which state transitions end.
+            ix_end = trans_ix_end[ax_fr]
+            ix_end = np.insert(ix_end, trj_starts, 0)
+            # Invalid frames are those between a positive initial state
+            # and a negative final state.
+            invalid_lt = valid & ~valid_end
+            # Lifetimes/number of frames of positive states that are
+            # followed by a negative state.
+            lifetimes = np.diff(ix_end)
+            # Negative values in `lifetimes` indicate the start of a new
+            # compound trajectory.
+            lifetimes = lifetimes[lifetimes > 0]
+            lifetimes = lifetimes[invalid_lt]
+            np.subtract.at(n_frames, cmp_ix_trans[invalid_lt], lifetimes)
+            del trj_starts, ix_end, invalid_lt, lifetimes
+            # Finish discarding all transition ending in a negative
+            # state.
+            valid &= valid_end
+            del valid_end, trans_ix_end
+        cmp_ix_trans = cmp_ix_trans[valid]
         del valid
     else:
-        cmp_ix_always_neg = np.array([], dtype=int)
         n_frames = np.full(n_cmps, n_frames)
-    del dtrj
+        cmp_ix_always_neg = np.array([], dtype=int)
+    del dtrj, trans_ix
 
-    # Number of transitions per compound.
-    n_trans_per_cmp = np.count_nonzero(trans, axis=ax_fr)
+    # Number of transitions for each compound that undergoes state
+    # transition(s).
+    cmp_ix_trans, n_trans = np.unique(cmp_ix_trans, return_counts=True)
+    if np.any(np.isin(cmp_ix_always_neg, cmp_ix_trans)):
+        raise ValueError(
+            "At least one compound that is considered to always be in a"
+            " negative state is also listed as compound that undergoes valid"
+            " state transition(s).  This should not have happened."
+        )
+    # Number of transitions for each compound in the discrete
+    # trajectory.
+    n_trans_per_cmp = np.zeros(n_cmps, dtype=np.uint32)
+    n_trans_per_cmp[cmp_ix_trans] = n_trans
+    n_trans_per_cmp = np.delete(n_trans_per_cmp, cmp_ix_always_neg)
+    n_frames = np.delete(n_frames, cmp_ix_always_neg)
 
     # Transition rates.
     trans_rate_per_cmp = n_trans_per_cmp / n_frames
+    if np.any(trans_rate_per_cmp > 1):
+        raise ValueError(
+            "At least one compound has a transition rate greater than one."
+            "  This should not have happened"
+        )
+    if np.any(trans_rate_per_cmp < 0):
+        raise ValueError(
+            "At least one compound has a negative transition rate.  This"
+            " should not have happened"
+        )
+
     if return_cmp_ix:
-        cmp_ix = np.arange(n_cmps)
-        cmp_ix = np.delete(cmp_ix, cmp_ix_always_neg)
+        cmp_ix = np.delete(np.arange(n_cmps), cmp_ix_always_neg)
         return trans_rate_per_cmp, cmp_ix
     else:
         return trans_rate_per_cmp
@@ -1166,8 +1277,6 @@ def lifetimes(
     :func:`mdtools.dtrj.remain_prob`.
 
     **Valid and Invalid States**
-
-    (See also the notes of :func:`mdtools.dtrj.remain_prob`.)
 
     By default, all states in the given discrete trajectory are valid.
     However, in some cases you might want to treat certain states as
@@ -1483,7 +1592,7 @@ def lifetimes(
     states = dtrj[trans_ix_start]
     cmp_ix = trans_ix_start[ax_cmp]
     if discard_neg_start or discard_all_neg:
-        # Only keep lifetimes of positive states.
+        # Discard the lifetimes of all negative states.
         valid = states >= 0
         if discard_all_neg:
             # Discard the lifetimes of positive states that are followed
@@ -1496,9 +1605,11 @@ def lifetimes(
             trj_ends = (trans_ix_start[ax_fr] + 1) == n_frames
             valid_follower[trj_ends] = True
             valid &= valid_follower
+            del valid_follower, trj_ends
         lt = lt[valid]
         states = states[valid]
         cmp_ix = cmp_ix[valid]
+        del valid
     del dtrj
 
     if np.any(lt > n_frames):
@@ -2098,8 +2209,6 @@ def remain_prob(  # noqa: C901
     *for all times* from :math:`t_0` to :math:`t_0 + \Delta t`.
 
     **Valid and Invalid States**
-
-    (See also the notes of :func:`mdtools.dtrj.lifetimes`.)
 
     By default, all states in the given discrete trajectory are valid.
     However, in some cases you might want to treat certain states as
