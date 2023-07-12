@@ -1523,6 +1523,7 @@ def lifetimes(
 
 def lifetimes_per_state(
     dtrj,
+    axis=-1,
     discard_neg_start=False,
     discard_all_neg=False,
     return_states=False,
@@ -1538,12 +1539,14 @@ def lifetimes_per_state(
     Parameters
     ----------
     dtrj : array_like
-        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
-        is the number of compounds and ``f`` is the number of frames.
-        The shape can also be ``(f,)``, in which case the array is
-        expanded to shape ``(1, f)``.   The elements of `dtrj` are
-        interpreted as the indices of the states in which a given
-        compound is at a given frame.
+        Array containing the discrete trajectory.
+    axis : int, optional
+        The axis along which to search for state transitions.  For
+        ordinary discrete trajectories with shape ``(n, f)`` or
+        ``(f,)``, where ``n`` is the number of compounds and ``f`` is
+        the number of frames, set `axis` to ``-1``.  If you parse a
+        transposed discrete trajectory of shape ``(f, n)``, set `axis`
+        to ``0``.
     discard_neg_start : bool, optional
         If ``True``, discard the lifetimes of all negative states (see
         notes of :func:`mdtools.dtrj.lifetimes`).  This is equivalent to
@@ -1652,6 +1655,24 @@ def lifetimes_per_state(
     array([1., 2., 3.])
     >>> lt_std
     array([0., 0., 0.])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=0,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([1, 2, 1, 2, 2]), array([1, 2, 3, 2, 1, 2, 1])]
+    >>> states
+    array([1, 2, 3])
+    >>> cmp_ix
+    [array([0, 0, 3, 5]), array([0, 1, 2, 4, 5]), array([0, 1, 2, 3, 3, 4, 5])]
+    >>> lt_avg
+    array([1.        , 1.6       , 1.71428571])
+    >>> lt_std
+    array([0.        , 0.48989795, 0.69985421])
 
     >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
     ...                  [2, 2, 3, 3, 3, 1],
@@ -1674,6 +1695,24 @@ def lifetimes_per_state(
     array([1., 2., 3., 2., 3.])
     >>> lt_std
     array([0., 0., 0., 0., 0.])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=0,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([1, 2, 1]), array([1, 2, 2, 1]), array([2, 2]), array([1, 2, 2, 1])]
+    >>> states
+    array([1, 2, 3, 4, 6])
+    >>> cmp_ix
+    [array([0, 0, 3, 5]), array([0, 1, 2]), array([2, 3, 4, 5]), array([4, 5]), array([0, 1, 2, 3])]
+    >>> lt_avg
+    array([1.        , 1.33333333, 1.5       , 2.        , 1.5       ])
+    >>> lt_std
+    array([0.        , 0.47140452, 0.5       , 0.        , 0.5       ])
 
     >>> dtrj = np.array([[ 1,  2,  2,  1,  1,  1],
     ...                  [ 2,  2,  3,  3,  3,  2],
@@ -1733,6 +1772,65 @@ def lifetimes_per_state(
     array([2. , 1.6, 3. ])
     >>> lt_std
     array([1.        , 0.48989795, 0.        ])
+    >>> ax = 0
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1]), array([1, 1]), array([1]), array([1, 1, 1, 1]), array([1, 1, 2, 1, 1, 2]), array([1, 1, 1, 1, 1, 1])]
+    >>> states
+    array([-3, -2, -1,  1,  2,  3])
+    >>> cmp_ix
+    [array([0, 1, 2]), array([4, 5]), array([3]), array([0, 3, 4, 5]), array([0, 0, 1, 2, 4, 5]), array([1, 2, 2, 3, 3, 4])]
+    >>> lt_avg
+    array([1.        , 1.        , 1.        , 1.        , 1.33333333,
+           1.        ])
+    >>> lt_std
+    array([0.        , 0.        , 0.        , 0.        , 0.47140452,
+           0.        ])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     discard_neg_start=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([1, 1, 2, 1, 1, 2]), array([1, 1, 1, 1, 1, 1])]
+    >>> states
+    array([1, 2, 3])
+    >>> cmp_ix
+    [array([0, 3, 4, 5]), array([0, 0, 1, 2, 4, 5]), array([1, 2, 2, 3, 3, 4])]
+    >>> lt_avg
+    array([1.        , 1.33333333, 1.        ])
+    >>> lt_std
+    array([0.        , 0.47140452, 0.        ])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     discard_all_neg=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([1, 1]), array([1, 1, 1, 1])]
+    >>> states
+    array([1, 2, 3])
+    >>> cmp_ix
+    [array([0, 3, 4, 5]), array([0, 2]), array([1, 2, 3, 4])]
+    >>> lt_avg
+    array([1., 1., 1.])
+    >>> lt_std
+    array([0., 0., 0.])
 
     >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
     ...                  [-2, -2,  3,  3,  3,  1],
@@ -1792,9 +1890,67 @@ def lifetimes_per_state(
     array([1., 3.])
     >>> lt_std
     array([0., 0.])
+    >>> ax = 0
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 2, 1, 2, 2]), array([1]), array([1, 2, 1, 1]), array([1, 2, 3, 2, 1, 2, 1]), array([1, 1, 1, 1])]
+    >>> states
+    array([-2, -1,  1,  3,  4])
+    >>> cmp_ix
+    [array([0, 1, 2, 4, 5]), array([5]), array([0, 0, 3, 5]), array([0, 1, 2, 3, 3, 4, 5]), array([1, 2, 3, 4])]
+    >>> lt_avg
+    array([1.6       , 1.        , 1.25      , 1.71428571, 1.        ])
+    >>> lt_std
+    array([0.48989795, 0.        , 0.4330127 , 0.69985421, 0.        ])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     discard_neg_start=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 2, 1, 1]), array([1, 2, 3, 2, 1, 2, 1]), array([1, 1, 1, 1])]
+    >>> states
+    array([1, 3, 4])
+    >>> cmp_ix
+    [array([0, 0, 3, 5]), array([0, 1, 2, 3, 3, 4, 5]), array([1, 2, 3, 4])]
+    >>> lt_avg
+    array([1.25      , 1.71428571, 1.        ])
+    >>> lt_std
+    array([0.4330127 , 0.69985421, 0.        ])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     discard_all_neg=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([2, 1]), array([1, 2, 3, 2, 1, 1]), array([1, 1, 1, 1])]
+    >>> states
+    array([1, 3, 4])
+    >>> cmp_ix
+    [array([0, 3]), array([0, 1, 2, 3, 3, 5]), array([1, 2, 3, 4])]
+    >>> lt_avg
+    array([1.5       , 1.66666667, 1.        ])
+    >>> lt_std
+    array([0.5       , 0.74535599, 0.        ])
     """  # noqa: E501, W505
     lt, states, cmp_ix = mdt.dtrj.lifetimes(
         dtrj,
+        axis=axis,
         discard_neg_start=discard_neg_start,
         discard_all_neg=discard_all_neg,
         return_states=True,
