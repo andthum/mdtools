@@ -961,6 +961,15 @@ def trans_rate(
     valid state transitions for each compound and dividing this number
     by the number of valid frames.
 
+    To calculate the transition rate averaged over all states and all
+    compounds simply do:
+
+    .. code-block:: python
+
+        n_trans_tot = np.count_nonzero(mdt.dtrj.locate_trans(dtrj))
+        n_frames_tot = dtrj.size
+        trans_rate = n_trans_tot / n_frames_tot
+
     The inverse of the transition rate gives an estimate for the average
     state lifetime.  In contrast to calculating the average lifetime by
     simply counting how many frames a given compound stays in a given
@@ -1205,13 +1214,8 @@ def trans_rate_per_state(
     discard_neg_start=False,
     discard_all_neg=False,
     return_states=False,
-    return_cmp_ix=False,
-    return_avg=False,
-    kwargs_avg=None,
-    return_std=False,
-    kwargs_std=None,
 ):
-    """
+    r"""
     Calculate the transition rate for each state averaged over all
     compounds.
 
@@ -1246,31 +1250,42 @@ def trans_rate_per_state(
 
     Returns
     -------
-    trans_rates : list of 1D numpy.ndarray
-        List of 1-dimensional arrays.  Each array contains the
-        transition rates of one state for each compound.
+    trans_rates : numpy.ndarray
+        1-dimensional array containing the transition rates for each
+        valid state.
     states : numpy.ndarray
-        1-dimensional array of shape ``(len(trans_rates),)`` containing
-        the corresponding state indices for each transition rate in
-        `trans_rates`.  Only returned if `return_states` is ``True``.
-    cmp_ix : list of 1D numpy.ndarray
-        List of 1-dimensional arrays of the same shape as `trans_rates`.
-        Each array contains the corresponding compound indices.  Only
-        returned if `return_cmp_ix` is ``True``.
-    tr_avg : numpy.ndarray
-        1-dimensional array of shape ``(len(trans_rates),)`` containing
-        the average transition rate of each state.  Only returned if
-        `return_avg` is ``True``.
-    tr_std : numpy.ndarray
-        1-dimensional array of shape ``(len(trans_rates),)`` containing
-        the standard deviation of the transition rates of each state.
-        Only returned if `return_std` is ``True``.
+        1-dimensional array of the same shape as `trans_rates`
+        containing the corresponding state indices.  Only returned if
+        `return_states` is ``True``.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.trans_rate` :
+        Calculate the transition rate for each compound averaged over
+        all states
+    :func:`mdtools.dtrj.remain_prob_discrete` :
+        Calculate the probability that a compound is in the same state
+        as at time :math:`t_0` after a lag time :math:`\Delta t`
+        resolved with respect to the states in second discrete
+        trajectory
+    :func:`mdtools.dtrj.lifetimes_per_state` :
+        Calculate the state lifetimes for each state
 
     Notes
     -----
-    Transitions rates are calculated by simply counting the number of
-    valid state transitions for each valid state and dividing this
-    number by the number of valid frames.
+    Transitions rates are calculated for a given valid state by simply
+    counting the number of valid transitions out of this state and
+    dividing this number by the number of valid frames that compounds
+    have spent in this state.
+
+    To calculate the transition rate averaged over all states and all
+    compounds simply do:
+
+    .. code-block:: python
+
+        n_trans_tot = np.count_nonzero(mdt.dtrj.locate_trans(dtrj))
+        n_frames_tot = dtrj.size
+        trans_rate = n_trans_tot / n_frames_tot
 
     The inverse of the transition rate gives an estimate for the average
     state lifetime.  In contrast to calculating the average lifetime by
@@ -1287,38 +1302,228 @@ def trans_rate_per_state(
     ...                  [2, 2, 3, 3, 3, 1],
     ...                  [3, 3, 3, 1, 2, 2],
     ...                  [1, 3, 3, 3, 2, 2]])
+    >>> trans_rates, states = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, return_states=True
+    ... )
+    >>> trans_rates
+    array([0.75, 0.25, 0.25])
+    >>> states
+    array([1, 2, 3])
+    >>> trans_rates, states = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, axis=0, return_states=True
+    ... )
+    >>> trans_rates
+    array([0.75      , 0.375     , 0.33333333])
+    >>> states
+    array([1, 2, 3])
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [6, 6, 6, 6, 6, 6]])
+    >>> trans_rates, states = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, return_states=True
+    ... )
+    >>> trans_rates
+    array([0.75, 0.25, 0.25, 0.  ])
+    >>> states
+    array([1, 2, 3, 6])
+    >>> trans_rates, states = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, axis=0, return_states=True
+    ... )
+    >>> trans_rates
+    array([1.        , 0.625     , 0.58333333, 0.        ])
+    >>> states
+    array([1, 2, 3, 6])
+
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1,  2,  2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [-6, -6, -6, -6, -6, -6],
+    ...                  [ 6,  6,  6,  6,  6,  6]])
+    >>> ax = -1
+    >>> trans_rates, states = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, axis=ax, return_states=True
+    ... )
+    >>> trans_rates
+    array([0.        , 0.33333333, 0.        , 0.8       , 0.        ,
+           0.25      , 0.25      , 0.        ])
+    >>> states
+    array([-6, -2, -1,  1,  2,  3,  4,  6])
+    >>> trans_rates_start, states_start = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, axis=ax, discard_neg_start=True, return_states=True
+    ... )
+    >>> trans_rates_start
+    array([0.8 , 0.  , 0.25, 0.25, 0.  ])
+    >>> states_start
+    array([1, 2, 3, 4, 6])
+    >>> trans_rates_all, states_all = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, axis=ax, discard_all_neg=True, return_states=True
+    ... )
+    >>> trans_rates_all
+    array([0.75      , 0.        , 0.22222222, 0.        ])
+    >>> states_all
+    array([1, 2, 3, 6])
+
+    >>> ax = 0
+    >>> trans_rates, states = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, axis=ax, return_states=True
+    ... )
+    >>> trans_rates
+    array([1.        , 0.83333333, 1.        , 0.8       , 1.        ,
+           0.58333333, 1.        , 0.        ])
+    >>> states
+    array([-6, -2, -1,  1,  2,  3,  4,  6])
+    >>> trans_rates_start, states_start = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, axis=ax, discard_neg_start=True, return_states=True
+    ... )
+    >>> trans_rates_start
+    array([0.8       , 1.        , 0.58333333, 1.        , 0.        ])
+    >>> states_start
+    array([1, 2, 3, 4, 6])
+    >>> trans_rates_all, states_all = mdt.dtrj.trans_rate_per_state(
+    ...     dtrj, axis=ax, discard_all_neg=True, return_states=True
+    ... )
+    >>> trans_rates_all
+    array([1.        , 0.58333333, 0.        ])
+    >>> states_all
+    array([1, 3, 6])
     """
     dtrj = mdt.check.dtrj(dtrj)
     ax_cmp, ax_fr = mdt.dtrj.get_ax(ax_fr=axis)
-    n_cmps, n_frames = dtrj.shape[ax_cmp], dtrj.shape[ax_fr]
+    n_cmps, n_frames_tot = dtrj.shape[ax_cmp], dtrj.shape[ax_fr]
 
+    # Unique state indices.
     states_uniq = np.unique(dtrj)
-
-    if discard_neg_start:
+    if discard_neg_start or discard_all_neg:
+        # Discard all transitions starting from a negative state.
         states_uniq = states_uniq[states_uniq >= 0]
+    if discard_all_neg:
+        # Discard all transition ending in a negative state.
+        # Invalid trajectory frames.
+        dtrj_invalid = dtrj < 0
+        # All state transitions.
+        trans2neg = mdt.dtrj.locate_trans(dtrj, pin="end", axis=ax_fr)
+        # End points of all transitions ending in a negative state.
+        trans2neg &= dtrj_invalid
+        # Start points of all transitions ending in a negative state.
+        trans2neg = np.roll(trans2neg, shift=-1, axis=ax_fr)
+        # Start points of transitions starting from a positive state and
+        # ending in a negative state.
+        trans2neg &= ~dtrj_invalid
+        del dtrj_invalid
 
-    n_states = len(states_uniq)
-    n_trans_per_state = np.zeros((n_states, n_cmps), dtype=np.uint32)
-    n_frames_per_state = np.zeros_like(n_trans_per_state)
-    cmp_has_state = np.zeros_like(n_trans_per_state, dtype=bool)
+    trans_rates = np.full(len(states_uniq), np.nan, dtype=np.float64)
     for six, state in enumerate(states_uniq):
+        # Frames at which compounds are in `state`.
         dtrj_state = dtrj == state
-        n_trans = np.diff(dtrj_state.astype(np.int8), axis=ax_fr)
-        n_trans = np.count_nonzero(n_trans == -1, axis=ax_fr)
-        n_trans_per_state[six] = n_trans
-        n_frames = np.count_nonzero(dtrj_state, axis=ax_fr)
-        n_frames_per_state[six] = n_frames
-        cmp_has_state[six] = n_frames > 0
-    del dtrj_state, n_trans, n_frames
+        # Transitions into and out of `state`.
+        trans = np.diff(dtrj_state.astype(np.int8), axis=ax_fr)
+        # Number of transitions that lead out of `state`.
+        n_trans = np.count_nonzero(trans == -1)
+        # Number of frames that compounds have spent in `state`.
+        n_frames = np.count_nonzero(dtrj_state)
+        if discard_all_neg:
+            # Start points of transitions starting in `state` and ending
+            # in a negative state.
+            trans_invalid = dtrj_state & trans2neg
+            # Subtract the number of invalid transitions.
+            n_trans_invalid = np.count_nonzero(trans_invalid)
+            if n_trans_invalid > n_trans:
+                raise ValueError(
+                    "The number of invalid transitions is greater than the"
+                    " total number of transitions.  This should not have"
+                    " happened "
+                )
+            n_trans -= n_trans_invalid
+            # Subtract the number of invalid frames, i.e. frames in
+            # which a compound resides in `state` but afterwards
+            # transitions to a negative state.  This is done by
+            # calculating the length ("lifetimes") of all `state`
+            # sequences in `dtrj` that are followed by a negative state.
+            # The sum of these sequences is then subtracted from the
+            # total number of frames in which compounds reside in
+            # `state`.
+            # Get all end and start points of all `state` sequences.
+            insertion = np.zeros(n_cmps, dtype=bool)
+            dtrj_state = np.insert(
+                dtrj_state, n_frames_tot, insertion, axis=ax_fr
+            )
+            dtrj_state = np.insert(dtrj_state, 0, insertion, axis=ax_fr)
+            trans = np.diff(dtrj_state.astype(np.int8), axis=ax_fr)
+            trans_ix = np.nonzero(trans)
+            if ax_cmp != 0:
+                # Sort position of state transitions by compound indices
+                ix_sort = np.argsort(trans_ix[ax_cmp])
+                trans_ix = np.array([tix[ix_sort] for tix in trans_ix])
+            else:
+                trans_ix = np.asarray(trans_ix)
+            # Make `trans_ix` indicating the start rather than the end
+            # of transitions into and out of `state`, i.e. `trans_ix`
+            # now indicates the end points of all `state` sequences and
+            # of all preceding sequences.
+            trans_ix[ax_fr] -= 1
+            # Length of all `state` sequences.
+            lifetimes = np.diff(trans_ix[ax_fr])
+            # End points of `state` sequences that are followed by a
+            # negative state.
+            trans_ix_invalid = np.asarray(np.nonzero(trans_invalid))
+            # Identify the lifetimes of `state` sequences that are
+            # followed by a negative state.
+            trans_ix_invalid = trans_ix_invalid.T
+            trans_ix = trans_ix.T
+            trans_ix_invalid = [
+                np.all(tix_iv == trans_ix, axis=1)
+                for tix_iv in trans_ix_invalid
+            ]
+            trans_ix_invalid = np.any(trans_ix_invalid, axis=0)
+            trans_ix_invalid = np.flatnonzero(trans_ix_invalid)
+            trans_ix_invalid -= 1
+            lifetimes_invalid = lifetimes[trans_ix_invalid]
+            if np.any(lifetimes_invalid < 1):
+                raise ValueError(
+                    "At least one invalid state sequence is shorter than one"
+                    " frame.  This should not have happened "
+                )
+            # Get the number of invalid frames.
+            n_frames_invalid = np.sum(lifetimes_invalid)
+            if n_frames_invalid > n_frames:
+                raise ValueError(
+                    "The number of invalid frames is greater than the total"
+                    " number of frames.  This should not have happened "
+                )
+            # Subtract the number of invalid frames.
+            n_frames -= n_frames_invalid
+            if n_frames == 0 and n_trans > 0:
+                raise ValueError(
+                    "The number of valid frames is zero but the number of"
+                    " valid transitions {}.  This should not have"
+                    " happened".format(n_trans)
+                )
+            elif n_frames == 0 and n_trans == 0:
+                # All `state` sequences are followed by negative states.
+                trans_rates[six] = np.nan
+                continue
+        trans_rates[six] = n_trans / n_frames
+    del dtrj_state, trans, n_trans, n_frames
 
-    trans_rate_per_state = [None for state in states_uniq]
-    cmp_ix = [None for state in states_uniq]
-    for six in range(n_states):
-        cmp_valid = cmp_has_state[six]
-        trans_rate_per_state[six] = n_trans_per_state[six][cmp_valid]
-        trans_rate_per_state[six] /= n_frames_per_state[six][cmp_valid]
-        cmp_ix[six] = np.flatnonzero(cmp_valid)
-    del cmp_valid
+    if discard_all_neg:
+        valid = ~np.isnan(trans_rates)
+        trans_rates = trans_rates[valid]
+        states_uniq = states_uniq[valid]
+    if np.any(np.isnan(trans_rates)):
+        raise ValueError(
+            "At least one state has a NaN transition rate.  This should not"
+            " have happened"
+        )
+
+    if return_states:
+        return trans_rates, states_uniq
+    else:
+        return trans_rates
 
 
 def lifetimes(
