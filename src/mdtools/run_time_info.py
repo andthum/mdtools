@@ -594,28 +594,30 @@ def dtrj_trans_info_str(dtrj):
     dti += "Total No. of state transitions:          {:>12d}\n".format(
         trans_info[4]
     )
+    # Convert to `np.int64` to avoid `ZeroDivisionError` when
+    # `trans_info[4]` is zero and instead return `np.inf`.
     dti += (
         "No. of Positive -> Positive transitions: "
         "{:>12d}  ({:>8.4f} %)\n".format(
-            trans_info[5], 100 * trans_info[5] / trans_info[4]
+            trans_info[5], 100 * np.int64(trans_info[5]) / trans_info[4]
         )
     )
     dti += (
         "No. of Positive -> Negative transitions: "
         "{:>12d}  ({:>8.4f} %)\n".format(
-            trans_info[6], 100 * trans_info[6] / trans_info[4]
+            trans_info[6], 100 * np.int64(trans_info[6]) / trans_info[4]
         )
     )
     dti += (
         "No. of Negative -> Positive transitions: "
         "{:>12d}  ({:>8.4f} %)\n".format(
-            trans_info[7], 100 * trans_info[7] / trans_info[4]
+            trans_info[7], 100 * np.int64(trans_info[7]) / trans_info[4]
         )
     )
     dti += (
         "No. of Negative -> Negative transitions: "
         "{:>12d}  ({:>8.4f} %)\n".format(
-            trans_info[8], 100 * trans_info[8] / trans_info[4]
+            trans_info[8], 100 * np.int64(trans_info[8]) / trans_info[4]
         )
     )
     dti += "Positive states are states with a state index >= 0\n"
