@@ -29,10 +29,14 @@ Options
     discrete trajectory is written as binary :file:`dtrj.npy` file in a
     compressed |npz_archive| of the given filename.  The discrete
     trajectory is stored as :class:`numpy.ndarray` of dtype
-    :attr:`numpy.uint32` and shape ``(n, f)``, where ``n`` is the number
+    :attr:`numpy.uint8` and shape ``(n, f)``, where ``n`` is the number
     of compounds and ``f`` is the number of frames.  The elements of the
     discrete trajectory are the states in which a given compound resides
     at a given frame.
+--hist
+    Output filename for a histogram plot of the drawn state lifetimes.
+    The histogram shows the lifetimes that were drawn from the
+    exponential distribution for each state.
 --tau
     Average lifetime of each state in the discrete trajectory.
     Lifetimes are drawn randomly from an exponential distribution with
@@ -52,13 +56,17 @@ Notes
 -----
 The discrete trajectory is generated in the following way:
 
-    1. Select a random state.  Thereby ensured that the selected state
+    1. Select a random state.  Thereby, ensure that the selected state
        is different from the previously selected state.
-    2. Draw a random number from an exponential distribution whose
-       average is the average lifetime of the selected state.  Extend
-       the discrete trajectory with a sequence of the selected state
-       whose length is equal to the drawn random number.
-    3. Clip the generated trajectory at the desired length.
+    2. Draw a random number from an exponential distribution.  The scale
+       of the exponential distribution is given by the average lifetime
+       of the selected state.  The drawn number is rounded to the next
+       integer.  If the drawn number is zero, the selected state is
+       discarded and another state is selected.
+    3. Extend the discrete trajectory with a sequence of the selected
+       state.  The length of the sequence is given by the drawn random
+       number.
+    4. Clip the generated trajectory at the desired length.
 
 """
 
@@ -74,11 +82,15 @@ import sys
 from datetime import datetime, timedelta
 
 # Third-party libraries
+import matplotlib.pyplot as plt
 import numpy as np
 import psutil
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.ticker import MaxNLocator
 
 # First-party libraries
 import mdtools as mdt
+import mdtools.plot as mdtplt  # Load MDTools plot style  # noqa: F401
 
 
 if __name__ == "__main__":
@@ -92,10 +104,21 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-o",
-        dest="OUTFILE",
+        dest="DTRJ_OUT",
         type=str,
         required=True,
-        help="Output filename.",
+        help="Output filename for the generated discrete trajectory.",
+    )
+    parser.add_argument(
+        "--hist",
+        dest="HIST_OUT",
+        type=str,
+        required=False,
+        default=None,
+        help=(
+            "Output filename for a histogram plot of the drawn state lifetimes"
+            " (optional)."
+        ),
     )
     parser.add_argument(
         "--tau",
@@ -115,7 +138,7 @@ if __name__ == "__main__":
         type=int,
         nargs=2,
         required=False,
-        default=[32, 1024],
+        default=[1, 10000],
         help=(
             "The shape of the generated discrete trajectory.  Default:"
             " %(default)s."
@@ -153,42 +176,139 @@ if __name__ == "__main__":
 
     n_cmps, n_frames = shape
     n_states = len(tau)
-    state_ix = np.arange(n_states)
+    state_ix = np.arange(n_states, dtype=np.uint8)
     if args.SEED is None:
         args.SEED = secrets.randbits(128)
     rng = np.random.default_rng(args.SEED)
+    if args.HIST_OUT is not None:
+        lifetimes = [[] for six in state_ix]
 
     print("\n")
     print("Generating discrete trajectory...")
     timer = datetime.now()
     dtrj = [[] for cmp_ix in range(n_cmps)]
     for cmp_ix in range(n_cmps):
+        n_frames_cmp = np.uint32(0)
         six_prev = rng.choice(state_ix)
-        while len(dtrj[cmp_ix]) < n_frames:
+        while n_frames_cmp < n_frames:
             # Select a random state.  Thereby, ensure that the selected
             # state is different from the previously selected state.
             mask = state_ix != six_prev
             six = rng.choice(state_ix[mask])
             # Draw a random number assuming an exponential distribution
             # of lifetimes for the selected state.
-            lifetime = round(rng.exponential(scale=tau[six]))
+            lifetime = np.uint32(round(rng.exponential(scale=tau[six])))
+            if args.HIST_OUT is not None:
+                # Histogram of the *drawn* lifetimes (`lifetime`), not
+                # the actually appended lifetimes (`n_frames_append`).
+                lifetimes[six].append(lifetime)
+            if lifetime == 0:
+                # Discard the selected state and select another state.
+                continue
             # Extend the trajectory by the drawn lifetime with the
-            # selected state.
-            dtrj[cmp_ix].append(np.full(lifetime, six, dtype=np.uint32))
+            # selected state.  If the trajectory would exceed the
+            # pre-defined length, clip it.
+            n_frames_append = min(lifetime, n_frames - n_frames_cmp)
+            if n_frames_append <= 0:
+                raise ValueError(
+                    "`n_frames_append` ({}) <= 0.  This should not have"
+                    " happened".format(n_frames_append)
+                )
+            dtrj[cmp_ix].append(np.full(n_frames_append, six, dtype=np.uint8))
+            # Increase frame counter.
+            n_frames_cmp += n_frames_append
+            # Store the selected state as previous state.
             six_prev = six
         dtrj[cmp_ix] = np.concatenate(dtrj[cmp_ix])
-        dtrj[cmp_ix] = dtrj[cmp_ix][:n_frames]
+        if len(dtrj[cmp_ix]) != n_frames:
+            raise ValueError(
+                "len(dtrj[{}]) ({}) != n_frames ({}).  This should not have"
+                " happened".format(cmp_ix, len(dtrj[cmp_ix]), n_frames)
+            )
     dtrj = np.asarray(dtrj)
+    if dtrj.shape != shape:
+        raise ValueError(
+            "dtrj.shape ({}) != shape ({}).  This should not have"
+            " happened".format(dtrj.shape, shape)
+        )
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
     print("Creating output...")
     timer = datetime.now()
-    mdt.fh.save_dtrj(args.OUTFILE, dtrj)
-    print("Created {}".format(args.OUTFILE))
+    mdt.fh.save_dtrj(args.DTRJ_OUT, dtrj)
+    del dtrj
+    print("Created {}".format(args.DTRJ_OUT))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
+
+    if args.HIST_OUT is not None:
+        print("\n")
+        print("Creating output...")
+        timer = datetime.now()
+
+        lifetime_max = [np.max(lt) if len(lt) > 0 else 0 for lt in lifetimes]
+        lifetime_max = max(1, np.max(lifetime_max))
+        bin_width = max(1, np.min(tau) // 2)
+        bins = np.arange(
+            0, lifetime_max + bin_width, bin_width, dtype=np.uint32
+        )
+        bin_mids = bins[1:] - np.diff(bins) / 2
+
+        alpha = 0.75
+        cmap = plt.get_cmap()
+        c_vals = np.arange(n_states)
+        c_norm = n_states - 1
+        c_vals_normed = c_vals / c_norm
+        colors = cmap(c_vals_normed)
+        mdt.fh.backup(args.HIST_OUT)
+        with PdfPages(args.HIST_OUT) as pdf:
+            for density in (False, True):
+                fig, ax = plt.subplots(clear=True)
+                for six, lt in enumerate(lifetimes):
+                    hist, bin_edges, patches = ax.hist(
+                        lt,
+                        bins=bins,
+                        density=density,
+                        label="$%d$" % six,
+                        color=colors[six],
+                        alpha=0.5,
+                        rasterized=True,
+                    )
+                    if density:
+                        lines = ax.plot(
+                            bin_mids,
+                            mdt.stats.exp_dist(bin_mids, 1 / tau[six]),
+                            linestyle="dashed",
+                            color=colors[six],
+                            alpha=alpha,
+                        )
+                for six in state_ix:
+                    # New loop to put the labels of `ax.axvline` at last
+                    # in the legend.
+                    ax.axvline(
+                        tau[six],
+                        linestyle="dotted",
+                        color=colors[six],
+                        label=r"$\tau_{%d}$" % six,
+                        alpha=alpha,
+                    )
+                ax.set(
+                    xlabel="State Lifetime / Frames",
+                    ylabel="Probability" if density else "Count",
+                    xlim=(0, None),
+                    ylim=(0, None),
+                )
+                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+                ax.legend(title="State", loc="upper right", ncol=2)
+                pdf.savefig()
+                plt.close()
+        print("Created {}".format(args.HIST_OUT))
+        print("Elapsed time:         {}".format(datetime.now() - timer))
+        print(
+            "Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc))
+        )
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
