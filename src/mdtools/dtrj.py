@@ -1434,9 +1434,9 @@ def trans_rate_per_state(
             n_trans_invalid = np.count_nonzero(trans_invalid)
             if n_trans_invalid > n_trans:
                 raise ValueError(
-                    "The number of invalid transitions is greater than the"
-                    " total number of transitions.  This should not have"
-                    " happened "
+                    "The number of invalid transitions ({}) is greater than"
+                    " the total number of transitions ({}).  This should not"
+                    " have happened".format(n_trans_invalid, n_trans)
                 )
             n_trans -= n_trans_invalid
             # Subtract the number of invalid frames, i.e. frames in
@@ -1448,7 +1448,7 @@ def trans_rate_per_state(
             # total number of frames in which compounds reside in
             # `state`.
             # Get all end and start points of all `state` sequences.
-            insertion = np.zeros(n_cmps, dtype=bool)
+            insertion = np.zeros(n_cmps, dtype=dtrj_state.dtype)
             dtrj_state = np.insert(
                 dtrj_state, n_frames_tot, insertion, axis=ax_fr
             )
@@ -1486,27 +1486,28 @@ def trans_rate_per_state(
             if np.any(lifetimes_invalid < 1):
                 raise ValueError(
                     "At least one invalid state sequence is shorter than one"
-                    " frame.  This should not have happened "
+                    " frame.  This should not have happened"
                 )
             # Get the number of invalid frames.
             n_frames_invalid = np.sum(lifetimes_invalid)
             if n_frames_invalid > n_frames:
                 raise ValueError(
-                    "The number of invalid frames is greater than the total"
-                    " number of frames.  This should not have happened "
+                    "The number of invalid frames ({}) is greater than the"
+                    " total number of frames ({}).  This should not have"
+                    " happened".format(n_frames_invalid, n_frames)
                 )
             # Subtract the number of invalid frames.
             n_frames -= n_frames_invalid
-            if n_frames == 0 and n_trans > 0:
-                raise ValueError(
-                    "The number of valid frames is zero but the number of"
-                    " valid transitions {}.  This should not have"
-                    " happened".format(n_trans)
-                )
-            elif n_frames == 0 and n_trans == 0:
+            if n_frames == 0 and n_trans == 0:
                 # All `state` sequences are followed by negative states.
                 trans_rates[six] = np.nan
                 continue
+            elif n_frames == 0 and n_trans > 0:
+                raise ValueError(
+                    "The number of valid frames is zero but the number of"
+                    " valid transitions is {}.  This should not have"
+                    " happened".format(n_trans)
+                )
         trans_rates[six] = n_trans / n_frames
     del dtrj_state, trans, n_trans, n_frames
 
