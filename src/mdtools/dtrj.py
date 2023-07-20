@@ -1177,7 +1177,7 @@ def trans_rate(
     cmp_ix_trans, n_trans = np.unique(cmp_ix_trans, return_counts=True)
     if np.any(np.isin(cmp_ix_always_neg, cmp_ix_trans)):
         raise ValueError(
-            "At least one compound that is considered to always be in a"
+            "At least one compound that is considered to be always in a"
             " negative state is also listed as compound that undergoes valid"
             " state transition(s).  This should not have happened."
         )
