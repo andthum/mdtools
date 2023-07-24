@@ -245,12 +245,13 @@ if __name__ == "__main__":  # noqa: C901
         )
     del states_cnt
     states = states.astype(np.int32)
+    n_states = len(states)
 
     # Method 3: Set the lifetime to the lag time at which the remain
     # probability crosses 1/e.
     thresh = 1 / np.e
     ix_thresh = np.nanargmax(remain_props <= thresh, axis=0)
-    lifetimes_e = np.full(len(states), np.nan, dtype=np.float64)
+    lifetimes_e = np.full(n_states, np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
         if rp[ix_thresh[i]] > thresh:
             # The remain probability never falls below the threshold.
@@ -294,17 +295,17 @@ if __name__ == "__main__":  # noqa: C901
 
     # Method 4: Calculate the lifetime as the integral of the remain
     # probability.
-    lifetimes_int_mom1 = np.full(len(states), np.nan, dtype=np.float64)
-    lifetimes_int_mom2 = np.full(len(states), np.nan, dtype=np.float64)
-    lifetimes_int_mom3 = np.full(len(states), np.nan, dtype=np.float64)
+    lifetimes_int_mom1 = np.full(n_states, np.nan, dtype=np.float64)
+    lifetimes_int_mom2 = np.full(n_states, np.nan, dtype=np.float64)
+    lifetimes_int_mom3 = np.full(n_states, np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
         valid = ~np.isnan(rp)
-        lifetimes_int_mom1[i] = np.trapz(y=rp[valid], x=times[valid], axis=0)
+        lifetimes_int_mom1[i] = np.trapz(y=rp[valid], x=times[valid])
         lifetimes_int_mom2[i] = np.trapz(
-            y=rp[valid] * times[valid], x=times[valid], axis=0
+            y=rp[valid] * times[valid], x=times[valid]
         )
         lifetimes_int_mom3[i] = np.trapz(
-            y=rp[valid] * times[valid] ** 2, x=times[valid], axis=0
+            y=rp[valid] * (times[valid] ** 2), x=times[valid]
         )
         lifetimes_int_mom3[i] /= 2
     invalid = np.all(remain_props > args.INT_THRESH, axis=0)
@@ -323,17 +324,17 @@ if __name__ == "__main__":  # noqa: C901
             times, args.ENDFIT, return_index=True
         )
     end_fit += 1  # Make `end_fit` inclusive.
-    fit_start = np.zeros(len(states), dtype=np.uint32)  # Inclusive.
-    fit_stop = np.zeros(len(states), dtype=np.uint32)  # Exclusive.
+    fit_start = np.zeros(n_states, dtype=np.uint32)  # Inclusive.
+    fit_stop = np.zeros(n_states, dtype=np.uint32)  # Exclusive.
 
     # Initial guesses for `tau0` and `beta`.
-    init_guess = np.column_stack([lifetimes_e, np.ones(len(states))])
+    init_guess = np.column_stack([lifetimes_e, np.ones(n_states)])
     init_guess[np.isnan(init_guess)] = 1.5 * times[-1]
 
-    popt = np.full((len(states), 2), np.nan, dtype=np.float64)
-    perr = np.full((len(states), 2), np.nan, dtype=np.float64)
-    fit_r2 = np.full(len(states), np.nan, dtype=np.float64)
-    fit_mse = np.full(len(states), np.nan, dtype=np.float64)
+    popt = np.full((n_states, 2), np.nan, dtype=np.float64)
+    perr = np.full((n_states, 2), np.nan, dtype=np.float64)
+    fit_r2 = np.full(n_states, np.nan, dtype=np.float64)
+    fit_mse = np.full(n_states, np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
         stop_fit = np.nanargmax(rp < args.STOPFIT)
         if stop_fit == 0 and rp[stop_fit] >= args.STOPFIT:
@@ -558,8 +559,8 @@ if __name__ == "__main__":  # noqa: C901
             [lifetime_min, np.nanmin(lifetimes_true_mom1)]
         )
     cmap = plt.get_cmap()
-    c_vals = np.arange(len(states))
-    c_norm = len(states) - 1
+    c_vals = np.arange(n_states)
+    c_norm = n_states - 1
     c_vals_normed = c_vals / c_norm
     colors = cmap(c_vals_normed)
     outfile = args.OUTFILE + ".pdf"
