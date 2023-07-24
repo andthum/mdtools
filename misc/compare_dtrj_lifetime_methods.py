@@ -345,7 +345,7 @@ if __name__ == "__main__":  # noqa: C901
             # Mean squared error / mean squared residuals.
             fit_mse[i] = ss_res / len(fit)
             # Total sum of squares
-            ss_tot = np.nansum((rp_fit - np.nanmean(rp)) ** 2)
+            ss_tot = np.nansum((rp_fit - np.nanmean(rp_fit)) ** 2)
             # (Pseudo) coefficient of determination (R^2).
             # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
             fit_r2[i] = 1 - (ss_res / ss_tot)
