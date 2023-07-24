@@ -162,15 +162,21 @@ if __name__ == "__main__":  # noqa: C901
         "--true-lifetimes",
         dest="TRUE_LIFETIMES",
         nargs="+",
-        type=int,
+        type=float,
         required=False,
         default=None,
         help=("True lifetime of each state.  Default:  %(default)s."),
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
+
+    # Conversion factor to convert "trajectory steps" to some physical
+    # time unit (e.g. ns).
+    time_conv = 1
+
     if args.TRUE_LIFETIMES is not None:
         lifetimes_true_mom1 = np.asarray(args.TRUE_LIFETIMES)
+        lifetimes_true_mom1 *= time_conv
         # Higher moments of the true lifetime assuming an exponential
         # distribution (<tau_true^n> = n! * <tau_true>^n).
         lifetimes_true_mom2 = 2 * lifetimes_true_mom1**2
@@ -185,12 +191,14 @@ if __name__ == "__main__":  # noqa: C901
     print("Calculating lifetimes directly from `dtrj` (Methods 1-2)...")
     timer = datetime.now()
     dtrj = mdt.fh.load_dtrj(args.INFILE_DTRJ)
+    n_frames = dtrj.shape[1]
 
     # Method 1: Calculate the average lifetime by counting the number of
     # frames that a given compound stays in a given state.
     lifetimes_cnt, states_cnt = mdt.dtrj.lifetimes_per_state(
         dtrj, return_states=True
     )
+    lifetimes_cnt = [lts * time_conv for lts in lifetimes_cnt]
     lifetimes_cnt_mom1 = np.array([np.mean(lts) for lts in lifetimes_cnt])
     lifetimes_cnt_mom2 = np.array([np.mean(lts**2) for lts in lifetimes_cnt])
     lifetimes_cnt_mom3 = np.array([np.mean(lts**3) for lts in lifetimes_cnt])
@@ -201,7 +209,7 @@ if __name__ == "__main__":  # noqa: C901
     # frames that compounds have spent in this state.  The average
     # lifetime is calculated as the inverse transition rate.
     rates, states_k = mdt.dtrj.trans_rate_per_state(dtrj, return_states=True)
-    lifetimes_k = 1 / rates
+    lifetimes_k = time_conv / rates
     if not np.array_equal(states_k, states_cnt):
         raise ValueError(
             "`states_k` ({}) != `states_cnt` ({})".format(states_k, states_cnt)
@@ -216,13 +224,16 @@ if __name__ == "__main__":  # noqa: C901
 
     remain_props = np.loadtxt(args.INFILE_RP)
     states = remain_props[0, 1:]  # State indices.
-    times = remain_props[1:, 0]  # Times in trajectory frames.
+    times = remain_props[1:, 0]  # Lag times in trajectory steps.
     remain_props = remain_props[1:, 1:]  # Remain probability functions.
     if np.any(remain_props < 0) or np.any(remain_props > 1):
         raise ValueError(
             "Some values of the remain probability lie outside the interval"
             " [0, 1]"
         )
+    if not np.array_equal(times, np.arange(n_frames)):
+        raise ValueError("`times` != `np.arange(n_frames)`")
+    times *= time_conv  # Lag times in the given physical time unit.
     if np.any(np.modf(states)[0] != 0):
         raise ValueError(
             "Some state indices are not integers but floats.  states ="
