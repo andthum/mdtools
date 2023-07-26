@@ -49,8 +49,13 @@ Options
     Stop fitting the remain probability as soon as it falls below the
     given value.  The fitting is stopped by whatever happens earlier:
     \--end-fit or \--stop-fit.  Default: ``0.01``.
---true-lifetimes
-    True lifetime of each state.  Default: ``None``.
+-k
+    :math:`k` values assuming a gamma distribution of the lifetimes for
+    each state (see :mod:`misc.generate_dtrj.py`).  Default: ``None``.
+--theta
+    :math:`\theta` values assuming a gamma distribution of the lifetimes
+    for each state (see :mod:`misc.generate_dtrj.py`).  Default:
+    ``None``.
 
 
 See Also
@@ -159,13 +164,28 @@ if __name__ == "__main__":  # noqa: C901
         ),
     )
     parser.add_argument(
-        "--true-lifetimes",
-        dest="TRUE_LIFETIMES",
+        "-k",
+        dest="K",
         nargs="+",
         type=float,
         required=False,
         default=None,
-        help=("True lifetime of each state.  Default:  %(default)s."),
+        help=(
+            "k values assuming a gamma distribution of the lifetimes for each"
+            " state.  Default:  %(default)s."
+        ),
+    )
+    parser.add_argument(
+        "--theta",
+        dest="THETA",
+        nargs="+",
+        type=float,
+        required=False,
+        default=None,
+        help=(
+            "Theta values assuming a gamma distribution of the lifetimes for"
+            " each state.  Default:  %(default)s."
+        ),
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
@@ -174,18 +194,41 @@ if __name__ == "__main__":  # noqa: C901
     # time unit (e.g. ns).
     time_conv = 1
 
-    if args.TRUE_LIFETIMES is not None:
-        lifetimes_true_mom1 = np.asarray(args.TRUE_LIFETIMES)
-        lifetimes_true_mom1 *= time_conv
-        # Higher moments of the true lifetime assuming an exponential
-        # distribution (<tau_true^n> = n! * <tau_true>^n).
-        lifetimes_true_mom2 = 2 * lifetimes_true_mom1**2
-        lifetimes_true_mom3 = 6 * lifetimes_true_mom1**3
-        if np.any(lifetimes_true_mom1 < 0):
+    if args.K is not None and args.THETA is None:
+        raise ValueError(
+            "--theta ({}) must get as many values as -k"
+            " ({})".format(args.THETA, args.K)
+        )
+    elif args.K is None and args.THETA is not None:
+        raise ValueError(
+            "-k ({}) must get as many values as --theta"
+            " ({})".format(args.K, args.THETA)
+        )
+    elif args.K is not None and args.THETA is not None:
+        k = np.asarray(args.K)
+        theta = np.asarray(args.THETA)
+        if np.any(k < 0):
+            raise ValueError("-k ({}) must be positive".format(args.K))
+        if np.any(theta < 0):
             raise ValueError(
-                "--true-lifetimes ({}) must not be"
-                " negative".format(args.TRUE_LIFETIMES)
+                "--theta ({}) must be positive".format(args.THETA)
             )
+        if theta.shape != k.shape:
+            raise ValueError(
+                "--theta ({}) must get as many values as -k"
+                " ({})".format(args.THETA, args.K)
+            )
+        # Moments of the true lifetime distribution assuming a gamma
+        # distribution (<tau_true^n> = theta^n Gamma(k+n)/Gamma(k)).
+        lifetimes_true_mom1 = theta**1 * gamma(k + 1) / gamma(k)
+        lifetimes_true_mom1 *= time_conv**1
+        lifetimes_true_mom2 = theta**2 * gamma(k + 2) / gamma(k)
+        lifetimes_true_mom2 *= time_conv**2
+        lifetimes_true_mom3 = theta**3 * gamma(k + 3) / gamma(k)
+        lifetimes_true_mom3 *= time_conv**3
+        lifetimes_true_provided = True
+    else:
+        lifetimes_true_provided = False
 
     print("\n")
     print("Calculating lifetimes directly from `dtrj` (Methods 1-2)...")
@@ -481,7 +524,7 @@ if __name__ == "__main__":  # noqa: C901
         + " 19 Start of fit region (inclusive) / frames\n"
         + " 20 End of fit region (exclusive) / frames\n"
     )
-    if args.TRUE_LIFETIMES is not None:
+    if lifetimes_true_provided:
         n_cols = 23
         header += (
             "\n"
@@ -523,7 +566,7 @@ if __name__ == "__main__":  # noqa: C901
         fit_start,  # 19
         fit_stop,  # 20
     ]
-    if args.TRUE_LIFETIMES is not None:
+    if lifetimes_true_provided:
         lifetimes_true_mom1 = lifetimes_true_mom1[states]
         lifetimes_true_mom2 = lifetimes_true_mom2[states]
         lifetimes_true_mom3 = lifetimes_true_mom3[states]
@@ -554,7 +597,7 @@ if __name__ == "__main__":  # noqa: C901
             lifetimes_exp_mom1,
         ]
     )
-    if args.TRUE_LIFETIMES is not None:
+    if lifetimes_true_provided:
         lifetime_min = np.nanmin(
             [lifetime_min, np.nanmin(lifetimes_true_mom1)]
         )
@@ -616,7 +659,7 @@ if __name__ == "__main__":  # noqa: C901
             marker="H",
             alpha=alpha,
         )
-        if args.TRUE_LIFETIMES is not None:
+        if lifetimes_true_provided:
             # True lifetimes.
             ax.errorbar(
                 states,
@@ -640,7 +683,7 @@ if __name__ == "__main__":  # noqa: C901
         # come before lines plotted with `ax.errorbar`.
         handles, labels = ax.get_legend_handles_labels()
         legend_order = (2, 3, 0, 1, 4)
-        if args.TRUE_LIFETIMES is not None:
+        if lifetimes_true_provided:
             legend_order += (5,)
         handles = [handles[leg_ord] for leg_ord in legend_order]
         labels = [labels[leg_ord] for leg_ord in legend_order]
@@ -710,7 +753,7 @@ if __name__ == "__main__":  # noqa: C901
             marker="H",
             alpha=alpha,
         )
-        if args.TRUE_LIFETIMES is not None:
+        if lifetimes_true_provided:
             # True lifetimes.
             ax.errorbar(
                 states,
@@ -734,7 +777,7 @@ if __name__ == "__main__":  # noqa: C901
         # come before lines plotted with `ax.errorbar`.
         handles, labels = ax.get_legend_handles_labels()
         legend_order = (2, 3, 0, 1, 4)
-        if args.TRUE_LIFETIMES is not None:
+        if lifetimes_true_provided:
             legend_order += (5,)
         handles = [handles[leg_ord] for leg_ord in legend_order]
         labels = [labels[leg_ord] for leg_ord in legend_order]
