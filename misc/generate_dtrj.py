@@ -37,7 +37,7 @@ the gamma distribution becomes the exponential distribution
 
 Options
 -------
--o
+--dtrj-out
     Output filename for the generated discrete trajectory.   The
     discrete trajectory is written as binary :file:`dtrj.npy` file in a
     compressed |npz_archive| of the given filename.  The discrete
@@ -46,10 +46,13 @@ Options
     of compounds and ``f`` is the number of frames.  The elements of the
     discrete trajectory are the states in which a given compound resides
     at a given frame.
---hist
-    Output filename for a histogram plot of the drawn state lifetimes.
-    The histogram shows the lifetimes that were drawn from the
-    exponential distribution for each state.
+--param-out
+    Output filename containing the parameters used to create the
+    discrete trajectory (optional).
+--hist-plot
+    Output filename for a histogram plot of the drawn state lifetimes
+    (optional).  The histogram shows the lifetimes that were drawn from
+    the exponential distribution for each state.
 -k
     :math:`k` values to use for the lifetime distribution of each state.
     The number of :math:`k` determines the number of different states in
@@ -88,6 +91,65 @@ The discrete trajectory is generated in the following way:
        frames as determined by the drawn lifetime.
     4. Clip the generated trajectory at the desired length.
 
+Examples
+--------
+Generate discrete trajectories with different number of frames.
+
+.. code-block:: bash
+
+    k=1
+    theta=100
+    n_cmps=1
+    for n_frames in 10 100 1000 10000 100000; do
+        fname="dtrj_k_1_${k}_theta_10_${theta}_shape_${n_cmps}_${n_frames}_seed_5462_4894_3496_8436"
+        python3 generate_dtrj.py \
+            --dtrj-out "${fname}.npz" \
+            --param-out "${fname}_param.txt.gz" \
+            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            -k 1 "${k}" \
+            --theta 10 "${theta}" \
+            --shape "${n_cmps}" "${n_frames}" \
+            --seed 5462489434968436
+    done
+
+Generate discrete trajectories with different number of compounds.
+
+.. code-block:: bash
+
+    k=1
+    theta=100
+    n_frames=10
+    for n_cmps in 1 10 100 1000 10000 100000; do
+        fname="dtrj_k_1_${k}_theta_10_${theta}_shape_${n_cmps}_${n_frames}_seed_5462_4894_3496_8436"
+        python3 generate_dtrj.py \
+            --dtrj-out "${fname}.npz" \
+            --param-out "${fname}_param.txt.gz" \
+            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            -k 1 "${k}" \
+            --theta 10 "${theta}" \
+            --shape "${n_cmps}" "${n_frames}" \
+            --seed 5462489434968436
+    done
+
+Generate discrete trajectories with different :math:`k` values.
+
+.. code-block:: bash
+
+    theta=100
+    n_cmps=100
+    n_frames=100000
+    for k in 0.01 0.1 1 10 100 1000 10000; do
+        fname="dtrj_k_1_${k}_theta_${theta}_${theta}_shape_${n_cmps}_${n_frames}_seed_5462_4894_3496_8436"
+        python3 generate_dtrj.py \
+            --dtrj-out "${fname}.npz" \
+            --param-out "${fname}_param.txt.gz" \
+            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            -k 1 "${k}" \
+            --theta "${theta}" "${theta}" \
+            --shape "${n_cmps}" "${n_frames}" \
+            --seed 5462489434968436
+    done
+
 """
 
 
@@ -124,15 +186,26 @@ if __name__ == "__main__":  # noqa: C901
         )
     )
     parser.add_argument(
-        "-o",
+        "--dtrj-out",
         dest="DTRJ_OUT",
         type=str,
         required=True,
         help="Output filename for the generated discrete trajectory.",
     )
     parser.add_argument(
-        "--hist",
-        dest="HIST_OUT",
+        "--param-out",
+        dest="PARAM_OUT",
+        type=str,
+        required=False,
+        default=None,
+        help=(
+            "Output filename containing the parameters used to create the"
+            " discrete trajectory (optional)."
+        ),
+    )
+    parser.add_argument(
+        "--hist-plot",
+        dest="HIST_PLOT",
         type=str,
         required=False,
         default=None,
@@ -217,7 +290,7 @@ if __name__ == "__main__":  # noqa: C901
     if args.SEED is None:
         args.SEED = secrets.randbits(128)
     rng = np.random.default_rng(args.SEED)
-    if args.HIST_OUT is not None:
+    if args.HIST_PLOT is not None:
         lifetimes = [[] for six in state_ix]
 
     print("\n")
@@ -236,7 +309,7 @@ if __name__ == "__main__":  # noqa: C901
             # lifetimes for the selected state.
             lifetime = rng.gamma(shape=k[six], scale=theta[six])
             lifetime = np.uint32(round(lifetime))
-            if args.HIST_OUT is not None:
+            if args.HIST_PLOT is not None:
                 # Histogram of the *drawn* lifetimes (`lifetime`), not
                 # the actually appended lifetimes (`n_frames_append`).
                 lifetimes[six].append(lifetime)
@@ -275,17 +348,38 @@ if __name__ == "__main__":  # noqa: C901
     print("\n")
     print("Creating output...")
     timer = datetime.now()
+
     mdt.fh.save_dtrj(args.DTRJ_OUT, dtrj)
     del dtrj
     print("Created {}".format(args.DTRJ_OUT))
-    print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
-    if args.HIST_OUT is not None:
-        print("\n")
-        print("Creating output...")
-        timer = datetime.now()
+    if args.PARAM_OUT is not None:
+        data = np.column_stack([state_ix, k, theta])
+        header = (
+            "Parameters used to generate an artificial discrete trajectory.\n"
+            + "\n"
+            + "State lifetimes were sampled from a gamma distribution:\n"
+            + "  p(x) = x^{k-1} e^{-x/theta} / (theta^k Gamma(k))\n"
+            + "where Gamma(z) is the gamma function.\n"
+            + "\n"
+            + "RNG Seed:            {:d}\n".format(args.SEED)
+            + "Number of compounds: {:d}\n".format(n_cmps)
+            + "Number of frames:    {:d}\n".format(n_frames)
+            + "Number of states:    {:d}\n".format(n_states)
+            + "\n"
+            + "\n"
+            + "The columns contain:\n"
+            + "  1 The state index (zero-based)\n"
+            + "  2 k values of each state\n"
+            + "  3 theta values of each state\n"
+            + "\n"
+            + "{:>14d}".format(1)
+        )
+        for col in range(2, len(data) + 2):
+            header += " {:>16d}".format(col)
+        mdt.fh.savetxt(args.PARAM_OUT, data, header=header)
 
+    if args.HIST_PLOT is not None:
         # Estimate common bin edges for the lifetime distributions of
         # all states.
         mean = k * theta  # Mean of the gamma distribution.
@@ -304,8 +398,8 @@ if __name__ == "__main__":  # noqa: C901
         c_vals_normed = c_vals / c_norm
         colors = cmap(c_vals_normed)
 
-        mdt.fh.backup(args.HIST_OUT)
-        with PdfPages(args.HIST_OUT) as pdf:
+        mdt.fh.backup(args.HIST_PLOT)
+        with PdfPages(args.HIST_PLOT) as pdf:
             for density in (False, True):
                 fig, ax = plt.subplots(clear=True)
                 for six, lt in enumerate(lifetimes):
@@ -352,11 +446,10 @@ if __name__ == "__main__":  # noqa: C901
                 )
                 pdf.savefig()
                 plt.close()
-        print("Created {}".format(args.HIST_OUT))
-        print("Elapsed time:         {}".format(datetime.now() - timer))
-        print(
-            "Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc))
-        )
+        print("Created {}".format(args.HIST_PLOT))
+
+    print("Elapsed time:         {}".format(datetime.now() - timer))
+    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
     print("{} done".format(os.path.basename(sys.argv[0])))
