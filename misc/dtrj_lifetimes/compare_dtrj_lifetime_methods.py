@@ -37,8 +37,8 @@ Options
 --param
     File containing the parameters that were used to generate the
     artificial discrete trajectory as created by
-    :mod:`misc.generate_dtrj.py` (optional).  If provided, the true mean
-    lifetime of each is also plotted.
+    :mod:`misc.dtrj_lifetimes.generate_dtrj.py` (optional).  If
+    provided, the true lifetimes are also plotted.
 -o
     Output filename pattern.
 --int-thresh
@@ -84,6 +84,9 @@ from scipy.special import gamma
 # First-party libraries
 import mdtools as mdt
 import mdtools.plot as mdtplt  # Load MDTools plot style  # noqa: F401
+
+
+# from scipy.stats import gengamma
 
 
 if __name__ == "__main__":  # noqa: C901
@@ -180,14 +183,24 @@ if __name__ == "__main__":  # noqa: C901
     time_conv = 1
 
     if args.INFILE_PARAM is not None:
-        states_true, k, theta = np.loadtxt(args.INFILE_PARAM, unpack=True)
-        # Moments of the true lifetime distribution assuming a gamma
-        # distribution (<tau_true^n> = theta^n Gamma(k+n)/Gamma(k)).
-        lifetimes_true_mom1 = theta**1 * gamma(k + 1) / gamma(k)
+        states_true, delta, beta, theta = np.loadtxt(
+            args.INFILE_PARAM, unpack=True
+        )
+        # Moments of the true lifetime distribution assuming a
+        # generalized gamma distribution:
+        #   <tau_true^n> = theta^n Gamma[(delta+n)/beta]
+        #                  / Gamma(delta/beta).
+        lifetimes_true_mom1 = (
+            theta**1 * gamma((delta + 1) / beta) / gamma(delta / beta)
+        )
+        lifetimes_true_mom2 = (
+            theta**2 * gamma((delta + 2) / beta) / gamma(delta / beta)
+        )
+        lifetimes_true_mom3 = (
+            theta**3 * gamma((delta + 3) / beta) / gamma(delta / beta)
+        )
         lifetimes_true_mom1 *= time_conv**1
-        lifetimes_true_mom2 = theta**2 * gamma(k + 2) / gamma(k)
         lifetimes_true_mom2 *= time_conv**2
-        lifetimes_true_mom3 = theta**3 * gamma(k + 3) / gamma(k)
         lifetimes_true_mom3 *= time_conv**3
 
     print("\n")
