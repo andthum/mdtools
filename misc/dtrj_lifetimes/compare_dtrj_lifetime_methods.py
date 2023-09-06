@@ -559,19 +559,21 @@ if __name__ == "__main__":  # noqa: C901
     xlabel = r"State Index"
     xlim = (np.min(states) - 0.5, np.max(states) + 0.5)
     alpha = 0.75
-    lifetime_min = np.nanmin(
+    lt_min = np.nanmin(
         [
-            lifetimes_cnt_mom1,
-            lifetimes_k,
-            lifetimes_e,
-            lifetimes_int_mom1,
-            lifetimes_exp_mom1,
+            lts_cnt_mom1,
+            lts_k,
+            lts_e,
+            lts_int_mom1,
+            lts_kww_mom1,
         ]
     )
+    tau0_min = np.nanmin(tau0_kww)
+    beta_min = np.nanmin(beta_kww)
     if args.INFILE_PARAM is not None:
-        lifetime_min = np.nanmin(
-            [lifetime_min, np.nanmin(lifetimes_true_mom1)]
-        )
+        lt_min = np.nanmin([lt_min, np.nanmin(lts_true_mom1)])
+        tau0_min = np.nanmin([tau0_min, np.nanmin(tau0_true)])
+        beta_min = np.nanmin([beta_min, np.nanmin(beta_true)])
     cmap = plt.get_cmap()
     c_vals = np.arange(n_states)
     c_norm = n_states - 1
@@ -580,13 +582,13 @@ if __name__ == "__main__":  # noqa: C901
     outfile = args.OUTFILE + ".pdf"
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
-        # Plot residence times vs. state indices ("ensemble average").
+        # Plot lifetimes vs. state indices.
         fig, ax = plt.subplots(clear=True)
         # Method 5 (integral of the fit).
         ax.errorbar(
             states,
-            lifetimes_exp_mom1,
-            yerr=np.sqrt(lifetimes_exp_mom2 - lifetimes_exp_mom1**2),
+            lts_kww_mom1,
+            yerr=np.sqrt(lts_kww_mom2 - lts_kww_mom1**2),
             label="Fit",
             color="tab:cyan",
             marker="D",
@@ -595,8 +597,8 @@ if __name__ == "__main__":  # noqa: C901
         # Method 4 (direct integral)
         ax.errorbar(
             states,
-            lifetimes_int_mom1,
-            yerr=np.sqrt(lifetimes_int_mom2 - lifetimes_int_mom1**2),
+            lts_int_mom1,
+            yerr=np.sqrt(lts_int_mom2 - lts_int_mom1**2),
             label="Area",
             color="tab:blue",
             marker="d",
@@ -605,7 +607,7 @@ if __name__ == "__main__":  # noqa: C901
         # Method 3 (1/e criterion).
         ax.plot(
             states,
-            lifetimes_e,
+            lts_e,
             label=r"$1/e$",
             color="tab:purple",
             marker="s",
@@ -614,7 +616,7 @@ if __name__ == "__main__":  # noqa: C901
         # Method 2 (inverse transition rate).
         ax.plot(
             states,
-            lifetimes_k,
+            lts_k,
             label="Rate",
             color="tab:red",
             marker="h",
@@ -623,8 +625,8 @@ if __name__ == "__main__":  # noqa: C901
         # Method 1 (counting).
         ax.errorbar(
             states,
-            lifetimes_cnt_mom1,
-            yerr=np.sqrt(lifetimes_cnt_mom2 - lifetimes_cnt_mom1**2),
+            lts_cnt_mom1,
+            yerr=np.sqrt(lts_cnt_mom2 - lts_cnt_mom1**2),
             label="Count",
             color="tab:orange",
             marker="H",
@@ -634,8 +636,8 @@ if __name__ == "__main__":  # noqa: C901
             # True lifetimes.
             ax.errorbar(
                 states,
-                lifetimes_true_mom1,
-                yerr=np.sqrt(lifetimes_true_mom2 - lifetimes_true_mom1**2),
+                lts_true_mom1,
+                yerr=np.sqrt(lts_true_mom2 - lts_true_mom1**2),
                 label="True",
                 color="tab:green",
                 marker="o",
@@ -643,7 +645,7 @@ if __name__ == "__main__":  # noqa: C901
             )
         ax.set(
             xlabel=xlabel,
-            ylabel=r"Residence Time $\langle \tau \rangle$ / Frames",
+            ylabel=r"Average Lifetime / Frames",
             xlim=xlim,
         )
         ylim = ax.get_ylim()
@@ -663,171 +665,14 @@ if __name__ == "__main__":  # noqa: C901
         )
         legend.get_title().set_multialignment("center")
         pdf.savefig()
-        # Set y axis to log scale
-        # (residence times vs. state indices, "ensemble average").
+        # Set y axis to log scale (lifetimes vs. state indices).
         # Round y limits to next lower and higher power of ten.
         ylim = ax.get_ylim()
-        ymin = 10 ** np.floor(np.log10(lifetime_min))
+        ymin = 10 ** np.floor(np.log10(lt_min))
         ymax = 10 ** np.ceil(np.log10(ylim[1]))
         ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
         ax.set_yscale("log", base=10, subs=np.arange(2, 10))
         pdf.savefig()
-        plt.close()
-
-        # Plot residence times vs. state indices ("time average").
-        fig, ax = plt.subplots(clear=True)
-        # Method 5 (integral of the fit).
-        ax.errorbar(
-            states,
-            lifetimes_exp_mom2 / lifetimes_exp_mom1,
-            yerr=np.sqrt(2 * lifetimes_exp_mom3 / lifetimes_exp_mom1),
-            label="Fit",
-            color="tab:cyan",
-            marker="D",
-            alpha=alpha,
-        )
-        # Method 4 (direct integral)
-        ax.errorbar(
-            states,
-            lifetimes_int_mom2 / lifetimes_int_mom1,
-            yerr=np.sqrt(2 * lifetimes_int_mom3 / lifetimes_int_mom1),
-            label="Area",
-            color="tab:blue",
-            marker="d",
-            alpha=alpha,
-        )
-        # Method 3 (1/e criterion).
-        ax.plot(
-            states,
-            lifetimes_e,
-            label=r"$1/e$",
-            color="tab:purple",
-            marker="s",
-            alpha=alpha,
-        )
-        # Method 2 (inverse transition rate).
-        ax.plot(
-            states,
-            lifetimes_k,
-            label="Rate",
-            color="tab:red",
-            marker="h",
-            alpha=alpha,
-        )
-        # Method 1 (counting).
-        ax.errorbar(
-            states,
-            lifetimes_cnt_mom1,
-            yerr=np.sqrt(lifetimes_cnt_mom2 - lifetimes_cnt_mom1**2),
-            label="Count",
-            color="tab:orange",
-            marker="H",
-            alpha=alpha,
-        )
-        if args.INFILE_PARAM is not None:
-            # True lifetimes.
-            ax.errorbar(
-                states,
-                lifetimes_true_mom1,
-                yerr=np.sqrt(lifetimes_true_mom2 - lifetimes_true_mom1**2),
-                label="True",
-                color="tab:green",
-                marker="o",
-                alpha=alpha,
-            )
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Residence Time $\bar{\tau}$ / Frames",
-            xlim=xlim,
-        )
-        ylim = ax.get_ylim()
-        if ylim[0] < 0:
-            ax.set_ylim(0, ylim[1])
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        # Sort legend entries.  By default, lines plotted with `ax.plot`
-        # come before lines plotted with `ax.errorbar`.
-        handles, labels = ax.get_legend_handles_labels()
-        legend_order = (2, 3, 0, 1, 4)
-        if args.INFILE_PARAM is not None:
-            legend_order += (5,)
-        handles = [handles[leg_ord] for leg_ord in legend_order]
-        labels = [labels[leg_ord] for leg_ord in legend_order]
-        legend = ax.legend(
-            handles, labels, ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        # Set y axis to log scale
-        # (residence times vs. state indices, "ensemble average").
-        # Round y limits to next lower and higher power of ten.
-        ylim = ax.get_ylim()
-        ymin = 10 ** np.floor(np.log10(lifetime_min))
-        ymax = 10 ** np.ceil(np.log10(ylim[1]))
-        ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        pdf.savefig()
-        plt.close()
-
-        # Plot fit parameter tau0.
-        fig, ax = plt.subplots(clear=True)
-        ax.errorbar(states, tau0, yerr=tau0_sd, marker="o")
-        ax.set(
-            xlabel=xlabel, ylabel=r"Fit Parameter $\tau_0$ / Frames", xlim=xlim
-        )
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        pdf.savefig()
-        if not np.all(np.isnan(tau0)):
-            # Set y axis to log scale (fit parameter tau0).
-            # Round y limits to next lower and higher power of ten.
-            ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(tau0)))
-            ymax = 10 ** np.ceil(np.log10(ylim[1]))
-            ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            pdf.savefig()
-        plt.close()
-
-        # Plot fit parameter beta.
-        fig, ax = plt.subplots(clear=True)
-        ax.errorbar(states, beta, yerr=beta_sd, marker="o")
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Fit Parameter $\beta$",
-            xlim=xlim,
-            ylim=(0, 1.05),
-        )
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        pdf.savefig()
-        plt.close()
-
-        # Plot R^2 value of the fits.
-        fig, ax = plt.subplots(clear=True)
-        ax.plot(states, fit_r2, marker="o")
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Coeff. of Determ. $R^2$",
-            xlim=xlim,
-            ylim=(0, 1.05),
-        )
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        pdf.savefig()
-        plt.close()
-
-        # Plot mean squared error.
-        fig, ax = plt.subplots(clear=True)
-        ax.plot(states, fit_mse, marker="o")
-        ax.set(xlabel=xlabel, ylabel=r"MSE / Frames$^2$", xlim=xlim)
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        pdf.savefig()
-        if not np.all(np.isnan(fit_mse)):
-            # Set y axis to log scale (mean squared error).
-            # Round y limits to next lower and higher power of ten.
-            ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_mse[fit_mse > 0])))
-            ymax = 10 ** np.ceil(np.log10(ylim[1]))
-            ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            pdf.savefig()
         plt.close()
 
         # Plot fitted region.
@@ -840,12 +685,107 @@ if __name__ == "__main__":  # noqa: C901
         pdf.savefig()
         plt.close()
 
+        # Plot scale parameter tau0.
+        fig, ax = plt.subplots(clear=True)
+        ax.errorbar(
+            states,
+            tau0_kww,
+            yerr=tau0_kww_sd,
+            label="Fit",
+            color="tab:cyan",
+            marker="D",
+        )
+        if args.INFILE_PARAM is not None:
+            ax.plot(
+                states, tau0_true, label="True", color="tab:green", marker="o"
+            )
+        ax.set(
+            xlabel=xlabel,
+            ylabel=r"Scale Parameter $\tau_0$ / Frames",
+            xlim=xlim,
+        )
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        pdf.savefig()
+        # Set y axis to log scale (scale parameter tau0).
+        # Round y limits to next lower and higher power of ten.
+        ylim = ax.get_ylim()
+        ymin = 10 ** np.floor(np.log10(tau0_min))
+        ymax = 10 ** np.ceil(np.log10(ylim[1]))
+        ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
+        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+        pdf.savefig()
+        plt.close()
+
+        # Plot shape parameter beta.
+        fig, ax = plt.subplots(clear=True)
+        ax.errorbar(
+            states,
+            beta_kww,
+            yerr=beta_kww_sd,
+            label="Fit",
+            color="tab:cyan",
+            marker="D",
+        )
+        if args.INFILE_PARAM is not None:
+            ax.plot(
+                states, beta_true, label="True", color="tab:green", marker="o"
+            )
+        ax.set(
+            xlabel=xlabel,
+            ylabel=r"Shape Parameter $\beta$",
+            xlim=xlim,
+            ylim=(0, 1.05),
+        )
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        pdf.savefig()
+        # Set y axis to log scale (shape parameter beta).
+        # Round y limits to next lower and higher power of ten.
+        ylim = ax.get_ylim()
+        ymin = 10 ** np.floor(np.log10(beta_min))
+        ymax = 10 ** np.ceil(np.log10(ylim[1]))
+        ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
+        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+        pdf.savefig()
+        plt.close()
+
+        # Plot R^2 value of the fits.
+        fig, ax = plt.subplots(clear=True)
+        ax.plot(states, fit_r2_kww, marker="o")
+        ax.set(
+            xlabel=xlabel,
+            ylabel=r"Coeff. of Determ. $R^2$",
+            xlim=xlim,
+            ylim=(0, 1.05),
+        )
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        pdf.savefig()
+        plt.close()
+
+        # Plot mean squared error.
+        fig, ax = plt.subplots(clear=True)
+        ax.plot(states, fit_mse_kww, marker="o")
+        ax.set(xlabel=xlabel, ylabel=r"MSE / Frames$^2$", xlim=xlim)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        pdf.savefig()
+        if not np.all(np.isnan(fit_mse_kww)):
+            # Set y axis to log scale (mean squared error).
+            # Round y limits to next lower and higher power of ten.
+            ylim = ax.get_ylim()
+            ymin = 10 ** np.floor(
+                np.log10(np.nanmin(fit_mse_kww[fit_mse_kww > 0]))
+            )
+            ymax = 10 ** np.ceil(np.log10(ylim[1]))
+            ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            pdf.savefig()
+        plt.close()
+
         # Plot remain probabilities and fits for each state.
         fig, ax = plt.subplots(clear=True)
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_props.T):
             times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.kww(times_fit, *popt[i])
+            fit = mdt.func.kww(times_fit, *popt_kww[i])
             lines = ax.plot(times, rp, label=r"$%d$" % states[i], linewidth=1)
             ax.plot(
                 times_fit, fit, linestyle="dashed", color=lines[0].get_color()
@@ -872,7 +812,7 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_props.T):
             times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.kww(times_fit, *popt[i])
+            fit = mdt.func.kww(times_fit, *popt_kww[i])
             res = rp[fit_start[i] : fit_stop[i]] - fit
             ax.plot(times_fit, res, label=r"$%d$" % states[i])
         ax.set(
