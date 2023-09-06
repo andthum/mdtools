@@ -204,20 +204,19 @@ if __name__ == "__main__":  # noqa: C901
 
     # Method 1: Calculate the average lifetime by counting the number of
     # frames that a given compound stays in a given state.
-    lifetimes_cnt, states_cnt = mdt.dtrj.lifetimes_per_state(
+    lts_cnt, states_cnt = mdt.dtrj.lifetimes_per_state(
         dtrj, return_states=True
     )
-    lifetimes_cnt = [lts * time_conv for lts in lifetimes_cnt]
-    lifetimes_cnt_mom1 = np.array([np.mean(lts) for lts in lifetimes_cnt])
-    lifetimes_cnt_mom2 = np.array([np.mean(lts**2) for lts in lifetimes_cnt])
-    lifetimes_cnt_mom3 = np.array([np.mean(lts**3) for lts in lifetimes_cnt])
-    del lifetimes_cnt
+    lts_cnt = [lts * time_conv for lts in lts_cnt]
+    lts_cnt_mom1 = np.array([np.mean(lts) for lts in lts_cnt])
+    lts_cnt_mom2 = np.array([np.mean(lts**2) for lts in lts_cnt])
+    del lts_cnt
 
     if args.INFILE_PARAM is not None and not np.all(
         np.isin(states_cnt, states_true)
     ):
         raise ValueError(
-            "`states_cnt` ({}) not in `states_true`"
+            "`states_cnt` ({}) is not fully contained in `states_true`"
             " ({})".format(states_cnt, states_true)
         )
 
