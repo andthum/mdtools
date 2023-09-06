@@ -41,11 +41,11 @@ Probability density function (PDF) of the generalized gamma function:
 
     f(t) =
     \frac{1}{\Gamma\left( \frac{\delta}{\beta} \right)}
-    \frac{\beta}{\theta}
-    \left( \frac{t}{\theta} \right)^{\delta - 1}
-    \exp{\left[ \left( \frac{t}{\theta} \right)^\beta \right]}
+    \frac{\beta}{\tau_0}
+    \left( \frac{t}{\tau_0} \right)^{\delta - 1}
+    \exp{\left[ -\left( \frac{t}{\tau_0} \right)^\beta \right]}
 
-with :math:`\delta, \beta, \theta > 0` and :math:`t \geq 0`.
+with :math:`\delta, \beta, \tau_0 > 0` and :math:`t \geq 0`.
 
 n-th raw moment:
 
@@ -53,7 +53,7 @@ n-th raw moment:
 
     \langle t^n \rangle =
     \int_0^\infty t^n f(t) dt =
-    \theta^n
+    \tau_0^n
     \frac{
         \Gamma\left( \frac{\delta + n}{\beta} \right)
     }{
@@ -86,16 +86,18 @@ The PDF implemented by
 
 .. math::
 
-    f(y) = |c| * y^(ca-1) * exp(-y^c) / [Gamma(a) * scale]
+    f(y) =
+    \frac{|c| y^{ca-1}}{scale \cdot \Gamma(a)}
+    \exp{\left(-y^c\right)}
 
 with :math:`y = (x - loc) / scale`.  To bring this to this form of the
 PDF to the one stated above, the following conversions must be applied:
 
-   * x -> t
-   * a -> delta / beta
-   * c -> beta
-   * loc -> 0
-   * scale -> theta
+   * :math:`x` -> :math:`t`
+   * :math:`a` -> :math:`\delta / \beta`
+   * :math:`c` -> :math:`\beta`
+   * :math:`loc` -> :math:`0`
+   * :math:`scale` -> :math:`\tau_0`
 
 """
 
@@ -235,24 +237,24 @@ if __name__ == "__main__":
     with PdfPages(outfile) as out:
         ################################################################
         # Different distributions
-        # delta = 0.5, beta = 0.5, theta = 1.0     => Weibull
-        # delta = 0.5, beta = 1.0, theta = 2.0     => Gamma/Chi-Squared
-        # delta = 1.0, beta = 0.5, theta = 1.0     => Stretched Exp.
-        # delta = 1.0, beta = 1.0, theta = 1.0     => Exponential
-        # delta = 1.0, beta = 2.0, theta = sqrt(2) => Half-normal / Chi
-        # delta = 2.0, beta = 2.0, theta = sqrt(2) => Rayleigh / Chi
+        # delta = 0.5, beta = 0.5, tau0 = 1.0     => Weibull
+        # delta = 0.5, beta = 1.0, tau0 = 2.0     => Gamma/Chi-Squared
+        # delta = 1.0, beta = 0.5, tau0 = 1.0     => Stretched Exp.
+        # delta = 1.0, beta = 1.0, tau0 = 1.0     => Exponential
+        # delta = 1.0, beta = 2.0, tau0 = sqrt(2) => Half-normal / Chi
+        # delta = 2.0, beta = 2.0, tau0 = sqrt(2) => Rayleigh / Chi
         ################################################################
         print("Different distributions")
         deltas = np.array([0.5, 0.5, 1.0, 1.0, 1.0, 2.0])
         betas = np.array([0.5, 1.0, 0.5, 1.0, 2.0, 2.0])
-        thetas = np.array([1.0, 2.0, 1.0, 1.0, np.sqrt(2), np.sqrt(2)])
+        tau0s = np.array([1.0, 2.0, 1.0, 1.0, np.sqrt(2), np.sqrt(2)])
         rv_gengamma = [
-            gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=thetas[i])
+            gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0s[i])
             for i, beta in enumerate(betas)
         ]
         labels = [
-            r"$\delta = %.2f$, $\beta = %.2f$, $\theta = %.2f$"
-            % (deltas[i], beta, thetas[i])
+            r"$\delta = %.2f$, $\beta = %.2f$, $\tau_0 = %.2f$"
+            % (deltas[i], beta, tau0s[i])
             for i, beta in enumerate(betas)
         ]
         legend_title = ""
@@ -267,14 +269,14 @@ if __name__ == "__main__":
         print("Stretched-exponential distribution")
         delta = 1.0
         betas = parameters
-        theta = 1.0
+        tau0 = 1.0
         rv_gengamma = [
-            gengamma(a=delta / beta, c=beta, loc=0, scale=theta)
+            gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
             for beta in betas
         ]
         labels = [r"$%.2f$" % beta for beta in betas]
         legend_title = (
-            r"$\delta = %.2f$, $\theta = %.2f$" % (delta, theta)
+            r"$\delta = %.2f$, $\tau_0 = %.2f$" % (delta, tau0)
             + "\n"
             + r"$\beta$"
         )
@@ -289,14 +291,14 @@ if __name__ == "__main__":
         print("Gamma distribution")
         deltas = parameters
         beta = 1.0
-        theta = 1.0
+        tau0 = 1.0
         rv_gengamma = [
-            gengamma(a=delta / beta, c=beta, loc=0, scale=theta)
+            gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
             for delta in deltas
         ]
         labels = [r"$%.2f$" % delta for delta in deltas]
         legend_title = (
-            r"$\beta = %.2f$, $\theta = %.2f$" % (beta, theta)
+            r"$\beta = %.2f$, $\tau_0 = %.2f$" % (beta, tau0)
             + "\n"
             + r"$\delta$"
         )
@@ -306,19 +308,19 @@ if __name__ == "__main__":
 
         ################################################################
         # Dependency on delta
-        # beta = 2, theta = sqrt(2) => Chi distribution
+        # beta = 2, tau0 = sqrt(2) => Chi distribution
         ################################################################
         print("Chi distribution")
         deltas = parameters
         beta = 2.0
-        theta = np.sqrt(2)
+        tau0 = np.sqrt(2)
         rv_gengamma = [
-            gengamma(a=delta / beta, c=beta, loc=0, scale=theta)
+            gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
             for delta in deltas
         ]
         labels = [r"$%.2f$" % delta for delta in deltas]
         legend_title = (
-            r"$\beta = %.2f$, $\theta = \sqrt{2}$" % beta + "\n" + r"$\delta$"
+            r"$\beta = %.2f$, $\tau_0 = \sqrt{2}$" % beta + "\n" + r"$\delta$"
         )
         plot_all(
             out, times, rv_gengamma, labels=labels, legend_title=legend_title
@@ -331,13 +333,13 @@ if __name__ == "__main__":
         print("Weibull distribution")
         deltas = parameters
         betas = deltas
-        theta = 1.0
+        tau0 = 1.0
         rv_gengamma = [
-            gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=theta)
+            gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0)
             for i, beta in enumerate(betas)
         ]
         labels = [r"$%.2f$" % delta for delta in deltas]
-        legend_title = r"$\theta = %.2f$" % theta + "\n" + r"$\delta = \beta$"
+        legend_title = r"$\tau_0 = %.2f$" % tau0 + "\n" + r"$\delta = \beta$"
         plot_all(
             out, times, rv_gengamma, labels=labels, legend_title=legend_title
         )
