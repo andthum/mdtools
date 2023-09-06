@@ -106,6 +106,7 @@ __author__ = "Andreas Thum"
 
 
 # Standard libraries
+import argparse
 import os
 import sys
 
@@ -136,7 +137,6 @@ def replot_xlogscale(out, ax, x):
     out.savefig()
 
 
-# Good `ylim`: (0, 1.05), (0, 1.2), (0, 1.6)
 def plot_pdf(out, x, random_variables, labels, legend_title, ylim=(0, 1.6)):
     """Plot probability density function."""
     fig, ax = plt.subplots(clear=True)
@@ -190,7 +190,6 @@ def plot_sf(out, x, random_variables, labels, legend_title, ylim=(0, 1.05)):
     plt.close()
 
 
-# Good `ylim`: (0, `t_max`)
 def plot_hz(out, x, random_variables, labels, legend_title, ylim=(0, 8)):
     """Plot hazard function."""
     fig, ax = plt.subplots(clear=True)
@@ -220,10 +219,59 @@ def plot_all(*args, **kwargs):
 if __name__ == "__main__":
     print(mdt.rti.run_time_info_str())
 
-    outfile = "gen_gamma_dist.pdf"
+    parser = argparse.ArgumentParser(
+        description=(
+            "Plot the PDF, CDF, Survival and Hazard function of the"
+            " generalized gamma distribution for a given set of shape and"
+            " scale parameters."
+        )
+    )
+    parser.add_argument(
+        "--param-set",
+        dest="PARAM_SET",
+        type=str,
+        choices=(
+            "generalized_gamma",
+            "stretched_exponential",
+            "gamma",
+            "chi",
+            "weibull",
+            "all",
+        ),
+        required=False,
+        default="generalized_gamma",
+        help="Name of the parameter set to use.",
+    )
+    args = parser.parse_args()
+    outfile = args.PARAM_SET + "_distribution.pdf"
+
     parameters = np.array([0.25, 0.50, 1.00, 2.00, 4.00])
 
-    # Good `t_max`: 4, 8, 10, 20
+    # if args.PARAM_SET == "generalized_gamma":
+    #     t_min, t_max = 0, 4
+    #     ylim_pdf = (0, 1.05)
+    #     ylim_hz = (0, 4)
+    # elif args.PARAM_SET == "stretched_exponential":
+    #     t_min, t_max = 0, 10
+    #     ylim_pdf = (0, 1.2)
+    #     ylim_hz = (0, t_max)
+    # elif args.PARAM_SET == "gamma":
+    #     t_min, t_max = 0, 20
+    #     ylim_pdf = (0, 1.6)
+    #     ylim_hz = (0, 8)
+    # elif args.PARAM_SET == "chi":
+    #     t_min, t_max = 0, 8
+    #     ylim_pdf = (0, 1.05)
+    #     ylim_hz = (0, 8)
+    # elif args.PARAM_SET == "weibull":
+    #     t_min, t_max = 0, 4
+    #     ylim_pdf = (0, 1.6)
+    #     ylim_hz = (0, t_max)
+    # else:
+    #     t_min, t_max = 0, 8
+    #     ylim_pdf = (0, 1.6)
+    #     ylim_hz = (0, 8)
+
     t_min, t_max = 0, 8
     n_samples = (t_max - t_min) * 100 + 1
     times = np.linspace(t_min, t_max, n_samples)
@@ -235,114 +283,143 @@ if __name__ == "__main__":
     print("Creating plot(s)...")
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as out:
-        ################################################################
-        # Different distributions
-        # delta = 0.5, beta = 0.5, tau0 = 1.0     => Weibull
-        # delta = 0.5, beta = 1.0, tau0 = 2.0     => Gamma/Chi-Squared
-        # delta = 1.0, beta = 0.5, tau0 = 1.0     => Stretched Exp.
-        # delta = 1.0, beta = 1.0, tau0 = 1.0     => Exponential
-        # delta = 1.0, beta = 2.0, tau0 = sqrt(2) => Half-normal / Chi
-        # delta = 2.0, beta = 2.0, tau0 = sqrt(2) => Rayleigh / Chi
-        ################################################################
-        print("Different distributions")
-        deltas = np.array([0.5, 0.5, 1.0, 1.0, 1.0, 2.0])
-        betas = np.array([0.5, 1.0, 0.5, 1.0, 2.0, 2.0])
-        tau0s = np.array([1.0, 2.0, 1.0, 1.0, np.sqrt(2), np.sqrt(2)])
-        rv_gengamma = [
-            gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0s[i])
-            for i, beta in enumerate(betas)
-        ]
-        labels = [
-            r"$\delta = %.2f$, $\beta = %.2f$, $\tau_0 = %.2f$"
-            % (deltas[i], beta, tau0s[i])
-            for i, beta in enumerate(betas)
-        ]
-        legend_title = ""
-        plot_all(
-            out, times, rv_gengamma, labels=labels, legend_title=legend_title
-        )
+        if args.PARAM_SET in ("generalized_gamma", "all"):
+            ############################################################
+            # Generalized gamma distribution
+            # delta = 0.5, beta = 0.5, tau0 = 1.0     => Weibull
+            # delta = 0.5, beta = 1.0, tau0 = 2.0     => Gamma/Chi^2
+            # delta = 1.0, beta = 0.5, tau0 = 1.0     => Stretched Exp.
+            # delta = 1.0, beta = 1.0, tau0 = 1.0     => Exponential
+            # delta = 1.0, beta = 2.0, tau0 = sqrt(2) => Half-normal/Chi
+            # delta = 2.0, beta = 2.0, tau0 = sqrt(2) => Rayleigh/Chi
+            ############################################################
+            print("Generalized gamma distribution")
+            deltas = np.array([0.5, 0.5, 1.0, 1.0, 1.0, 2.0])
+            betas = np.array([0.5, 1.0, 0.5, 1.0, 2.0, 2.0])
+            tau0s = np.array([1.0, 2.0, 1.0, 1.0, np.sqrt(2), np.sqrt(2)])
+            rv_gengamma = [
+                gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0s[i])
+                for i, beta in enumerate(betas)
+            ]
+            labels = [
+                r"$\delta = %.2f$, $\beta = %.2f$, $\tau_0 = %.2f$"
+                % (deltas[i], beta, tau0s[i])
+                for i, beta in enumerate(betas)
+            ]
+            legend_title = ""
+            plot_all(
+                out,
+                times,
+                rv_gengamma,
+                labels=labels,
+                legend_title=legend_title,
+            )
 
-        ################################################################
-        # Dependency on beta
-        # delta = 1 => Stretched-exponential distribution
-        ################################################################
-        print("Stretched-exponential distribution")
-        delta = 1.0
-        betas = parameters
-        tau0 = 1.0
-        rv_gengamma = [
-            gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
-            for beta in betas
-        ]
-        labels = [r"$%.2f$" % beta for beta in betas]
-        legend_title = (
-            r"$\delta = %.2f$, $\tau_0 = %.2f$" % (delta, tau0)
-            + "\n"
-            + r"$\beta$"
-        )
-        plot_all(
-            out, times, rv_gengamma, labels=labels, legend_title=legend_title
-        )
+        if args.PARAM_SET in ("stretched_exponential", "all"):
+            ############################################################
+            # Dependency on beta
+            # delta = 1 => Stretched-exponential distribution
+            ############################################################
+            print("Stretched-exponential distribution")
+            delta = 1.0
+            betas = parameters
+            tau0 = 1.0
+            rv_gengamma = [
+                gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
+                for beta in betas
+            ]
+            labels = [r"$%.2f$" % beta for beta in betas]
+            legend_title = (
+                r"$\delta = %.2f$, $\tau_0 = %.2f$" % (delta, tau0)
+                + "\n"
+                + r"$\beta$"
+            )
+            plot_all(
+                out,
+                times,
+                rv_gengamma,
+                labels=labels,
+                legend_title=legend_title,
+            )
 
-        ################################################################
-        # Dependency on delta
-        # beta = 1 => Gamma distribution
-        ################################################################
-        print("Gamma distribution")
-        deltas = parameters
-        beta = 1.0
-        tau0 = 1.0
-        rv_gengamma = [
-            gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
-            for delta in deltas
-        ]
-        labels = [r"$%.2f$" % delta for delta in deltas]
-        legend_title = (
-            r"$\beta = %.2f$, $\tau_0 = %.2f$" % (beta, tau0)
-            + "\n"
-            + r"$\delta$"
-        )
-        plot_all(
-            out, times, rv_gengamma, labels=labels, legend_title=legend_title
-        )
+        if args.PARAM_SET in ("gamma", "all"):
+            ############################################################
+            # Dependency on delta
+            # beta = 1 => Gamma distribution
+            ############################################################
+            print("Gamma distribution")
+            deltas = parameters
+            beta = 1.0
+            tau0 = 1.0
+            rv_gengamma = [
+                gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
+                for delta in deltas
+            ]
+            labels = [r"$%.2f$" % delta for delta in deltas]
+            legend_title = (
+                r"$\beta = %.2f$, $\tau_0 = %.2f$" % (beta, tau0)
+                + "\n"
+                + r"$\delta$"
+            )
+            plot_all(
+                out,
+                times,
+                rv_gengamma,
+                labels=labels,
+                legend_title=legend_title,
+            )
 
-        ################################################################
-        # Dependency on delta
-        # beta = 2, tau0 = sqrt(2) => Chi distribution
-        ################################################################
-        print("Chi distribution")
-        deltas = parameters
-        beta = 2.0
-        tau0 = np.sqrt(2)
-        rv_gengamma = [
-            gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
-            for delta in deltas
-        ]
-        labels = [r"$%.2f$" % delta for delta in deltas]
-        legend_title = (
-            r"$\beta = %.2f$, $\tau_0 = \sqrt{2}$" % beta + "\n" + r"$\delta$"
-        )
-        plot_all(
-            out, times, rv_gengamma, labels=labels, legend_title=legend_title
-        )
+        if args.PARAM_SET in ("chi", "all"):
+            ############################################################
+            # Dependency on delta
+            # beta = 2, tau0 = sqrt(2) => Chi distribution
+            ############################################################
+            print("Chi distribution")
+            deltas = parameters
+            beta = 2.0
+            tau0 = np.sqrt(2)
+            rv_gengamma = [
+                gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
+                for delta in deltas
+            ]
+            labels = [r"$%.2f$" % delta for delta in deltas]
+            legend_title = (
+                r"$\beta = %.2f$, $\tau_0 = \sqrt{2}$" % beta
+                + "\n"
+                + r"$\delta$"
+            )
+            plot_all(
+                out,
+                times,
+                rv_gengamma,
+                labels=labels,
+                legend_title=legend_title,
+            )
 
-        ################################################################
-        # Dependency on delta
-        # beta = delta => Weibull distribution
-        ################################################################
-        print("Weibull distribution")
-        deltas = parameters
-        betas = deltas
-        tau0 = 1.0
-        rv_gengamma = [
-            gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0)
-            for i, beta in enumerate(betas)
-        ]
-        labels = [r"$%.2f$" % delta for delta in deltas]
-        legend_title = r"$\tau_0 = %.2f$" % tau0 + "\n" + r"$\delta = \beta$"
-        plot_all(
-            out, times, rv_gengamma, labels=labels, legend_title=legend_title
-        )
+        if args.PARAM_SET in ("weibull", "all"):
+            ############################################################
+            # Dependency on delta
+            # beta = delta => Weibull distribution
+            ############################################################
+            print("Weibull distribution")
+            deltas = parameters
+            betas = deltas
+            tau0 = 1.0
+            rv_gengamma = [
+                gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0)
+                for i, beta in enumerate(betas)
+            ]
+            labels = [r"$%.2f$" % delta for delta in deltas]
+            legend_title = (
+                r"$\tau_0 = %.2f$" % tau0 + "\n" + r"$\delta = \beta$"
+            )
+            plot_all(
+                out,
+                times,
+                rv_gengamma,
+                labels=labels,
+                legend_title=legend_title,
+            )
 
     print("Created {}".format(outfile))
 
