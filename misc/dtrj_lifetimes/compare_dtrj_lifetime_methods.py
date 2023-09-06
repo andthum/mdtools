@@ -238,6 +238,7 @@ if __name__ == "__main__":  # noqa: C901
     print("Calculating lifetimes from the remain probability (Methods 3-5)...")
     timer = datetime.now()
 
+    # Read remain probabilities from file.
     remain_props = np.loadtxt(args.INFILE_RP)
     states = remain_props[0, 1:]  # State indices.
     times = remain_props[1:, 0]  # Lag times in trajectory steps.
@@ -267,15 +268,15 @@ if __name__ == "__main__":  # noqa: C901
     # probability crosses 1/e.
     thresh = 1 / np.e
     ix_thresh = np.nanargmax(remain_props <= thresh, axis=0)
-    lifetimes_e = np.full(n_states, np.nan, dtype=np.float64)
+    lts_e = np.full(n_states, np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
         if rp[ix_thresh[i]] > thresh:
             # The remain probability never falls below the threshold.
-            lifetimes_e[i] = np.nan
+            lts_e[i] = np.nan
         elif ix_thresh[i] < 1:
             # The remain probability immediately falls below the
             # threshold.
-            lifetimes_e[i] = 0
+            lts_e[i] = 0
         elif rp[ix_thresh[i] - 1] < thresh:
             raise ValueError(
                 "The threshold ({}) does not lie within the remain probability"
@@ -291,17 +292,17 @@ if __name__ == "__main__":  # noqa: C901
         else:
             slope = rp[ix_thresh[i]] - rp[ix_thresh[i] - 1]
             slope /= times[ix_thresh[i]] - times[ix_thresh[i] - 1]
-            intercept = rp[ix_thresh[i] - 1] - slope * times[ix_thresh[i] - 1]
-            lifetimes_e[i] = (thresh - intercept) / slope
+            intercept = rp[ix_thresh[i]] - slope * times[ix_thresh[i]]
+            lts_e[i] = (thresh - intercept) / slope
             if (
-                times[ix_thresh[i] - 1] > lifetimes_e[i]
-                or times[ix_thresh[i]] < lifetimes_e[i]
+                times[ix_thresh[i] - 1] > lts_e[i]
+                or times[ix_thresh[i]] < lts_e[i]
             ):
                 raise ValueError(
                     "The lifetime ({}) does not lie within the time interval"
                     " ([{}, {}]) at the found indices ({}, {}).  This should"
                     " not have happened.".format(
-                        lifetimes_e[i],
+                        lts_e[i],
                         times[ix_thresh[i] - 1],
                         times[ix_thresh[i]],
                         ix_thresh[i] - 1,
