@@ -26,11 +26,11 @@ The lifetime distribution follows the generalized gamma distribution
 
 .. math::
 
-    p(x) =
+    f(t) =
     \frac{1}{\Gamma\left( \frac{\delta}{\beta} \right)}
-    \frac{\beta}{\theta}
-    \left( \frac{x}{\theta} \right)^{\delta - 1}
-    \exp{\left[ \left( \frac{x}{\theta} \right)^\beta \right]}
+    \frac{\beta}{\tau_0}
+    \left( \frac{t}{\tau_0} \right)^{\delta - 1}
+    \exp{\left[ \left( -\frac{t}{\tau_0} \right)^\beta \right]}
 
 with :math:`\Gamma(z)` being the gamma function.
 
@@ -62,9 +62,9 @@ Options
     :math:`\beta` values to use for the lifetime distribution of each
     state.  The number of given :math:`\beta` values must match the
     number of given :math:`\delta` values.  Default: ``[1, 1]``.
---theta
-    :math:`\theta` values to use for the lifetime distribution of each
-    state.  The number of given :math:`\theta` values must match the
+--tau0
+    :math:`\tau_0` values to use for the lifetime distribution of each
+    state.  The number of given :math:`\tau_0` values must match the
     number of given :math:`\delta` values.  Default: ``[10, 100]``.
 --shape
     The shape ``(n, f)`` of the generated discrete trajectory.  Default:
@@ -122,18 +122,18 @@ Generate discrete trajectories with different number of frames.
 
     delta=1
     beta=1
-    theta=100
+    tau0=100
     n_cmps=1
     discard=1000
     for n_frames in 10 100 1000 10000 100000; do
-        fname="dtrj_delta_1_${delta}_beta_1_${beta}_theta_10_${theta}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_delta_1_${delta}_beta_1_${beta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
             --delta 1 "${delta}" \
             --beta 1 "${beta}" \
-            --theta 10 "${theta}" \
+            --tau0 10 "${tau0}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
             --seed 5462489434968436
@@ -145,18 +145,18 @@ Generate discrete trajectories with different number of compounds.
 
     delta=1
     beta=1
-    theta=100
+    tau0=100
     n_frames=10
     discard=1000
     for n_cmps in 1 10 100 1000 10000 100000; do
-        fname="dtrj_delta_1_${delta}_beta_1_${beta}_theta_10_${theta}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_delta_1_${delta}_beta_1_${beta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
             --delta 1 "${delta}" \
             --beta 1 "${beta}" \
-            --theta 10 "${theta}" \
+            --tau0 10 "${tau0}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
             --seed 5462489434968436
@@ -169,19 +169,19 @@ distribution.
 .. code-block:: bash
 
     delta=1
-    theta=100
+    tau0=100
     n_cmps=100
     n_frames=100000
     discard=1000
     for beta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_delta_1_${delta}_beta_1_${beta}_theta_10_${theta}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_delta_1_${delta}_beta_1_${beta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
             --delta 1 "${delta}" \
             --beta 1 "${beta}" \
-            --theta "${theta}" "${theta}" \
+            --tau0 "${tau0}" "${tau0}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
             --seed 5462489434968436
@@ -193,19 +193,19 @@ whereas :math:`\beta` is fixed to unity => Gamma distribution.
 .. code-block:: bash
 
     beta=1
-    theta=100
+    tau0=100
     n_cmps=100
     n_frames=100000
     discard=1000
     for delta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_delta_1_${delta}_beta_1_${beta}_theta_10_${theta}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_delta_1_${delta}_beta_1_${beta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
             --delta 1 "${delta}" \
             --beta 1 "${beta}" \
-            --theta "${theta}" "${theta}" \
+            --tau0 "${tau0}" "${tau0}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
             --seed 5462489434968436
@@ -216,19 +216,19 @@ whereas :math:`\beta` is set to :math:`\delta` => Weibull distribution.
 
 .. code-block:: bash
 
-    theta=100
+    tau0=100
     n_cmps=100
     n_frames=100000
     discard=1000
     for delta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_delta_1_${delta}_beta_1_${delta}_theta_10_${theta}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_delta_1_${delta}_beta_1_${delta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
             --delta 1 "${delta}" \
             --beta 1 "${delta}" \
-            --theta "${theta}" "${theta}" \
+            --tau0 "${tau0}" "${tau0}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
             --seed 5462489434968436
@@ -324,14 +324,14 @@ if __name__ == "__main__":  # noqa: C901
         ),
     )
     parser.add_argument(
-        "--theta",
-        dest="THETA",
+        "--tau0",
+        dest="TAU0",
         type=float,
         nargs="+",
         required=False,
         default=[10, 100],
         help=(
-            "Theta values to use for the lifetime distribution of each state."
+            "tau0 values to use for the lifetime distribution of each state."
             "  Default: %(default)s."
         ),
     )
@@ -386,13 +386,13 @@ if __name__ == "__main__":  # noqa: C901
             "--beta ({}) must get as many values as --delta"
             " ({})".format(args.BETA, args.DELTA)
         )
-    theta = np.asarray(args.THETA)
-    if np.any(theta < 0):
-        raise ValueError("--theta ({}) must be positive".format(args.THETA))
-    if theta.shape != delta.shape:
+    tau0 = np.asarray(args.TAU0)
+    if np.any(tau0 < 0):
+        raise ValueError("--tau0 ({}) must be positive".format(args.TAU0))
+    if tau0.shape != delta.shape:
         raise ValueError(
-            "--theta ({}) must get as many values as --delta"
-            " ({})".format(args.THETA, args.DELTA)
+            "--tau0 ({}) must get as many values as --delta"
+            " ({})".format(args.TAU0, args.DELTA)
         )
     shape = tuple(args.SHAPE)
     if np.any(np.less(shape, 1)):
@@ -417,9 +417,7 @@ if __name__ == "__main__":  # noqa: C901
     rng = np.random.default_rng(args.SEED)
     # List of lifetime distributions for each state.
     lt_dists = [
-        gengamma(
-            a=delta[six] / beta[six], c=beta[six], loc=0, scale=theta[six]
-        )
+        gengamma(a=delta[six] / beta[six], c=beta[six], loc=0, scale=tau0[six])
         for six in state_ix
     ]
 
@@ -448,7 +446,7 @@ if __name__ == "__main__":  # noqa: C901
             if lifetime == 0:
                 # Discard the selected state and select another state.
                 continue
-            # Extend the trajectory by with the selected state as many
+            # Extend the trajectory with the selected state as many
             # frames as determined by the drawn lifetime.  If the
             # trajectory exceeds the pre-defined length, clip it.
             n_frames_append = min(lifetime, n_frames_tot - n_frames_cmp)
@@ -463,6 +461,8 @@ if __name__ == "__main__":  # noqa: C901
             # Store the selected state as previous state.
             six_prev = six
         dtrj[cmp_ix] = np.concatenate(dtrj[cmp_ix])
+        # Discard the first `args.DISCARD` frames to emulate a
+        # left-censoring of the state lifetimes.
         dtrj[cmp_ix] = dtrj[cmp_ix][args.DISCARD :]
         if len(dtrj[cmp_ix]) != n_frames:
             raise ValueError(
@@ -487,14 +487,14 @@ if __name__ == "__main__":  # noqa: C901
     print("Created {}".format(args.DTRJ_OUT))
 
     if args.PARAM_OUT is not None:
-        data = np.column_stack([state_ix, delta, beta, theta])
+        data = np.column_stack([state_ix, delta, beta, tau0])
         header = (
             "Parameters used to generate an artificial discrete trajectory.\n"
             + "\n"
             + "State lifetimes were sampled from a generalized gamma\n"
             + "distribution:\n"
-            + "  p(x) = 1/Gamma(delta/beta) * beta/theta *\n"
-            + "         (x/theta)^(delta-1) * exp[(-x/theta)^beta]\n"
+            + "  f(t) = 1/Gamma(delta/beta) * beta/tau0 *\n"
+            + "         (t/tau0)^(delta-1) * exp[-(t/tau0)^beta]\n"
             + "where Gamma(z) is the gamma function.\n"
             + "\n"
             + "RNG Seed:            {:d}\n".format(args.SEED)
@@ -508,7 +508,7 @@ if __name__ == "__main__":  # noqa: C901
             + "  1 The state index (zero-based)\n"
             + "  2 delta values of each state\n"
             + "  3 beta values of each state\n"
-            + "  4 theta values of each state\n"
+            + "  4 tau0 values of each state\n"
             + "\n"
             + "{:>14d}".format(1)
         )
@@ -521,7 +521,7 @@ if __name__ == "__main__":  # noqa: C901
         # Estimate common bin edges for the lifetime distributions of
         # all states.
         # Mean of the generalized gamma distribution.
-        mean = theta * gamma((delta + 1) / beta) / gamma(delta / beta)
+        mean = tau0 * gamma((delta + 1) / beta) / gamma(delta / beta)
         bin_width = max(1, np.min(mean) // 2)
         lifetime_max = [np.max(lt) if len(lt) > 0 else 0 for lt in lifetimes]
         lifetime_max = max(1, np.max(lifetime_max))
