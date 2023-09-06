@@ -58,7 +58,7 @@ Options
 
 See Also
 --------
-:mod:`misc.generate_dtrj.py` :
+:mod:`misc.dtrj_lifetimes.generate_dtrj` :
     Generate an artificial discrete trajectory with a given number of
     states with a given lifetime distribution
 """
@@ -183,21 +183,20 @@ if __name__ == "__main__":  # noqa: C901
     time_conv = 1
 
     if args.INFILE_PARAM is not None:
-        states_true, delta, beta, theta = np.loadtxt(
+        states_true, delta, beta, tau0 = np.loadtxt(
             args.INFILE_PARAM, unpack=True
         )
         # Moments of the true lifetime distribution assuming a
         # generalized gamma distribution:
-        #   <tau_true^n> = theta^n Gamma[(delta+n)/beta]
-        #                  / Gamma(delta/beta).
+        #   <t^n> = tau0^n Gamma[(delta+n)/beta] / Gamma(delta/beta).
         lifetimes_true_mom1 = (
-            theta**1 * gamma((delta + 1) / beta) / gamma(delta / beta)
+            tau0**1 * gamma((delta + 1) / beta) / gamma(delta / beta)
         )
         lifetimes_true_mom2 = (
-            theta**2 * gamma((delta + 2) / beta) / gamma(delta / beta)
+            tau0**2 * gamma((delta + 2) / beta) / gamma(delta / beta)
         )
         lifetimes_true_mom3 = (
-            theta**3 * gamma((delta + 3) / beta) / gamma(delta / beta)
+            tau0**3 * gamma((delta + 3) / beta) / gamma(delta / beta)
         )
         lifetimes_true_mom1 *= time_conv**1
         lifetimes_true_mom2 *= time_conv**2
