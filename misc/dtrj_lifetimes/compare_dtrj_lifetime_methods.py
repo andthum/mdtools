@@ -399,125 +399,115 @@ if __name__ == "__main__":  # noqa: C901
     print("Creating text output...")
     timer = datetime.now()
     header = (
-        "State residence times.\n"
+        "State lifetimes.\n"
         + "Average time that a given compound stays in a given state\n"
-        + "calculated either directly from the discrete trajectory (Method\n"
-        + "1-2) or from the corresponding remain probability function\n"
-        + "(Method 3-4). \n"
+        + "calculated either directly from the discrete trajectory\n"
+        + "(Method 1-2) or from the corresponding remain probability\n"
+        + "function (Method 3-5). \n"
         + "\n"
         + "\n"
         + "Discrete trajectory: {:s}\n".format(args.INFILE_DTRJ)
         + "Remain probability:  {:s}\n".format(args.INFILE_RP)
+    )
+    if args.INFILE_PARAM is not None:
+        header += (
+            "Parameter file:      {:s}\n".format(args.INFILE_PARAM)
+            + "\n"
+            + "\n"
+        )
+    header += (
+        "Lifetimes are calculated using five different methods:\n"
         + "\n"
-        + "\n"
-        + "Residence times are calculated using five different methods:\n"
-        + "\n"
-        + "1) The residence time <tau_cnt> is calculated by counting how\n"
+        + "1) The average lifetime <t_cnt> is calculated by counting how\n"
         + "   many frames a given compound stays in a given state.  Note\n"
-        + "   that residence times calculated in this way can at maximum be\n"
-        + "   as long as the trajectory and are usually biased to lower\n"
-        + "   values because of edge effects.\n"
+        + "   lifetimes calculated in this way can at maximum be as long as\n"
+        + "   the trajectory and are usually biased to lower values because\n"
+        + "   of edge effects.\n"
         + "\n"
         + "2) The average transition rate <k> is calculated as the number of\n"
         + "   transitions leading out of a given state divided by the number\n"
         + "   frames that compounds have spent in this state.  The average\n"
-        + "   lifetime <tau_k> is calculated as the inverse transition rate:\n"
-        + "     <tau_k> = 1 / <k>\n"
+        + "   lifetime <t_k> is calculated as the inverse transition rate:\n"
+        + "     <t_k> = 1 / <k>\n"
         + "\n"
-        + "3) The residence time <tau_e> is set to the lag time at which the\n"
+        + "3) The average lifetime <t_e> is set to the lag time at which the\n"
         + "   remain probability function p(t) crosses 1/e.  If this never\n"
-        + "   happens, <tau_e> is set to NaN.\n"
+        + "   happens, <t_e> is set to NaN.\n"
         + "\n"
-        + "4) According to Equations (12) and (14) of Reference [1], the\n"
-        + "   n-th moment of the residence time <tau_int^n> is calculated\n"
-        + "   as the integral of the remain probability function p(t) times\n"
-        + "   t^{n-1}:\n"
-        + "     <tau_int^n> = 1/(n-1)! int_0^inf t^{n-1} p(t) dt\n"
+        + "4) The remain probability function p(t) is interpreted as the\n"
+        + "   survival function of the underlying lifetime distribution.\n"
+        + "   Thus, the lifetime can be calculated according to the\n"
+        + "   alternative expectation formula [1]:\n"
+        + "     <t_int^n> = n * int_0^inf t^(n-1) p(t) dt\n"
         + "   If p(t) does not decay below the given threshold of\n"
-        + "   {:.4f}, <tau_int^n> is set to NaN.\n".format(args.INT_THRESH)
+        + "   {:.4f}, <t_int^n> is set to NaN.\n".format(args.INT_THRESH)
         + "\n"
-        + "5) The remain probability function p(t) is fitted by a stretched\n"
-        + "   exponential function using the 'Trust Region Reflective'\n"
-        + "   method of scipy.optimize.curve_fit:\n"
-        + "     f(t) = exp[-(t/tau0)^beta]\n"
-        + "   Thereby, tau0 is confined to positive values and beta is\n"
-        + "   confined to the interval [0, 1].  The remain probability is\n"
-        + "   fitted until it decays below a given threshold or until a\n"
-        + "   given lag time is reached (whatever happens earlier).  The\n"
-        + "   n-th moment of the residence time <tau_exp^n> is calculated\n"
-        + "   according to Equations (12) and (14) of Reference [1] and\n"
-        + "   Equation (16) of Reference [2] as the integral of f(t) times\n"
-        + "    t^{n-1}:\n"
-        + "     <tau_exp^n> = 1/(n-1)! int_0^infty t^{n-1} f(t) dt\n"
-        + "                 = tau0^n/beta * Gamma(1/beta)/Gamma(n)\n"
-        + "   where Gamma(x) is the gamma function.\n"
-        + "\n"
-        + "Note that the moments calculated by method 4 and 5 are the\n"
-        + "moments of an assumed underlying, continuous distribution of time\n"
-        + "constants tau.  They are related to the moments of the underlying\n"
-        + "distribution of decay times t by\n"
-        + "  <t^n> = n! * <tau^{n+1}> / <tau>\n"
-        + "Compare Equation (14) of Reference [1].\n"
+        + "5) The remain probability function p(t) is fitted by a Kohlrausch\n"
+        + "   function (stretched exponential) using the 'Trust Region\n"
+        + "   Reflective' method of scipy.optimize.curve_fit:\n"
+        + "     I(t) = exp[-(t/tau0_kww)^beta_kww]\n"
+        + "   Thereby, tau0_kww and beta_kww are confined to positive\n"
+        + "   values.  The remain probability is fitted until it decays\n"
+        + "   below a given threshold or until a given lag time is reached\n"
+        + "   (whatever happens earlier).  The average lifetime <t_kww^n> is\n"
+        + "   calculated according to the alternative expectation\n"
+        + "   formula [1]:\n"
+        + "     <t_kww^n> = n * int_0^inf t^(n-1) I(t) dt\n"
+        + "               = tau0_kww^n * Gamma(1 + n/beta_kww)\n"
+        + "   where Gamma(z) is the gamma function.\n"
         + "\n"
         + "Reference [1]:\n"
-        + "  M. N. Berberan-Santos, E. N. Bodunov, B. Valeur,\n"
-        + "  Mathematical functions for the analysis of luminescence decays\n"
-        + "  with underlying distributions 1. Kohlrausch decay function\n"
-        + "  (stretched exponential),\n"
-        + "  Chemical Physics, 2005, 315, 171-182.\n"
-        + "Reference [2]:\n"
-        + "  D. C. Johnston,\n"
-        + "  Stretched exponential relaxation arising from a continuous sum\n"
-        + "  of exponential decays,\n"
-        + "  Physical Review B, 2006, 74, 184430.\n"
+        + "  S. Chakraborti, F. Jardim, E. Epprecht,\n"
+        + "  Higher-order moments using the survival function: The\n"
+        + "  alternative expectation formula,\n"
+        + "  The American Statistician, 2019, 73, 2, 191-194."
         + "\n"
         + "int_thresh = {:.4f}\n".format(args.INT_THRESH)
         + "\n"
         + "\n"
         + "The columns contain:\n"
-        + "  1 State indices (zero based)\n"
+        + "  1 State index (zero-based)\n"
         + "\n"
-        + "  Residence times from Method 1 (counting)\n"
-        + "  2 1st moment <tau_cnt> / frames\n"
-        + "  3 2nd moment <tau_cnt^2> / frames^2\n"
-        + "  4 3rd moment <tau_cnt^3> / frames^3\n"
+        + "  Lifetime from Method 1 (counting)\n"
+        + "  2 1st moment <t_cnt> / frames\n"
+        + "  3 2nd moment <t_cnt^2> / frames^2\n"
         + "\n"
-        + "  Residence times from Method 2 (inverse transition rate)\n"
-        + "  5 <tau_k> / frames\n"
+        + "  Lifetime from Method 2 (inverse transition rate)\n"
+        + "  4 <t_k> / frames\n"
         + "\n"
-        + "  Residence times from Method 3 (1/e criterion)\n"
-        + "  6 <tau_e> / frames\n"
+        + "  Lifetime from Method 3 (1/e criterion)\n"
+        + "  5 <t_e> / frames\n"
         + "\n"
-        + "  Residence times from Method 4 (direct integral)\n"
-        + "  7 1st moment <tau_int> / frames\n"
-        + "  8 2nd moment <tau_int^2> / frames^2\n"
-        + "  9 3rd moment <tau_int^3> / frames^3\n"
+        + "  Lifetime from Method 4 (direct integral)\n"
+        + "  6 1st moment <t_int> / frames\n"
+        + "  7 2nd moment <t_int^2> / frames^2\n"
         + "\n"
-        + "  Residence times from Method 5 (integral of the fit)\n"
-        + " 10 1st moment <tau_exp> / frames\n"
-        + " 11 2nd moment <tau_exp^2> / frames^2\n"
-        + " 12 3rd moment <tau_exp^3> / frames^3\n"
-        + " 13 Fit parameter tau0 / frames\n"
-        + " 14 Standard deviation of tau0 / frames\n"
-        + " 15 Fit parameter beta\n"
-        + " 16 Standard deviation of beta\n"
-        + " 17 Coefficient of determination of the fit (R^2 value)\n"
-        + " 18 Mean squared error of the fit (mean squared residuals) /"
+        + "  Lifetime from Method 5 (integral of Kohlrausch fit)\n"
+        + "  8 Start of fit region (inclusive) / frames\n"
+        + "  9 End of fit region (exclusive) / frames\n"
+        + " 10 1st moment <t_kww> / frames\n"
+        + " 11 2nd moment <t_kww^2> / frames^2\n"
+        + " 12 Fit parameter tau0_kww / frames\n"
+        + " 13 Standard deviation of tau0_kww / frames\n"
+        + " 14 Fit parameter beta_kww\n"
+        + " 15 Standard deviation of beta_kww\n"
+        + " 16 Coefficient of determination of the fit (R^2 value)\n"
+        + " 17 Mean squared error of the fit (mean squared residuals) /"
         + " frames^2\n"
-        + " 19 Start of fit region (inclusive) / frames\n"
-        + " 20 End of fit region (exclusive) / frames\n"
     )
     if args.INFILE_PARAM is not None:
-        n_cols = 23
+        n_cols = 19
         header += (
             "\n"
-            "  True residence times\n"
-            " 21 1st moment <tau_true> / frames\n"
-            " 22 2nd moment <tau_true^2> = 2 * <tau_true>^2 / frames^2\n"
-            " 23 3rd moment <tau_true^3> = 6 * <tau_true>^3 / frames^3\n"
+            "  True state lifetimes\n"
+            " 18 1st moment <t_true> / frames\n"
+            " 19 2nd moment <t_true^2> / frames^2\n"
+            " 20 Scale parameter tau0_true\n"
+            " 21 Shape parameter beta_true\n"
+            " 22 Shape parameter delta_true\n"
         )
     else:
-        n_cols = 20
+        n_cols = 17
     header += "\n" + "Column number:\n"
     header += "{:>14d}".format(1)
     for i in range(2, n_cols + 1):
@@ -525,38 +515,36 @@ if __name__ == "__main__":  # noqa: C901
     data = [
         states,  # 1
         #
-        lifetimes_cnt_mom1,  # 2
-        lifetimes_cnt_mom2,  # 3
-        lifetimes_cnt_mom3,  # 4
+        lts_cnt_mom1,  # 2
+        lts_cnt_mom2,  # 3
         #
-        lifetimes_k,  # 5
+        lts_k,  # 4
         #
-        lifetimes_e,  # 6
+        lts_e,  # 5
         #
-        lifetimes_int_mom1,  # 7
-        lifetimes_int_mom2,  # 8
-        lifetimes_int_mom3,  # 9
+        lts_int_mom1,  # 6
+        lts_int_mom2,  # 7
         #
-        lifetimes_exp_mom1,  # 10
-        lifetimes_exp_mom2,  # 11
-        lifetimes_exp_mom3,  # 12
-        tau0,  # 13
-        tau0_sd,  # 14
-        beta,  # 15
-        beta_sd,  # 16
-        fit_r2,  # 17
-        fit_mse,  # 18
-        fit_start,  # 19
-        fit_stop,  # 20
+        fit_start,  # 8
+        fit_stop,  # 9
+        lts_kww_mom1,  # 10
+        lts_kww_mom2,  # 11
+        tau0_kww,  # 12
+        tau0_kww_sd,  # 13
+        beta_kww,  # 14
+        beta_kww_sd,  # 15
+        fit_r2_kww,  # 16
+        fit_mse_kww,  # 17
     ]
     if args.INFILE_PARAM is not None:
-        lifetimes_true_mom1 = lifetimes_true_mom1[states]
-        lifetimes_true_mom2 = lifetimes_true_mom2[states]
-        lifetimes_true_mom3 = lifetimes_true_mom3[states]
+        lts_true_mom1 = lts_true_mom1[states]
+        lts_true_mom2 = lts_true_mom2[states]
         data += [
-            lifetimes_true_mom1,  # 21
-            lifetimes_true_mom2,  # 22
-            lifetimes_true_mom3,  # 23
+            lts_true_mom1,  # 18
+            lts_true_mom2,  # 19
+            tau0_true,  # 20
+            beta_true,  # 21
+            delta_true,  # 22
         ]
     data = np.column_stack(data)
     outfile = args.OUTFILE + ".txt"
