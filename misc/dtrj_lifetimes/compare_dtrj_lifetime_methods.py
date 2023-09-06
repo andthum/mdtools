@@ -325,9 +325,12 @@ if __name__ == "__main__":  # noqa: C901
     lts_int_mom2[invalid] = np.nan
     del valid, invalid
 
-    # Method 5: Fit the remain probability with a stretched exponential
-    # and calculate the lifetime as the integral of this stretched
-    # exponential.
+    # Method 5: Fit the remain probability with a Kohlrausch function
+    # (stretched exponential) and calculate the lifetime as the integral
+    # of the fit:
+    #   f(t) = exp[-(t/tau0_kww)^beta_kww]
+    #   <t^n> = n * int_0^inf t^(n-1) * f(t) dt
+    #         = tau0_kww^n * Gamma(1 + n/beta_kww)
     if args.ENDFIT is None:
         end_fit = int(0.9 * len(times))
     else:
@@ -337,46 +340,58 @@ if __name__ == "__main__":  # noqa: C901
     end_fit += 1  # Make `end_fit` inclusive.
     fit_start = np.zeros(n_states, dtype=np.uint32)  # Inclusive.
     fit_stop = np.zeros(n_states, dtype=np.uint32)  # Exclusive.
-
-    # Initial guesses for `tau0` and `beta`.
-    init_guess = np.column_stack([lifetimes_e, np.ones(n_states)])
-    init_guess[np.isnan(init_guess)] = 1.5 * times[-1]
-
-    popt = np.full((n_states, 2), np.nan, dtype=np.float64)
-    perr = np.full((n_states, 2), np.nan, dtype=np.float64)
-    fit_r2 = np.full(n_states, np.nan, dtype=np.float64)
-    fit_mse = np.full(n_states, np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
         stop_fit = np.nanargmax(rp < args.STOPFIT)
         if stop_fit == 0 and rp[stop_fit] >= args.STOPFIT:
+            # The remain probability never falls below `args.STOPFIT`.
             stop_fit = len(rp)
         elif stop_fit < 2:
+            # The remain probability immediately falls below
+            # `args.STOPFIT`.
             stop_fit = 2
         fit_stop[i] = min(end_fit, stop_fit)
+
+    # Initial guesses for `tau0_kww` and `beta_kww`.
+    init_guess_kww = np.column_stack([lts_e, np.ones(n_states)])
+    invalid = np.isnan(init_guess_kww)
+    init_guess_kww[invalid] = 1 + remain_props[end_fit][invalid] - 1 / np.e
+    init_guess_kww[invalid] *= times[end_fit]
+    del invalid
+    # Bounds for `tau0_kww` and `beta_kww`.
+    bounds_kww = ([0, 0], [np.inf, 10])
+
+    popt_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
+    perr_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
+    fit_r2_kww = np.full(n_states, np.nan, dtype=np.float64)
+    fit_mse_kww = np.full(n_states, np.nan, dtype=np.float64)
+    for i, rp in enumerate(remain_props.T):
         times_fit = times[fit_start[i] : fit_stop[i]]
         rp_fit = rp[fit_start[i] : fit_stop[i]]
-        popt[i], perr[i] = mdt.func.fit_kww(
-            xdata=times_fit, ydata=rp_fit, p0=init_guess[i], method="trf"
+        popt_kww[i], perr_kww[i] = mdt.func.fit_kww(
+            xdata=times_fit,
+            ydata=rp_fit,
+            p0=init_guess_kww[i],
+            bounds=bounds_kww,
+            method="trf",
         )
-        if np.any(np.isnan(popt[i])):
-            fit_mse[i] = np.nan
-            fit_r2[i] = np.nan
+        if np.any(np.isnan(popt_kww[i])):
+            fit_mse_kww[i] = np.nan
+            fit_r2_kww[i] = np.nan
         else:
-            fit = mdt.func.kww(times_fit, *popt[i])
+            fit = mdt.func.kww(times_fit, *popt_kww[i])
             # Residual sum of squares.
             ss_res = np.nansum((rp_fit - fit) ** 2)
             # Mean squared error / mean squared residuals.
-            fit_mse[i] = ss_res / len(fit)
-            # Total sum of squares
+            fit_mse_kww[i] = ss_res / len(fit)
+            # Total sum of squares.
             ss_tot = np.nansum((rp_fit - np.nanmean(rp_fit)) ** 2)
             # (Pseudo) coefficient of determination (R^2).
             # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
-            fit_r2[i] = 1 - (ss_res / ss_tot)
-    tau0, beta = popt.T
-    tau0_sd, beta_sd = perr.T
-    lifetimes_exp_mom1 = tau0 / beta * gamma(1 / beta)
-    lifetimes_exp_mom2 = tau0**2 / beta * gamma(2 / beta)
-    lifetimes_exp_mom3 = tau0**3 / beta * gamma(3 / beta) / 2
+            fit_r2_kww[i] = 1 - (ss_res / ss_tot)
+    tau0_kww, beta_kww = popt_kww.T
+    tau0_kww_sd, beta_kww_sd = perr_kww.T
+    lts_kww_mom1 = tau0_kww * gamma(1 + 1 / beta_kww)
+    lts_kww_mom2 = tau0_kww**2 * gamma(1 + 2 / beta_kww)
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
