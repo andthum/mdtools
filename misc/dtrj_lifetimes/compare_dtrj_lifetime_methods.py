@@ -311,24 +311,18 @@ if __name__ == "__main__":  # noqa: C901
                 )
 
     # Method 4: Calculate the lifetime as the integral of the remain
-    # probability.
-    lifetimes_int_mom1 = np.full(n_states, np.nan, dtype=np.float64)
-    lifetimes_int_mom2 = np.full(n_states, np.nan, dtype=np.float64)
-    lifetimes_int_mom3 = np.full(n_states, np.nan, dtype=np.float64)
+    # probability:
+    #   <t^n> = n * int_0^inf t^(n-1) * `rp` dt
+    lts_int_mom1 = np.full(n_states, np.nan, dtype=np.float64)
+    lts_int_mom2 = np.full(n_states, np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
         valid = ~np.isnan(rp)
-        lifetimes_int_mom1[i] = np.trapz(y=rp[valid], x=times[valid])
-        lifetimes_int_mom2[i] = np.trapz(
-            y=rp[valid] * times[valid], x=times[valid]
-        )
-        lifetimes_int_mom3[i] = np.trapz(
-            y=rp[valid] * (times[valid] ** 2), x=times[valid]
-        )
-        lifetimes_int_mom3[i] /= 2
+        lts_int_mom1[i] = np.trapz(y=rp[valid], x=times[valid])
+        lts_int_mom2[i] = np.trapz(y=rp[valid] * times[valid], x=times[valid])
+        lts_int_mom2[i] *= 2
     invalid = np.all(remain_props > args.INT_THRESH, axis=0)
-    lifetimes_int_mom1[invalid] = np.nan
-    lifetimes_int_mom2[invalid] = np.nan
-    lifetimes_int_mom3[invalid] = np.nan
+    lts_int_mom1[invalid] = np.nan
+    lts_int_mom2[invalid] = np.nan
     del valid, invalid
 
     # Method 5: Fit the remain probability with a stretched exponential
