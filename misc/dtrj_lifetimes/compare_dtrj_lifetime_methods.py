@@ -225,7 +225,7 @@ if __name__ == "__main__":  # noqa: C901
     # frames that compounds have spent in this state.  The average
     # lifetime is calculated as the inverse transition rate.
     rates, states_k = mdt.dtrj.trans_rate_per_state(dtrj, return_states=True)
-    lifetimes_k = time_conv / rates
+    lts_k = time_conv / rates
     if not np.array_equal(states_k, states_cnt):
         raise ValueError(
             "`states_k` ({}) != `states_cnt` ({})".format(states_k, states_cnt)
