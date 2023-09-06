@@ -185,7 +185,7 @@ if __name__ == "__main__":  # noqa: C901
 
     # Method 0: True lifetimes.
     if args.INFILE_PARAM is not None:
-        states_true, delta_true, beta_true, tau0_true = np.loadtxt(
+        states_true, beta_true, delta_true, tau0_true = np.loadtxt(
             args.INFILE_PARAM, unpack=True
         )
         # True lifetime distribution for each state.

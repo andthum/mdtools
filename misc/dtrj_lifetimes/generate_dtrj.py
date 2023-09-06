@@ -52,20 +52,22 @@ Options
     Output filename for a histogram plot of the drawn state lifetimes
     (optional).  The histogram shows the lifetimes that were drawn from
     the exponential distribution for each state.
---delta
-    :math:`\delta` values to use for the lifetime distribution of each
-    state.  The number of :math:`\delta` values determines the number of
-    different states in the generated discrete trajectory.  States are
-    sequentially numbered starting from zero.  At least two values must
-    be given.  Default: ``[1, 1]``
 --beta
-    :math:`\beta` values to use for the lifetime distribution of each
-    state.  The number of given :math:`\beta` values must match the
-    number of given :math:`\delta` values.  Default: ``[1, 1]``.
+    :math:`\beta` values (shape parameter) to use for the lifetime
+    distribution of each state.  The number of given :math:`\beta`
+    values determines the number of different states in the generated
+    discrete trajectory.  States are sequentially numbered starting from
+    zero.  At least two values must be given.  Default: ``[1, 1]``.
+--delta
+    :math:`\delta` values (shape parameter) to use for the lifetime
+    distribution of each state.  The number of given :math:`\delta`
+    values must match the number of given :math:`\beta` values.
+    Default: ``[1, 1]``.
 --tau0
-    :math:`\tau_0` values to use for the lifetime distribution of each
-    state.  The number of given :math:`\tau_0` values must match the
-    number of given :math:`\delta` values.  Default: ``[10, 100]``.
+    :math:`\tau_0` values (scale parameter) to use for the lifetime
+    distribution of each state.  The number of given :math:`\tau_0`
+    values must match the number of given :math:`\beta` values.
+    Default: ``[10, 100]``.
 --shape
     The shape ``(n, f)`` of the generated discrete trajectory.  Default:
     ``(100, 100000)``.
@@ -120,19 +122,19 @@ Generate discrete trajectories with different number of frames.
 
 .. code-block:: bash
 
-    delta=1
     beta=1
+    delta=1
     tau0=100
     n_cmps=1
     discard=1000
     for n_frames in 10 100 1000 10000 100000; do
-        fname="dtrj_delta_1_${delta}_beta_1_${beta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --delta 1 "${delta}" \
             --beta 1 "${beta}" \
+            --delta 1 "${delta}" \
             --tau0 10 "${tau0}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
@@ -143,19 +145,19 @@ Generate discrete trajectories with different number of compounds.
 
 .. code-block:: bash
 
-    delta=1
     beta=1
+    delta=1
     tau0=100
     n_frames=10
     discard=1000
     for n_cmps in 1 10 100 1000 10000 100000; do
-        fname="dtrj_delta_1_${delta}_beta_1_${beta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --delta 1 "${delta}" \
             --beta 1 "${beta}" \
+            --delta 1 "${delta}" \
             --tau0 10 "${tau0}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
@@ -174,13 +176,36 @@ distribution.
     n_frames=100000
     discard=1000
     for beta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_delta_1_${delta}_beta_1_${beta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --delta 1 "${delta}" \
             --beta 1 "${beta}" \
+            --delta 1 "${delta}" \
+            --tau0 "${tau0}" "${tau0}" \
+            --shape "${n_cmps}" "${n_frames}" \
+            --discard "${discard}" \
+            --seed 5462489434968436
+    done
+
+Generate discrete trajectories with different :math:`\beta` values
+whereas :math:`\delta` is set to :math:`\beta` => Weibull distribution.
+
+.. code-block:: bash
+
+    tau0=100
+    n_cmps=100
+    n_frames=100000
+    discard=1000
+    for beta in 0.25 0.50 1.00 2.00 4.00; do
+        fname="dtrj_beta_1_${beta}_delta_1_${beta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        python3 generate_dtrj.py \
+            --dtrj-out "${fname}.npz" \
+            --param-out "${fname}_param.txt.gz" \
+            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            --beta 1 "${beta}" \
+            --delta 1 "${beta}" \
             --tau0 "${tau0}" "${tau0}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
@@ -198,13 +223,13 @@ whereas :math:`\beta` is fixed to unity => Gamma distribution.
     n_frames=100000
     discard=1000
     for delta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_delta_1_${delta}_beta_1_${beta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --delta 1 "${delta}" \
             --beta 1 "${beta}" \
+            --delta 1 "${delta}" \
             --tau0 "${tau0}" "${tau0}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
@@ -212,23 +237,26 @@ whereas :math:`\beta` is fixed to unity => Gamma distribution.
     done
 
 Generate discrete trajectories with different :math:`\delta` values
-whereas :math:`\beta` is set to :math:`\delta` => Weibull distribution.
+whereas :math:`\beta` is fixed to two and :math:`\tau_0` is fixed to
+:math:`\sqrt{2}` => Chi distribution.
 
 .. code-block:: bash
 
-    tau0=100
+    beta=2
+    tau0_long=$(echo "scale=30; sqrt(2)" | bc)
+    tau0="${tau0::4}"  # Only two decimal places.
     n_cmps=100
     n_frames=100000
     discard=1000
     for delta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_delta_1_${delta}_beta_1_${delta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
             --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            --beta 1 "${beta}" \
             --delta 1 "${delta}" \
-            --beta 1 "${delta}" \
-            --tau0 "${tau0}" "${tau0}" \
+            --tau0 "${tau0_long}" "${tau0_long}" \
             --shape "${n_cmps}" "${n_frames}" \
             --discard "${discard}" \
             --seed 5462489434968436
@@ -300,18 +328,6 @@ if __name__ == "__main__":  # noqa: C901
         ),
     )
     parser.add_argument(
-        "--delta",
-        dest="DELTA",
-        type=float,
-        nargs="+",
-        required=False,
-        default=[1, 1],
-        help=(
-            "delta values to use for the lifetime distribution of each state."
-            "  Default: %(default)s."
-        ),
-    )
-    parser.add_argument(
         "--beta",
         dest="BETA",
         type=float,
@@ -319,8 +335,20 @@ if __name__ == "__main__":  # noqa: C901
         required=False,
         default=[1, 1],
         help=(
-            "beta values to use for the lifetime distribution of each state."
-            "  Default: %(default)s."
+            "beta values (shape parameters) to use for the lifetime"
+            " distribution of each state.  Default: %(default)s."
+        ),
+    )
+    parser.add_argument(
+        "--delta",
+        dest="DELTA",
+        type=float,
+        nargs="+",
+        required=False,
+        default=[1, 1],
+        help=(
+            "delta values (shape parameters) to use for the lifetime"
+            " distribution of each state.  Default: %(default)s."
         ),
     )
     parser.add_argument(
@@ -331,8 +359,8 @@ if __name__ == "__main__":  # noqa: C901
         required=False,
         default=[10, 100],
         help=(
-            "tau0 values to use for the lifetime distribution of each state."
-            "  Default: %(default)s."
+            "tau0 values (scale parameters) to use for the lifetime"
+            " distribution of each state.  Default: %(default)s."
         ),
     )
     parser.add_argument(
@@ -371,28 +399,28 @@ if __name__ == "__main__":  # noqa: C901
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
-    delta = np.asarray(args.DELTA)
-    if np.any(delta < 0):
-        raise ValueError("--delta ({}) must be positive".format(args.DELTA))
-    if len(delta) < 2:
-        raise ValueError(
-            "--delta ({}) must get at least two values".format(args.DELTA)
-        )
     beta = np.asarray(args.BETA)
     if np.any(beta < 0):
         raise ValueError("--beta ({}) must be positive".format(args.BETA))
-    if beta.shape != delta.shape:
+    if len(beta) < 2:
         raise ValueError(
-            "--beta ({}) must get as many values as --delta"
-            " ({})".format(args.BETA, args.DELTA)
+            "--beta ({}) must get at least two values".format(args.BETA)
+        )
+    delta = np.asarray(args.DELTA)
+    if np.any(delta < 0):
+        raise ValueError("--delta ({}) must be positive".format(args.DELTA))
+    if delta.shape != beta.shape:
+        raise ValueError(
+            "--delta ({}) must get as many values as --beta"
+            " ({})".format(args.DELTA, args.BETA)
         )
     tau0 = np.asarray(args.TAU0)
     if np.any(tau0 < 0):
         raise ValueError("--tau0 ({}) must be positive".format(args.TAU0))
-    if tau0.shape != delta.shape:
+    if tau0.shape != beta.shape:
         raise ValueError(
-            "--tau0 ({}) must get as many values as --delta"
-            " ({})".format(args.TAU0, args.DELTA)
+            "--tau0 ({}) must get as many values as --beta"
+            " ({})".format(args.TAU0, args.BETA)
         )
     shape = tuple(args.SHAPE)
     if np.any(np.less(shape, 1)):
@@ -408,7 +436,7 @@ if __name__ == "__main__":  # noqa: C901
 
     n_cmps, n_frames = shape
     n_frames_tot = n_frames + args.DISCARD
-    n_states = len(delta)
+    n_states = len(beta)
     state_ix = np.arange(n_states, dtype=np.uint8)
     if args.HIST_PLOT is not None:
         lifetimes = [[] for six in state_ix]
@@ -487,7 +515,7 @@ if __name__ == "__main__":  # noqa: C901
     print("Created {}".format(args.DTRJ_OUT))
 
     if args.PARAM_OUT is not None:
-        data = np.column_stack([state_ix, delta, beta, tau0])
+        data = np.column_stack([state_ix, beta, delta, tau0])
         header = (
             "Parameters used to generate an artificial discrete trajectory.\n"
             + "\n"
@@ -506,9 +534,9 @@ if __name__ == "__main__":  # noqa: C901
             + "\n"
             + "The columns contain:\n"
             + "  1 The state index (zero-based)\n"
-            + "  2 delta values of each state\n"
-            + "  3 beta values of each state\n"
-            + "  4 tau0 values of each state\n"
+            + "  2 beta values of each state (shape parameter)\n"
+            + "  3 delta values of each state (shape parameter)\n"
+            + "  4 tau0 values of each state (scale parameter)\n"
             + "\n"
             + "{:>14d}".format(1)
         )
