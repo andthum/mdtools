@@ -80,6 +80,7 @@ import psutil
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
 from scipy.special import gamma
+from scipy.stats import gengamma
 
 # First-party libraries
 import mdtools as mdt
@@ -182,25 +183,18 @@ if __name__ == "__main__":  # noqa: C901
     # time unit (e.g. ns).
     time_conv = 1
 
+    # Method 0: True lifetimes.
     if args.INFILE_PARAM is not None:
-        states_true, delta, beta, tau0 = np.loadtxt(
+        states_true, delta_true, beta_true, tau0_true = np.loadtxt(
             args.INFILE_PARAM, unpack=True
         )
-        # Moments of the true lifetime distribution assuming a
-        # generalized gamma distribution:
-        #   <t^n> = tau0^n Gamma[(delta+n)/beta] / Gamma(delta/beta).
-        lifetimes_true_mom1 = (
-            tau0**1 * gamma((delta + 1) / beta) / gamma(delta / beta)
+        # True lifetime distribution for each state.
+        lt_dists_true = gengamma(
+            a=delta_true / beta_true, c=beta_true, loc=0, scale=tau0_true
         )
-        lifetimes_true_mom2 = (
-            tau0**2 * gamma((delta + 2) / beta) / gamma(delta / beta)
-        )
-        lifetimes_true_mom3 = (
-            tau0**3 * gamma((delta + 3) / beta) / gamma(delta / beta)
-        )
-        lifetimes_true_mom1 *= time_conv**1
-        lifetimes_true_mom2 *= time_conv**2
-        lifetimes_true_mom3 *= time_conv**3
+        # Moments of the true lifetime distributions.
+        lts_true_mom1 = lt_dists_true.moment(order=1) * time_conv
+        lts_true_mom2 = lt_dists_true.moment(order=2) * time_conv**2
 
     print("\n")
     print("Calculating lifetimes directly from `dtrj` (Methods 1-2)...")
