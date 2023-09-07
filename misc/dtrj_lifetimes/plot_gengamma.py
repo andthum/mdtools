@@ -286,34 +286,28 @@ if __name__ == "__main__":
         if args.PARAM_SET in ("generalized_gamma", "all"):
             ############################################################
             # Generalized gamma distribution
-            # delta = 0.5, beta = 0.5, tau0 = 1.0     => Weibull
-            # delta = 0.5, beta = 1.0, tau0 = 2.0     => Gamma/Chi^2
-            # delta = 1.0, beta = 0.5, tau0 = 1.0     => Stretched Exp.
-            # delta = 1.0, beta = 1.0, tau0 = 1.0     => Exponential
-            # delta = 1.0, beta = 2.0, tau0 = sqrt(2) => Half-normal/Chi
-            # delta = 2.0, beta = 2.0, tau0 = sqrt(2) => Rayleigh/Chi
+            # beta = 0.5, delta = 0.5, tau0 = 1.0     => Weibull
+            # beta = 0.5, delta = 1.0, tau0 = 1.0     => Stretched Exp.
+            # beta = 1.0, delta = 0.5, tau0 = 2.0     => Gamma/Chi^2
+            # beta = 1.0, delta = 1.0, tau0 = 1.0     => Exponential
+            # beta = 2.0, delta = 1.0, tau0 = sqrt(2) => Half-normal/Chi
+            # beta = 2.0, delta = 2.0, tau0 = sqrt(2) => Rayleigh/Chi
             ############################################################
             print("Generalized gamma distribution")
-            deltas = np.array([0.5, 0.5, 1.0, 1.0, 1.0, 2.0])
-            betas = np.array([0.5, 1.0, 0.5, 1.0, 2.0, 2.0])
-            tau0s = np.array([1.0, 2.0, 1.0, 1.0, np.sqrt(2), np.sqrt(2)])
-            rv_gengamma = [
+            betas = np.array([0.5, 0.5, 1.0, 1.0, 2.0, 2.0])
+            deltas = np.array([0.5, 1.0, 0.5, 1.0, 1.0, 2.0])
+            tau0s = np.array([1.0, 1.0, 2.0, 1.0, np.sqrt(2), np.sqrt(2)])
+            rv = [
                 gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0s[i])
                 for i, beta in enumerate(betas)
             ]
             labels = [
-                r"$\delta = %.2f$, $\beta = %.2f$, $\tau_0 = %.2f$"
-                % (deltas[i], beta, tau0s[i])
+                r"$\beta = %.2f$, $\delta = %.2f$, $\tau_0 = %.2f$"
+                % (beta, deltas[i], tau0s[i])
                 for i, beta in enumerate(betas)
             ]
             legend_title = ""
-            plot_all(
-                out,
-                times,
-                rv_gengamma,
-                labels=labels,
-                legend_title=legend_title,
-            )
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
         if args.PARAM_SET in ("stretched_exponential", "all"):
             ############################################################
@@ -321,10 +315,10 @@ if __name__ == "__main__":
             # delta = 1 => Stretched-exponential distribution
             ############################################################
             print("Stretched-exponential distribution")
-            delta = 1.0
             betas = parameters
+            delta = 1.0
             tau0 = 1.0
-            rv_gengamma = [
+            rv = [
                 gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
                 for beta in betas
             ]
@@ -334,13 +328,7 @@ if __name__ == "__main__":
                 + "\n"
                 + r"$\beta$"
             )
-            plot_all(
-                out,
-                times,
-                rv_gengamma,
-                labels=labels,
-                legend_title=legend_title,
-            )
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
         if args.PARAM_SET in ("gamma", "all"):
             ############################################################
@@ -348,10 +336,10 @@ if __name__ == "__main__":
             # beta = 1 => Gamma distribution
             ############################################################
             print("Gamma distribution")
-            deltas = parameters
             beta = 1.0
+            deltas = parameters
             tau0 = 1.0
-            rv_gengamma = [
+            rv = [
                 gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
                 for delta in deltas
             ]
@@ -361,13 +349,7 @@ if __name__ == "__main__":
                 + "\n"
                 + r"$\delta$"
             )
-            plot_all(
-                out,
-                times,
-                rv_gengamma,
-                labels=labels,
-                legend_title=legend_title,
-            )
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
         if args.PARAM_SET in ("chi", "all"):
             ############################################################
@@ -375,10 +357,10 @@ if __name__ == "__main__":
             # beta = 2, tau0 = sqrt(2) => Chi distribution
             ############################################################
             print("Chi distribution")
-            deltas = parameters
             beta = 2.0
+            deltas = parameters
             tau0 = np.sqrt(2)
-            rv_gengamma = [
+            rv = [
                 gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
                 for delta in deltas
             ]
@@ -388,13 +370,7 @@ if __name__ == "__main__":
                 + "\n"
                 + r"$\delta$"
             )
-            plot_all(
-                out,
-                times,
-                rv_gengamma,
-                labels=labels,
-                legend_title=legend_title,
-            )
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
         if args.PARAM_SET in ("weibull", "all"):
             ############################################################
@@ -402,10 +378,10 @@ if __name__ == "__main__":
             # beta = delta => Weibull distribution
             ############################################################
             print("Weibull distribution")
-            deltas = parameters
-            betas = deltas
+            betas = parameters
+            deltas = betas
             tau0 = 1.0
-            rv_gengamma = [
+            rv = [
                 gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0)
                 for i, beta in enumerate(betas)
             ]
@@ -413,13 +389,7 @@ if __name__ == "__main__":
             legend_title = (
                 r"$\tau_0 = %.2f$" % tau0 + "\n" + r"$\delta = \beta$"
             )
-            plot_all(
-                out,
-                times,
-                rv_gengamma,
-                labels=labels,
-                legend_title=legend_title,
-            )
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
     print("Created {}".format(outfile))
 
