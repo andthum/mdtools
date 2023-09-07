@@ -342,9 +342,9 @@ if __name__ == "__main__":
         choices=(
             "generalized_gamma",
             "stretched_exponential",
+            "weibull",
             "gamma",
             "chi",
-            "weibull",
             "burr12",
             "log_logistic",
             "lomax",
@@ -367,18 +367,18 @@ if __name__ == "__main__":
     #     t_min, t_max = 0, 10
     #     ylim_pdf = (0, 1.2)
     #     ylim_hz = (0, t_max)
+    # elif args.PARAM_SET == "weibull":
+    #     t_min, t_max = 0, 4
+    #     ylim_pdf = (0, 1.6)
+    #     ylim_hz = (0, t_max)
     # elif args.PARAM_SET == "gamma":
     #     t_min, t_max = 0, 20
     #     ylim_pdf = (0, 1.6)
     #     ylim_hz = (0, 8)
     # elif args.PARAM_SET == "chi":
-    #     t_min, t_max = 0, 8
-    #     ylim_pdf = (0, 1.05)
-    #     ylim_hz = (0, 8)
-    # elif args.PARAM_SET == "weibull":
     #     t_min, t_max = 0, 4
-    #     ylim_pdf = (0, 1.6)
-    #     ylim_hz = (0, t_max)
+    #     ylim_pdf = (0, 1.05)
+    #     ylim_hz = (0, 4)
     # elif args.PARAM_SET == "burr12":
     #     t_min, t_max = 0, 4
     #     ylim_pdf = (0, 1.05)
@@ -455,6 +455,28 @@ if __name__ == "__main__":
             )
             plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
+        if args.PARAM_SET in ("weibull", "all"):
+            ############################################################
+            # Dependency on beta
+            # delta = beta => Weibull distribution
+            ############################################################
+            print("Weibull distribution")
+            betas = parameters
+            deltas = betas
+            tau0 = 1.0
+            rv = [
+                gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0)
+                for i, beta in enumerate(betas)
+            ]
+            labels = [r"$%.2f$" % beta for beta in betas]
+            legend_title = (
+                "Weibull Dist.\n"
+                + r"$\tau_0 = %.2f$" % tau0
+                + "\n"
+                + r"$\delta = \beta$"
+            )
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
+
         if args.PARAM_SET in ("gamma", "all"):
             ############################################################
             # Dependency on delta
@@ -496,28 +518,6 @@ if __name__ == "__main__":
                 + r"$\beta = %.2f$, $\tau_0 = \sqrt{2}$" % beta
                 + "\n"
                 + r"$\delta$"
-            )
-            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
-
-        if args.PARAM_SET in ("weibull", "all"):
-            ############################################################
-            # Dependency on delta
-            # beta = delta => Weibull distribution
-            ############################################################
-            print("Weibull distribution")
-            betas = parameters
-            deltas = betas
-            tau0 = 1.0
-            rv = [
-                gengamma(a=deltas[i] / beta, c=beta, loc=0, scale=tau0)
-                for i, beta in enumerate(betas)
-            ]
-            labels = [r"$%.2f$" % delta for delta in deltas]
-            legend_title = (
-                "Weibull Dist.\n"
-                + r"$\tau_0 = %.2f$" % tau0
-                + "\n"
-                + r"$\delta = \beta$"
             )
             plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
