@@ -570,8 +570,6 @@ if __name__ == "__main__":  # noqa: C901
     n_frames_tot = n_frames + args.DISCARD
     n_states = len(beta)
     state_ix = np.arange(n_states, dtype=np.uint8)
-    if args.HIST_PLOT is not None:
-        lifetimes = [[] for six in state_ix]
     if args.SEED is None:
         args.SEED = secrets.randbits(128)
     rng = np.random.default_rng(args.SEED)
@@ -590,6 +588,12 @@ if __name__ == "__main__":  # noqa: C901
         ]
     else:
         raise ValueError("Invalid --dist ({})".format(args.DIST))
+    # List of drawn lifetimes for each state.
+    lts_drw = [[] for six in state_ix]
+    # List of uncensored lifetimes for each state.
+    lts_unc = [[] for six in state_ix]
+    # List of censored lifetimes for each state.
+    lts_cen = [[] for six in state_ix]
 
     print("\n")
     print("Generating discrete trajectory...")
@@ -607,26 +611,36 @@ if __name__ == "__main__":  # noqa: C901
             six = rng.choice(state_ix[mask])
             # Draw a random number from the lifetime distribution of the
             # selected state.
-            lifetime = lt_dists[six].rvs(random_state=rng)
-            lifetime = np.uint32(round(lifetime))
-            if args.HIST_PLOT is not None:
-                # Histogram of the *drawn* lifetimes (`lifetime`), not
-                # the actually appended lifetimes (`n_frames_append`).
-                lifetimes[six].append(lifetime)
-            if lifetime == 0:
+            lt_drw = lt_dists[six].rvs(random_state=rng)
+            lt_drw = np.uint32(round(lt_drw))
+            if lt_drw == 0:
                 # Discard the selected state and select another state.
                 continue
+            lts_drw[six].append(lt_drw)
+            if n_frames_cmp + lt_drw > args.DISCARD:
+                # If the drawn lifetime lies at least partially within
+                # the censored trajectory, append it to the list of
+                # uncensored lifetimes.
+                lts_unc[six].append(lt_drw)
             # Extend the trajectory with the selected state by as many
             # frames as determined by the drawn lifetime.  If the
             # trajectory exceeds the pre-defined length, clip it.
-            n_frames_append = min(lifetime, n_frames_tot - n_frames_cmp)
+            n_frames_append = min(lt_drw, n_frames_tot - n_frames_cmp)
             if n_frames_append <= 0:
                 raise ValueError(
                     "`n_frames_append` ({}) <= 0.  This should not have"
                     " happened".format(n_frames_append)
                 )
             dtrj[cmp_ix].append(np.full(n_frames_append, six, dtype=np.uint8))
-            # Increase frame counter.
+            if n_frames_cmp + n_frames_append > args.DISCARD:
+                # Calculate the censored lifetime from
+                # `n_frames_append`.  The maximum possible value for
+                # `n_frames_append` is
+                # ``n_frames_tot = n_frames + args.DISCARD``.  However,
+                # the maximum possible value for `lt_cen` is `n_frames`.
+                lt_cen = min(n_frames_append, n_frames)
+                lts_cen[six].append(lt_cen)
+            # Increase the frame counter.
             n_frames_cmp += n_frames_append
             # Store the selected state as previous state.
             six_prev = six
@@ -645,6 +659,15 @@ if __name__ == "__main__":  # noqa: C901
             "dtrj.shape ({}) != shape ({}).  This should not have"
             " happened".format(dtrj.shape, shape)
         )
+    lts_drw = [np.array(lts) for lts in lts_drw]
+    lts_unc = [np.array(lts) for lts in lts_unc]
+    lts_cen = [np.array(lts) for lts in lts_cen]
+    for lts in lts_cen:
+        if np.any(lts > n_frames):
+            raise ValueError(
+                "any(lts_cen) > n_frames ({}).  This should not have"
+                " happened".format(n_frames)
+            )
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
@@ -657,7 +680,47 @@ if __name__ == "__main__":  # noqa: C901
     print("Created {}".format(args.DTRJ_OUT))
 
     if args.PARAM_OUT is not None:
-        data = np.column_stack([state_ix, beta, delta, tau0])
+        lt_dists_mom1 = np.array([dist.moment(order=1) for dist in lt_dists])
+        lt_dists_mom2 = np.array([dist.moment(order=2) for dist in lt_dists])
+        lts_drw_mom1 = np.array(
+            [np.mean(lts) if len(lts) > 0 else np.nan for lts in lts_drw]
+        )
+        lts_drw_mom2 = np.array(
+            [np.mean(lts**2) if len(lts) > 0 else np.nan for lts in lts_drw]
+        )
+        lts_unc_mom1 = np.array(
+            [np.mean(lts) if len(lts) > 0 else np.nan for lts in lts_unc]
+        )
+        lts_unc_mom2 = np.array(
+            [np.mean(lts**2) if len(lts) > 0 else np.nan for lts in lts_unc]
+        )
+        lts_cen_mom1 = np.array(
+            [np.mean(lts) if len(lts) > 0 else np.nan for lts in lts_cen]
+        )
+        lts_cen_mom2 = np.array(
+            [np.mean(lts**2) if len(lts) > 0 else np.nan for lts in lts_cen]
+        )
+        if np.any(lts_cen_mom1 > lts_unc_mom1):
+            raise ValueError(
+                "`lts_cen_mom1` ({}) > `lts_unc_mom1`"
+                " ({})".format(lts_cen_mom1, lts_unc_mom1)
+            )
+        data = np.column_stack(
+            [
+                state_ix,  # 1
+                beta,  # 2
+                delta,  # 3
+                tau0,  # 4
+                lt_dists_mom1,  # 5
+                lt_dists_mom2,  # 6
+                lts_drw_mom1,  # 7
+                lts_drw_mom2,  # 8
+                lts_unc_mom1,  # 9
+                lts_unc_mom2,  # 10
+                lts_cen_mom1,  # 11
+                lts_cen_mom2,  # 12
+            ]
+        )
         header = (
             "Parameters used to generate the artificial discrete trajectory\n"
             + "{:s}\n".format(args.DTRJ_OUT)
@@ -681,19 +744,28 @@ if __name__ == "__main__":  # noqa: C901
                 + "\n"
             )
         header += (
-            "Lifetime Distribution: {:s}\n".format(args.DIST)
-            + "RNG Seed:              {:d}\n".format(args.SEED)
-            + "Number of states:      {:d}\n".format(n_states)
-            + "Number of compounds:   {:d}\n".format(n_cmps)
-            + "Number of frames:      {:d}\n".format(n_frames)
-            + "Discarded frames:      {:d}\n".format(args.DISCARD)
+            "Lifetime dist.:      {:s}\n".format(args.DIST)
+            + "RNG seed:            {:d}\n".format(args.SEED)
+            + "Number of states:    {:d}\n".format(n_states)
+            + "Number of compounds: {:d}\n".format(n_cmps)
+            + "Number of frames:    {:d}\n".format(n_frames)
+            + "Discarded frames:    {:d}\n".format(args.DISCARD)
             + "\n"
             + "\n"
             + "The columns contain:\n"
-            + "  1 The state index (zero-based)\n"
-            + "  2 beta values of each state (shape parameter)\n"
-            + "  3 delta values of each state (shape parameter)\n"
-            + "  4 tau0 values of each state (scale parameter)\n"
+            + "  1 State index (zero-based)\n"
+            + "  2 Shape parameter beta of the distribution\n"
+            + "  3 Shape parameter delta of the distribution\n"
+            + "  4 Scale parameter tau0 of the distribution\n"
+            + "  5 1st moment of the distribution <t_dst> / frames\n"
+            + "  6 2nd moment of the distribution <t_dst^2> / frames^2\n"
+            + "  7 1st moment of the drawn lifetimes <t_drw> / frames\n"
+            + "  8 2nd moment of the drawn lifetimes <t_drw^2> / frames^2\n"
+            + "  9 1st moment of the uncensored lifetimes <t_unc> / frames\n"
+            + " 10 2nd moment of the uncensored lifetimes <t_unc^2> /"
+            + " frames^2\n"
+            + " 11 1st moment of the censored lifetimes <t_cen> / frames\n"
+            + " 12 2nd moment of the censored lifetimes <t_cen^2> / frames^2\n"
             + "\n"
             + "{:>14d}".format(1)
         )
@@ -705,14 +777,21 @@ if __name__ == "__main__":  # noqa: C901
     if args.HIST_PLOT is not None:
         # Estimate common bin edges for the lifetime distributions of
         # all states.
-        means = np.asarray([lt_dist.mean() for lt_dist in lt_dists])
-        bin_width = max(1, np.min(means) // 2)
-        lt_max = [np.max(lt) if len(lt) > 0 else 0 for lt in lifetimes]
+        bin_width = max(1, np.min(lt_dists_mom1) // 2)
+        lt_max = [np.max(lts) if len(lts) > 0 else 0 for lts in lts_drw]
         lt_max = max(1, np.max(lt_max))
         bins = np.arange(0, lt_max + bin_width, bin_width, dtype=np.uint32)
         bin_mids = bins[1:] - np.diff(bins) / 2
 
-        alpha = 0.75
+        xlabel = "State Lifetime / Frames"
+        ylabel = "Probability"
+        xlim = (0, None)
+        ylim = (0, None)
+        legend_loc = "upper right"
+        legend_ncol = 2 + n_states // 7
+
+        alpha_hist = 0.5
+        alpha_lines = 0.75
         cmap = plt.get_cmap()
         c_vals = np.arange(n_states)
         c_norm = n_states - 1
@@ -721,47 +800,164 @@ if __name__ == "__main__":  # noqa: C901
 
         mdt.fh.backup(args.HIST_PLOT)
         with PdfPages(args.HIST_PLOT) as pdf:
-            for density in (False, True):
-                fig, ax = plt.subplots(clear=True)
-                for six, lt in enumerate(lifetimes):
-                    hist, bin_edges, patches = ax.hist(
-                        lt,
-                        bins=bins,
-                        density=density,
-                        label="$%d$" % six,
-                        color=colors[six],
-                        alpha=0.5,
-                        rasterized=True,
-                    )
-                    if density:
-                        lines = ax.plot(
-                            bin_mids,
-                            lt_dists[six].pdf(bin_mids),
-                            linestyle="dashed",
-                            color=colors[six],
-                            alpha=alpha,
-                        )
-                    ax.axvline(
-                        means[six],
-                        linestyle="dotted",
-                        color=colors[six],
-                        alpha=alpha,
-                    )
-                ax.set(
-                    xlabel="State Lifetime / Frames",
-                    ylabel="Probability" if density else "Count",
-                    xlim=(0, None),
-                    ylim=(0, None),
+            # Histogram of drawn lifetimes.
+            fig, ax = plt.subplots(clear=True)
+            for six, lts in enumerate(lts_drw):
+                hist, bin_edges, patches = ax.hist(
+                    lts,
+                    bins=bins,
+                    density=True,
+                    label=r"State $%d$" % six,
+                    color=colors[six],
+                    alpha=alpha_hist,
+                    rasterized=True,
                 )
-                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-                ax.legend(
-                    title="State",
-                    loc="upper right",
-                    ncol=1 + n_states // 6,
-                    **mdtplt.LEGEND_KWARGS_XSMALL,
+                lines = ax.plot(
+                    bin_mids,
+                    lt_dists[six].pdf(bin_mids),
+                    linestyle="solid",
+                    color=colors[six],
+                    alpha=alpha_lines,
                 )
-                pdf.savefig()
-                plt.close()
+                ax.axvline(
+                    lt_dists_mom1[six],
+                    label=(
+                        r"$\langle t_{dist} \rangle$"
+                        if six == n_states - 1
+                        else None
+                    ),
+                    linestyle="dashed",
+                    color=colors[six],
+                    alpha=alpha_lines,
+                )
+                ax.axvline(
+                    lts_drw_mom1[six],
+                    label=(
+                        r"$\langle t_{drawn} \rangle$"
+                        if six == n_states - 1
+                        else None
+                    ),
+                    linestyle="dotted",
+                    color=colors[six],
+                    alpha=alpha_lines,
+                )
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            legend = ax.legend(
+                title="Drawn Lifetimes",
+                loc=legend_loc,
+                ncol=legend_ncol,
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
+
+            # Histogram of uncensored lifetimes.
+            fig, ax = plt.subplots(clear=True)
+            for six, lts in enumerate(lts_unc):
+                hist, bin_edges, patches = ax.hist(
+                    lts,
+                    bins=bins,
+                    density=True,
+                    label=r"State $%d$" % six,
+                    color=colors[six],
+                    alpha=alpha_hist,
+                    rasterized=True,
+                )
+                lines = ax.plot(
+                    bin_mids,
+                    lt_dists[six].pdf(bin_mids),
+                    linestyle="solid",
+                    color=colors[six],
+                    alpha=alpha_lines,
+                )
+                ax.axvline(
+                    lt_dists_mom1[six],
+                    label=(
+                        r"$\langle t_{dist} \rangle$"
+                        if six == n_states - 1
+                        else None
+                    ),
+                    linestyle="dashed",
+                    color=colors[six],
+                    alpha=alpha_lines,
+                )
+                ax.axvline(
+                    lts_unc_mom1[six],
+                    label=(
+                        r"$\langle t_{uncens} \rangle$"
+                        if six == n_states - 1
+                        else None
+                    ),
+                    linestyle="dotted",
+                    color=colors[six],
+                    alpha=0.8,
+                )
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            legend = ax.legend(
+                title="Uncensored Lifetimes",
+                loc=legend_loc,
+                ncol=legend_ncol,
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
+
+            # Histogram of uncensored lifetimes.
+            fig, ax = plt.subplots(clear=True)
+            for six, lts in enumerate(lts_cen):
+                hist, bin_edges, patches = ax.hist(
+                    lts,
+                    bins=bins,
+                    density=True,
+                    label=r"State $%d$" % six,
+                    color=colors[six],
+                    alpha=alpha_hist,
+                    rasterized=True,
+                )
+                lines = ax.plot(
+                    bin_mids,
+                    lt_dists[six].pdf(bin_mids),
+                    linestyle="solid",
+                    color=colors[six],
+                    alpha=alpha_lines,
+                )
+                ax.axvline(
+                    lt_dists_mom1[six],
+                    label=(
+                        r"$\langle t_{dist} \rangle$"
+                        if six == n_states - 1
+                        else None
+                    ),
+                    linestyle="dashed",
+                    color=colors[six],
+                    alpha=alpha_lines,
+                )
+                ax.axvline(
+                    lts_cen_mom1[six],
+                    label=(
+                        r"$\langle t_{cens} \rangle$"
+                        if six == n_states - 1
+                        else None
+                    ),
+                    linestyle=":",
+                    color=colors[six],
+                    alpha=0.9,
+                )
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            legend = ax.legend(
+                title="Censored Lifetimes",
+                loc=legend_loc,
+                ncol=legend_ncol,
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
         print("Created {}".format(args.HIST_PLOT))
 
     print("Elapsed time:         {}".format(datetime.now() - timer))
