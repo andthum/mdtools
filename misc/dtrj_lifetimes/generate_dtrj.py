@@ -22,7 +22,8 @@ r"""
 Generate an artificial discrete trajectory with a given number of states
 with a given lifetime distribution.
 
-The lifetime distribution follows the generalized gamma distribution
+For the lifetime distribution follows you can choose between the
+generalized gamma distribution
 
 .. math::
 
@@ -32,7 +33,24 @@ The lifetime distribution follows the generalized gamma distribution
     \left( \frac{t}{\tau_0} \right)^{\delta - 1}
     \exp{\left[ \left( -\frac{t}{\tau_0} \right)^\beta \right]}
 
-with :math:`\Gamma(z)` being the gamma function.
+with :math:`\Gamma(z)` being the gamma function, and the Burr Type XII
+distribution
+
+.. math::
+
+    f(t) =
+    \frac{\beta \delta}{\tau_0}
+    \left( \frac{t}{\tau_0} \right)^{\beta - 1}
+    \frac{
+        1
+    }{
+        \left[
+            1 + \left( \frac{t}{\tau_0} \right)^\beta
+        \right]^{\delta - 1}
+    }
+
+Note that the n-th raw moment of the Burr Type XII distribution only
+exists if :math:`n < \beta \delta`.
 
 Options
 -------
@@ -52,6 +70,10 @@ Options
     Output filename for a histogram plot of the drawn state lifetimes
     (optional).  The histogram shows the lifetimes that were drawn from
     the exponential distribution for each state.
+--dist
+    {'generalized_gamma', 'burr12'}
+
+    Which distribution to use as lifetime distribution.
 --beta
     :math:`\beta` values (shape parameter) to use for the lifetime
     distribution of each state.  The number of given :math:`\beta`
@@ -87,9 +109,10 @@ See Also
 :mod:`misc.dtrj_lifetimes.compare_dtrj_lifetime_methods` :
     Compare state lifetimes calculated from a discrete trajectory using
     different methods
-:mod:`misc.dtrj_lifetimes.plot_gengamma` :
+:mod:`misc.dtrj_lifetimes.plot_lifetime_distributions` :
     Plot the PDF, CDF, Survival and Hazard function of the generalized
-    gamma distribution for a given set of shape and scale parameters
+    gamma distribution or the Burr Type XII distribution for a given set
+    of shape and scale parameters.
 
 Notes
 -----
@@ -97,10 +120,10 @@ The discrete trajectory is generated in the following way:
 
     1. Select a random state.  Thereby, ensure that the selected state
        is different from the previously selected state.
-    2. Draw a random number from the generalized gamma distribution of
-       lifetimes assigned to the selected state.  The drawn number is
-       rounded to the nearest integer.  If the drawn number is zero, the
-       selected state is discarded and another state is selected.
+    2. Draw a random number from the selected lifetime distribution.
+       The drawn number is rounded to the nearest integer.  If the drawn
+       number is zero, the selected state is discarded and another state
+       is selected.
     3. Extend the discrete trajectory with the selected state by as many
        frames as determined by the drawn lifetime.
     4. Discard a given number of frames (\--discard) at the beginning of
@@ -111,156 +134,256 @@ The generalized gamma distribution reduces to many other distributions,
 e.g. to the
 
     * Stretched exponential distribution if :math:`\delta` is unity.
-    * Gamma distribution if :math:`\beta` is unity.
     * Weibull distribution if :math:`\delta` equals :math:`\beta`.
+    * Gamma distribution if :math:`\beta` is unity.
+    * Chi distribution if :math:`\beta` is two and :math:`\tau` is
+      :math:`\sqrt{2}`.
     * Exponential distribution if both :math:`\delta` and :math:`\beta`
       are unity.
 
+The Burr Type XII distribution reduces to the
+
+    * Log-logistic distribution if :math:`\delta` is unity.
+    * Lomax distribution if :math:`\beta` is unity.
+
 Examples
 --------
-Generate discrete trajectories with different number of frames.
+Generalized Gamma Distribution
 
-.. code-block:: bash
+    **Dependence on trajectory size**
 
-    beta=1
-    delta=1
-    tau0=100
-    n_cmps=1
-    discard=1000
-    for n_frames in 10 100 1000 10000 100000; do
-        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --beta 1 "${beta}" \
-            --delta 1 "${delta}" \
-            --tau0 10 "${tau0}" \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436
-    done
+    Generate discrete trajectories with different number of frames.
+    :math:`\beta = \delta = 1` => Exponential distribution.
 
-Generate discrete trajectories with different number of compounds.
+    .. code-block:: bash
 
-.. code-block:: bash
+        beta=1
+        delta=1
+        tau0=100
+        n_cmps=1
+        discard=1000
+        for n_frames in 10 100 1000 10000 100000; do
+            fname="dtrj_gengamma_beta_1_${beta}_delta_1_${delta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist generalized_gamma \
+                --beta 1 "${beta}" \
+                --delta 1 "${delta}" \
+                --tau0 10 "${tau0}" \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436
+        done
 
-    beta=1
-    delta=1
-    tau0=100
-    n_frames=10
-    discard=1000
-    for n_cmps in 1 10 100 1000 10000 100000; do
-        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --beta 1 "${beta}" \
-            --delta 1 "${delta}" \
-            --tau0 10 "${tau0}" \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436
-    done
+    Generate discrete trajectories with different number of compounds.
+    :math:`\beta = \delta = 1` => Exponential distribution.
 
-Generate discrete trajectories with different :math:`\beta` values
-whereas :math:`\delta` is fixed to unity => Stretched exponential
-distribution.
+    .. code-block:: bash
 
-.. code-block:: bash
+        beta=1
+        delta=1
+        tau0=100
+        n_frames=10
+        discard=1000
+        for n_cmps in 1 10 100 1000 10000 100000; do
+            fname="dtrj_gengamma_beta_1_${beta}_delta_1_${delta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist generalized_gamma \
+                --beta 1 "${beta}" \
+                --delta 1 "${delta}" \
+                --tau0 10 "${tau0}" \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436
+        done
 
-    delta=1
-    tau0=100
-    n_cmps=100
-    n_frames=100000
-    discard=1000
-    for beta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --beta 1 "${beta}" \
-            --delta 1 "${delta}" \
-            --tau0 "${tau0}" "${tau0}" \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436
-    done
+    **Dependence on lifetime distribution**
 
-Generate discrete trajectories with different :math:`\beta` values
-whereas :math:`\delta` is set to :math:`\beta` => Weibull distribution.
+    Generate discrete trajectories with different :math:`\tau_0` values
+    whereas :math:`\beta = \delta = 1` => Exponential distribution.
 
-.. code-block:: bash
+    .. code-block:: bash
 
-    tau0=100
-    n_cmps=100
-    n_frames=100000
-    discard=1000
-    for beta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_beta_1_${beta}_delta_1_${beta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --beta 1 "${beta}" \
-            --delta 1 "${beta}" \
-            --tau0 "${tau0}" "${tau0}" \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436
-    done
+        beta=1
+        delta=1
+        n_cmps=100
+        n_frames=100000
+        discard=1000
+        for tau0 in 25 50 100 200 400; do
+            fname="dtrj_gengamma_beta_1_${beta}_delta_1_${delta}_tau0_10_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist generalized_gamma \
+                --beta 1 "${beta}" \
+                --delta 1 "${delta}" \
+                --tau0 10 "${tau0}" \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436
+        done
 
-Generate discrete trajectories with different :math:`\delta` values
-whereas :math:`\beta` is fixed to unity => Gamma distribution.
+    Generate discrete trajectories with different :math:`\beta` values
+    whereas :math:`\delta` is fixed to unity => Stretched exponential
+    distribution.
 
-.. code-block:: bash
+    .. code-block:: bash
 
-    beta=1
-    tau0=100
-    n_cmps=100
-    n_frames=100000
-    discard=1000
-    for delta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --beta 1 "${beta}" \
-            --delta 1 "${delta}" \
-            --tau0 "${tau0}" "${tau0}" \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436
-    done
+        delta=1
+        tau0=100
+        n_cmps=100
+        n_frames=100000
+        discard=1000
+        for beta in 0.25 0.50 1.00 2.00 4.00; do
+            fname="dtrj_gengamma_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist generalized_gamma \
+                --beta 1 "${beta}" \
+                --delta 1 "${delta}" \
+                --tau0 "${tau0}" "${tau0}" \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436
+        done
 
-Generate discrete trajectories with different :math:`\delta` values
-whereas :math:`\beta` is fixed to two and :math:`\tau_0` is fixed to
-:math:`\sqrt{2}` => Chi distribution.
+    Generate discrete trajectories with different :math:`\beta` values
+    whereas :math:`\delta` is set to :math:`\beta` => Weibull
+    distribution.
 
-.. code-block:: bash
+    .. code-block:: bash
 
-    beta=2
-    tau0_long=$(echo "scale=30; sqrt(2)" | bc)
-    tau0="${tau0::4}"  # Only two decimal places.
-    n_cmps=100
-    n_frames=100000
-    discard=1000
-    for delta in 0.25 0.50 1.00 2.00 4.00; do
-        fname="dtrj_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --beta 1 "${beta}" \
-            --delta 1 "${delta}" \
-            --tau0 "${tau0_long}" "${tau0_long}" \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436
-    done
+        tau0=100
+        n_cmps=100
+        n_frames=100000
+        discard=1000
+        for beta in 0.25 0.50 1.00 2.00 4.00; do
+            fname="dtrj_gengamma_beta_1_${beta}_delta_1_${beta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist generalized_gamma \
+                --beta 1 "${beta}" \
+                --delta 1 "${beta}" \
+                --tau0 "${tau0}" "${tau0}" \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436
+        done
+
+    Generate discrete trajectories with different :math:`\delta` values
+    whereas :math:`\beta` is fixed to unity => Gamma distribution.
+
+    .. code-block:: bash
+
+        beta=1
+        tau0=100
+        n_cmps=100
+        n_frames=100000
+        discard=1000
+        for delta in 0.25 0.50 1.00 2.00 4.00; do
+            fname="dtrj_gengamma_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist generalized_gamma \
+                --beta 1 "${beta}" \
+                --delta 1 "${delta}" \
+                --tau0 "${tau0}" "${tau0}" \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436
+        done
+
+    Generate discrete trajectories with different :math:`\delta` values
+    whereas :math:`\beta` is fixed to two and :math:`\tau_0` is fixed to
+    :math:`\sqrt{2}` => Chi distribution.
+
+    .. code-block:: bash
+
+        beta=2
+        tau0_long=$(echo "scale=30; sqrt(2)" | bc)
+        tau0="${tau0_long::4}"  # Only two decimal places.
+        n_cmps=100
+        n_frames=100000
+        discard=1000
+        for delta in 0.25 0.50 1.00 2.00 4.00 8.00 16.00; do
+            fname="dtrj_gengamma_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist generalized_gamma \
+                --beta 1 "${beta}" \
+                --delta 1 "${delta}" \
+                --tau0 "${tau0_long}" "${tau0_long}" \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436
+        done
+
+Burr Type XII Distribution
+
+    Generate discrete trajectories with different :math:`\beta` values
+    whereas :math:`\delta` is fixed to unity => Log-logistic
+    distribution.
+
+    .. code-block:: bash
+
+        delta=1
+        tau0=100
+        n_cmps=100
+        n_frames=100000
+        discard=1000
+        for beta in 2.00 4.00 8.00 16.00; do
+            fname="dtrj_burr12_beta_4_${beta}_delta_${delta}_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist burr12 \
+                --beta 4 "${beta}" \
+                --delta "${delta}" "${delta}" \
+                --tau0 "${tau0}" "${tau0}" \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436
+        done
+
+    Generate discrete trajectories with different :math:`\delta` values
+    whereas :math:`\beta` is fixed to unity => Lomax distribution.
+
+    .. code-block:: bash
+
+        beta=1
+        tau0=100
+        n_cmps=100
+        n_frames=100000
+        discard=1000
+        for delta in 2.00 4.00 8.00 16.00; do
+            fname="dtrj_burr12_beta_${beta}_${beta}_delta_4_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist burr12 \
+                --beta "${beta}" "${beta}" \
+                --delta 4 "${delta}" \
+                --tau0 "${tau0}" "${tau0}" \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436
+        done
 
 """
 
@@ -281,8 +404,7 @@ import numpy as np
 import psutil
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
-from scipy.special import gamma
-from scipy.stats import gengamma
+from scipy.stats import burr12, gengamma
 
 # First-party libraries
 import mdtools as mdt
@@ -295,7 +417,8 @@ if __name__ == "__main__":  # noqa: C901
     proc.cpu_percent()  # Initiate monitoring of CPU usage.
     parser = argparse.ArgumentParser(
         description=(
-            "Generate artificial discrete trajectories for testing purposes."
+            "Generate an artificial discrete trajectory with a given number of"
+            " states with a given lifetime distribution."
         )
     )
     parser.add_argument(
@@ -326,6 +449,15 @@ if __name__ == "__main__":  # noqa: C901
             "Output filename for a histogram plot of the drawn state lifetimes"
             " (optional)."
         ),
+    )
+    parser.add_argument(
+        "--dist",
+        dest="DIST",
+        type=str,
+        choices=("generalized_gamma", "burr12"),
+        required=False,
+        default="generalized_gamma",
+        help="Which distribution to use as lifetime distribution",
     )
     parser.add_argument(
         "--beta",
@@ -444,10 +576,20 @@ if __name__ == "__main__":  # noqa: C901
         args.SEED = secrets.randbits(128)
     rng = np.random.default_rng(args.SEED)
     # List of lifetime distributions for each state.
-    lt_dists = [
-        gengamma(a=delta[six] / beta[six], c=beta[six], loc=0, scale=tau0[six])
-        for six in state_ix
-    ]
+    if args.DIST == "generalized_gamma":
+        lt_dists = [
+            gengamma(
+                a=delta[six] / beta[six], c=beta[six], loc=0, scale=tau0[six]
+            )
+            for six in state_ix
+        ]
+    elif args.DIST == "burr12":
+        lt_dists = [
+            burr12(c=beta[six], d=delta[six], loc=0, scale=tau0[six])
+            for six in state_ix
+        ]
+    else:
+        raise ValueError("Invalid --dist ({})".format(args.DIST))
 
     print("\n")
     print("Generating discrete trajectory...")
@@ -474,7 +616,7 @@ if __name__ == "__main__":  # noqa: C901
             if lifetime == 0:
                 # Discard the selected state and select another state.
                 continue
-            # Extend the trajectory with the selected state as many
+            # Extend the trajectory with the selected state by as many
             # frames as determined by the drawn lifetime.  If the
             # trajectory exceeds the pre-defined length, clip it.
             n_frames_append = min(lifetime, n_frames_tot - n_frames_cmp)
@@ -517,19 +659,34 @@ if __name__ == "__main__":  # noqa: C901
     if args.PARAM_OUT is not None:
         data = np.column_stack([state_ix, beta, delta, tau0])
         header = (
-            "Parameters used to generate an artificial discrete trajectory.\n"
+            "Parameters used to generate the artificial discrete trajectory\n"
+            + "{:s}\n".format(args.DTRJ_OUT)
             + "\n"
-            + "State lifetimes were sampled from a generalized gamma\n"
-            + "distribution:\n"
-            + "  f(t) = 1/Gamma(delta/beta) * beta/tau0 *\n"
-            + "         (t/tau0)^(delta-1) * exp[-(t/tau0)^beta]\n"
-            + "where Gamma(z) is the gamma function.\n"
-            + "\n"
-            + "RNG Seed:            {:d}\n".format(args.SEED)
-            + "Number of states:    {:d}\n".format(n_states)
-            + "Number of compounds: {:d}\n".format(n_cmps)
-            + "Number of frames:    {:d}\n".format(n_frames)
-            + "Discarded frames:    {:d}\n".format(args.DISCARD)
+        )
+        if args.DIST == "generalized_gamma":
+            header += (
+                "State lifetimes were sampled from a generalized gamma\n"
+                + "distribution:\n"
+                + "  f(t) = 1/Gamma(delta/beta) * beta/tau0 *\n"
+                + "         (t/tau0)^(delta-1) * exp[-(t/tau0)^beta]\n"
+                + "where Gamma(z) is the gamma function.\n"
+                + "\n"
+            )
+        elif args.DIST == "burr12":
+            header += (
+                "State lifetimes were sampled from a Burr Type XII\n"
+                + "distribution:\n"
+                + "  f(t) = beta*delta/tau0 * (t/tau0)^beta *\n"
+                + "         1 / [1 + (t/tau0)^beta]^(delta-1)\n"
+                + "\n"
+            )
+        header += (
+            "Lifetime Distribution: {:s}\n".format(args.DIST)
+            + "RNG Seed:              {:d}\n".format(args.SEED)
+            + "Number of states:      {:d}\n".format(n_states)
+            + "Number of compounds:   {:d}\n".format(n_cmps)
+            + "Number of frames:      {:d}\n".format(n_frames)
+            + "Discarded frames:      {:d}\n".format(args.DISCARD)
             + "\n"
             + "\n"
             + "The columns contain:\n"
@@ -548,14 +705,11 @@ if __name__ == "__main__":  # noqa: C901
     if args.HIST_PLOT is not None:
         # Estimate common bin edges for the lifetime distributions of
         # all states.
-        # Mean of the generalized gamma distribution.
-        mean = tau0 * gamma((delta + 1) / beta) / gamma(delta / beta)
-        bin_width = max(1, np.min(mean) // 2)
-        lifetime_max = [np.max(lt) if len(lt) > 0 else 0 for lt in lifetimes]
-        lifetime_max = max(1, np.max(lifetime_max))
-        bins = np.arange(
-            0, lifetime_max + bin_width, bin_width, dtype=np.uint32
-        )
+        means = np.asarray([lt_dist.mean() for lt_dist in lt_dists])
+        bin_width = max(1, np.min(means) // 2)
+        lt_max = [np.max(lt) if len(lt) > 0 else 0 for lt in lifetimes]
+        lt_max = max(1, np.max(lt_max))
+        bins = np.arange(0, lt_max + bin_width, bin_width, dtype=np.uint32)
         bin_mids = bins[1:] - np.diff(bins) / 2
 
         alpha = 0.75
@@ -587,11 +741,8 @@ if __name__ == "__main__":  # noqa: C901
                             color=colors[six],
                             alpha=alpha,
                         )
-                for six in state_ix:
-                    # New loop to put the labels of `ax.axvline` at last
-                    # in the legend.
                     ax.axvline(
-                        mean[six],
+                        means[six],
                         linestyle="dotted",
                         color=colors[six],
                         alpha=alpha,
