@@ -341,6 +341,7 @@ if __name__ == "__main__":
         type=str,
         choices=(
             "generalized_gamma",
+            "exponential",
             "stretched_exponential",
             "weibull",
             "gamma",
@@ -363,6 +364,10 @@ if __name__ == "__main__":
     #     t_min, t_max = 0, 4
     #     ylim_pdf = (0, 1.05)
     #     ylim_hz = (0, 4)
+    # elif args.PARAM_SET == "exponential":
+    #     t_min, t_max = 0, 8
+    #     ylim_pdf = (0, 1.2)
+    #     ylim_hz = (0, t_max)
     # elif args.PARAM_SET == "stretched_exponential":
     #     t_min, t_max = 0, 10
     #     ylim_pdf = (0, 1.2)
@@ -431,6 +436,30 @@ if __name__ == "__main__":
                 for i, beta in enumerate(betas)
             ]
             legend_title = "Generalized Gamma Dist."
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
+
+        if args.PARAM_SET in ("exponential", "all"):
+            ############################################################
+            # Dependency on tau0
+            # beta = delta = 1 => Exponential distribution
+            ############################################################
+            print("Exponential distribution")
+            beta = 1.0
+            delta = 1.0
+            tau0s = parameters
+            # tau0s = np.array([1e1, 1e2, 1e3, 1e4, 1e5])
+            rv = [
+                gengamma(a=delta / beta, c=beta, loc=0, scale=tau0)
+                for tau0 in tau0s
+            ]
+            labels = [r"$%.2f$" % tau0 for tau0 in tau0s]
+            # labels = [r"$10^{%d}$" % np.log10(tau0) for tau0 in tau0s]
+            legend_title = (
+                "Exp. Dist.\n"
+                + r"$\beta = \delta = %.2f$" % beta
+                + "\n"
+                + r"$\tau_0$"
+            )
             plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
         if args.PARAM_SET in ("stretched_exponential", "all"):
