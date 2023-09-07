@@ -20,84 +20,193 @@
 
 r"""
 Plot the PDF, CDF, Survival and Hazard function of the generalized gamma
-distribution for a given set of shape and scale parameters.
+distribution or the Burr Type XII distribution for a given set of scale
+and shape parameters.
 
 See Also
 --------
 :func:`scipy.stats.gengamma` :
-    A generalized gamma continuous random variable.  Function used to
-    sample the PDF.
-`SciPy User Guide`_ :
-    Information about the generalized gamma distribution.
+    A generalized gamma continuous random variable.
+:func:`scipy.stats.burr12` :
+    A Burr Type XII continuous random variable.
+`Generalized Gamma Distribution`_ :
+    Information about the generalized gamma distribution as implemented
+    in SciPy.
+`Burr12 Distribution`_ :
+    Information about the Burr Type XII distribution as implemented in
+    SciPy.
 
-.. _SciPy User Guide:
+
+.. _Generalized Gamma Distribution:
     https://docs.scipy.org/doc/scipy/tutorial/stats/continuous_gengamma.html
+.. _Burr12 Distribution:
+    https://docs.scipy.org/doc/scipy/tutorial/stats/continuous_burr12.html
 
 Notes
 -----
-Probability density function (PDF) of the generalized gamma function:
+Generalized Gamma Distribution
 
-.. math::
+    Probability density function (PDF):
 
-    f(t) =
-    \frac{1}{\Gamma\left( \frac{\delta}{\beta} \right)}
-    \frac{\beta}{\tau_0}
-    \left( \frac{t}{\tau_0} \right)^{\delta - 1}
-    \exp{\left[ -\left( \frac{t}{\tau_0} \right)^\beta \right]}
+    .. math::
 
-with :math:`\delta, \beta, \tau_0 > 0` and :math:`t \geq 0`.
+        f(t) =
+        \frac{1}{\Gamma\left( \frac{\delta}{\beta} \right)}
+        \frac{\beta}{\tau_0}
+        \left( \frac{t}{\tau_0} \right)^{\delta - 1}
+        \exp{\left[ -\left( \frac{t}{\tau_0} \right)^\beta \right]}
 
-n-th raw moment:
+    with shape parameters :math:`\beta, \delta > 0`, scale parameter
+    :math:`\tau_0 > 0` and :math:`t \geq 0`.
 
-.. math::
+    n-th raw moment:
 
-    \langle t^n \rangle =
-    \int_0^\infty t^n f(t) dt =
-    \tau_0^n
-    \frac{
-        \Gamma\left( \frac{\delta + n}{\beta} \right)
-    }{
-        \Gamma\left( \frac{\delta}{\beta} \right)
-    }
+    .. math::
 
-Cumulative distribution function (CDF):
+        \langle t^n \rangle =
+        \int_0^\infty t^n f(t) dt =
+        n \int_0^\infty t^{n-1} S(t) dt =
+        \tau_0^n
+        \frac{
+            \Gamma\left( \frac{\delta + n}{\beta} \right)
+        }{
+            \Gamma\left( \frac{\delta}{\beta} \right)
+        }
 
-.. math::
+    Cumulative distribution function (CDF):
 
-    F(t) = \int_0^t f(t') dt'
+    .. math::
 
-Survival function:
+        F(t) = \int_0^t f(t') dt'
 
-.. math::
+    Survival function:
 
-    S(t) = 1 - F(t)
+    .. math::
 
-Hazard function:
+        S(t) = 1 - F(t)
 
-.. math::
+    Hazard function:
 
-    h(t) =
-    \frac{f(t)}{S(t)} =
-    -\frac{S'(t)}{S(t)} =
-    -\frac{\text{d } \ln{S(t)}}{\text{d}t}
+    .. math::
 
-The PDF implemented by
-:func:`scipy.stats.gengamma(x, a, c, loc=0, scale)` is
+        h(t) =
+        \frac{f(t)}{S(t)} =
+        -\frac{S'(t)}{S(t)} =
+        -\frac{\text{d } \ln{S(t)}}{\text{d}t}
 
-.. math::
+    The PDF implemented by
+    :func:`scipy.stats.gengamma(x, a, c, loc, scale)` is
 
-    f(y) =
-    \frac{|c| y^{ca-1}}{scale \cdot \Gamma(a)}
-    \exp{\left(-y^c\right)}
+    .. math::
 
-with :math:`y = (x - loc) / scale`.  To bring this to this form of the
-PDF to the one stated above, the following conversions must be applied:
+        f(y) =
+        \frac{|c| y^{ca-1}}{scale \cdot \Gamma(a)}
+        \exp{\left(-y^c\right)}
 
-   * :math:`x` -> :math:`t`
-   * :math:`a` -> :math:`\delta / \beta`
-   * :math:`c` -> :math:`\beta`
-   * :math:`loc` -> :math:`0`
-   * :math:`scale` -> :math:`\tau_0`
+    with :math:`y = (x - loc) / scale`.  To bring this form of the PDF
+    to the one stated above, the following conversions must be applied:
+
+       * :math:`x` -> :math:`t`
+       * :math:`a` -> :math:`\delta / \beta`
+       * :math:`c` -> :math:`\beta`
+       * :math:`loc` -> :math:`0`
+       * :math:`scale` -> :math:`\tau_0`
+
+Burr Type XII Distribution
+
+    Probability density function (PDF):
+
+    .. math::
+
+        f(t) =
+        \frac{\beta \delta}{\tau_0}
+        \left( \frac{t}{\tau_0} \right)^{\beta - 1}
+        \frac{
+            1
+        }{
+            \left[
+                1 + \left( \frac{t}{\tau_0} \right)^\beta
+            \right]^{\delta - 1}
+        }
+
+    with shape parameters :math:`\beta, \delta > 0`, scale parameter
+    :math:`\tau_0 > 0` and :math:`t \geq 0`.
+
+    n-th raw moment:
+
+    .. math::
+
+        \langle t^n \rangle =
+        \int_0^\infty t^n f(t) dt =
+        n \int_0^\infty t^{n-1} S(t) dt =
+        \tau_0^n
+        \frac{
+            \Gamma\left( \delta - \frac{n}{\beta} \right)
+            \Gamma\left( 1      + \frac{n}{\beta} \right)
+        }{
+            \Gamma(\delta)
+        }
+
+    only exists if :math:`n < \beta \delta`.
+
+    Cumulative distribution function (CDF):
+
+    .. math::
+
+        F(t) =
+        \int_0^t f(t') dt' =
+        1 -
+        \frac{
+            1
+        }{
+            \left[
+                1 + \left( \frac{t}{\tau_0} \right)^\beta
+            \right]^\delta
+        }
+
+    Survival function:
+
+    .. math::
+
+        S(t) =
+        1 - F(t) =
+        \frac{
+            1
+        }{
+            \left[
+                1 + \left( \frac{t}{\tau_0} \right)^\beta
+            \right]^\delta
+        }
+
+    Hazard function:
+
+    .. math::
+
+        h(t) =
+        \frac{f(t)}{S(t)} =
+        -\frac{S'(t)}{S(t)} =
+        -\frac{\text{d } \ln{S(t)}}{\text{d}t} =
+        \frac{\beta \delta}{\tau_0}
+        \left( \frac{t}{\tau_0} \right)^{beta-1}
+        \frac{1}{1 + \left( \frac{t}{\tau_0} \right)^\beta}
+
+    The PDF implemented by
+    :func:`scipy.stats.burr12(x, c, d, loc, scale)` is
+
+    .. math::
+
+        f(y) =
+        \frac{c d}{scale}
+        \frac{x^{c-1}}{\left( 1 + y^c \right)^{d+1}}
+
+    with :math:`y = (x - loc) / scale`.  To bring this form of the PDF
+    to the one stated above, the following conversions must be applied:
+
+       * :math:`x` -> :math:`t`
+       * :math:`c` -> :math:`\beta`
+       * :math:`d` -> :math:`\delta`
+       * :math:`loc` -> :math:`0`
+       * :math:`scale` -> :math:`\tau_0`
 
 """
 
@@ -114,7 +223,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
-from scipy.stats import gengamma
+from scipy.stats import burr12, gengamma
 
 # First-party libraries
 import mdtools as mdt
@@ -236,6 +345,9 @@ if __name__ == "__main__":
             "gamma",
             "chi",
             "weibull",
+            "burr12",
+            "log_logistic",
+            "lomax",
             "all",
         ),
         required=False,
@@ -267,6 +379,18 @@ if __name__ == "__main__":
     #     t_min, t_max = 0, 4
     #     ylim_pdf = (0, 1.6)
     #     ylim_hz = (0, t_max)
+    # elif args.PARAM_SET == "burr12":
+    #     t_min, t_max = 0, 4
+    #     ylim_pdf = (0, 1.05)
+    #     ylim_hz = (0, 4)
+    # elif args.PARAM_SET == "log_logistic":
+    #     t_min, t_max = 0, 4
+    #     ylim_pdf = (0, 1.2)
+    #     ylim_hz = (0, 3)
+    # elif args.PARAM_SET == "lomax":
+    #     t_min, t_max = 0, 4
+    #     ylim_pdf = (0, 1.05)
+    #     ylim_hz = (0, 4)
     # else:
     #     t_min, t_max = 0, 8
     #     ylim_pdf = (0, 1.6)
@@ -306,15 +430,15 @@ if __name__ == "__main__":
                 % (beta, deltas[i], tau0s[i])
                 for i, beta in enumerate(betas)
             ]
-            legend_title = ""
+            legend_title = "Generalized Gamma Dist."
             plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
         if args.PARAM_SET in ("stretched_exponential", "all"):
             ############################################################
             # Dependency on beta
-            # delta = 1 => Stretched-exponential distribution
+            # delta = 1 => Stretched exponential distribution
             ############################################################
-            print("Stretched-exponential distribution")
+            print("Stretched exponential distribution")
             betas = parameters
             delta = 1.0
             tau0 = 1.0
@@ -324,7 +448,8 @@ if __name__ == "__main__":
             ]
             labels = [r"$%.2f$" % beta for beta in betas]
             legend_title = (
-                r"$\delta = %.2f$, $\tau_0 = %.2f$" % (delta, tau0)
+                "Str. Exp. Dist.\n"
+                + r"$\delta = %.2f$, $\tau_0 = %.2f$" % (delta, tau0)
                 + "\n"
                 + r"$\beta$"
             )
@@ -345,7 +470,8 @@ if __name__ == "__main__":
             ]
             labels = [r"$%.2f$" % delta for delta in deltas]
             legend_title = (
-                r"$\beta = %.2f$, $\tau_0 = %.2f$" % (beta, tau0)
+                "Gamma Dist.\n"
+                + r"$\beta = %.2f$, $\tau_0 = %.2f$" % (beta, tau0)
                 + "\n"
                 + r"$\delta$"
             )
@@ -366,7 +492,8 @@ if __name__ == "__main__":
             ]
             labels = [r"$%.2f$" % delta for delta in deltas]
             legend_title = (
-                r"$\beta = %.2f$, $\tau_0 = \sqrt{2}$" % beta
+                "Chi Dist.\n"
+                + r"$\beta = %.2f$, $\tau_0 = \sqrt{2}$" % beta
                 + "\n"
                 + r"$\delta$"
             )
@@ -387,7 +514,76 @@ if __name__ == "__main__":
             ]
             labels = [r"$%.2f$" % delta for delta in deltas]
             legend_title = (
-                r"$\tau_0 = %.2f$" % tau0 + "\n" + r"$\delta = \beta$"
+                "Weibull Dist.\n"
+                + r"$\tau_0 = %.2f$" % tau0
+                + "\n"
+                + r"$\delta = \beta$"
+            )
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
+
+        if args.PARAM_SET in ("burr12", "all"):
+            ############################################################
+            # Burr Type XII Distribution
+            # beta = 0.5, delta = 0.5, tau0 = 1.0
+            # beta = 0.5, delta = 1.0, tau0 = 1.0 => log-logistic
+            # beta = 1.0, delta = 0.5, tau0 = 2.0 => Lomax
+            # beta = 1.0, delta = 1.0, tau0 = 1.0 => Lomax/log-logistic
+            # beta = 2.0, delta = 1.0, tau0 = sqrt(2) => log-logistic
+            # beta = 2.0, delta = 2.0, tau0 = sqrt(2)
+            ############################################################
+            print("Burr Type XII Distribution")
+            betas = np.array([0.5, 0.5, 1.0, 1.0, 2.0, 2.0])
+            deltas = np.array([0.5, 1.0, 0.5, 1.0, 1.0, 2.0])
+            tau0s = np.array([1.0, 1.0, 2.0, 1.0, np.sqrt(2), np.sqrt(2)])
+            rv = [
+                burr12(c=beta, d=deltas[i], loc=0, scale=tau0s[i])
+                for i, beta in enumerate(betas)
+            ]
+            labels = [
+                r"$\beta = %.2f$, $\delta = %.2f$, $\tau_0 = %.2f$"
+                % (beta, deltas[i], tau0s[i])
+                for i, beta in enumerate(betas)
+            ]
+            legend_title = "Burr Type XII Dist."
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
+
+        if args.PARAM_SET in ("log_logistic", "all"):
+            ############################################################
+            # Dependency on beta
+            # delta = 1 => Log-logistic distribution
+            ############################################################
+            print("Log-logistic distribution")
+            betas = parameters
+            delta = 1.0
+            tau0 = 1.0
+            rv = [burr12(c=beta, d=delta, loc=0, scale=tau0) for beta in betas]
+            labels = [r"$%.2f$" % beta for beta in betas]
+            legend_title = (
+                "Log-Lgstc. Dist.\n"
+                + r"$\delta = %.2f$, $\tau_0 = %.2f$" % (delta, tau0)
+                + "\n"
+                + r"$\beta$"
+            )
+            plot_all(out, times, rv, labels=labels, legend_title=legend_title)
+
+        if args.PARAM_SET in ("lomax", "all"):
+            ############################################################
+            # Dependency on delta
+            # beta = 1 => Lomax distribution
+            ############################################################
+            print("Lomax distribution")
+            beta = 1.0
+            deltas = parameters
+            tau0 = 1.0
+            rv = [
+                burr12(c=beta, d=delta, loc=0, scale=tau0) for delta in deltas
+            ]
+            labels = [r"$%.2f$" % delta for delta in deltas]
+            legend_title = (
+                "Lomax Dist.\n"
+                + r"$\beta = %.2f$, $\tau_0 = %.2f$" % (beta, tau0)
+                + "\n"
+                + r"$\delta$"
             )
             plot_all(out, times, rv, labels=labels, legend_title=legend_title)
 
