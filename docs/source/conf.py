@@ -576,6 +576,7 @@ doctest_path = [os.path.abspath("../../")]
 # Python code that is treated like it were put in a testsetup directive
 # for every file that is tested.
 doctest_global_setup = """
+import platform
 import numpy as np
 import mdtools as mdt
 """
