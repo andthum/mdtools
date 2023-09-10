@@ -456,3 +456,48 @@ def fit_kww(xdata, ydata, ysd=None, return_valid=False, **kwargs):
         return popt, perr, valid
     else:
         return popt, perr
+
+
+def burr12_sf(t, tau=1, beta=1, delta=1):
+    r"""
+    Survival function of the Burr Type XII distribution function:
+
+    .. math::
+
+        S(t) =
+        \frac{
+            1
+        }{
+            \left[
+                1 + \left( \frac{t}{\tau} \right)^\beta
+            \right]^\delta
+        }
+
+    For :math:`\beta = 1`, the Burr Type XII distribution becomes the
+    Lomax distribution and for :math:`\delta = 1` it becomes the
+    log-logistic distribution.  The survival function of the Lomax
+    distribution is equal to the Becquerel decay law.
+
+    Parameters
+    ----------
+    t : scalar or array_like
+        Value(s) at which to evaluate :math:`f(t)`.
+    tau : scalar or array_like, optional
+        Scale parameter(s).
+    beta : scalar or array_like, optional
+        Shape parameter(s).
+    delta : scalar or array_like, optional
+        Shape parameter(s).
+
+    Returns
+    -------
+    sf : scalar or numpy.ndarray
+        The outcome of :math:`S(t)`.  :math:`S(t)` is evaluated
+        element-wise if at least one of the input arguments is an array.
+
+    Notes
+    -----
+    If more than one input argument is an array, all arrays must be
+    broadcastable.
+    """
+    return (1 + (t / tau) ** beta) ** (-delta)
