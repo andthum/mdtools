@@ -175,6 +175,9 @@ if __name__ == "__main__":  # noqa: C901
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
 
+    # Fit method of `scipy.optimize.curve_fit` to use for all fits.
+    fit_method = "trf"
+
     # Conversion factor to convert "trajectory steps" to some physical
     # time unit (e.g. ns).
     time_conv = 1
@@ -210,7 +213,7 @@ if __name__ == "__main__":  # noqa: C901
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
-    print("Calculating lifetimes from the remain probability (Methods 3-5)...")
+    print("Calculating lifetimes from the remain probability (Methods 3-6)...")
     timer = datetime.now()
 
     # Read remain probabilities from file.
@@ -286,8 +289,8 @@ if __name__ == "__main__":  # noqa: C901
                 )
 
     # Method 4: Calculate the lifetime as the integral of the remain
-    # probability:
-    #   <t^n> = n * int_0^inf t^(n-1) * `rp` dt
+    # probability p(t):
+    #   <t^n> = n * int_0^inf t^(n-1) * p(t) dt
     lts_int_mom1 = np.full(n_states, np.nan, dtype=np.float64)
     lts_int_mom2 = np.full(n_states, np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
@@ -300,12 +303,7 @@ if __name__ == "__main__":  # noqa: C901
     lts_int_mom2[invalid] = np.nan
     del valid, invalid
 
-    # Method 5: Fit the remain probability with a Kohlrausch function
-    # (stretched exponential) and calculate the lifetime as the integral
-    # of the fit:
-    #   f(t) = exp[-(t/tau0_kww)^beta_kww]
-    #   <t^n> = n * int_0^inf t^(n-1) * f(t) dt
-    #         = tau0_kww^n * Gamma(1 + n/beta_kww)
+    # Get fit region for fitting methods.
     if args.ENDFIT is None:
         end_fit = int(0.9 * len(times))
     else:
@@ -326,6 +324,12 @@ if __name__ == "__main__":  # noqa: C901
             stop_fit = 2
         fit_stop[i] = min(end_fit, stop_fit)
 
+    # Method 5: Fit the remain probability with a Kohlrausch function
+    # (stretched exponential) and calculate the lifetime as the integral
+    # of the fit:
+    #   I_kww(t) = exp[-(t/tau0_kww)^beta_kww]
+    #   <t^n> = n * int_0^inf t^(n-1) * I_kww(t) dt
+    #         = tau0_kww^n * Gamma(1 + n/beta_kww)
     # Initial guesses for `tau0_kww` and `beta_kww`.
     init_guess_kww = np.column_stack([lts_e, np.ones(n_states)])
     invalid = np.isnan(init_guess_kww)
@@ -334,7 +338,7 @@ if __name__ == "__main__":  # noqa: C901
     del invalid
     # Bounds for `tau0_kww` and `beta_kww`.
     bounds_kww = ([0, 0], [np.inf, 10])
-
+    # Fit the data.
     popt_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
     perr_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
     fit_r2_kww = np.full(n_states, np.nan, dtype=np.float64)
@@ -347,7 +351,7 @@ if __name__ == "__main__":  # noqa: C901
             ydata=rp_fit,
             p0=init_guess_kww[i],
             bounds=bounds_kww,
-            method="trf",
+            method=fit_method,
         )
         if np.any(np.isnan(popt_kww[i])):
             fit_mse_kww[i] = np.nan
@@ -367,6 +371,56 @@ if __name__ == "__main__":  # noqa: C901
     tau0_kww_sd, beta_kww_sd = perr_kww.T
     lts_kww_mom1 = tau0_kww * gamma(1 + 1 / beta_kww)
     lts_kww_mom2 = tau0_kww**2 * gamma(1 + 2 / beta_kww)
+
+    # Method 6: Fit the remain probability with the survival function of
+    # a Burr Type XII distribution and calculate the lifetime as the
+    # integral fo the fit:
+    #   I_bur(t) = 1 / [1 + (t/tau0_bur)^beta_bur]^delta_bur
+    #   <t^n> = n * int_0^inf t^(n-1) * I_bur(t) dt
+    #         = tau0_bur^n * Gamma(delta_bur - n/beta_bur) *
+    #           Gamma(1 + n/beta_bur) / Gamma(delta_bur)
+    bounds_bur = ([0, 0, 0], [np.inf, 10, 10])
+    popt_bur = np.full((n_states, 3), np.nan, dtype=np.float64)
+    perr_bur = np.full((n_states, 3), np.nan, dtype=np.float64)
+    fit_r2_bur = np.full(n_states, np.nan, dtype=np.float64)
+    fit_mse_bur = np.full(n_states, np.nan, dtype=np.float64)
+    for i, rp in enumerate(remain_props.T):
+        times_fit = times[fit_start[i] : fit_stop[i]]
+        rp_fit = rp[fit_start[i] : fit_stop[i]]
+        popt_bur[i], perr_bur[i] = mdt.func.fit_burr12_sf(
+            xdata=times_fit,
+            ydata=rp_fit,
+            bounds=bounds_bur,
+            method=fit_method,
+        )
+        if np.any(np.isnan(popt_bur[i])):
+            fit_mse_bur[i] = np.nan
+            fit_r2_bur[i] = np.nan
+        else:
+            fit = mdt.func.burr12_sf(times_fit, *popt_bur[i])
+            # Residual sum of squares.
+            ss_res = np.nansum((rp_fit - fit) ** 2)
+            # Mean squared error / mean squared residuals.
+            fit_mse_bur[i] = ss_res / len(fit)
+            # Total sum of squares.
+            ss_tot = np.nansum((rp_fit - np.nanmean(rp_fit)) ** 2)
+            # (Pseudo) coefficient of determination (R^2).
+            # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
+            fit_r2_bur[i] = 1 - (ss_res / ss_tot)
+    tau0_bur, beta_bur, delta_bur = popt_bur.T
+    tau0_bur_sd, beta_bur_sd, delta_bur_sd = perr_bur.T
+    lts_bur_mom1 = (
+        tau0_bur
+        * gamma(delta_bur - 1 / beta_bur)
+        * gamma(1 + 1 / beta_bur)
+        / gamma(delta_bur)
+    )
+    lts_bur_mom2 = (
+        tau0_bur**2
+        * gamma(delta_bur - 2 / beta_bur)
+        * gamma(1 + 2 / beta_bur)
+        / gamma(delta_bur)
+    )
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
@@ -396,12 +450,51 @@ if __name__ == "__main__":  # noqa: C901
     print("\n")
     print("Creating text output...")
     timer = datetime.now()
+    data = [
+        states,  # 1
+        # Method 1 (counting).
+        lts_cnt_mom1,  # 2
+        lts_cnt_mom2,  # 3
+        # Method 2 (inverse transition rate).
+        lts_k,  # 4
+        # Method 3 (1/e criterion).
+        lts_e,  # 5
+        # Method 4 (direct integral).
+        lts_int_mom1,  # 6
+        lts_int_mom2,  # 7
+        # Method 5 (integral of Kohlrausch fit).
+        lts_kww_mom1,  # 8
+        lts_kww_mom2,  # 9
+        tau0_kww,  # 10
+        tau0_kww_sd,  # 11
+        beta_kww,  # 12
+        beta_kww_sd,  # 13
+        fit_r2_kww,  # 14
+        fit_mse_kww,  # 15
+        # Method 6 (integral of Burr fit).
+        lts_bur_mom1,  # 16
+        lts_bur_mom2,  # 17
+        tau0_bur,  # 18
+        tau0_bur_sd,  # 19
+        beta_bur,  # 20
+        beta_bur_sd,  # 21
+        delta_bur,  # 22
+        delta_bur_sd,  # 23
+        fit_r2_bur,  # 24
+        fit_mse_bur,  # 25
+        # Fit region
+        fit_start,  # 26
+        fit_stop,  # 27
+    ]
+    if args.INFILE_PARAM is not None:
+        data += params[1:12].tolist()
+    data = np.column_stack(data)
     header = (
         "State lifetimes.\n"
         + "Average time that a given compound stays in a given state\n"
         + "calculated either directly from the discrete trajectory\n"
         + "(Method 1-2) or from the corresponding remain probability\n"
-        + "function (Method 3-5). \n"
+        + "function (Method 3-6). \n"
         + "\n"
         + "\n"
         + "Discrete trajectory: {:s}\n".format(args.INFILE_DTRJ)
@@ -414,13 +507,13 @@ if __name__ == "__main__":  # noqa: C901
             + "\n"
         )
     header += (
-        "Lifetimes are calculated using five different methods:\n"
+        "Lifetimes are calculated using six different methods:\n"
         + "\n"
         + "1) The average lifetime <t_cnt> is calculated by counting how\n"
         + "   many frames a given compound stays in a given state.  Note\n"
         + "   lifetimes calculated in this way can at maximum be as long as\n"
         + "   the trajectory and are usually biased to lower values because\n"
-        + "   of edge effects.\n"
+        + "   of edge effects (censoring).\n"
         + "\n"
         + "2) The average transition rate <k> is calculated as the number of\n"
         + "   transitions leading out of a given state divided by the number\n"
@@ -441,26 +534,54 @@ if __name__ == "__main__":  # noqa: C901
         + "   {:.4f}, <t_int^n> is set to NaN.\n".format(args.INT_THRESH)
         + "\n"
         + "5) The remain probability function p(t) is fitted by a Kohlrausch\n"
-        + "   function (stretched exponential) using the 'Trust Region\n"
-        + "   Reflective' method of scipy.optimize.curve_fit:\n"
-        + "     I(t) = exp[-(t/tau0_kww)^beta_kww]\n"
-        + "   Thereby, tau0_kww and beta_kww are confined to positive\n"
-        + "   values.  The remain probability is fitted until it decays\n"
-        + "   below a given threshold or until a given lag time is reached\n"
-        + "   (whatever happens earlier).  The average lifetime <t_kww^n> is\n"
-        + "   calculated according to the alternative expectation\n"
-        + "   formula [1]:\n"
-        + "     <t_kww^n> = n * int_0^inf t^(n-1) I(t) dt\n"
+        + "   function (stretched exponential, survival function of the\n"
+        + "   Weibull distribution):\n"
+        + "     I_kww(t) = exp[-(t/tau0_kww)^beta_kww]\n"
+        + "   Thereby, tau0_kww is confined to the interval [{}, {}]\n".format(
+            bounds_kww[0][0], bounds_kww[1][0]
+        )
+        + "   and beta_kww is confined to the interval [{}, {}].\n".format(
+            bounds_kww[0][1], bounds_kww[1][1]
+        )
+        + "   The average lifetime <t_kww^n> is calculated according to the\n"
+        + "   alternative expectation formula [1]:\n"
+        + "     <t_kww^n> = n * int_0^inf t^(n-1) I_kww(t) dt\n"
         + "               = tau0_kww^n * Gamma(1 + n/beta_kww)\n"
         + "   where Gamma(z) is the gamma function.\n"
+        + "\n"
+        + "6) The remain probability function p(t) is fitted by the survival\n"
+        + "   function of a Burr Type XII distribution:\n"
+        + "     I_bur(t) = 1 / [1 + (t/tau0_bur)^beta_bur]^delta_bur\n"
+        + "   Thereby, tau0_bur is confined to the interval [{}, {}]\n".format(
+            bounds_bur[0][0], bounds_bur[1][0]
+        )
+        + "   beta_kww is confined to the interval [{}, {}]  and\n".format(
+            bounds_bur[0][1], bounds_bur[1][1]
+        )
+        + "   delta_bur is confined to the interval [{}, {}].\n".format(
+            bounds_bur[0][2], bounds_bur[1][2]
+        )
+        + "   The average lifetime <t_bur^n> is calculated according to the\n"
+        + "   alternative expectation formula [1]:\n"
+        + "     <t_bur^n> = n * int_0^inf t^(n-1) I_bur(t) dt\n"
+        + "               = tau0_bur^n * Gamma(delta_bur - n/beta_bur) *\n"
+        + "                 Gamma(1 + n/beta_bur) / Gamma(delta_bur)\n"
+        + "   where Gamma(z) is the gamma function.\n"
+        + "\n"
+        + "All fits are done using scipy.optimize.curve_fit with the 'Trust\n"
+        + "Region Reflective' method.  The remain probability is always\n"
+        + "fitted until it decays below the given threshold or until the\n"
+        + "given lag time is reached (whatever happens earlier).\n"
+        + "\n"
+        + "int_thresh = {:.4f}\n".format(args.INT_THRESH)
+        + "end_fit  = {}\n".format(args.ENDFIT)
+        + "stop_fit = {:.4f}\n".format(args.STOPFIT)
         + "\n"
         + "Reference [1]:\n"
         + "  S. Chakraborti, F. Jardim, E. Epprecht,\n"
         + "  Higher-order moments using the survival function: The\n"
         + "  alternative expectation formula,\n"
         + "  The American Statistician, 2019, 73, 2, 191-194."
-        + "\n"
-        + "int_thresh = {:.4f}\n".format(args.INT_THRESH)
         + "\n"
         + "\n"
         + "The columns contain:\n"
@@ -481,69 +602,54 @@ if __name__ == "__main__":  # noqa: C901
         + "  7 2nd moment <t_int^2> / frames^2\n"
         + "\n"
         + "  Lifetime from Method 5 (integral of Kohlrausch fit)\n"
-        + "  8 Start of fit region (inclusive) / frames\n"
-        + "  9 End of fit region (exclusive) / frames\n"
-        + " 10 1st moment <t_kww> / frames\n"
-        + " 11 2nd moment <t_kww^2> / frames^2\n"
-        + " 12 Fit parameter tau0_kww / frames\n"
-        + " 13 Standard deviation of tau0_kww / frames\n"
-        + " 14 Fit parameter beta_kww\n"
-        + " 15 Standard deviation of beta_kww\n"
-        + " 16 Coefficient of determination of the fit (R^2 value)\n"
-        + " 17 Mean squared error of the fit (mean squared residuals) /"
+        + "  8 1st moment <t_kww> / frames\n"
+        + "  9 2nd moment <t_kww^2> / frames^2\n"
+        + " 10 Fit parameter tau0_kww / frames\n"
+        + " 11 Standard deviation of tau0_kww / frames\n"
+        + " 12 Fit parameter beta_kww\n"
+        + " 13 Standard deviation of beta_kww\n"
+        + " 14 Coefficient of determination of the fit (R^2 value)\n"
+        + " 15 Mean squared error of the fit (mean squared residuals) /"
         + " frames^2\n"
+        + "\n"
+        + "  Lifetime from Method 6 (integral of Burr fit)\n"
+        + " 16 1st moment <t_bur> / frames\n"
+        + " 17 2nd moment <t_bur^2> / frames^2\n"
+        + " 18 Fit parameter tau0_burr / frames\n"
+        + " 19 Standard deviation of tau0_burr / frames\n"
+        + " 20 Fit parameter beta_burr\n"
+        + " 21 Standard deviation of beta_burr\n"
+        + " 22 Fit parameter delta_burr\n"
+        + " 23 Standard deviation of delta_burr\n"
+        + " 24 Coefficient of determination of the fit (R^2 value)\n"
+        + " 25 Mean squared error of the fit (mean squared residuals) /"
+        + " frames^2\n"
+        + "\n"
+        + "  Fit region for all fitting methods\n"
+        + " 26 Start of fit region (inclusive) / frames\n"
+        + " 27 End of fit region (exclusive) / frames\n"
     )
     if args.INFILE_PARAM is not None:
-        n_cols = 28
         header += (
             "\n"
             + "  True state lifetimes\n"
-            + " 18 Shape parameter beta of the true distribution\n"
-            + " 19 Shape parameter delta of the true distribution\n"
-            + " 20 Scale parameter tau0 of the true distribution\n"
-            + " 21 1st moment of the true distribution <t_dst> / frames\n"
-            + " 22 2nd moment of the true distribution <t_dst^2> / frames^2\n"
-            + " 23 1st moment of the drawn lifetimes <t_drw> / frames\n"
-            + " 24 2nd moment of the drawn lifetimes <t_drw^2> / frames^2\n"
-            + " 25 1st moment of the uncensored lifetimes <t_unc> / frames\n"
-            + " 26 2nd moment of the uncensored lifetimes <t_unc^2> /"
+            + " 28 Shape parameter beta of the true distribution\n"
+            + " 29 Shape parameter delta of the true distribution\n"
+            + " 30 Scale parameter tau0 of the true distribution\n"
+            + " 31 1st moment of the true distribution <t_dst> / frames\n"
+            + " 32 2nd moment of the true distribution <t_dst^2> / frames^2\n"
+            + " 33 1st moment of the drawn lifetimes <t_drw> / frames\n"
+            + " 34 2nd moment of the drawn lifetimes <t_drw^2> / frames^2\n"
+            + " 35 1st moment of the uncensored lifetimes <t_unc> / frames\n"
+            + " 36 2nd moment of the uncensored lifetimes <t_unc^2> /"
             + " frames^2\n"
-            + " 27 1st moment of the censored lifetimes <t_cen> / frames\n"
-            + " 28 2nd moment of the censored lifetimes <t_cen^2> / frames^2\n"
+            + " 37 1st moment of the censored lifetimes <t_cen> / frames\n"
+            + " 38 2nd moment of the censored lifetimes <t_cen^2> / frames^2\n"
         )
-    else:
-        n_cols = 17
     header += "\n" + "Column number:\n"
     header += "{:>14d}".format(1)
-    for i in range(2, n_cols + 1):
+    for i in range(2, data.shape[-1] + 1):
         header += " {:>16d}".format(i)
-    data = [
-        states,  # 1
-        #
-        lts_cnt_mom1,  # 2
-        lts_cnt_mom2,  # 3
-        #
-        lts_k,  # 4
-        #
-        lts_e,  # 5
-        #
-        lts_int_mom1,  # 6
-        lts_int_mom2,  # 7
-        #
-        fit_start,  # 8
-        fit_stop,  # 9
-        lts_kww_mom1,  # 10
-        lts_kww_mom2,  # 11
-        tau0_kww,  # 12
-        tau0_kww_sd,  # 13
-        beta_kww,  # 14
-        beta_kww_sd,  # 15
-        fit_r2_kww,  # 16
-        fit_mse_kww,  # 17
-    ]
-    if args.INFILE_PARAM is not None:
-        data += params[1:12].tolist()
-    data = np.column_stack(data)
     outfile = args.OUTFILE + ".txt"
     mdt.fh.savetxt(outfile, data, header=header)
     print("Created {}".format(outfile))
