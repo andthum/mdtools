@@ -80,14 +80,10 @@ import psutil
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
 from scipy.special import gamma
-from scipy.stats import gengamma
 
 # First-party libraries
 import mdtools as mdt
 import mdtools.plot as mdtplt  # Load MDTools plot style  # noqa: F401
-
-
-# from scipy.stats import gengamma
 
 
 if __name__ == "__main__":  # noqa: C901
@@ -183,19 +179,6 @@ if __name__ == "__main__":  # noqa: C901
     # time unit (e.g. ns).
     time_conv = 1
 
-    # Method 0: True lifetimes.
-    if args.INFILE_PARAM is not None:
-        states_true, beta_true, delta_true, tau0_true = np.loadtxt(
-            args.INFILE_PARAM, unpack=True
-        )
-        # True lifetime distribution for each state.
-        lt_dists_true = gengamma(
-            a=delta_true / beta_true, c=beta_true, loc=0, scale=tau0_true
-        )
-        # Moments of the true lifetime distributions.
-        lts_true_mom1 = lt_dists_true.moment(order=1) * time_conv
-        lts_true_mom2 = lt_dists_true.moment(order=2) * time_conv**2
-
     print("\n")
     print("Calculating lifetimes directly from `dtrj` (Methods 1-2)...")
     timer = datetime.now()
@@ -211,14 +194,6 @@ if __name__ == "__main__":  # noqa: C901
     lts_cnt_mom1 = np.array([np.mean(lts) for lts in lts_cnt])
     lts_cnt_mom2 = np.array([np.mean(lts**2) for lts in lts_cnt])
     del lts_cnt
-
-    if args.INFILE_PARAM is not None and not np.all(
-        np.isin(states_cnt, states_true)
-    ):
-        raise ValueError(
-            "`states_cnt` ({}) is not fully contained in `states_true`"
-            " ({})".format(states_cnt, states_true)
-        )
 
     # Method 2: Calculate the transition rate as the number of
     # transitions leading out of a given state divided by the number of
@@ -395,6 +370,29 @@ if __name__ == "__main__":  # noqa: C901
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
+    if args.INFILE_PARAM is not None:
+        print("\n")
+        print("Reading true lifetimes from parameters file...")
+        params = np.loadtxt(args.INFILE_PARAM, unpack=True)
+        states_true = params[0]
+        if not np.all(np.isin(states, states_true)):
+            raise ValueError(
+                "`states` ({}) is not fully contained in `states_true`"
+                " ({})".format(states, states_true)
+            )
+        del states_true
+        params = params[:, states]
+        # Parameters of the true lifetime distribution.
+        beta_true, delta_true, tau0_true = params[1:4]
+        # Moments of the true lifetime distribution.
+        lts_dst_mom1, lts_dst_mom2 = params[4:6]
+        # Moments of the drawn lifetimes.
+        lts_drw_mom1, lts_drw_mom2 = params[6:8]
+        # Moments of the uncensored lifetimes.
+        lts_unc_mom1, lts_unc_mom2 = params[8:10]
+        # Moments of the censored lifetimes.
+        lts_cen_mom1, lts_cen_mom2 = params[10:12]
+
     print("\n")
     print("Creating text output...")
     timer = datetime.now()
@@ -496,15 +494,22 @@ if __name__ == "__main__":  # noqa: C901
         + " frames^2\n"
     )
     if args.INFILE_PARAM is not None:
-        n_cols = 19
+        n_cols = 28
         header += (
             "\n"
-            "  True state lifetimes\n"
-            " 18 1st moment <t_true> / frames\n"
-            " 19 2nd moment <t_true^2> / frames^2\n"
-            " 20 Scale parameter tau0_true\n"
-            " 21 Shape parameter beta_true\n"
-            " 22 Shape parameter delta_true\n"
+            + "  True state lifetimes\n"
+            + " 18 Shape parameter beta of the true distribution\n"
+            + " 19 Shape parameter delta of the true distribution\n"
+            + " 20 Scale parameter tau0 of the true distribution\n"
+            + " 21 1st moment of the true distribution <t_dst> / frames\n"
+            + " 22 2nd moment of the true distribution <t_dst^2> / frames^2\n"
+            + " 23 1st moment of the drawn lifetimes <t_drw> / frames\n"
+            + " 24 2nd moment of the drawn lifetimes <t_drw^2> / frames^2\n"
+            + " 25 1st moment of the uncensored lifetimes <t_unc> / frames\n"
+            + " 26 2nd moment of the uncensored lifetimes <t_unc^2> /"
+            + " frames^2\n"
+            + " 27 1st moment of the censored lifetimes <t_cen> / frames\n"
+            + " 28 2nd moment of the censored lifetimes <t_cen^2> / frames^2\n"
         )
     else:
         n_cols = 17
@@ -537,15 +542,7 @@ if __name__ == "__main__":  # noqa: C901
         fit_mse_kww,  # 17
     ]
     if args.INFILE_PARAM is not None:
-        lts_true_mom1 = lts_true_mom1[states]
-        lts_true_mom2 = lts_true_mom2[states]
-        data += [
-            lts_true_mom1,  # 18
-            lts_true_mom2,  # 19
-            tau0_true,  # 20
-            beta_true,  # 21
-            delta_true,  # 22
-        ]
+        data += params[1:12].tolist()
     data = np.column_stack(data)
     outfile = args.OUTFILE + ".txt"
     mdt.fh.savetxt(outfile, data, header=header)
