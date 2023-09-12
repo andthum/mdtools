@@ -55,12 +55,25 @@ Options
     given value.  The fitting is stopped by whatever happens earlier:
     \--end-fit or \--stop-fit.  Default: ``0.01``.
 
-
 See Also
 --------
 :mod:`misc.dtrj_lifetimes.generate_dtrj` :
     Generate an artificial discrete trajectory with a given number of
     states with a given lifetime distribution
+
+Notes
+-----
+.. code-block:: bash
+
+    for dtrj in *.npz; do
+        fname="${dtrj::-4}"
+        python3 compare_dtrj_lifetime_methods.py \
+            --dtrj "${dtrj}" \
+            --rp "${fname}_state_lifetime_discrete_continuous.txt.gz" \
+            --param "${fname}_param.txt.gz" \
+            -o "${fname}_compare_dtrj_lifetime_methods"
+    done
+
 """
 
 
