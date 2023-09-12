@@ -650,42 +650,63 @@ if __name__ == "__main__":  # noqa: C901
     print("\n")
     print("Creating plot(s)...")
     timer = datetime.now()
+    lts_mom1s = [
+        lts_cnt_mom1,
+        lts_k,
+        lts_e,
+        lts_int_mom1,
+        lts_kww_mom1,
+        lts_bur_mom1,
+    ]
+    tau0s = [tau0_kww, tau0_bur]
+    betas = [beta_kww, beta_bur]
+    deltas = [delta_bur]
+    fit_r2s = [fit_r2_kww, fit_r2_bur]
+    fit_mses = [fit_mse_kww, fit_mse_bur]
+    if args.INFILE_PARAM is not None:
+        lts_mom1s.append(params[[4, 8, 10]])  # lts_dst, lts_unc, lts_cen
+        tau0s.append(tau0_true)
+        betas.append(beta_true)
+        deltas.append(delta_true)
+    lts_mom1s = np.vstack(lts_mom1s)
+    tau0s = np.vstack(tau0s)
+    betas = np.vstack(betas)
+    deltas = np.vstack(deltas)
+    fit_r2s = np.vstack(fit_r2s)
+    fit_mses = np.vstack(fit_mses)
+
     xlabel = r"State Index"
     xlim = (np.min(states) - 0.5, np.max(states) + 0.5)
     alpha = 0.75
-    lt_min = np.nanmin(
-        [
-            lts_cnt_mom1,
-            lts_k,
-            lts_e,
-            lts_int_mom1,
-            lts_kww_mom1,
-        ]
-    )
-    tau0_min = np.nanmin(tau0_kww)
-    beta_min = np.nanmin(beta_kww)
-    if args.INFILE_PARAM is not None:
-        lt_min = np.nanmin([lt_min, np.nanmin(lts_true_mom1)])
-        tau0_min = np.nanmin([tau0_min, np.nanmin(tau0_true)])
-        beta_min = np.nanmin([beta_min, np.nanmin(beta_true)])
     cmap = plt.get_cmap()
     c_vals = np.arange(n_states)
     c_norm = n_states - 1
     c_vals_normed = c_vals / c_norm
     colors = cmap(c_vals_normed)
+
     outfile = args.OUTFILE + ".pdf"
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
         # Plot lifetimes vs. state indices.
         fig, ax = plt.subplots(clear=True)
-        # Method 5 (integral of the fit).
+        # Method 6 (integral of Burr fit).
+        ax.errorbar(
+            states,
+            lts_bur_mom1,
+            yerr=np.sqrt(lts_bur_mom2 - lts_bur_mom1**2),
+            label="Burr",
+            color="tab:cyan",
+            marker="^",
+            alpha=alpha,
+        )
+        # Method 5 (integral of Kohlrausch fit).
         ax.errorbar(
             states,
             lts_kww_mom1,
             yerr=np.sqrt(lts_kww_mom2 - lts_kww_mom1**2),
-            label="Fit",
-            color="tab:cyan",
-            marker="D",
+            label="Kohlrausch",
+            color="tab:blue",
+            marker="v",
             alpha=alpha,
         )
         # Method 4 (direct integral)
@@ -694,23 +715,25 @@ if __name__ == "__main__":  # noqa: C901
             lts_int_mom1,
             yerr=np.sqrt(lts_int_mom2 - lts_int_mom1**2),
             label="Area",
-            color="tab:blue",
-            marker="d",
+            color="tab:purple",
+            marker=">",
             alpha=alpha,
         )
         # Method 3 (1/e criterion).
-        ax.plot(
+        ax.errorbar(
             states,
             lts_e,
+            yerr=None,
             label=r"$1/e$",
-            color="tab:purple",
-            marker="s",
+            color="tab:pink",
+            marker="<",
             alpha=alpha,
         )
         # Method 2 (inverse transition rate).
-        ax.plot(
+        ax.errorbar(
             states,
             lts_k,
+            yerr=None,
             label="Rate",
             color="tab:red",
             marker="h",
@@ -727,14 +750,34 @@ if __name__ == "__main__":  # noqa: C901
             alpha=alpha,
         )
         if args.INFILE_PARAM is not None:
-            # True lifetimes.
+            # True lifetimes (from distribution).
             ax.errorbar(
                 states,
-                lts_true_mom1,
-                yerr=np.sqrt(lts_true_mom2 - lts_true_mom1**2),
+                lts_dst_mom1,
+                yerr=np.sqrt(lts_dst_mom2 - lts_dst_mom1**2),
                 label="True",
                 color="tab:green",
-                marker="o",
+                marker="s",
+                alpha=alpha,
+            )
+            # Uncensored lifetimes.
+            ax.errorbar(
+                states,
+                lts_unc_mom1,
+                yerr=np.sqrt(lts_unc_mom2 - lts_unc_mom1**2),
+                label="Uncensored",
+                color="tab:olive",
+                marker="D",
+                alpha=alpha,
+            )
+            # Censored lifetimes.
+            ax.errorbar(
+                states,
+                lts_cen_mom1,
+                yerr=np.sqrt(lts_cen_mom2 - lts_cen_mom1**2),
+                label="Censored",
+                color="darkolivegreen",
+                marker="d",
                 alpha=alpha,
             )
         ax.set(
@@ -746,27 +789,243 @@ if __name__ == "__main__":  # noqa: C901
         if ylim[0] < 0:
             ax.set_ylim(0, ylim[1])
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        # Sort legend entries.  By default, lines plotted with `ax.plot`
-        # come before lines plotted with `ax.errorbar`.
-        handles, labels = ax.get_legend_handles_labels()
-        legend_order = (2, 3, 0, 1, 4)
-        if args.INFILE_PARAM is not None:
-            legend_order += (5,)
-        handles = [handles[leg_ord] for leg_ord in legend_order]
-        labels = [labels[leg_ord] for leg_ord in legend_order]
-        legend = ax.legend(
-            handles, labels, ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL
-        )
-        legend.get_title().set_multialignment("center")
+        ax.set_xticks([], minor=True)
+        ax.legend(loc="upper left", ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
         # Set y axis to log scale (lifetimes vs. state indices).
         # Round y limits to next lower and higher power of ten.
         ylim = ax.get_ylim()
-        ymin = 10 ** np.floor(np.log10(lt_min))
+        ymin = 10 ** np.floor(np.log10(np.nanmin(lts_mom1s)))
         ymax = 10 ** np.ceil(np.log10(ylim[1]))
         ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
         ax.set_yscale("log", base=10, subs=np.arange(2, 10))
         pdf.savefig()
+        plt.close()
+
+        # Plot scale parameter tau0.
+        fig, ax = plt.subplots(clear=True)
+        # Method 6 (Burr fit).
+        ax.errorbar(
+            states,
+            tau0_bur,
+            yerr=tau0_bur_sd,
+            label="Burr",
+            color="tab:cyan",
+            marker="^",
+        )
+        # Method 5 (Kohlrausch fit).
+        ax.errorbar(
+            states,
+            tau0_kww,
+            yerr=tau0_kww_sd,
+            label="Kohlrausch",
+            color="tab:blue",
+            marker="v",
+        )
+        if args.INFILE_PARAM is not None:
+            # True tau0 (from distribution).
+            ax.errorbar(
+                states,
+                tau0_true,
+                yerr=None,
+                label="True",
+                color="tab:green",
+                marker="s",
+            )
+        ax.set(
+            xlabel=xlabel,
+            ylabel=r"Scale Parameter $\tau_0$ / Frames",
+            xlim=xlim,
+        )
+        ylim = ax.get_ylim()
+        if ylim[0] < 0:
+            ax.set_ylim(0, ylim[1])
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_xticks([], minor=True)
+        ax.legend(loc="upper left", **mdtplt.LEGEND_KWARGS_XSMALL)
+        pdf.savefig()
+        if not np.all(np.isnan(tau0s)):
+            # Set y axis to log scale (scale parameter tau0).
+            # Round y limits to next lower and higher power of ten.
+            ylim = ax.get_ylim()
+            ymin = 10 ** np.floor(np.log10(np.nanmin(tau0s)))
+            ymax = 10 ** np.ceil(np.log10(ylim[1]))
+            ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            pdf.savefig()
+        plt.close()
+
+        # Plot shape parameter beta.
+        fig, ax = plt.subplots(clear=True)
+        # Method 6 (Burr fit).
+        ax.errorbar(
+            states,
+            beta_bur,
+            yerr=beta_bur_sd,
+            label="Burr",
+            color="tab:cyan",
+            marker="^",
+        )
+        # Method 5 (Kohlrausch fit).
+        ax.errorbar(
+            states,
+            beta_kww,
+            yerr=beta_kww_sd,
+            label="Kohlrausch",
+            color="tab:blue",
+            marker="v",
+        )
+        if args.INFILE_PARAM is not None:
+            # True beta (from distribution).
+            ax.errorbar(
+                states,
+                beta_true,
+                yerr=None,
+                label="True",
+                color="tab:green",
+                marker="s",
+            )
+        ax.set(
+            xlabel=xlabel,
+            ylabel=r"Shape Parameter $\beta$",
+            xlim=xlim,
+        )
+        ylim = ax.get_ylim()
+        if ylim[0] < 0:
+            ax.set_ylim(0, ylim[1])
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_xticks([], minor=True)
+        ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
+        pdf.savefig()
+        if not np.all(np.isnan(betas)):
+            # Set y axis to log scale (shape parameter beta).
+            # Round y limits to next lower and higher power of ten.
+            ylim = ax.get_ylim()
+            ymin = 10 ** np.floor(np.log10(np.nanmin(betas)))
+            ymax = 10 ** np.ceil(np.log10(ylim[1]))
+            ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            pdf.savefig()
+        plt.close()
+
+        # Plot shape parameter delta.
+        fig, ax = plt.subplots(clear=True)
+        # Method 6 (Burr fit).
+        ax.errorbar(
+            states,
+            delta_bur,
+            yerr=delta_bur_sd,
+            label="Burr",
+            color="tab:cyan",
+            marker="^",
+        )
+        if args.INFILE_PARAM is not None:
+            # True delta (from distribution).
+            ax.errorbar(
+                states,
+                delta_true,
+                yerr=None,
+                label="True",
+                color="tab:green",
+                marker="s",
+            )
+        ax.set(
+            xlabel=xlabel,
+            ylabel=r"Shape Parameter $\delta$",
+            xlim=xlim,
+        )
+        ylim = ax.get_ylim()
+        if ylim[0] < 0:
+            ax.set_ylim(0, ylim[1])
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_xticks([], minor=True)
+        ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
+        pdf.savefig()
+        if not np.all(np.isnan(deltas)):
+            # Set y axis to log scale (shape parameter delta).
+            # Round y limits to next lower and higher power of ten.
+            ylim = ax.get_ylim()
+            ymin = 10 ** np.floor(np.log10(np.nanmin(deltas)))
+            ymax = 10 ** np.ceil(np.log10(ylim[1]))
+            ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            pdf.savefig()
+        plt.close()
+
+        # Plot R^2 value of the fits.
+        fig, ax = plt.subplots(clear=True)
+        # Method 6 (Burr fit).
+        ax.plot(
+            states,
+            fit_r2_bur,
+            label="Burr",
+            color="tab:cyan",
+            marker="^",
+        )
+        # Method 5 (Kohlrausch fit).
+        ax.plot(
+            states,
+            fit_r2_kww,
+            label="Kohlrausch",
+            color="tab:blue",
+            marker="v",
+        )
+        ax.set(
+            xlabel=xlabel,
+            ylabel=r"Coeff. of Determ. $R^2$",
+            xlim=xlim,
+            ylim=(0, 1.05),
+        )
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_xticks([], minor=True)
+        ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
+        pdf.savefig()
+        if not np.all(np.isnan(fit_r2s)):
+            # Set y axis to log scale (R^2 value of the fits).
+            # Round `ymin` to next lower power of ten.
+            ylim = ax.get_ylim()
+            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_r2s)))
+            ymax = 2
+            ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            pdf.savefig()
+        plt.close()
+
+        # Plot mean squared error.
+        fig, ax = plt.subplots(clear=True)
+        # Method 6 (Burr fit).
+        ax.plot(
+            states,
+            fit_mse_bur,
+            label="Burr",
+            color="tab:cyan",
+            marker="^",
+        )
+        # Method 5 (Kohlrausch fit).
+        ax.plot(
+            states,
+            fit_mse_kww,
+            label="Kohlrausch",
+            color="tab:blue",
+            marker="v",
+        )
+        ax.set(xlabel=xlabel, ylabel=r"MSE / Frames$^2$", xlim=xlim)
+        ylim = ax.get_ylim()
+        if ylim[0] < 0:
+            ax.set_ylim(0, ylim[1])
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_xticks([], minor=True)
+        ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
+        pdf.savefig()
+        if not np.all(np.isnan(fit_mses)):
+            # Set y axis to log scale (mean squared error).
+            # Round y limits to next lower and higher power of ten.
+            ylim = ax.get_ylim()
+            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_mses)))
+            ymax = 10 ** np.ceil(np.log10(ylim[1]))
+            ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            pdf.savefig()
         plt.close()
 
         # Plot fitted region.
@@ -775,114 +1034,24 @@ if __name__ == "__main__":  # noqa: C901
         ax.plot(states, fit_stop, label="End", marker="v")
         ax.set(xlabel=xlabel, ylabel="Fitted Region / Frames", xlim=xlim)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        legend = ax.legend(ncol=2)
+        ax.set_xticks([], minor=True)
+        ax.legend(ncol=2)
         pdf.savefig()
         plt.close()
 
-        # Plot scale parameter tau0.
-        fig, ax = plt.subplots(clear=True)
-        ax.errorbar(
-            states,
-            tau0_kww,
-            yerr=tau0_kww_sd,
-            label="Fit",
-            color="tab:cyan",
-            marker="D",
-        )
-        if args.INFILE_PARAM is not None:
-            ax.plot(
-                states, tau0_true, label="True", color="tab:green", marker="o"
-            )
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Scale Parameter $\tau_0$ / Frames",
-            xlim=xlim,
-        )
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        pdf.savefig()
-        # Set y axis to log scale (scale parameter tau0).
-        # Round y limits to next lower and higher power of ten.
-        ylim = ax.get_ylim()
-        ymin = 10 ** np.floor(np.log10(tau0_min))
-        ymax = 10 ** np.ceil(np.log10(ylim[1]))
-        ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        pdf.savefig()
-        plt.close()
-
-        # Plot shape parameter beta.
-        fig, ax = plt.subplots(clear=True)
-        ax.errorbar(
-            states,
-            beta_kww,
-            yerr=beta_kww_sd,
-            label="Fit",
-            color="tab:cyan",
-            marker="D",
-        )
-        if args.INFILE_PARAM is not None:
-            ax.plot(
-                states, beta_true, label="True", color="tab:green", marker="o"
-            )
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Shape Parameter $\beta$",
-            xlim=xlim,
-            ylim=(0, 1.05),
-        )
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        pdf.savefig()
-        # Set y axis to log scale (shape parameter beta).
-        # Round y limits to next lower and higher power of ten.
-        ylim = ax.get_ylim()
-        ymin = 10 ** np.floor(np.log10(beta_min))
-        ymax = 10 ** np.ceil(np.log10(ylim[1]))
-        ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        pdf.savefig()
-        plt.close()
-
-        # Plot R^2 value of the fits.
-        fig, ax = plt.subplots(clear=True)
-        ax.plot(states, fit_r2_kww, marker="o")
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Coeff. of Determ. $R^2$",
-            xlim=xlim,
-            ylim=(0, 1.05),
-        )
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        pdf.savefig()
-        plt.close()
-
-        # Plot mean squared error.
-        fig, ax = plt.subplots(clear=True)
-        ax.plot(states, fit_mse_kww, marker="o")
-        ax.set(xlabel=xlabel, ylabel=r"MSE / Frames$^2$", xlim=xlim)
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        pdf.savefig()
-        if not np.all(np.isnan(fit_mse_kww)):
-            # Set y axis to log scale (mean squared error).
-            # Round y limits to next lower and higher power of ten.
-            ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(
-                np.log10(np.nanmin(fit_mse_kww[fit_mse_kww > 0]))
-            )
-            ymax = 10 ** np.ceil(np.log10(ylim[1]))
-            ax.set_ylim(ymin if not np.isnan(ymin) else None, ymax)
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            pdf.savefig()
-        plt.close()
-
-        # Plot remain probabilities and fits for each state.
+        # Plot remain probabilities and Burr fits for each state.
         fig, ax = plt.subplots(clear=True)
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_props.T):
             times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.kww(times_fit, *popt_kww[i])
+            fit = mdt.func.burr12_sf(times_fit, *popt_bur[i])
             lines = ax.plot(times, rp, label=r"$%d$" % states[i], linewidth=1)
             ax.plot(
-                times_fit, fit, linestyle="dashed", color=lines[0].get_color()
+                times_fit,
+                fit,
+                label="Burr" if i == n_states - 1 else None,
+                linestyle="dashed",
+                color=lines[0].get_color(),
             )
         ax.set(
             xlabel="Lag Time / Frames",
@@ -894,14 +1063,69 @@ if __name__ == "__main__":  # noqa: C901
         legend = ax.legend(
             title="State Index",
             loc="upper right",
-            ncol=3,
+            ncol=2,
             **mdtplt.LEGEND_KWARGS_XSMALL,
         )
         legend.get_title().set_multialignment("center")
         pdf.savefig()
         plt.close()
 
-        # Plot fit residuals for each state.
+        # Plot Burr fit residuals for each state.
+        fig, ax = plt.subplots(clear=True)
+        ax.set_prop_cycle(color=colors)
+        for i, rp in enumerate(remain_props.T):
+            times_fit = times[fit_start[i] : fit_stop[i]]
+            fit = mdt.func.burr12_sf(times_fit, *popt_bur[i])
+            res = rp[fit_start[i] : fit_stop[i]] - fit
+            ax.plot(times_fit, res, label=r"$%d$" % states[i])
+        ax.set(
+            xlabel="Lag Time / Frames",
+            ylabel="Burr Fit Residuals",
+            xlim=(times[1], times[-1]),
+        )
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        legend = ax.legend(
+            title="State Index",
+            loc="lower right",
+            ncol=2,
+            **mdtplt.LEGEND_KWARGS_XSMALL,
+        )
+        legend.get_title().set_multialignment("center")
+        pdf.savefig()
+        plt.close()
+
+        # Plot remain probabilities and Kohlrausch fits for each state.
+        fig, ax = plt.subplots(clear=True)
+        ax.set_prop_cycle(color=colors)
+        for i, rp in enumerate(remain_props.T):
+            times_fit = times[fit_start[i] : fit_stop[i]]
+            fit = mdt.func.kww(times_fit, *popt_kww[i])
+            lines = ax.plot(times, rp, label=r"$%d$" % states[i], linewidth=1)
+            ax.plot(
+                times_fit,
+                fit,
+                label="Kohlrausch" if i == n_states - 1 else None,
+                linestyle="dashed",
+                color=lines[0].get_color(),
+            )
+        ax.set(
+            xlabel="Lag Time / Frames",
+            ylabel="Decay Law",
+            xlim=(times[1], times[-1]),
+            ylim=(0, 1),
+        )
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        legend = ax.legend(
+            title="State Index",
+            loc="upper right",
+            ncol=2,
+            **mdtplt.LEGEND_KWARGS_XSMALL,
+        )
+        legend.get_title().set_multialignment("center")
+        pdf.savefig()
+        plt.close()
+
+        # Plot Kohlrausch fit residuals for each state.
         fig, ax = plt.subplots(clear=True)
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_props.T):
@@ -911,14 +1135,14 @@ if __name__ == "__main__":  # noqa: C901
             ax.plot(times_fit, res, label=r"$%d$" % states[i])
         ax.set(
             xlabel="Lag Time / Frames",
-            ylabel="Fit Residuals",
+            ylabel="Kohlrausch Fit Residuals",
             xlim=(times[1], times[-1]),
         )
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
         legend = ax.legend(
             title="State Index",
             loc="lower right",
-            ncol=3,
+            ncol=2,
             **mdtplt.LEGEND_KWARGS_XSMALL,
         )
         legend.get_title().set_multialignment("center")
