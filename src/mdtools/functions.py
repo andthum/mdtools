@@ -594,6 +594,9 @@ def fit_burr12_sf(xdata, ydata, ysd=None, return_valid=False, **kwargs):
 
     See Also
     --------
+    :func:`mdtools.functions.fit_burr12_sf_alt` :
+        Fit the survival function of the Burr Type XII distribution
+        using an alternative parameterization
     :func:`mdtools.functions.burr12_sf` :
         Survival function of the Burr Type XII distribution function
     """
@@ -728,6 +731,9 @@ def burr12_sf_alt(t, tau=1, beta=1, d=1):
     --------
     :func:`mdtools.functions.burr12_sf` :
         Original parameterization of the Burr Type XII survival function
+    :func:`mdtools.functions.fit_burr12_sf_alt` :
+        Fit the survival function of the Burr Type XII distribution
+        using the alternative parameterization
 
     Notes
     -----
@@ -735,3 +741,168 @@ def burr12_sf_alt(t, tau=1, beta=1, d=1):
     broadcastable.
     """
     return (1 + (t / tau) ** beta) ** (-(d / beta))
+
+
+def fit_burr12_sf_alt(xdata, ydata, ysd=None, return_valid=False, **kwargs):
+    r"""
+    Fit the survival function of the Burr Type XII distribution to
+    `ydata` using :func:`scipy.optimize.curve_fit`.
+
+    The survival function of the Burr Type XII distribution is given by
+
+    .. math::
+
+        S(t) =
+        \frac{
+            1
+        }{
+            \left[
+                1 + \left( \frac{t}{\tau} \right)^\beta
+            \right]^{\frac{d}{\beta}}
+        }
+
+    This function uses an alternative parameterization compared to
+    :func:`fit_burr12_sf` by setting :math:`d = \beta \delta`.  The
+    advantage is that one can know specify bounds for
+    :math:`\beta \delta`.  One might want to do this, because the n-th
+    raw moment of the Burr Type XII distribution, which is
+
+    .. math::
+
+        \langle t^n \rangle =
+        \tau^n
+        \frac{
+            \Gamma\left( \delta - \frac{n}{\beta}\right)
+            \Gamma\left( 1      + \frac{b}{\beta}\right)
+        }{
+            \Gamma(\delta)
+        },
+
+    only exists if :math:`\beta \delta > n`.
+
+    Parameters
+    ----------
+    xdata : array_like
+        The independent variable where the data is measured.
+    ydata : array_like
+        The dependent data.  Must have the same shape as `xdata`.  Only
+        data points with `0 < ydata <= 1` will be considered.  NaN's and
+        infinite values will not be considered, either.
+    ysd : array_like, optional
+        The standard deviation of `ydata`.  Must have the same shape as
+        `ydata`.
+    return_valid : bool, optional
+        If ``True``, return a boolean array of the same shape as `ydata`
+        that indicates which elements of `ydata` meet the requirements
+        given above.
+    kwargs : dict, optional
+        Additional keyword arguments (besides `xdata`, `ydata` and
+        `sigma`) to parse to :func:`scipy.optimize.curve_fit`.  See
+        there for possible options.  By default, `absolute_sigma` is set
+        to ``True``, `p0` is set to
+        ``[tau_init, 1, 1 + tol_d]`` and `bounds` is set to
+        ``([0, 0, 1 + tol_d], [np.inf, 1, 2 + tol_d])`` where ``tol_d``
+        is set to ``1e-6``.  ``tau_init`` is the point at which `ydata`
+        falls below :math:`1/2`.
+
+    Returns
+    -------
+    popt : numpy.ndarray
+        Optimal values for the parameters so that the sum of the squared
+        residuals is minimized.  The first element of `popt` is the
+        optimal :math:`\tau` value, the second element is the optimal
+        :math:`\beta` value, the third value is the optimal :math:`d`
+        value.
+    perr : numpy.ndarray
+        Standard deviation of the optimal parameters.
+    valid : numpy.ndarray
+        Boolean array of the same shape as `ydata` indicating, which
+        elements of `ydata` were used for the fit.  Only returned if
+        `return_valid` is ``True``.
+
+    See Also
+    --------
+    :func:`mdtools.functions.fit_burr12_sf` :
+        Fit the survival function of the Burr Type XII distribution
+        using the original parameterization
+    :func:`mdtools.functions.burr12_sf_alt` :
+        Survival function of the Burr Type XII distribution function
+        using the alternative parameterization
+    """
+    ydata = np.asarray(ydata)
+    valid = np.isfinite(ydata)
+    valid &= ydata > 0
+    valid &= ydata <= 1
+    if not np.all(valid):
+        warnings.warn(
+            "{} elements of ydata do not fulfill the requirement"
+            " 0 < ydata <= 1 and are discarded for"
+            " fitting".format(len(valid) - np.count_nonzero(valid)),
+            RuntimeWarning,
+        )
+    if not np.any(valid):
+        warnings.warn(
+            "None of the y-data fulfills the requirement 0 < ydata <= 1."
+            "  Setting fit parameters to numpy.nan",
+            RuntimeWarning,
+        )
+        if return_valid:
+            return np.full(3, np.nan), np.full(3, np.nan), valid
+        else:
+            return np.full(3, np.nan), np.full(3, np.nan)
+    xdata = xdata[valid]
+    ydata = ydata[valid]
+    if ysd is not None:
+        ysd = ysd[valid]
+        ysd[ysd == 0] = CURVE_FIT_ZERO_SD
+
+    if kwargs.get("p0", None) is not None:
+        # Initial guess for tau.
+        # If beta = d = 1, S(t=tau) = 0.5  =>  tau = S^(-1)(0.5).
+        thresh = 0.5
+        ix = np.argmin(ydata <= thresh)
+        if ydata[ix] > thresh:
+            # `ydata` never falls below `thresh`.
+            # Linearly extrapolate `ydata` to `thresh`.
+            tau_init = (1 + ydata[-1] - thresh) * xdata[-1]
+        else:
+            tau_init = xdata[ix]
+        # Ensure that `tau_init` is greater than zero.
+        tau_init = max(tau_init, CURVE_FIT_ZERO_SD)
+    else:
+        # `p0` is already given, the value of `tau_init` is ignored.
+        tau_init = xdata[-1]
+    tol_d = 1e-6
+    kwargs.setdefault("absolute_sigma", True)
+    kwargs.setdefault("p0", [tau_init, 1, 1 + tol_d])
+    kwargs.setdefault(
+        "bounds",
+        ([0, 0, 1 + tol_d], [np.inf, 1, 2 + tol_d]),
+    )
+
+    try:
+        popt, pcov = optimize.curve_fit(
+            f=burr12_sf_alt, xdata=xdata, ydata=ydata, sigma=ysd, **kwargs
+        )
+    except (ValueError, RuntimeError) as err:
+        print()
+        print("An error has occurred during fitting:")
+        print("{}".format(err))
+        print("Setting fit parameters to `numpy.nan`")
+        print()
+        if return_valid:
+            return np.full(3, np.nan), np.full(3, np.nan), valid
+        else:
+            return np.full(3, np.nan), np.full(3, np.nan)
+    except optimize.OptimizeWarning as warn:
+        print()
+        print("A warning has occurred during fitting:")
+        print("{}".format(warn))
+        perr = np.sqrt(np.diag(pcov))
+    else:
+        perr = np.sqrt(np.diag(pcov))
+
+    if return_valid:
+        return popt, perr, valid
+    else:
+        return popt, perr
