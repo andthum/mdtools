@@ -330,15 +330,7 @@ if __name__ == "__main__":  # noqa: C901
     #   I_kww(t) = exp[-(t/tau0_kww)^beta_kww]
     #   <t^n> = n * int_0^inf t^(n-1) * I_kww(t) dt
     #         = tau0_kww^n * Gamma(1 + n/beta_kww)
-    # Initial guesses for `tau0_kww` and `beta_kww`.
-    init_guess_kww = np.column_stack([lts_e, np.ones(n_states)])
-    invalid = np.isnan(init_guess_kww)
-    init_guess_kww[invalid] = 1 + remain_props[end_fit][invalid] - 1 / np.e
-    init_guess_kww[invalid] *= times[end_fit]
-    del invalid
-    # Bounds for `tau0_kww` and `beta_kww`.
     bounds_kww = ([0, 0], [np.inf, 10])
-    # Fit the data.
     popt_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
     perr_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
     fit_r2_kww = np.full(n_states, np.nan, dtype=np.float64)
@@ -349,7 +341,6 @@ if __name__ == "__main__":  # noqa: C901
         popt_kww[i], perr_kww[i] = mdt.func.fit_kww(
             xdata=times_fit,
             ydata=rp_fit,
-            p0=init_guess_kww[i],
             bounds=bounds_kww,
             method=fit_method,
         )
