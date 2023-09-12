@@ -80,6 +80,7 @@ import psutil
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
 from scipy.special import gamma
+from scipy.stats import burr12, gengamma
 
 # First-party libraries
 import mdtools as mdt
@@ -437,6 +438,37 @@ if __name__ == "__main__":  # noqa: C901
         lts_unc_mom1, lts_unc_mom2 = params[8:10]
         # Moments of the censored lifetimes.
         lts_cen_mom1, lts_cen_mom2 = params[10:12]
+        # Lifetime distributions used to generate the trajectory.
+        dist = None
+        with mdt.fh.xopen(args.INFILE_PARAM, "r") as file:
+            for line in file.readlines():
+                if line.startswith("# Lifetime dist.:"):
+                    dist = line.split()[-1]
+                    break
+        if dist is None:
+            raise ValueError(
+                "Could not determine the used lifetime distribution from"
+                " {}".format(args.INFILE_PARAM)
+            )
+        elif dist == "generalized_gamma":
+            lt_dists = [
+                gengamma(
+                    a=delta_true[i] / beta_true[i],
+                    c=beta_true[i],
+                    loc=0,
+                    scale=tau0_true[i],
+                )
+                for i in range(n_states)
+            ]
+        elif dist == "burr12":
+            lt_dists = [
+                burr12(
+                    c=beta_true[i], d=delta_true[i], loc=0, scale=tau0_true[i]
+                )
+                for i in range(n_states)
+            ]
+        else:
+            raise ValueError("Unknown lifetime distribution: {}".format(dist))
 
     print("\n")
     print("Creating text output...")
@@ -1148,6 +1180,62 @@ if __name__ == "__main__":  # noqa: C901
         legend.get_title().set_multialignment("center")
         pdf.savefig()
         plt.close()
+
+        if args.INFILE_PARAM is not None:
+            # Plot remain probabilities and true survival functions for
+            # each state.
+            fig, ax = plt.subplots(clear=True)
+            ax.set_prop_cycle(color=colors)
+            for i, rp in enumerate(remain_props.T):
+                lines = ax.plot(
+                    times, rp, label=r"$%d$" % states[i], linewidth=1
+                )
+                ax.plot(
+                    times,
+                    lt_dists[i].sf(times),
+                    label="True SF" if i == n_states - 1 else None,
+                    linestyle="dashed",
+                    color=lines[0].get_color(),
+                )
+            ax.set(
+                xlabel="Lag Time / Frames",
+                ylabel="Decay Law",
+                xlim=(times[1], times[-1]),
+                ylim=(0, 1),
+            )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            legend = ax.legend(
+                title="State Index",
+                loc="upper right",
+                ncol=2,
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
+
+            # Plot difference of the remain probabilities to the true
+            # survival functions for each state.
+            fig, ax = plt.subplots(clear=True)
+            ax.set_prop_cycle(color=colors)
+            for i, rp in enumerate(remain_props.T):
+                res = lt_dists[i].sf(times) - rp
+                ax.plot(times, res, label=r"$%d$" % states[i])
+            ax.set(
+                xlabel="Lag Time / Frames",
+                ylabel=r"True SF $-$ Remain Prob.",
+                xlim=(times[1], times[-1]),
+            )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            legend = ax.legend(
+                title="State Index",
+                loc="lower right",
+                ncol=2,
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
     print("Created {}".format(outfile))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
