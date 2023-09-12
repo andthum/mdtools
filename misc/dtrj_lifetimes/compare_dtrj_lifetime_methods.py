@@ -371,7 +371,7 @@ if __name__ == "__main__":  # noqa: C901
     #   <t^n> = n * int_0^inf t^(n-1) * I_bur(t) dt
     #         = tau0_bur^n * Gamma(delta_bur - n/beta_bur) *
     #           Gamma(1 + n/beta_bur) / Gamma(delta_bur)
-    bounds_bur = ([0, 0, 0], [np.inf, 10, 10])
+    bounds_bur = ([0, 0, 1 + 1e-6], [np.inf, 10, 100])
     popt_bur = np.full((n_states, 3), np.nan, dtype=np.float64)
     perr_bur = np.full((n_states, 3), np.nan, dtype=np.float64)
     fit_r2_bur = np.full(n_states, np.nan, dtype=np.float64)
@@ -379,7 +379,7 @@ if __name__ == "__main__":  # noqa: C901
     for i, rp in enumerate(remain_props.T):
         times_fit = times[fit_start[i] : fit_stop[i]]
         rp_fit = rp[fit_start[i] : fit_stop[i]]
-        popt_bur[i], perr_bur[i] = mdt.func.fit_burr12_sf(
+        popt_bur[i], perr_bur[i] = mdt.func.fit_burr12_sf_alt(
             xdata=times_fit,
             ydata=rp_fit,
             bounds=bounds_bur,
@@ -389,7 +389,7 @@ if __name__ == "__main__":  # noqa: C901
             fit_mse_bur[i] = np.nan
             fit_r2_bur[i] = np.nan
         else:
-            fit = mdt.func.burr12_sf(times_fit, *popt_bur[i])
+            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
             # Residual sum of squares.
             ss_res = np.nansum((rp_fit - fit) ** 2)
             # Mean squared error / mean squared residuals.
@@ -399,8 +399,17 @@ if __name__ == "__main__":  # noqa: C901
             # (Pseudo) coefficient of determination (R^2).
             # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
             fit_r2_bur[i] = 1 - (ss_res / ss_tot)
-    tau0_bur, beta_bur, delta_bur = popt_bur.T
-    tau0_bur_sd, beta_bur_sd, delta_bur_sd = perr_bur.T
+    tau0_bur, beta_bur, d_bur = popt_bur.T
+    tau0_bur_sd, beta_bur_sd, d_bur_sd = perr_bur.T
+    delta_bur = d_bur / beta_bur
+    delta_bur_sd = np.sqrt(  # Propagation of uncertainty.
+        delta_bur**2
+        * (
+            (d_bur_sd / d_bur) ** 2
+            + (beta_bur_sd / beta_bur) ** 2
+            - 2 * d_bur_sd * beta_bur_sd / (d_bur * beta_bur)
+        )
+    )
     lts_bur_mom1 = (
         tau0_bur
         * gamma(delta_bur - 1 / beta_bur)
@@ -560,10 +569,11 @@ if __name__ == "__main__":  # noqa: C901
         + "   function (stretched exponential, survival function of the\n"
         + "   Weibull distribution):\n"
         + "     I_kww(t) = exp[-(t/tau0_kww)^beta_kww]\n"
-        + "   Thereby, tau0_kww is confined to the interval [{}, {}]\n".format(
+        + "   Thereby, tau0_kww is confined to the interval\n"
+        + "   [{:.4f}, {:.4f}] and beta_kww is confined to the\n".format(
             bounds_kww[0][0], bounds_kww[1][0]
         )
-        + "   and beta_kww is confined to the interval [{}, {}].\n".format(
+        + "   interval [{:.4f}, {:.4f}].\n".format(
             bounds_kww[0][1], bounds_kww[1][1]
         )
         + "   The average lifetime <t_kww^n> is calculated according to the\n"
@@ -575,17 +585,19 @@ if __name__ == "__main__":  # noqa: C901
         + "6) The remain probability function p(t) is fitted by the survival\n"
         + "   function of a Burr Type XII distribution:\n"
         + "     I_bur(t) = 1 / [1 + (t/tau0_bur)^beta_bur]^delta_bur\n"
-        + "   Thereby, tau0_bur is confined to the interval [{}, {}]\n".format(
+        + "   Thereby, tau0_bur is confined to the interval\n"
+        + "   [{:.4f}, {:.4f}], beta_bur is confined to the interval\n".format(
             bounds_bur[0][0], bounds_bur[1][0]
         )
-        + "   beta_kww is confined to the interval [{}, {}]  and\n".format(
+        + "   [{:.4f}, {:.4f}] and beta_bur * delta_bur is confined\n".format(
             bounds_bur[0][1], bounds_bur[1][1]
         )
-        + "   delta_bur is confined to the interval [{}, {}].\n".format(
+        + "   to the interval [{:.4f}, {:.4f}].\n".format(
             bounds_bur[0][2], bounds_bur[1][2]
         )
         + "   The average lifetime <t_bur^n> is calculated according to the\n"
-        + "   alternative expectation formula [1]:\n"
+        + "   alternative expectation\n"
+        + "   formula [1]:\n"
         + "     <t_bur^n> = n * int_0^inf t^(n-1) I_bur(t) dt\n"
         + "               = tau0_bur^n * Gamma(delta_bur - n/beta_bur) *\n"
         + "                 Gamma(1 + n/beta_bur) / Gamma(delta_bur)\n"
@@ -1076,7 +1088,7 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_props.T):
             times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.burr12_sf(times_fit, *popt_bur[i])
+            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
             lines = ax.plot(times, rp, label=r"$%d$" % states[i], linewidth=1)
             ax.plot(
                 times_fit,
@@ -1107,7 +1119,7 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_props.T):
             times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.burr12_sf(times_fit, *popt_bur[i])
+            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
             res = rp[fit_start[i] : fit_stop[i]] - fit
             ax.plot(times_fit, res, label=r"$%d$" % states[i])
         ax.set(
