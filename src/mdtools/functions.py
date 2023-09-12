@@ -516,6 +516,9 @@ def burr12_sf(t, tau=1, beta=1, delta=1):
 
     See Also
     --------
+    :func:`mdtools.functions.burr12_sf_alt` :
+        Alternative parameterization of the Burr Type XII survival
+        function
     :func:`mdtools.functions.fit_burr12_sf` :
         Fit the survival function of the Burr Type XII distribution
 
@@ -667,3 +670,68 @@ def fit_burr12_sf(xdata, ydata, ysd=None, return_valid=False, **kwargs):
         return popt, perr, valid
     else:
         return popt, perr
+
+
+def burr12_sf_alt(t, tau=1, beta=1, d=1):
+    r"""
+    Survival function of the Burr Type XII distribution function:
+
+    .. math::
+
+        S(t) =
+        \frac{
+            1
+        }{
+            \left[
+                1 + \left( \frac{t}{\tau} \right)^\beta
+            \right]^{\frac{d}{\beta}}
+        }
+
+    This function uses an alternative parameterization compared to
+    :func:`burr12_sf` by setting :math:`d = \beta \delta`.  The
+    advantage is that one can know specify bounds for
+    :math:`\beta \delta` when fitting data with this function.  One
+    might want to do this, because the n-th raw moment of the Burr Type
+    XII distribution, which is
+
+    .. math::
+
+        \langle t^n \rangle =
+        \tau^n
+        \frac{
+            \Gamma\left( \delta - \frac{n}{\beta}\right)
+            \Gamma\left( 1      + \frac{b}{\beta}\right)
+        }{
+            \Gamma(\delta)
+        },
+
+    only exists if :math:`\beta \delta > n`.
+
+    Parameters
+    ----------
+    t : scalar or array_like
+        Value(s) at which to evaluate :math:`f(t)`.
+    tau : scalar or array_like, optional
+        Scale parameter(s).
+    beta : scalar or array_like, optional
+        Shape parameter(s).
+    d : scalar or array_like, optional
+        Shape parameter(s).
+
+    Returns
+    -------
+    sf : scalar or numpy.ndarray
+        The outcome of :math:`S(t)`.  :math:`S(t)` is evaluated
+        element-wise if at least one of the input arguments is an array.
+
+    See Also
+    --------
+    :func:`mdtools.functions.burr12_sf` :
+        Original parameterization of the Burr Type XII survival function
+
+    Notes
+    -----
+    If more than one input argument is an array, all arrays must be
+    broadcastable.
+    """
+    return (1 + (t / tau) ** beta) ** (-(d / beta))
