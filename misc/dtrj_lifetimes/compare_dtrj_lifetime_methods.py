@@ -348,27 +348,30 @@ if __name__ == "__main__":  # noqa: C901
     popt_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
     perr_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
     fit_r2_kww = np.full(n_states, np.nan, dtype=np.float64)
-    fit_mse_kww = np.full(n_states, np.nan, dtype=np.float64)
+    fit_rmse_kww = np.full(n_states, np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
         times_fit = times[fit_start[i] : fit_stop[i]]
         rp_fit = rp[fit_start[i] : fit_stop[i]]
-        popt_kww[i], perr_kww[i] = mdt.func.fit_kww(
+        popt_kww[i], perr_kww[i], valid = mdt.func.fit_kww(
             xdata=times_fit,
             ydata=rp_fit,
+            return_valid=True,
             bounds=bounds_kww,
             method=fit_method,
         )
+        times_fit = times_fit[valid]
+        rp_fit = rp_fit[valid]
         if np.any(np.isnan(popt_kww[i])):
-            fit_mse_kww[i] = np.nan
+            fit_rmse_kww[i] = np.nan
             fit_r2_kww[i] = np.nan
         else:
             fit = mdt.func.kww(times_fit, *popt_kww[i])
             # Residual sum of squares.
-            ss_res = np.nansum((rp_fit - fit) ** 2)
-            # Mean squared error / mean squared residuals.
-            fit_mse_kww[i] = ss_res / len(fit)
+            ss_res = np.sum((rp_fit - fit) ** 2)
+            # Root-mean-square error / root-mean-square residuals.
+            fit_rmse_kww[i] = np.sqrt(ss_res / len(fit))
             # Total sum of squares.
-            ss_tot = np.nansum((rp_fit - np.nanmean(rp_fit)) ** 2)
+            ss_tot = np.sum((rp_fit - np.mean(rp_fit)) ** 2)
             # (Pseudo) coefficient of determination (R^2).
             # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
             fit_r2_kww[i] = 1 - (ss_res / ss_tot)
@@ -388,27 +391,30 @@ if __name__ == "__main__":  # noqa: C901
     popt_bur = np.full((n_states, 3), np.nan, dtype=np.float64)
     perr_bur = np.full((n_states, 3), np.nan, dtype=np.float64)
     fit_r2_bur = np.full(n_states, np.nan, dtype=np.float64)
-    fit_mse_bur = np.full(n_states, np.nan, dtype=np.float64)
+    fit_rmse_bur = np.full(n_states, np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
         times_fit = times[fit_start[i] : fit_stop[i]]
         rp_fit = rp[fit_start[i] : fit_stop[i]]
-        popt_bur[i], perr_bur[i] = mdt.func.fit_burr12_sf_alt(
+        popt_bur[i], perr_bur[i], valid = mdt.func.fit_burr12_sf_alt(
             xdata=times_fit,
             ydata=rp_fit,
+            return_valid=True,
             bounds=bounds_bur,
             method=fit_method,
         )
+        times_fit = times_fit[valid]
+        rp_fit = rp_fit[valid]
         if np.any(np.isnan(popt_bur[i])):
-            fit_mse_bur[i] = np.nan
+            fit_rmse_bur[i] = np.nan
             fit_r2_bur[i] = np.nan
         else:
             fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
             # Residual sum of squares.
-            ss_res = np.nansum((rp_fit - fit) ** 2)
-            # Mean squared error / mean squared residuals.
-            fit_mse_bur[i] = ss_res / len(fit)
+            ss_res = np.sum((rp_fit - fit) ** 2)
+            # Root-mean-square error / root-mean-square residuals.
+            fit_rmse_bur[i] = np.sqrt(ss_res / len(fit))
             # Total sum of squares.
-            ss_tot = np.nansum((rp_fit - np.nanmean(rp_fit)) ** 2)
+            ss_tot = np.sum((rp_fit - np.mean(rp_fit)) ** 2)
             # (Pseudo) coefficient of determination (R^2).
             # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
             fit_r2_bur[i] = 1 - (ss_res / ss_tot)
@@ -515,7 +521,7 @@ if __name__ == "__main__":  # noqa: C901
         beta_kww,  # 12
         beta_kww_sd,  # 13
         fit_r2_kww,  # 14
-        fit_mse_kww,  # 15
+        fit_rmse_kww,  # 15
         # Method 6 (integral of Burr fit).
         lts_bur_mom1,  # 16
         lts_bur_mom2,  # 17
@@ -526,7 +532,7 @@ if __name__ == "__main__":  # noqa: C901
         delta_bur,  # 22
         delta_bur_sd,  # 23
         fit_r2_bur,  # 24
-        fit_mse_bur,  # 25
+        fit_rmse_bur,  # 25
         # Fit region
         fit_start,  # 26
         fit_stop,  # 27
@@ -657,8 +663,7 @@ if __name__ == "__main__":  # noqa: C901
         + " 12 Fit parameter beta_kww\n"
         + " 13 Standard deviation of beta_kww\n"
         + " 14 Coefficient of determination of the fit (R^2 value)\n"
-        + " 15 Mean squared error of the fit (mean squared residuals) /"
-        + " frames^2\n"
+        + " 15 Root-mean-square error (RMSE) of the fit / frames\n"
         + "\n"
         + "  Lifetime from Method 6 (integral of Burr fit)\n"
         + " 16 1st moment <t_bur> / frames\n"
@@ -670,8 +675,7 @@ if __name__ == "__main__":  # noqa: C901
         + " 22 Fit parameter delta_burr\n"
         + " 23 Standard deviation of delta_burr\n"
         + " 24 Coefficient of determination of the fit (R^2 value)\n"
-        + " 25 Mean squared error of the fit (mean squared residuals) /"
-        + " frames^2\n"
+        + " 25 Root-mean-square error (RMSE) of the fit / frames\n"
         + "\n"
         + "  Fit region for all fitting methods\n"
         + " 26 Start of fit region (inclusive) / frames\n"
@@ -719,7 +723,7 @@ if __name__ == "__main__":  # noqa: C901
     betas = [beta_kww, beta_bur]
     deltas = [delta_bur]
     fit_r2s = [fit_r2_kww, fit_r2_bur]
-    fit_mses = [fit_mse_kww, fit_mse_bur]
+    fit_rmses = [fit_rmse_kww, fit_rmse_bur]
     if args.INFILE_PARAM is not None:
         lts_mom1s.append(params[[4, 8, 10]])  # lts_dst, lts_unc, lts_cen
         tau0s.append(tau0_true)
@@ -730,7 +734,7 @@ if __name__ == "__main__":  # noqa: C901
     betas = np.vstack(betas)
     deltas = np.vstack(deltas)
     fit_r2s = np.vstack(fit_r2s)
-    fit_mses = np.vstack(fit_mses)
+    fit_rmses = np.vstack(fit_rmses)
 
     xlabel = r"State Index"
     xlim = (np.min(states) - 0.5, np.max(states) + 0.5)
@@ -1048,12 +1052,12 @@ if __name__ == "__main__":  # noqa: C901
             pdf.savefig()
         plt.close()
 
-        # Plot mean squared error.
+        # Plot root-mean-square error.
         fig, ax = plt.subplots(clear=True)
         # Method 6 (Burr fit).
         ax.plot(
             states,
-            fit_mse_bur,
+            fit_rmse_bur,
             label="Burr",
             color="tab:cyan",
             marker="^",
@@ -1061,12 +1065,12 @@ if __name__ == "__main__":  # noqa: C901
         # Method 5 (Kohlrausch fit).
         ax.plot(
             states,
-            fit_mse_kww,
+            fit_rmse_kww,
             label="Kohlrausch",
             color="tab:blue",
             marker="v",
         )
-        ax.set(xlabel=xlabel, ylabel=r"MSE / Frames$^2$", xlim=xlim)
+        ax.set(xlabel=xlabel, ylabel=r"RMSE / Frames", xlim=xlim)
         ylim = ax.get_ylim()
         if ylim[0] < 0:
             ax.set_ylim(0, ylim[1])
@@ -1074,11 +1078,11 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        if np.any(np.isfinite(fit_mses)):
-            # Set y axis to log scale (mean squared error).
+        if np.any(np.isfinite(fit_rmses)):
+            # Set y axis to log scale (root-mean-square error).
             # Round y limits to next lower and higher power of ten.
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_mses)))
+            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_rmses)))
             ymax = 10 ** np.ceil(np.log10(ylim[1]))
             ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
