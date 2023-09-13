@@ -879,14 +879,16 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(loc="upper left", ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        # Set y axis to log scale (lifetimes vs. state indices).
-        # Round y limits to next lower and higher power of ten.
-        ylim = ax.get_ylim()
-        ymin = 10 ** np.floor(np.log10(np.nanmin(lts_mom1s)))
-        ymax = 10 ** np.ceil(np.log10(ylim[1]))
-        ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        pdf.savefig()
+        valid = np.isfinite(lts_mom1s) & (lts_mom1s > 0)
+        if np.any(valid):
+            # Set y axis to log scale (lifetimes vs. state indices).
+            # Round y limits to next lower and higher power of ten.
+            ylim = ax.get_ylim()
+            ymin = 10 ** np.floor(np.log10(np.nanmin(lts_mom1s[valid])))
+            ymax = 10 ** np.ceil(np.log10(ylim[1]))
+            ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            pdf.savefig()
         plt.close()
 
         # Plot scale parameter tau0.
@@ -931,11 +933,12 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(loc="upper left", **mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        if np.any(np.isfinite(tau0s)):
+        valid = np.isfinite(tau0s) & (tau0s > 0)
+        if np.any(valid):
             # Set y axis to log scale (scale parameter tau0).
             # Round y limits to next lower and higher power of ten.
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(tau0s)))
+            ymin = 10 ** np.floor(np.log10(np.nanmin(tau0s[valid])))
             ymax = 10 ** np.ceil(np.log10(ylim[1]))
             ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
@@ -984,11 +987,12 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        if np.any(np.isfinite(betas)):
+        valid = np.isfinite(betas) & (betas > 0)
+        if np.any(valid):
             # Set y axis to log scale (shape parameter beta).
             # Round y limits to next lower and higher power of ten.
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(betas)))
+            ymin = 10 ** np.floor(np.log10(np.nanmin(betas[valid])))
             ymax = 10 ** np.ceil(np.log10(ylim[1]))
             ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
@@ -1028,11 +1032,12 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        if np.any(np.isfinite(deltas)):
+        valid = np.isfinite(deltas) & (deltas > 0)
+        if np.any(valid):
             # Set y axis to log scale (shape parameter delta).
             # Round y limits to next lower and higher power of ten.
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(deltas)))
+            ymin = 10 ** np.floor(np.log10(np.nanmin(deltas[valid])))
             ymax = 10 ** np.ceil(np.log10(ylim[1]))
             ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
@@ -1075,11 +1080,12 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        if np.any(np.isfinite(fit_r2s)):
+        valid = np.isfinite(fit_r2s) & (fit_r2s > 0)
+        if np.any(valid):
             # Set y axis to log scale (R^2 value of the fits).
             # Round `ymin` to next lower power of ten.
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_r2s)))
+            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_r2s[valid])))
             ymax = 2
             ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
@@ -1120,11 +1126,12 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        if np.any(np.isfinite(fit_rmses)):
+        valid = np.isfinite(fit_rmses) & (fit_rmses > 0)
+        if np.any(valid):
             # Set y axis to log scale (root-mean-square error).
             # Round y limits to next lower and higher power of ten.
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_rmses)))
+            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_rmses[valid])))
             ymax = 10 ** np.ceil(np.log10(ylim[1]))
             ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
