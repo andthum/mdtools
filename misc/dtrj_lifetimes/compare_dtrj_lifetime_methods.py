@@ -466,6 +466,7 @@ if __name__ == "__main__":  # noqa: C901
         lts_unc_mom1, lts_unc_mom2 = params[8:10]
         # Moments of the censored lifetimes.
         lts_cen_mom1, lts_cen_mom2 = params[10:12]
+
         # Lifetime distributions used to generate the trajectory.
         dist = None
         with mdt.fh.xopen(args.INFILE_PARAM, "r") as file:
@@ -497,6 +498,25 @@ if __name__ == "__main__":  # noqa: C901
             ]
         else:
             raise ValueError("Unknown lifetime distribution: {}".format(dist))
+
+        # R^2 and RMSE if we treat the remain probability as fit of the
+        # true survival function.
+        rp_r2 = np.full(n_states, np.nan, dtype=np.float64)
+        rp_rmse = np.full(n_states, np.nan, dtype=np.float64)
+        for i, rp in enumerate(remain_props.T):
+            valid = np.isfinite(rp)
+            rp_valid = rp[valid]
+            # True survival function.
+            sf_true = lt_dists[i].sf(times[valid])
+            # Residual sum of squares.
+            ss_res = np.sum((sf_true - rp_valid) ** 2)
+            # Root-mean-square error / root-mean-square residuals.
+            rp_rmse[i] = np.sqrt(ss_res / len(rp_valid))
+            # Total sum of squares.
+            ss_tot = np.sum((sf_true - np.mean(sf_true)) ** 2)
+            # (Pseudo) coefficient of determination (R^2).
+            # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
+            rp_r2[i] = 1 - (ss_res / ss_tot)
 
     print("\n")
     print("Creating text output...")
@@ -539,6 +559,7 @@ if __name__ == "__main__":  # noqa: C901
     ]
     if args.INFILE_PARAM is not None:
         data += params[1:12].tolist()
+        data += [rp_r2, rp_rmse]
     data = np.column_stack(data)
     header = (
         "State lifetimes.\n"
@@ -697,6 +718,9 @@ if __name__ == "__main__":  # noqa: C901
             + " frames^2\n"
             + " 37 1st moment of the censored lifetimes <t_cen> / frames\n"
             + " 38 2nd moment of the censored lifetimes <t_cen^2> / frames^2\n"
+            + " 39 R^2 if the remain probability is seen as fit of the\n"
+            + "    survival function (SF) of the true distribution\n"
+            + " 40 RMSE of the remain probability to the true SF\n"
         )
     header += "\n" + "Column number:\n"
     header += "{:>14d}".format(1)
@@ -729,6 +753,8 @@ if __name__ == "__main__":  # noqa: C901
         tau0s.append(tau0_true)
         betas.append(beta_true)
         deltas.append(delta_true)
+        fit_r2s.append(rp_r2)
+        fit_rmses.append(rp_rmse)
     lts_mom1s = np.vstack(lts_mom1s)
     tau0s = np.vstack(tau0s)
     betas = np.vstack(betas)
@@ -1031,6 +1057,14 @@ if __name__ == "__main__":  # noqa: C901
             color="tab:blue",
             marker="v",
         )
+        if args.INFILE_PARAM is not None:
+            ax.plot(
+                states,
+                rp_r2,
+                label="Remain Prob.",
+                color="tab:green",
+                marker="s",
+            )
         ax.set(
             xlabel=xlabel,
             ylabel=r"Coeff. of Determ. $R^2$",
@@ -1070,6 +1104,14 @@ if __name__ == "__main__":  # noqa: C901
             color="tab:blue",
             marker="v",
         )
+        if args.INFILE_PARAM is not None:
+            ax.plot(
+                states,
+                rp_rmse,
+                label="Remain Prob.",
+                color="tab:green",
+                marker="s",
+            )
         ax.set(xlabel=xlabel, ylabel=r"RMSE / Frames", xlim=xlim)
         ylim = ax.get_ylim()
         if ylim[0] < 0:
