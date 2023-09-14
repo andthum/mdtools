@@ -555,7 +555,7 @@ if __name__ == "__main__":  # noqa: C901
         fit_rmse_bur,  # 25
         # Fit region
         fit_start,  # 26
-        fit_stop,  # 27
+        fit_stop - 1,  # 27
     ]
     if args.INFILE_PARAM is not None:
         data += params[1:12].tolist()
@@ -1141,7 +1141,7 @@ if __name__ == "__main__":  # noqa: C901
         # Plot fitted region.
         fig, ax = plt.subplots(clear=True)
         ax.plot(states, fit_start, label="Start", marker="^")
-        ax.plot(states, fit_stop, label="End", marker="v")
+        ax.plot(states, fit_stop - 1, label="End", marker="v")
         ax.set(xlabel=xlabel, ylabel="Fitted Region / Frames", xlim=xlim)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.set_xticks([], minor=True)
