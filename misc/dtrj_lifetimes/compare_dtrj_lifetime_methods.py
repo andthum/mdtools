@@ -684,7 +684,7 @@ if __name__ == "__main__":  # noqa: C901
         + " 12 Fit parameter beta_kww\n"
         + " 13 Standard deviation of beta_kww\n"
         + " 14 Coefficient of determination of the fit (R^2 value)\n"
-        + " 15 Root-mean-square error (RMSE) of the fit / frames\n"
+        + " 15 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Lifetime from Method 6 (integral of Burr fit)\n"
         + " 16 1st moment <t_bur> / frames\n"
@@ -696,7 +696,7 @@ if __name__ == "__main__":  # noqa: C901
         + " 22 Fit parameter delta_burr\n"
         + " 23 Standard deviation of delta_burr\n"
         + " 24 Coefficient of determination of the fit (R^2 value)\n"
-        + " 25 Root-mean-square error (RMSE) of the fit / frames\n"
+        + " 25 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Fit region for all fitting methods\n"
         + " 26 Start of fit region (inclusive) / frames\n"
@@ -891,7 +891,7 @@ if __name__ == "__main__":  # noqa: C901
             pdf.savefig()
         plt.close()
 
-        # Plot scale parameter tau0.
+        # Plot fit parameter tau0.
         fig, ax = plt.subplots(clear=True)
         # Method 6 (Burr fit).
         ax.errorbar(
@@ -923,7 +923,7 @@ if __name__ == "__main__":  # noqa: C901
             )
         ax.set(
             xlabel=xlabel,
-            ylabel=r"Scale Parameter $\tau_0$ / Frames",
+            ylabel=r"Fit Parameter $\tau_0$ / Frames",
             xlim=xlim,
         )
         ylim = ax.get_ylim()
@@ -935,7 +935,7 @@ if __name__ == "__main__":  # noqa: C901
         pdf.savefig()
         valid = np.isfinite(tau0s) & (tau0s > 0)
         if np.any(valid):
-            # Set y axis to log scale (scale parameter tau0).
+            # Set y axis to log scale (fit parameter tau0).
             # Round y limits to next lower and higher power of ten.
             ylim = ax.get_ylim()
             ymin = 10 ** np.floor(np.log10(np.nanmin(tau0s[valid])))
@@ -945,7 +945,7 @@ if __name__ == "__main__":  # noqa: C901
             pdf.savefig()
         plt.close()
 
-        # Plot shape parameter beta.
+        # Plot fit parameter beta.
         fig, ax = plt.subplots(clear=True)
         # Method 6 (Burr fit).
         ax.errorbar(
@@ -977,7 +977,7 @@ if __name__ == "__main__":  # noqa: C901
             )
         ax.set(
             xlabel=xlabel,
-            ylabel=r"Shape Parameter $\beta$",
+            ylabel=r"Fit Parameter $\beta$",
             xlim=xlim,
         )
         ylim = ax.get_ylim()
@@ -989,7 +989,7 @@ if __name__ == "__main__":  # noqa: C901
         pdf.savefig()
         valid = np.isfinite(betas) & (betas > 0)
         if np.any(valid):
-            # Set y axis to log scale (shape parameter beta).
+            # Set y axis to log scale (fit parameter beta).
             # Round y limits to next lower and higher power of ten.
             ylim = ax.get_ylim()
             ymin = 10 ** np.floor(np.log10(np.nanmin(betas[valid])))
@@ -999,7 +999,7 @@ if __name__ == "__main__":  # noqa: C901
             pdf.savefig()
         plt.close()
 
-        # Plot shape parameter delta.
+        # Plot fit parameter delta.
         fig, ax = plt.subplots(clear=True)
         # Method 6 (Burr fit).
         ax.errorbar(
@@ -1022,7 +1022,7 @@ if __name__ == "__main__":  # noqa: C901
             )
         ax.set(
             xlabel=xlabel,
-            ylabel=r"Shape Parameter $\delta$",
+            ylabel=r"Fit Parameter $\delta$",
             xlim=xlim,
         )
         ylim = ax.get_ylim()
@@ -1034,7 +1034,7 @@ if __name__ == "__main__":  # noqa: C901
         pdf.savefig()
         valid = np.isfinite(deltas) & (deltas > 0)
         if np.any(valid):
-            # Set y axis to log scale (shape parameter delta).
+            # Set y axis to log scale (fit parameter delta).
             # Round y limits to next lower and higher power of ten.
             ylim = ax.get_ylim()
             ymin = 10 ** np.floor(np.log10(np.nanmin(deltas[valid])))
@@ -1118,7 +1118,7 @@ if __name__ == "__main__":  # noqa: C901
                 color="tab:green",
                 marker="s",
             )
-        ax.set(xlabel=xlabel, ylabel=r"RMSE / Frames", xlim=xlim)
+        ax.set(xlabel=xlabel, ylabel=r"RMSE", xlim=xlim)
         ylim = ax.get_ylim()
         if ylim[0] < 0:
             ax.set_ylim(0, ylim[1])
