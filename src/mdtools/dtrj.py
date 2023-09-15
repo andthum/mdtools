@@ -2209,6 +2209,7 @@ def lifetimes(
 def lifetimes_per_state(
     dtrj,
     axis=-1,
+    uncensored=False,
     discard_neg_start=False,
     discard_all_neg=False,
     return_states=False,
@@ -2232,6 +2233,12 @@ def lifetimes_per_state(
         the number of frames, set `axis` to ``-1``.  If you parse a
         transposed discrete trajectory of shape ``(f, n)``, set `axis`
         to ``0``.
+    uncensored : bool, optional
+        If ``True`` only take into account uncensored states, i.e.
+        states whose start and end lie within the trajectory.  In other
+        words, discard the truncated (censored) states at the beginning
+        and end of the trajectory.  For these states the start/end time
+        is unknown.
     discard_neg_start : bool, optional
         If ``True``, discard the lifetimes of all negative states (see
         notes of :func:`mdtools.dtrj.lifetimes`).  This is equivalent to
@@ -2304,61 +2311,12 @@ def lifetimes_per_state(
 
     Notes
     -----
-    State lifetimes are calculated by simply counting the number of
-    frames a given compound stays in a given state.  Note that lifetimes
-    calculated in this way can at maximum be as long as the trajectory
-    and are usually biased to lower values because of edge effects:  At
-    the beginning and end of the trajectory it is impossible to say how
-    long a compound has already been it's initial state or how long it
-    will stay in it's final state.  For unbiased estimates of the
-    average state lifetime use :func:`mdtools.dtrj.trans_rate_per_state`
-    or :func:`mdtools.dtrj.remain_prob_discrete`.
-
-    See :func:`mdtools.dtrj.lifetimes` for details about valid and
-    invalid states (`discard_neg_start` and `discard_all_neg`).
+    See :func:`mdtools.dtrj.lifetimes` for details about how state
+    lifetimes are calculated and about valid and invalid states
+    (`discard_neg_start` and `discard_all_neg`).
 
     Examples
     --------
-    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
-    ...                  [2, 2, 3, 3, 3, 1],
-    ...                  [3, 3, 3, 1, 2, 2],
-    ...                  [1, 3, 3, 3, 2, 2]])
-    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
-    ...     dtrj,
-    ...     return_states=True,
-    ...     return_cmp_ix=True,
-    ...     return_avg=True,
-    ...     return_std=True,
-    ... )
-    >>> lt
-    [array([1, 1, 1, 1]), array([2, 2, 2, 2]), array([3, 3, 3, 3])]
-    >>> states
-    array([1, 2, 3])
-    >>> cmp_ix
-    [array([0, 1, 2, 3]), array([0, 1, 2, 3]), array([0, 1, 2, 3])]
-    >>> lt_avg
-    array([1., 2., 3.])
-    >>> lt_std
-    array([0., 0., 0.])
-    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
-    ...     dtrj,
-    ...     axis=0,
-    ...     return_states=True,
-    ...     return_cmp_ix=True,
-    ...     return_avg=True,
-    ...     return_std=True,
-    ... )
-    >>> lt
-    [array([1, 1, 1, 1]), array([1, 2, 1, 2, 2]), array([1, 2, 3, 2, 1, 2, 1])]
-    >>> states
-    array([1, 2, 3])
-    >>> cmp_ix
-    [array([0, 0, 3, 5]), array([0, 1, 2, 4, 5]), array([0, 1, 2, 3, 3, 4, 5])]
-    >>> lt_avg
-    array([1.        , 1.6       , 1.71428571])
-    >>> lt_std
-    array([0.        , 0.48989795, 0.69985421])
-
     >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
     ...                  [2, 2, 3, 3, 3, 1],
     ...                  [6, 6, 6, 1, 4, 4],
@@ -2398,6 +2356,83 @@ def lifetimes_per_state(
     array([1.        , 1.33333333, 1.5       , 2.        , 1.5       ])
     >>> lt_std
     array([0.        , 0.47140452, 0.5       , 0.        , 0.5       ])
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([2, 2, 2, 2]), array([3, 3, 3, 3])]
+    >>> states
+    array([1, 2, 3])
+    >>> cmp_ix
+    [array([0, 1, 2, 3]), array([0, 1, 2, 3]), array([0, 1, 2, 3])]
+    >>> lt_avg
+    array([1., 2., 3.])
+    >>> lt_std
+    array([0., 0., 0.])
+    >>> lt_unc, states_unc, cmp_ix_unc, lt_avg_unc, lt_std_unc = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt_unc
+    [array([1]), array([2]), array([3, 3])]
+    >>> states_unc
+    array([1, 2, 3])
+    >>> cmp_ix_unc
+    [array([2]), array([0]), array([1, 3])]
+    >>> lt_avg_unc
+    array([1., 2., 3.])
+    >>> lt_std_unc
+    array([0., 0., 0.])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=0,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([1, 2, 1, 2, 2]), array([1, 2, 3, 2, 1, 2, 1])]
+    >>> states
+    array([1, 2, 3])
+    >>> cmp_ix
+    [array([0, 0, 3, 5]), array([0, 1, 2, 4, 5]), array([0, 1, 2, 3, 3, 4, 5])]
+    >>> lt_avg
+    array([1.        , 1.6       , 1.71428571])
+    >>> lt_std
+    array([0.        , 0.48989795, 0.69985421])
+    >>> lt_unc, states_unc, cmp_ix_unc, lt_avg_unc, lt_std_unc = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=0,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt_unc
+    [array([1, 1]), array([1]), array([1])]
+    >>> states_unc
+    array([1, 2, 3])
+    >>> cmp_ix_unc
+    [array([3, 5]), array([0]), array([0])]
+    >>> lt_avg_unc
+    array([1., 1., 1.])
+    >>> lt_std_unc
+    array([0., 0., 0.])
 
     >>> dtrj = np.array([[ 1,  2,  2,  1,  1,  1],
     ...                  [ 2,  2,  3,  3,  3,  2],
@@ -2632,10 +2667,51 @@ def lifetimes_per_state(
     array([1.5       , 1.66666667, 1.        ])
     >>> lt_std
     array([0.5       , 0.74535599, 0.        ])
+
+    >>> dtrj = np.array([[1, 2, 2],
+    ...                  [3, 3, 3]])
+    >>> lt_unc, states_unc, cmp_ix_unc, lt_avg_unc, lt_std_unc = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt_unc
+    [array([], dtype=int64)]
+    >>> states_unc
+    array([], dtype=int64)
+    >>> cmp_ix_unc
+    [array([], dtype=int64)]
+    >>> lt_avg_unc
+    array([nan])
+    >>> lt_std_unc
+    array([nan])
+    >>> lt_unc, states_unc, cmp_ix_unc, lt_avg_unc, lt_std_unc = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=0,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt_unc
+    [array([], dtype=int64)]
+    >>> states_unc
+    array([], dtype=int64)
+    >>> cmp_ix_unc
+    [array([], dtype=int64)]
+    >>> lt_avg_unc
+    array([nan])
+    >>> lt_std_unc
+    array([nan])
     """  # noqa: E501, W505
     lt, states, cmp_ix = mdt.dtrj.lifetimes(
         dtrj,
         axis=axis,
+        uncensored=uncensored,
         discard_neg_start=discard_neg_start,
         discard_all_neg=discard_all_neg,
         return_states=True,
@@ -2659,12 +2735,24 @@ def lifetimes_per_state(
     if return_avg:
         if kwargs_avg is None:
             kwargs_avg = {}
-        lt_avg = np.array([np.mean(lt_state, **kwargs_avg) for lt_state in lt])
+        lt_avg = np.array(
+            [
+                np.mean(lt_state, **kwargs_avg)
+                if len(lt_state) > 0
+                else np.nan
+                for lt_state in lt
+            ]
+        )
         ret += (lt_avg,)
     if return_std:
         if kwargs_std is None:
             kwargs_std = {}
-        lt_std = np.array([np.std(lt_state, **kwargs_std) for lt_state in lt])
+        lt_std = np.array(
+            [
+                np.std(lt_state, **kwargs_std) if len(lt_state) > 0 else np.nan
+                for lt_state in lt
+            ]
+        )
         ret += (lt_std,)
     if len(ret) == 1:
         ret = ret[0]
