@@ -1140,7 +1140,7 @@ def trans_rate(
             trans_ix_end = tuple(trans_ix_end)
             valid_end = dtrj[trans_ix_end] >= 0
             # Remove frames in which a compound resides in a positive
-            # state that if followed by a negative state from the number
+            # state that is followed by a negative state from the number
             # of valid frames:
             # Start points of single compound trajectories.
             trj_starts = np.diff(trans_ix[ax_cmp])
@@ -1542,6 +1542,7 @@ def trans_rate_per_state(
 def lifetimes(
     dtrj,
     axis=-1,
+    uncensored=False,
     discard_neg_start=False,
     discard_all_neg=False,
     return_states=False,
@@ -1561,6 +1562,12 @@ def lifetimes(
         the number of frames, set `axis` to ``-1``.  If you parse a
         transposed discrete trajectory of shape ``(f, n)``, set `axis`
         to ``0``.
+    uncensored : bool, optional
+        If ``True`` only take into account uncensored states, i.e.
+        states whose start and end lie within the trajectory.  In other
+        words, discard the truncated (censored) states at the beginning
+        and end of the trajectory.  For these states the start/end time
+        is unknown.
     discard_neg_start : bool, optional
         If ``True``, discard the lifetimes of all negative states (see
         notes).  This is equivalent to discarding all transitions
@@ -1611,13 +1618,20 @@ def lifetimes(
     -----
     State lifetimes are calculated by simply counting the number of
     frames a given compound stays in a given state.  Note that lifetimes
-    calculated in this way can at maximum be as long as the trajectory
-    and are usually biased to lower values because of edge effects:  At
-    the beginning and end of the trajectory it is impossible to say how
-    long a compound has already been it's initial state or how long it
-    will stay in it's final state.  For unbiased estimates of the
-    average state lifetime use :func:`mdtools.dtrj.trans_rate` or
-    :func:`mdtools.dtrj.remain_prob`.
+    calculated in this way are usually biased to lower values because of
+    the limited length of the trajectory and because of
+    truncation/censoring at the trajectory edges: At the beginning and
+    end of the trajectory it is impossible to say how long a compound
+    has already been it's initial state or how long it will stay in it's
+    final state.  For better estimates of the average state lifetime use
+    :func:`mdtools.dtrj.trans_rate` or :func:`mdtools.dtrj.remain_prob`.
+
+    If `uncensored` is ``True``, the truncated states at the trajectory
+    edges are ignored.  Thus, lifetimes calculated in this way can at
+    maximum be as long as the trajectory minus the first and last frame.
+    Depending on the length of the trajectory and the average state
+    lifetime, uncensored counting might waste a significant amount of
+    the trajectory.
 
     **Valid and Invalid States**
 
@@ -1659,45 +1673,6 @@ def lifetimes(
     --------
     >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
     ...                  [2, 2, 3, 3, 3, 1],
-    ...                  [3, 3, 3, 1, 2, 2],
-    ...                  [1, 3, 3, 3, 2, 2]])
-    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
-    ...     dtrj, return_states=True, return_cmp_ix=True
-    ... )
-    >>> lt
-    array([1, 2, 3, 2, 3, 1, 3, 1, 2, 1, 3, 2])
-    >>> states
-    array([1, 2, 3, 2, 3, 1, 3, 1, 2, 1, 3, 2])
-    >>> cmp_ix
-    array([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
-    >>> mdt.nph.group_by(states, lt)
-    [array([1, 1, 1, 1]), array([2, 2, 2, 2]), array([3, 3, 3, 3])]
-    >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
-    [array([1, 2, 3]), array([2, 3, 1]), array([3, 1, 2]), array([1, 3, 2])]
-    >>> np.mean(lt)
-    2.0
-    >>> np.std(lt, ddof=1)
-    0.8528028654224418
-    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
-    ...     dtrj, axis=0, return_states=True, return_cmp_ix=True
-    ... )
-    >>> lt
-    array([1, 1, 1, 1, 2, 2, 1, 3, 2, 1, 1, 2, 2, 1, 1, 2])
-    >>> states
-    array([1, 2, 3, 1, 2, 3, 2, 3, 3, 1, 3, 3, 2, 3, 1, 2])
-    >>> cmp_ix
-    array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5])
-    >>> mdt.nph.group_by(states, lt)
-    [array([1, 1, 1, 1]), array([1, 2, 1, 2, 2]), array([1, 2, 3, 2, 1, 2, 1])]
-    >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
-    [array([1, 1, 1, 1]), array([2, 2]), array([1, 3]), array([2, 1, 1]), array([2, 2]), array([1, 1, 2])]
-    >>> np.mean(lt)
-    1.5
-    >>> np.std(lt, ddof=1)
-    0.6324555320336759
-
-    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
-    ...                  [2, 2, 3, 3, 3, 1],
     ...                  [6, 6, 6, 1, 4, 4],
     ...                  [1, 6, 6, 6, 4, 4]])
     >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
@@ -1726,6 +1701,70 @@ def lifetimes(
     [array([1, 1, 1, 1]), array([1, 2, 1]), array([1, 2, 2, 1]), array([2, 2]), array([1, 2, 2, 1])]
     >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
     [array([1, 1, 1, 1]), array([2, 2]), array([1, 1, 2]), array([2, 1, 1]), array([2, 2]), array([1, 1, 2])]
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
+    ...     dtrj, return_states=True, return_cmp_ix=True
+    ... )
+    >>> lt
+    array([1, 2, 3, 2, 3, 1, 3, 1, 2, 1, 3, 2])
+    >>> states
+    array([1, 2, 3, 2, 3, 1, 3, 1, 2, 1, 3, 2])
+    >>> cmp_ix
+    array([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+    >>> mdt.nph.group_by(states, lt)
+    [array([1, 1, 1, 1]), array([2, 2, 2, 2]), array([3, 3, 3, 3])]
+    >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
+    [array([1, 2, 3]), array([2, 3, 1]), array([3, 1, 2]), array([1, 3, 2])]
+    >>> np.mean(lt)
+    2.0
+    >>> np.std(lt, ddof=1)
+    0.8528028654224418
+    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt
+    array([2, 3, 1, 3])
+    >>> states
+    array([2, 3, 1, 3])
+    >>> cmp_ix
+    array([0, 1, 2, 3])
+    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
+    ...     dtrj, axis=0, return_states=True, return_cmp_ix=True
+    ... )
+    >>> lt
+    array([1, 1, 1, 1, 2, 2, 1, 3, 2, 1, 1, 2, 2, 1, 1, 2])
+    >>> states
+    array([1, 2, 3, 1, 2, 3, 2, 3, 3, 1, 3, 3, 2, 3, 1, 2])
+    >>> cmp_ix
+    array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5])
+    >>> mdt.nph.group_by(states, lt)
+    [array([1, 1, 1, 1]), array([1, 2, 1, 2, 2]), array([1, 2, 3, 2, 1, 2, 1])]
+    >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
+    [array([1, 1, 1, 1]), array([2, 2]), array([1, 3]), array([2, 1, 1]), array([2, 2]), array([1, 1, 2])]
+    >>> np.mean(lt)
+    1.5
+    >>> np.std(lt, ddof=1)
+    0.6324555320336759
+    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     axis=0,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt
+    array([1, 1, 1, 1])
+    >>> states
+    array([2, 3, 1, 1])
+    >>> cmp_ix
+    array([0, 0, 3, 5])
 
     >>> dtrj = np.array([[ 1,  2,  2,  1,  1,  1],
     ...                  [ 2,  2,  3,  3,  3,  2],
@@ -1832,6 +1871,18 @@ def lifetimes(
     [array([2, 2, 2, 2]), array([1]), array([1, 1, 1, 1, 1]), array([3, 3, 3, 3]), array([4])]
     >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
     [array([1, 2, 3]), array([2, 3, 1]), array([3, 1, 2]), array([1, 3, 2]), array([1, 4, 1])]
+    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt
+    array([2, 3, 1, 3, 4])
+    >>> states
+    array([-2,  3,  1,  3,  4])
+    >>> cmp_ix
+    array([0, 1, 2, 3, 4])
     >>> lt_start, states_start, cmp_ix_start = mdt.dtrj.lifetimes(
     ...     dtrj,
     ...     discard_neg_start=True,
@@ -1848,6 +1899,19 @@ def lifetimes(
     [array([1, 1, 1, 1, 1]), array([3, 3, 3, 3]), array([4])]
     >>> mdt.nph.group_by(cmp_ix_start, lt_start, assume_sorted=True)
     [array([1, 3]), array([3, 1]), array([3, 1]), array([1, 3]), array([1, 4])]
+    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     discard_neg_start=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt
+    array([3, 1, 3, 4])
+    >>> states
+    array([3, 1, 3, 4])
+    >>> cmp_ix
+    array([1, 2, 3, 4])
     >>> lt_all, states_all, cmp_ix_all = mdt.dtrj.lifetimes(
     ...     dtrj,
     ...     discard_all_neg=True,
@@ -1864,6 +1928,19 @@ def lifetimes(
     [array([1, 1, 1]), array([3, 3, 3])]
     >>> mdt.nph.group_by(cmp_ix_all, lt_all, assume_sorted=True)
     [array([3]), array([3, 1]), array([3]), array([1]), array([1])]
+    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     discard_all_neg=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt
+    array([3])
+    >>> states
+    array([3])
+    >>> cmp_ix
+    array([1])
     >>> ax = 0
     >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
     ...     dtrj, axis=ax, return_states=True, return_cmp_ix=True
@@ -1906,14 +1983,20 @@ def lifetimes(
     ax_cmp, ax_fr = mdt.dtrj.get_ax(ax_fr=axis)
     n_frames = dtrj.shape[ax_fr]
 
-    # Ensure that the end of the trajectory (i.e. the virtual frame
-    # after the last frame) is treated as the end of a state transition
-    # by adding a new state to the end of `dtrj`.
-    dtrj = np.insert(dtrj, n_frames, np.max(dtrj) + 1, axis=ax_fr)
-    # Ensures that the first frame is treated as the end of a state
-    # transition by setting `tfft` to ``True``.
+    if uncensored:
+        # Do not treat the first first frame as the end of a state
+        # transition.
+        tfft = False
+    else:
+        # Ensure that the end of the trajectory (i.e. the virtual frame
+        # after the last frame) is treated as the end of a state
+        # transition by adding a new state to the end of `dtrj`.
+        dtrj = np.insert(dtrj, n_frames, np.max(dtrj) + 1, axis=ax_fr)
+        # Ensures that the first frame is treated as the end of a state
+        # transition by setting `tfft` to ``True``.
+        tfft = True
     trans_ix_start, trans_ix_end = mdt.dtrj.trans_ix(
-        dtrj, axis=ax_fr, pin="both", tfft=True
+        dtrj, axis=ax_fr, pin="both", tfft=tfft
     )
 
     if ax_cmp != 0:
@@ -1926,10 +2009,24 @@ def lifetimes(
 
     # Calculate the state lifetimes.
     lt = np.diff(trans_ix_end[ax_fr])
-    # Negative values in `lt` indicate the start of a new compound
-    # trajectory and are therefore of no physical relevance and are thus
-    # removed.
-    lt = lt[lt > 0]
+    # Remove lifetimes that were calculated from transition-index
+    # differences between consecutive compound trajectories.
+    lt = lt[np.diff(trans_ix_end[ax_cmp]) == 0]
+
+    if uncensored:
+        # Remove censored states at the beginning fo the trajectory.
+        cens = np.diff(trans_ix_start[ax_cmp]) != 0
+        cens = np.append(cens, True)
+        cens = np.roll(cens, shift=1)
+        uncens = np.invert(cens, out=cens)
+        trans_ix_start = tuple(tix[uncens] for tix in trans_ix_start)
+        # Remove censored states at the end fo the trajectory.
+        # `trans_ix_end` is not used in the remainder of this function.
+        # cens = np.diff(trans_ix_end[ax_cmp]) != 0
+        # cens = np.append(cens, True)
+        # uncens = np.invert(cens, out=cens)
+        # trans_ix_end = tuple(tix[uncens] for tix in trans_ix_end)
+        del cens, uncens
 
     # Get state and compound indices corresponding to each lifetime.
     states = dtrj[trans_ix_start]
@@ -1942,13 +2039,17 @@ def lifetimes(
             # by a negative state (i.e. discard all states that do not
             # have a valid follower state).
             valid_follower = np.roll(valid, shift=-1)
-            # States at the end of a compound trajectory do not have any
-            # follower state and are therefore always regarded as valid
-            # (except if they are negative).
-            trj_ends = (trans_ix_start[ax_fr] + 1) == n_frames
-            valid_follower[trj_ends] = True
+            if not uncensored:
+                # States at the end of a compound trajectory do not have
+                # any follower state and are therefore always regarded
+                # as valid (except if they are negative).  If only
+                # uncensored states are counted, the end states have
+                # already been discarded.
+                trj_ends = (trans_ix_start[ax_fr] + 1) == n_frames
+                valid_follower[trj_ends] = True
+                del trj_ends
             valid &= valid_follower
-            del valid_follower, trj_ends
+            del valid_follower
         lt = lt[valid]
         states = states[valid]
         cmp_ix = cmp_ix[valid]
