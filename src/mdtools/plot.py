@@ -137,7 +137,7 @@ class MidpointNormalize(colors.Normalize):
     See `Colormap Normalization`_ for more information.
 
     .. _Colormap Normalization:
-        https://matplotlib.org/stable/tutorials/colors/colormapnorms.html#custom-normalization-manually-implement-two-linear-ranges
+        https://matplotlib.org/stable/users/explain/colors/colormapnorms.html#custom-normalization-manually-implement-two-linear-ranges
     """  # noqa: W505, E501
 
     def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
