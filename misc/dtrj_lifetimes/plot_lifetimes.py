@@ -79,14 +79,14 @@ if __name__ == "__main__":  # noqa: C901
     col_cnt_cen = 1
     col_cnt_unc = 3
     col_rate = 5
-    col_e = 6
+    # col_e = 6
     col_int = 7
     col_kww = 9
     col_bur = 17
     col_dst = 32
-    col_drw = 34
-    col_unc = 36
-    col_cen = 38
+    # col_drw = 34
+    # col_unc = 36
+    # col_cen = 38
 
     # Read data.
     infiles = glob.glob(infile_pattern)
@@ -118,9 +118,11 @@ if __name__ == "__main__":  # noqa: C901
 
     # Sort data.
     if sort_by == "n_cmps":
-        sort_ix = np.argsort(shapes[0])  # Sort by number of compounds.
+        sort_ix = np.argsort(shapes[0])
         xdata = shapes[0][sort_ix]
         xlim = (5e-1, 2e5)
+        ylim_lt_mom1 = (2e0, 3e2)  # y limits for 1st moment lifetime plot
+        ylim_lt_mom2 = (1e0, 3e2)  # y limits for 2nd moment lifetime plot
         xlabel = "Number of Particles"
         legend_title = (
             dist_name + r", $\tau_0 = %.2f$" % data[col_tau0_true][0]
@@ -128,7 +130,9 @@ if __name__ == "__main__":  # noqa: C901
     elif sort_by == "n_frames":
         sort_ix = np.argsort(shapes[1])
         xdata = shapes[1][sort_ix]
-        xlim = (5e0, 2e6)
+        xlim = (5e0, 2e5)
+        ylim_lt_mom1 = (2e0, 3e2)  # y limits for 1st moment lifetime plot
+        ylim_lt_mom2 = (1e0, 3e2)  # y limits for 2nd moment lifetime plot
         xlabel = "Number of Frames"
         legend_title = (
             dist_name + r", $\tau_0 = %.2f$" % data[col_tau0_true][0]
@@ -136,7 +140,9 @@ if __name__ == "__main__":  # noqa: C901
     elif sort_by == "beta_true":
         sort_ix = np.argsort(data[col_beta_true])
         xdata = data[col_beta_true][sort_ix]
-        xlim = (1e-1, 1e1)
+        xlim = (2e-1, 5e0)
+        ylim_lt_mom1 = (None, None)  # y limits for 1st moment lifetime plot
+        ylim_lt_mom2 = (None, None)  # y limits for 2nd moment lifetime plot
         xlabel = r"Shape Parameter $\beta$"
         legend_title = (
             dist_name + r", $\tau_0 = %.2f$" % data[col_tau0_true][0]
@@ -144,7 +150,9 @@ if __name__ == "__main__":  # noqa: C901
     elif sort_by == "delta_true":
         sort_ix = np.argsort(data[col_delta_true])
         xdata = data[col_delta_true][sort_ix]
-        xlim = (1e-1, 1e1)
+        xlim = (2e-1, 5e0)
+        ylim_lt_mom1 = (None, None)  # y limits for 1st moment lifetime plot
+        ylim_lt_mom2 = (None, None)  # y limits for 2nd moment lifetime plot
         xlabel = r"Shape Parameter $\delta$"
         if dist_name == "Chi Dist.":
             legend_title = dist_name
@@ -155,7 +163,9 @@ if __name__ == "__main__":  # noqa: C901
     elif sort_by == "tau0_true":
         sort_ix = np.argsort(data[col_tau0_true])
         xdata = data[col_tau0_true][sort_ix]
-        xlim = (1e1, 1e3)
+        xlim = (2e1, 5e2)
+        ylim_lt_mom1 = xlim  # y limits for 1st moment lifetime plot
+        ylim_lt_mom2 = xlim  # y limits for 2nd moment lifetime plot
         xlabel = r"Scale Parameter $\tau_0$ / Frames"
         legend_title = dist_name
     else:
@@ -163,47 +173,38 @@ if __name__ == "__main__":  # noqa: C901
     shapes = shapes[:, sort_ix]
     data = data[:, sort_ix]
 
-    lts_mom1_min = np.nanmin([data[col_dst], data[col_unc], data[col_cen]])
-    lts_mom1_max = np.nanmax([data[col_dst], data[col_unc], data[col_cen]])
-    lts_mom2_min = np.nanmin(
-        [data[col_dst + 1], data[col_unc + 1], data[col_cen + 1]]
-    )
-    lts_mom2_max = np.nanmax(
-        [data[col_dst + 1], data[col_unc + 1], data[col_cen + 1]]
-    )
-
     label_true = "True"
-    label_cen = "True Cens."
-    label_unc = "True Uncen."
-    label_cnt_cen = "Count Cens."
-    label_cnt_unc = "Count Uncens."
+    # label_cen = "True Cens."
+    # label_unc = "True Uncen."
+    label_cnt_cen = "Cens."
+    label_cnt_unc = "Uncens."
     label_rate = "Rate"
-    label_e = r"$1/e$"
+    # label_e = r"$1/e$"
     label_int = "Area"
     label_kww = "Kohl."
     label_bur = "Burr"
 
     color_true = "tab:green"
-    color_cen = "tab:olive"
-    color_unc = "darkolivegreen"
+    # color_cen = "tab:olive"
+    # color_unc = "darkolivegreen"
     color_cnt_cen = "tab:orange"
     color_cnt_unc = "tab:red"
     color_rate = "tab:brown"
-    color_e = "tab:pink"
+    # color_e = "tab:pink"
     color_int = "tab:purple"
     color_kww = "tab:blue"
     color_bur = "tab:cyan"
 
     marker_true = "s"
-    marker_cen = "D"
-    marker_unc = "d"
+    # marker_cen = "D"
+    # marker_unc = "d"
     marker_cnt_cen = "H"
     marker_cnt_unc = "h"
     marker_rate = "p"
-    marker_e = "<"
+    # marker_e = "<"
     marker_int = ">"
-    marker_kww = "v"
-    marker_bur = "^"
+    marker_kww = "^"
+    marker_bur = "v"
 
     alpha = 0.75
 
@@ -222,28 +223,28 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_true,
                 alpha=alpha,
             )
-        # True censored lifetimes.
-        valid = data[col_cen] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_cen][valid],
-                label=label_cen,
-                color=color_cen,
-                marker=marker_cen,
-                alpha=alpha,
-            )
-        # True uncensored lifetimes.
-        valid = data[col_unc] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_unc][valid],
-                label=label_unc,
-                color=color_unc,
-                marker=marker_unc,
-                alpha=alpha,
-            )
+        # # True censored lifetimes.
+        # valid = data[col_cen] > 0
+        # if np.any(valid):
+        #     ax.plot(
+        #         xdata[valid],
+        #         data[col_cen][valid],
+        #         label=label_cen,
+        #         color=color_cen,
+        #         marker=marker_cen,
+        #         alpha=alpha,
+        #     )
+        # # True uncensored lifetimes.
+        # valid = data[col_unc] > 0
+        # if np.any(valid):
+        #     ax.plot(
+        #         xdata[valid],
+        #         data[col_unc][valid],
+        #         label=label_unc,
+        #         color=color_unc,
+        #         marker=marker_unc,
+        #         alpha=alpha,
+        #     )
         # Method 1 (censored counting).
         valid = data[col_cnt_cen] > 0
         if np.any(valid):
@@ -277,17 +278,17 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_rate,
                 alpha=alpha,
             )
-        # Method 4 (1/e criterion).
-        valid = data[col_e] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_e][valid],
-                label=label_e,
-                color=color_e,
-                marker=marker_e,
-                alpha=alpha,
-            )
+        # # Method 4 (1/e criterion).
+        # valid = data[col_e] > 0
+        # if np.any(valid):
+        #     ax.plot(
+        #         xdata[valid],
+        #         data[col_e][valid],
+        #         label=label_e,
+        #         color=color_e,
+        #         marker=marker_e,
+        #         alpha=alpha,
+        #     )
         # Method 5 (direct integral).
         valid = data[col_int] > 0
         if np.any(valid):
@@ -323,116 +324,113 @@ if __name__ == "__main__":  # noqa: C901
             )
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
         ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ylim = list(ax.get_ylim())
-        if ylim[0] < lts_mom1_min / 20:
-            # Round to 2nd-next lower power of ten.
-            ymin = 5 * 10 ** np.floor(np.log10(lts_mom1_min) - 1)
-            ylim[0] = ymin if np.isfinite(ymin) else None
-        if ylim[1] > lts_mom1_max * 20:
-            # Round to next higher power of ten.
-            ymax = 2 * 10 ** np.ceil(np.log10(lts_mom1_max))
-            ylim[1] = ymax if np.isfinite(ymax) else None
         ax.set(
             xlabel=xlabel,
             ylabel=r"Average Lifetime / Frames",
             xlim=xlim,
-            ylim=ylim,
+            ylim=ylim_lt_mom1,
         )
         handles, labels = ax.get_legend_handles_labels()
         legend = ax.legend(
-            title=legend_title,
-            ncol=max(np.ceil(len(handles) / 2), 1),
-            **mdtplt.LEGEND_KWARGS_XSMALL,
+            title=legend_title, ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL
         )
         legend.get_title().set_multialignment("center")
         pdf.savefig()
         plt.close()
 
-        # Plot 2nd raw moment of the lifetime distribution.
+        # Plot standard deviation of the lifetime distribution.
         fig, ax = plt.subplots(clear=True)
         # True lifetimes (from distribution).
-        valid = data[col_dst + 1] > 0
+        std = np.sqrt(data[col_dst + 1] - data[col_dst] ** 2)
+        valid = std > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[col_dst + 1][valid],
+                std[valid],
                 label=label_true,
                 color=color_true,
                 marker=marker_true,
                 alpha=alpha,
             )
-        # True censored lifetimes.
-        valid = data[col_cen + 1] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_cen + 1][valid],
-                label=label_cen,
-                color=color_cen,
-                marker=marker_cen,
-                alpha=alpha,
-            )
-        # True uncensored lifetimes.
-        valid = data[col_unc + 1] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_unc + 1][valid],
-                label=label_unc,
-                color=color_unc,
-                marker=marker_unc,
-                alpha=alpha,
-            )
+        # # True censored lifetimes.
+        # std = np.sqrt(data[col_cen + 1] - data[col_cen] ** 2)
+        # valid = std > 0
+        # if np.any(valid):
+        #     ax.plot(
+        #         xdata[valid],
+        #         std[valid],
+        #         label=label_cen,
+        #         color=color_cen,
+        #         marker=marker_cen,
+        #         alpha=alpha,
+        #     )
+        # # True uncensored lifetimes.
+        # std = np.sqrt(data[col_unc + 1] - data[col_unc] ** 2)
+        # valid = std > 0
+        # if np.any(valid):
+        #     ax.plot(
+        #         xdata[valid],
+        #         std[valid],
+        #         label=label_unc,
+        #         color=color_unc,
+        #         marker=marker_unc,
+        #         alpha=alpha,
+        #     )
         # Method 1 (censored counting).
-        valid = data[col_cnt_cen + 1] > 0
+        std = np.sqrt(data[col_cnt_cen + 1] - data[col_cnt_cen] ** 2)
+        valid = std > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[col_cnt_cen + 1][valid],
+                std[valid],
                 label=label_cnt_cen,
                 color=color_cnt_cen,
                 marker=marker_cnt_cen,
                 alpha=alpha,
             )
         # Method 2 (uncensored counting).
-        valid = data[col_cnt_unc + 1] > 0
+        std = np.sqrt(data[col_cnt_unc + 1] - data[col_cnt_unc] ** 2)
+        valid = std > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[col_cnt_unc + 1][valid],
+                std[valid],
                 label=label_cnt_unc,
                 color=color_cnt_unc,
                 marker=marker_cnt_unc,
                 alpha=alpha,
             )
         # Method 5 (direct integral).
-        valid = data[col_int + 1] > 0
+        std = np.sqrt(data[col_int + 1] - data[col_int] ** 2)
+        valid = std > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[col_int + 1][valid],
+                std[valid],
                 label=label_int,
                 color=color_int,
                 marker=marker_int,
                 alpha=alpha,
             )
         # Method 6 (integral of Kohlrausch fit).
-        valid = data[col_kww + 1] > 0
+        std = np.sqrt(data[col_kww + 1] - data[col_kww] ** 2)
+        valid = std > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[col_kww + 1][valid],
+                std[valid],
                 label=label_kww,
                 color=color_kww,
                 marker=marker_kww,
                 alpha=alpha,
             )
         # Method 7 (integral of Burr fit).
-        valid = data[col_bur + 1] > 0
+        std = np.sqrt(data[col_bur + 1] - data[col_bur] ** 2)
+        valid = std > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[col_bur + 1][valid],
+                std[valid],
                 label=label_bur,
                 color=color_bur,
                 marker=marker_bur,
@@ -440,26 +438,15 @@ if __name__ == "__main__":  # noqa: C901
             )
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
         ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ylim = list(ax.get_ylim())
-        if ylim[0] < lts_mom2_min / 200:
-            # Round to 3rd-next lower power of ten.
-            ymin = 5 * 10 ** np.floor(np.log10(lts_mom2_min) - 2)
-            ylim[0] = ymin if np.isfinite(ymin) else None
-        if ylim[1] > lts_mom2_max * 200:
-            # Round to 2nd-next higher power of ten.
-            ymax = 2 * 10 ** np.ceil(np.log10(lts_mom2_max) + 1)
-            ylim[1] = ymax if np.isfinite(ymax) else None
         ax.set(
             xlabel=xlabel,
-            ylabel=r"2$^\mathrm{nd}$ Moment / Frames$^2$",
+            ylabel=r"Est. Std. Dev. / Frames",
             xlim=xlim,
-            ylim=ylim,
+            ylim=ylim_lt_mom2,
         )
         handles, labels = ax.get_legend_handles_labels()
         legend = ax.legend(
-            title=legend_title,
-            ncol=max(np.ceil(len(handles) / 2), 1),
-            **mdtplt.LEGEND_KWARGS_XSMALL,
+            title=legend_title, ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL
         )
         legend.get_title().set_multialignment("center")
         pdf.savefig()
@@ -613,7 +600,7 @@ if __name__ == "__main__":  # noqa: C901
             ax.plot(
                 xdata[valid],
                 data[col_dst + 8][valid],
-                label="Model",
+                label=r"$S(t)$",
                 color=color_true,
                 marker=marker_true,
                 alpha=alpha,
@@ -660,7 +647,7 @@ if __name__ == "__main__":  # noqa: C901
             ax.plot(
                 xdata[valid],
                 data[col_dst + 9][valid],
-                label="Model",
+                label=r"$S(t)$",
                 color=color_true,
                 marker=marker_true,
                 alpha=alpha,
@@ -707,7 +694,7 @@ if __name__ == "__main__":  # noqa: C901
             ax.plot(xdata[valid], data[col_fit_end][valid], marker="v")
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
         ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(xlabel=xlabel, ylabel=r"End of Fit Region / Frames", xlim=xlim)
+        ax.set(xlabel=xlabel, ylabel="End of Fit Region / Frames", xlim=xlim)
         legend = ax.legend(title=legend_title, **mdtplt.LEGEND_KWARGS_XSMALL)
         legend.get_title().set_multialignment("center")
         pdf.savefig()
