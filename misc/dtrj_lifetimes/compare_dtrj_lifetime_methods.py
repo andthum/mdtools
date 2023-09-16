@@ -811,34 +811,34 @@ if __name__ == "__main__":  # noqa: C901
     fit_rmses = np.vstack(fit_rmses)
 
     label_true = "True"
-    # label_cen = "True Cens."
-    # label_unc = "True Uncen."
-    label_cnt_cen = "Cens."
-    label_cnt_unc = "Uncens."
+    label_cen = "True Cens."
+    label_unc = "True Uncen."
+    label_cnt_cen = "Count Cens."
+    label_cnt_unc = "Count Uncens."
     label_k = "Rate"
-    # label_e = r"$1/e$"
+    label_e = r"$1/e$"
     label_int = "Area"
     label_kww = "Kohl."
     label_bur = "Burr"
 
     color_true = "tab:green"
-    # color_cen = "tab:olive"
-    # color_unc = "darkolivegreen"
+    color_cen = "tab:olive"
+    color_unc = "darkolivegreen"
     color_cnt_cen = "tab:orange"
     color_cnt_unc = "tab:red"
     color_k = "tab:brown"
-    # color_e = "tab:pink"
+    color_e = "tab:pink"
     color_int = "tab:purple"
     color_kww = "tab:blue"
     color_bur = "tab:cyan"
 
     marker_true = "s"
-    # marker_cen = "D"
-    # marker_unc = "d"
+    marker_cen = "D"
+    marker_unc = "d"
     marker_cnt_cen = "H"
     marker_cnt_unc = "h"
     marker_k = "p"
-    # marker_e = "<"
+    marker_e = "<"
     marker_int = ">"
     marker_kww = "^"
     marker_bur = "v"
@@ -868,26 +868,26 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_true,
                 alpha=alpha,
             )
-            # # True uncensored lifetimes.
-            # ax.errorbar(
-            #     states,
-            #     lts_unc_mom1,
-            #     yerr=np.sqrt(lts_unc_mom2 - lts_unc_mom1**2),
-            #     label=label_unc,
-            #     color=color_unc,
-            #     marker=marker_unc,
-            #     alpha=alpha,
-            # )
-            # # True censored lifetimes.
-            # ax.errorbar(
-            #     states,
-            #     lts_cen_mom1,
-            #     yerr=np.sqrt(lts_cen_mom2 - lts_cen_mom1**2),
-            #     label=label_cen,
-            #     color=color_cen,
-            #     marker=marker_cen,
-            #     alpha=alpha,
-            # )
+            # True uncensored lifetimes.
+            ax.errorbar(
+                states,
+                lts_unc_mom1,
+                yerr=np.sqrt(lts_unc_mom2 - lts_unc_mom1**2),
+                label=label_unc,
+                color=color_unc,
+                marker=marker_unc,
+                alpha=alpha,
+            )
+            # True censored lifetimes.
+            ax.errorbar(
+                states,
+                lts_cen_mom1,
+                yerr=np.sqrt(lts_cen_mom2 - lts_cen_mom1**2),
+                label=label_cen,
+                color=color_cen,
+                marker=marker_cen,
+                alpha=alpha,
+            )
         # Method 1 (censored counting).
         ax.errorbar(
             states,
@@ -918,16 +918,16 @@ if __name__ == "__main__":  # noqa: C901
             marker=marker_k,
             alpha=alpha,
         )
-        # # Method 4 (1/e criterion).
-        # ax.errorbar(
-        #     states,
-        #     lts_e,
-        #     yerr=None,
-        #     label=label_e,
-        #     color=color_e,
-        #     marker=marker_e,
-        #     alpha=alpha,
-        # )
+        # Method 4 (1/e criterion).
+        ax.errorbar(
+            states,
+            lts_e,
+            yerr=None,
+            label=label_e,
+            color=color_e,
+            marker=marker_e,
+            alpha=alpha,
+        )
         # Method 5 (direct integral)
         ax.errorbar(
             states,
