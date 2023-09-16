@@ -810,6 +810,39 @@ if __name__ == "__main__":  # noqa: C901
     fit_r2s = np.vstack(fit_r2s)
     fit_rmses = np.vstack(fit_rmses)
 
+    label_true = "True"
+    # label_cen = "True Cens."
+    # label_unc = "True Uncen."
+    label_cnt_cen = "Cens."
+    label_cnt_unc = "Uncens."
+    label_k = "Rate"
+    # label_e = r"$1/e$"
+    label_int = "Area"
+    label_kww = "Kohl."
+    label_bur = "Burr"
+
+    color_true = "tab:green"
+    # color_cen = "tab:olive"
+    # color_unc = "darkolivegreen"
+    color_cnt_cen = "tab:orange"
+    color_cnt_unc = "tab:red"
+    color_k = "tab:brown"
+    # color_e = "tab:pink"
+    color_int = "tab:purple"
+    color_kww = "tab:blue"
+    color_bur = "tab:cyan"
+
+    marker_true = "s"
+    # marker_cen = "D"
+    # marker_unc = "d"
+    marker_cnt_cen = "H"
+    marker_cnt_unc = "h"
+    marker_k = "p"
+    # marker_e = "<"
+    marker_int = ">"
+    marker_kww = "^"
+    marker_bur = "v"
+
     xlabel = r"State Index"
     xlim = (np.min(states) - 0.5, np.max(states) + 0.5)
     alpha = 0.75
@@ -824,54 +857,45 @@ if __name__ == "__main__":  # noqa: C901
     with PdfPages(outfile) as pdf:
         # Plot lifetimes vs. state indices.
         fig, ax = plt.subplots(clear=True)
-        # Method 7 (integral of Burr fit).
+        if args.INFILE_PARAM is not None:
+            # True lifetimes (from distribution).
+            ax.errorbar(
+                states,
+                lts_dst_mom1,
+                yerr=np.sqrt(lts_dst_mom2 - lts_dst_mom1**2),
+                label=label_true,
+                color=color_true,
+                marker=marker_true,
+                alpha=alpha,
+            )
+            # # True uncensored lifetimes.
+            # ax.errorbar(
+            #     states,
+            #     lts_unc_mom1,
+            #     yerr=np.sqrt(lts_unc_mom2 - lts_unc_mom1**2),
+            #     label=label_unc,
+            #     color=color_unc,
+            #     marker=marker_unc,
+            #     alpha=alpha,
+            # )
+            # # True censored lifetimes.
+            # ax.errorbar(
+            #     states,
+            #     lts_cen_mom1,
+            #     yerr=np.sqrt(lts_cen_mom2 - lts_cen_mom1**2),
+            #     label=label_cen,
+            #     color=color_cen,
+            #     marker=marker_cen,
+            #     alpha=alpha,
+            # )
+        # Method 1 (censored counting).
         ax.errorbar(
             states,
-            lts_bur_mom1,
-            yerr=np.sqrt(lts_bur_mom2 - lts_bur_mom1**2),
-            label="Burr",
-            color="tab:cyan",
-            marker="^",
-            alpha=alpha,
-        )
-        # Method 6 (integral of Kohlrausch fit).
-        ax.errorbar(
-            states,
-            lts_kww_mom1,
-            yerr=np.sqrt(lts_kww_mom2 - lts_kww_mom1**2),
-            label="Kohlrausch",
-            color="tab:blue",
-            marker="v",
-            alpha=alpha,
-        )
-        # Method 5 (direct integral)
-        ax.errorbar(
-            states,
-            lts_int_mom1,
-            yerr=np.sqrt(lts_int_mom2 - lts_int_mom1**2),
-            label="Area",
-            color="tab:purple",
-            marker=">",
-            alpha=alpha,
-        )
-        # Method 4 (1/e criterion).
-        ax.errorbar(
-            states,
-            lts_e,
-            yerr=None,
-            label=r"$1/e$",
-            color="tab:pink",
-            marker="<",
-            alpha=alpha,
-        )
-        # Method 3 (inverse transition rate).
-        ax.errorbar(
-            states,
-            lts_k,
-            yerr=None,
-            label="Rate",
-            color="tab:brown",
-            marker="p",
+            lts_cnt_cen_mom1,
+            yerr=np.sqrt(lts_cnt_cen_mom2 - lts_cnt_cen_mom1**2),
+            label=label_cnt_cen,
+            color=color_cnt_cen,
+            marker=marker_cnt_cen,
             alpha=alpha,
         )
         # Method 2 (uncensored counting).
@@ -879,57 +903,62 @@ if __name__ == "__main__":  # noqa: C901
             states,
             lts_cnt_unc_mom1,
             yerr=np.sqrt(lts_cnt_unc_mom2 - lts_cnt_unc_mom1**2),
-            label="Uncens. Count",
-            color="tab:red",
-            marker="h",
+            label=label_cnt_unc,
+            color=color_cnt_unc,
+            marker=marker_cnt_unc,
             alpha=alpha,
         )
-        # Method 1 (censored counting).
+        # Method 3 (inverse transition rate).
         ax.errorbar(
             states,
-            lts_cnt_cen_mom1,
-            yerr=np.sqrt(lts_cnt_cen_mom2 - lts_cnt_cen_mom1**2),
-            label="Cens. Count",
-            color="tab:orange",
-            marker="H",
+            lts_k,
+            yerr=None,
+            label=label_k,
+            color=color_k,
+            marker=marker_k,
             alpha=alpha,
         )
-        if args.INFILE_PARAM is not None:
-            # True lifetimes (from distribution).
-            ax.errorbar(
-                states,
-                lts_dst_mom1,
-                yerr=np.sqrt(lts_dst_mom2 - lts_dst_mom1**2),
-                label="True",
-                color="tab:green",
-                marker="s",
-                alpha=alpha,
-            )
-            # Uncensored lifetimes.
-            ax.errorbar(
-                states,
-                lts_unc_mom1,
-                yerr=np.sqrt(lts_unc_mom2 - lts_unc_mom1**2),
-                label="Uncensored",
-                color="tab:olive",
-                marker="D",
-                alpha=alpha,
-            )
-            # Censored lifetimes.
-            ax.errorbar(
-                states,
-                lts_cen_mom1,
-                yerr=np.sqrt(lts_cen_mom2 - lts_cen_mom1**2),
-                label="Censored",
-                color="darkolivegreen",
-                marker="d",
-                alpha=alpha,
-            )
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Average Lifetime / Frames",
-            xlim=xlim,
+        # # Method 4 (1/e criterion).
+        # ax.errorbar(
+        #     states,
+        #     lts_e,
+        #     yerr=None,
+        #     label=label_e,
+        #     color=color_e,
+        #     marker=marker_e,
+        #     alpha=alpha,
+        # )
+        # Method 5 (direct integral)
+        ax.errorbar(
+            states,
+            lts_int_mom1,
+            yerr=np.sqrt(lts_int_mom2 - lts_int_mom1**2),
+            label=label_int,
+            color=color_int,
+            marker=marker_int,
+            alpha=alpha,
         )
+        # Method 6 (integral of Kohlrausch fit).
+        ax.errorbar(
+            states,
+            lts_kww_mom1,
+            yerr=np.sqrt(lts_kww_mom2 - lts_kww_mom1**2),
+            label=label_kww,
+            color=color_kww,
+            marker=marker_kww,
+            alpha=alpha,
+        )
+        # Method 7 (integral of Burr fit).
+        ax.errorbar(
+            states,
+            lts_bur_mom1,
+            yerr=np.sqrt(lts_bur_mom2 - lts_bur_mom1**2),
+            label=label_bur,
+            color=color_bur,
+            marker=marker_bur,
+            alpha=alpha,
+        )
+        ax.set(xlabel=xlabel, ylabel=r"Average Lifetime / Frames", xlim=xlim)
         ylim = ax.get_ylim()
         if ylim[0] < 0:
             ax.set_ylim(0, ylim[1])
@@ -951,38 +980,39 @@ if __name__ == "__main__":  # noqa: C901
 
         # Plot fit parameter tau0.
         fig, ax = plt.subplots(clear=True)
-        # Method 7 (Burr fit).
-        ax.errorbar(
-            states,
-            tau0_bur,
-            yerr=tau0_bur_sd,
-            label="Burr",
-            color="tab:cyan",
-            marker="^",
-        )
-        # Method 6 (Kohlrausch fit).
-        ax.errorbar(
-            states,
-            tau0_kww,
-            yerr=tau0_kww_sd,
-            label="Kohlrausch",
-            color="tab:blue",
-            marker="v",
-        )
         if args.INFILE_PARAM is not None:
             # True tau0 (from distribution).
             ax.errorbar(
                 states,
                 tau0_true,
                 yerr=None,
-                label="True",
-                color="tab:green",
-                marker="s",
+                label=label_true,
+                color=color_true,
+                marker=marker_true,
+                alpha=alpha,
             )
+        # Method 6 (Kohlrausch fit).
+        ax.errorbar(
+            states,
+            tau0_kww,
+            yerr=tau0_kww_sd,
+            label=label_kww,
+            color=color_kww,
+            marker=marker_kww,
+            alpha=alpha,
+        )
+        # Method 7 (Burr fit).
+        ax.errorbar(
+            states,
+            tau0_bur,
+            yerr=tau0_bur_sd,
+            label=label_bur,
+            color=color_bur,
+            marker=marker_bur,
+            alpha=alpha,
+        )
         ax.set(
-            xlabel=xlabel,
-            ylabel=r"Fit Parameter $\tau_0$ / Frames",
-            xlim=xlim,
+            xlabel=xlabel, ylabel=r"Fit Parameter $\tau_0$ / Frames", xlim=xlim
         )
         ylim = ax.get_ylim()
         if ylim[0] < 0:
@@ -1005,39 +1035,38 @@ if __name__ == "__main__":  # noqa: C901
 
         # Plot fit parameter beta.
         fig, ax = plt.subplots(clear=True)
-        # Method 7 (Burr fit).
-        ax.errorbar(
-            states,
-            beta_bur,
-            yerr=beta_bur_sd,
-            label="Burr",
-            color="tab:cyan",
-            marker="^",
-        )
-        # Method 6 (Kohlrausch fit).
-        ax.errorbar(
-            states,
-            beta_kww,
-            yerr=beta_kww_sd,
-            label="Kohlrausch",
-            color="tab:blue",
-            marker="v",
-        )
         if args.INFILE_PARAM is not None:
             # True beta (from distribution).
             ax.errorbar(
                 states,
                 beta_true,
                 yerr=None,
-                label="True",
-                color="tab:green",
-                marker="s",
+                label=label_true,
+                color=color_true,
+                marker=marker_true,
+                alpha=alpha,
             )
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Fit Parameter $\beta$",
-            xlim=xlim,
+        # Method 6 (Kohlrausch fit).
+        ax.errorbar(
+            states,
+            beta_kww,
+            yerr=beta_kww_sd,
+            label=label_kww,
+            color=color_kww,
+            marker=marker_kww,
+            alpha=alpha,
         )
+        # Method 7 (Burr fit).
+        ax.errorbar(
+            states,
+            beta_bur,
+            yerr=beta_bur_sd,
+            label=label_bur,
+            color=color_bur,
+            marker=marker_bur,
+            alpha=alpha,
+        )
+        ax.set(xlabel=xlabel, ylabel=r"Fit Parameter $\beta$", xlim=xlim)
         ylim = ax.get_ylim()
         if ylim[0] < 0:
             ax.set_ylim(0, ylim[1])
@@ -1059,30 +1088,28 @@ if __name__ == "__main__":  # noqa: C901
 
         # Plot fit parameter delta.
         fig, ax = plt.subplots(clear=True)
-        # Method 7 (Burr fit).
-        ax.errorbar(
-            states,
-            delta_bur,
-            yerr=delta_bur_sd,
-            label="Burr",
-            color="tab:cyan",
-            marker="^",
-        )
         if args.INFILE_PARAM is not None:
             # True delta (from distribution).
             ax.errorbar(
                 states,
                 delta_true,
                 yerr=None,
-                label="True",
-                color="tab:green",
-                marker="s",
+                label=label_true,
+                color=color_true,
+                marker=marker_true,
+                alpha=alpha,
             )
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Fit Parameter $\delta$",
-            xlim=xlim,
+        # Method 7 (Burr fit).
+        ax.errorbar(
+            states,
+            delta_bur,
+            yerr=delta_bur_sd,
+            label=label_bur,
+            color=color_bur,
+            marker=marker_bur,
+            alpha=alpha,
         )
+        ax.set(xlabel=xlabel, ylabel=r"Fit Parameter $\delta$", xlim=xlim)
         ylim = ax.get_ylim()
         if ylim[0] < 0:
             ax.set_ylim(0, ylim[1])
@@ -1104,30 +1131,35 @@ if __name__ == "__main__":  # noqa: C901
 
         # Plot R^2 value of the fits.
         fig, ax = plt.subplots(clear=True)
-        # Method 7 (Burr fit).
-        ax.plot(
-            states,
-            fit_r2_bur,
-            label="Burr",
-            color="tab:cyan",
-            marker="^",
-        )
+        if args.INFILE_PARAM is not None:
+            # R^2 of the remain probability to the true survival
+            # function.
+            ax.plot(
+                states,
+                rp_r2,
+                label=r"$S(t)$",
+                color=color_true,
+                marker=marker_true,
+                alpha=alpha,
+            )
         # Method 6 (Kohlrausch fit).
         ax.plot(
             states,
             fit_r2_kww,
-            label="Kohlrausch",
-            color="tab:blue",
-            marker="v",
+            label=label_kww,
+            color=color_kww,
+            marker=marker_kww,
+            alpha=alpha,
         )
-        if args.INFILE_PARAM is not None:
-            ax.plot(
-                states,
-                rp_r2,
-                label="Remain Prob.",
-                color="tab:green",
-                marker="s",
-            )
+        # Method 7 (Burr fit).
+        ax.plot(
+            states,
+            fit_r2_bur,
+            label=label_bur,
+            color=color_bur,
+            marker=marker_bur,
+            alpha=alpha,
+        )
         ax.set(
             xlabel=xlabel,
             ylabel=r"Coeff. of Determ. $R^2$",
@@ -1152,30 +1184,35 @@ if __name__ == "__main__":  # noqa: C901
 
         # Plot root-mean-square error.
         fig, ax = plt.subplots(clear=True)
-        # Method 7 (Burr fit).
-        ax.plot(
-            states,
-            fit_rmse_bur,
-            label="Burr",
-            color="tab:cyan",
-            marker="^",
-        )
+        if args.INFILE_PARAM is not None:
+            # RMSE of the remain probability to the true survival
+            # function.
+            ax.plot(
+                states,
+                rp_rmse,
+                label=r"$S(t)$",
+                color=color_true,
+                marker=marker_true,
+                alpha=alpha,
+            )
         # Method 6 (Kohlrausch fit).
         ax.plot(
             states,
             fit_rmse_kww,
-            label="Kohlrausch",
-            color="tab:blue",
-            marker="v",
+            label=label_kww,
+            color=color_kww,
+            marker=marker_kww,
+            alpha=alpha,
         )
-        if args.INFILE_PARAM is not None:
-            ax.plot(
-                states,
-                rp_rmse,
-                label="Remain Prob.",
-                color="tab:green",
-                marker="s",
-            )
+        # Method 7 (Burr fit).
+        ax.plot(
+            states,
+            fit_rmse_bur,
+            label=label_bur,
+            color=color_bur,
+            marker=marker_bur,
+            alpha=alpha,
+        )
         ax.set(xlabel=xlabel, ylabel=r"RMSE", xlim=xlim)
         ylim = ax.get_ylim()
         if ylim[0] < 0:
@@ -1196,71 +1233,76 @@ if __name__ == "__main__":  # noqa: C901
             pdf.savefig()
         plt.close()
 
-        # Plot fitted region.
+        # Plot end of fit region.
         fig, ax = plt.subplots(clear=True)
-        ax.plot(states, fit_start, label="Start", marker="^")
-        ax.plot(states, fit_stop - 1, label="End", marker="v")
-        ax.set(xlabel=xlabel, ylabel="Fitted Region / Frames", xlim=xlim)
+        ax.plot(states, fit_stop - 1, marker="v")
+        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+        ax.set(xlabel=xlabel, ylabel="End of Fit Region / Frames", xlim=xlim)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.set_xticks([], minor=True)
-        ax.legend(ncol=2)
         pdf.savefig()
         plt.close()
 
-        # Plot remain probabilities and Burr fits for each state.
-        fig, ax = plt.subplots(clear=True)
-        ax.set_prop_cycle(color=colors)
-        for i, rp in enumerate(remain_props.T):
-            times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
-            lines = ax.plot(times, rp, label=r"$%d$" % states[i], linewidth=1)
-            ax.plot(
-                times_fit,
-                fit,
-                label="Burr" if i == n_states - 1 else None,
-                linestyle="dashed",
-                color=lines[0].get_color(),
+        if args.INFILE_PARAM is not None:
+            # Plot remain probabilities and true survival functions for
+            # each state.
+            fig, ax = plt.subplots(clear=True)
+            ax.set_prop_cycle(color=colors)
+            for i, rp in enumerate(remain_props.T):
+                lines = ax.plot(
+                    times,
+                    rp,
+                    label=r"$%d$" % states[i],
+                    linewidth=1,
+                    alpha=alpha,
+                )
+                ax.plot(
+                    times,
+                    lt_dists[i].sf(times),
+                    label="True SF" if i == n_states - 1 else None,
+                    linestyle="dashed",
+                    color=lines[0].get_color(),
+                    alpha=alpha,
+                )
+            ax.set(
+                xlabel="Lag Time / Frames",
+                ylabel="Decay Law",
+                xlim=(times[1], times[-1]),
+                ylim=(0, 1),
             )
-        ax.set(
-            xlabel="Lag Time / Frames",
-            ylabel="Decay Law",
-            xlim=(times[1], times[-1]),
-            ylim=(0, 1),
-        )
-        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        legend = ax.legend(
-            title="State Index",
-            loc="upper right",
-            ncol=2,
-            **mdtplt.LEGEND_KWARGS_XSMALL,
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        plt.close()
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            legend = ax.legend(
+                title="State Index",
+                loc="upper right",
+                ncol=2,
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
 
-        # Plot Burr fit residuals for each state.
-        fig, ax = plt.subplots(clear=True)
-        ax.set_prop_cycle(color=colors)
-        for i, rp in enumerate(remain_props.T):
-            times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
-            res = rp[fit_start[i] : fit_stop[i]] - fit
-            ax.plot(times_fit, res, label=r"$%d$" % states[i])
-        ax.set(
-            xlabel="Lag Time / Frames",
-            ylabel="Burr Fit Residuals",
-            xlim=(times[1], times[-1]),
-        )
-        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        legend = ax.legend(
-            title="State Index",
-            loc="lower right",
-            ncol=2,
-            **mdtplt.LEGEND_KWARGS_XSMALL,
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        plt.close()
+            # Plot difference of the remain probabilities to the true
+            # survival functions for each state.
+            fig, ax = plt.subplots(clear=True)
+            ax.set_prop_cycle(color=colors)
+            for i, rp in enumerate(remain_props.T):
+                res = lt_dists[i].sf(times) - rp
+                ax.plot(times, res, label=r"$%d$" % states[i], alpha=alpha)
+            ax.set(
+                xlabel="Lag Time / Frames",
+                ylabel=r"True SF $-$ Remain Prob.",
+                xlim=(times[1], times[-1]),
+            )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            legend = ax.legend(
+                title="State Index",
+                loc="lower right",
+                ncol=2,
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
 
         # Plot remain probabilities and Kohlrausch fits for each state.
         fig, ax = plt.subplots(clear=True)
@@ -1268,13 +1310,16 @@ if __name__ == "__main__":  # noqa: C901
         for i, rp in enumerate(remain_props.T):
             times_fit = times[fit_start[i] : fit_stop[i]]
             fit = mdt.func.kww(times_fit, *popt_kww[i])
-            lines = ax.plot(times, rp, label=r"$%d$" % states[i], linewidth=1)
+            lines = ax.plot(
+                times, rp, label=r"$%d$" % states[i], linewidth=1, alpha=alpha
+            )
             ax.plot(
                 times_fit,
                 fit,
-                label="Kohlrausch" if i == n_states - 1 else None,
+                label=label_kww if i == n_states - 1 else None,
                 linestyle="dashed",
                 color=lines[0].get_color(),
+                alpha=alpha,
             )
         ax.set(
             xlabel="Lag Time / Frames",
@@ -1300,7 +1345,7 @@ if __name__ == "__main__":  # noqa: C901
             times_fit = times[fit_start[i] : fit_stop[i]]
             fit = mdt.func.kww(times_fit, *popt_kww[i])
             res = rp[fit_start[i] : fit_stop[i]] - fit
-            ax.plot(times_fit, res, label=r"$%d$" % states[i])
+            ax.plot(times_fit, res, label=r"$%d$" % states[i], alpha=alpha)
         ax.set(
             xlabel="Lag Time / Frames",
             ylabel="Kohlrausch Fit Residuals",
@@ -1317,61 +1362,63 @@ if __name__ == "__main__":  # noqa: C901
         pdf.savefig()
         plt.close()
 
-        if args.INFILE_PARAM is not None:
-            # Plot remain probabilities and true survival functions for
-            # each state.
-            fig, ax = plt.subplots(clear=True)
-            ax.set_prop_cycle(color=colors)
-            for i, rp in enumerate(remain_props.T):
-                lines = ax.plot(
-                    times, rp, label=r"$%d$" % states[i], linewidth=1
-                )
-                ax.plot(
-                    times,
-                    lt_dists[i].sf(times),
-                    label="True SF" if i == n_states - 1 else None,
-                    linestyle="dashed",
-                    color=lines[0].get_color(),
-                )
-            ax.set(
-                xlabel="Lag Time / Frames",
-                ylabel="Decay Law",
-                xlim=(times[1], times[-1]),
-                ylim=(0, 1),
+        # Plot remain probabilities and Burr fits for each state.
+        fig, ax = plt.subplots(clear=True)
+        ax.set_prop_cycle(color=colors)
+        for i, rp in enumerate(remain_props.T):
+            times_fit = times[fit_start[i] : fit_stop[i]]
+            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
+            lines = ax.plot(
+                times, rp, label=r"$%d$" % states[i], linewidth=1, alpha=alpha
             )
-            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-            legend = ax.legend(
-                title="State Index",
-                loc="upper right",
-                ncol=2,
-                **mdtplt.LEGEND_KWARGS_XSMALL,
+            ax.plot(
+                times_fit,
+                fit,
+                label=label_bur if i == n_states - 1 else None,
+                linestyle="dashed",
+                color=lines[0].get_color(),
+                alpha=alpha,
             )
-            legend.get_title().set_multialignment("center")
-            pdf.savefig()
-            plt.close()
+        ax.set(
+            xlabel="Lag Time / Frames",
+            ylabel="Decay Law",
+            xlim=(times[1], times[-1]),
+            ylim=(0, 1),
+        )
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        legend = ax.legend(
+            title="State Index",
+            loc="upper right",
+            ncol=2,
+            **mdtplt.LEGEND_KWARGS_XSMALL,
+        )
+        legend.get_title().set_multialignment("center")
+        pdf.savefig()
+        plt.close()
 
-            # Plot difference of the remain probabilities to the true
-            # survival functions for each state.
-            fig, ax = plt.subplots(clear=True)
-            ax.set_prop_cycle(color=colors)
-            for i, rp in enumerate(remain_props.T):
-                res = lt_dists[i].sf(times) - rp
-                ax.plot(times, res, label=r"$%d$" % states[i])
-            ax.set(
-                xlabel="Lag Time / Frames",
-                ylabel=r"True SF $-$ Remain Prob.",
-                xlim=(times[1], times[-1]),
-            )
-            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-            legend = ax.legend(
-                title="State Index",
-                loc="lower right",
-                ncol=2,
-                **mdtplt.LEGEND_KWARGS_XSMALL,
-            )
-            legend.get_title().set_multialignment("center")
-            pdf.savefig()
-            plt.close()
+        # Plot Burr fit residuals for each state.
+        fig, ax = plt.subplots(clear=True)
+        ax.set_prop_cycle(color=colors)
+        for i, rp in enumerate(remain_props.T):
+            times_fit = times[fit_start[i] : fit_stop[i]]
+            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
+            res = rp[fit_start[i] : fit_stop[i]] - fit
+            ax.plot(times_fit, res, label=r"$%d$" % states[i], alpha=alpha)
+        ax.set(
+            xlabel="Lag Time / Frames",
+            ylabel="Burr Fit Residuals",
+            xlim=(times[1], times[-1]),
+        )
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        legend = ax.legend(
+            title="State Index",
+            loc="lower right",
+            ncol=2,
+            **mdtplt.LEGEND_KWARGS_XSMALL,
+        )
+        legend.get_title().set_multialignment("center")
+        pdf.savefig()
+        plt.close()
     print("Created {}".format(outfile))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
