@@ -71,18 +71,22 @@ if __name__ == "__main__":  # noqa: C901
 
     # Column indices for the input file(s).
     col_state = 0
-    col_beta_true = 27
-    col_delta_true = 28
-    col_tau0_true = 29
+    col_beta_true = 29
+    col_delta_true = 30
+    col_tau0_true = 31
+    col_fit_end = 28
     # Average lifetimes from the different methods.
-    col_count = 1
-    col_rate = 3
-    col_int = 5
-    col_kww = 7
-    col_bur = 15
-    col_dst = 30
-    col_unc = 34
-    col_cen = 36
+    col_cnt_cen = 1
+    col_cnt_unc = 3
+    col_rate = 5
+    col_e = 6
+    col_int = 7
+    col_kww = 9
+    col_bur = 17
+    col_dst = 32
+    col_drw = 34
+    col_unc = 36
+    col_cen = 38
 
     # Read data.
     infiles = glob.glob(infile_pattern)
@@ -169,28 +173,34 @@ if __name__ == "__main__":  # noqa: C901
     )
 
     label_true = "True"
-    label_unc = "Uncen."
-    label_cen = "Cens."
-    label_count = "Count"
+    label_cen = "True Cens."
+    label_unc = "True Uncen."
+    label_cnt_cen = "Count Cens."
+    label_cnt_unc = "Count Uncens."
     label_rate = "Rate"
+    label_e = r"$1/e$"
     label_int = "Area"
     label_kww = "Kohl."
     label_bur = "Burr"
 
     color_true = "tab:green"
-    color_unc = "tab:olive"
-    color_cen = "darkolivegreen"
-    color_count = "tab:orange"
-    color_rate = "tab:red"
+    color_cen = "tab:olive"
+    color_unc = "darkolivegreen"
+    color_cnt_cen = "tab:orange"
+    color_cnt_unc = "tab:red"
+    color_rate = "tab:brown"
+    color_e = "tab:pink"
     color_int = "tab:purple"
     color_kww = "tab:blue"
     color_bur = "tab:cyan"
 
     marker_true = "s"
-    marker_unc = "D"
-    marker_cen = "d"
-    marker_count = "H"
-    marker_rate = "h"
+    marker_cen = "D"
+    marker_unc = "d"
+    marker_cnt_cen = "H"
+    marker_cnt_unc = "h"
+    marker_rate = "p"
+    marker_e = "<"
     marker_int = ">"
     marker_kww = "v"
     marker_bur = "^"
@@ -212,18 +222,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_true,
                 alpha=alpha,
             )
-        # Uncensored lifetimes.
-        valid = data[col_unc] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_unc][valid],
-                label=label_unc,
-                color=color_unc,
-                marker=marker_unc,
-                alpha=alpha,
-            )
-        # Censored lifetimes.
+        # True censored lifetimes.
         valid = data[col_cen] > 0
         if np.any(valid):
             ax.plot(
@@ -234,18 +233,40 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_cen,
                 alpha=alpha,
             )
-        # Method 1 (counting).
-        valid = data[col_count] > 0
+        # True uncensored lifetimes.
+        valid = data[col_unc] > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[col_count][valid],
-                label=label_count,
-                color=color_count,
-                marker=marker_count,
+                data[col_unc][valid],
+                label=label_unc,
+                color=color_unc,
+                marker=marker_unc,
                 alpha=alpha,
             )
-        # Method 2 (inverse transition rate).
+        # Method 1 (censored counting).
+        valid = data[col_cnt_cen] > 0
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                data[col_cnt_cen][valid],
+                label=label_cnt_cen,
+                color=color_cnt_cen,
+                marker=marker_cnt_cen,
+                alpha=alpha,
+            )
+        # Method 2 (uncensored counting).
+        valid = data[col_cnt_unc] > 0
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                data[col_cnt_unc][valid],
+                label=label_cnt_unc,
+                color=color_cnt_unc,
+                marker=marker_cnt_unc,
+                alpha=alpha,
+            )
+        # Method 3 (inverse transition rate).
         valid = data[col_rate] > 0
         if np.any(valid):
             ax.plot(
@@ -256,7 +277,18 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_rate,
                 alpha=alpha,
             )
-        # Method 4 (direct integral).
+        # Method 4 (1/e criterion).
+        valid = data[col_e] > 0
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                data[col_e][valid],
+                label=label_e,
+                color=color_e,
+                marker=marker_e,
+                alpha=alpha,
+            )
+        # Method 5 (direct integral).
         valid = data[col_int] > 0
         if np.any(valid):
             ax.plot(
@@ -267,7 +299,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_int,
                 alpha=alpha,
             )
-        # Method 5 (integral of Kohlrausch fit).
+        # Method 6 (integral of Kohlrausch fit).
         valid = data[col_kww] > 0
         if np.any(valid):
             ax.plot(
@@ -278,7 +310,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_kww,
                 alpha=alpha,
             )
-        # Method 6 (integral of Burr fit).
+        # Method 7 (integral of Burr fit).
         valid = data[col_bur] > 0
         if np.any(valid):
             ax.plot(
@@ -329,18 +361,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_true,
                 alpha=alpha,
             )
-        # Uncensored lifetimes.
-        valid = data[col_unc + 1] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_unc + 1][valid],
-                label=label_unc,
-                color=color_unc,
-                marker=marker_unc,
-                alpha=alpha,
-            )
-        # Censored lifetimes.
+        # True censored lifetimes.
         valid = data[col_cen + 1] > 0
         if np.any(valid):
             ax.plot(
@@ -351,18 +372,40 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_cen,
                 alpha=alpha,
             )
-        # Method 1 (counting).
-        valid = data[col_count + 1] > 0
+        # True uncensored lifetimes.
+        valid = data[col_unc + 1] > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[col_count + 1][valid],
-                label=label_count,
-                color=color_count,
-                marker=marker_count,
+                data[col_unc + 1][valid],
+                label=label_unc,
+                color=color_unc,
+                marker=marker_unc,
                 alpha=alpha,
             )
-        # Method 4 (direct integral).
+        # Method 1 (censored counting).
+        valid = data[col_cnt_cen + 1] > 0
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                data[col_cnt_cen + 1][valid],
+                label=label_cnt_cen,
+                color=color_cnt_cen,
+                marker=marker_cnt_cen,
+                alpha=alpha,
+            )
+        # Method 2 (uncensored counting).
+        valid = data[col_cnt_unc + 1] > 0
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                data[col_cnt_unc + 1][valid],
+                label=label_cnt_unc,
+                color=color_cnt_unc,
+                marker=marker_cnt_unc,
+                alpha=alpha,
+            )
+        # Method 5 (direct integral).
         valid = data[col_int + 1] > 0
         if np.any(valid):
             ax.plot(
@@ -373,7 +416,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_int,
                 alpha=alpha,
             )
-        # Method 5 (integral of Kohlrausch fit).
+        # Method 6 (integral of Kohlrausch fit).
         valid = data[col_kww + 1] > 0
         if np.any(valid):
             ax.plot(
@@ -384,7 +427,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_kww,
                 alpha=alpha,
             )
-        # Method 6 (integral of Burr fit).
+        # Method 7 (integral of Burr fit).
         valid = data[col_bur + 1] > 0
         if np.any(valid):
             ax.plot(
@@ -435,7 +478,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_true,
                 alpha=alpha,
             )
-        # Method 5 (Kohlrausch fit).
+        # Method 6 (Kohlrausch fit).
         valid = data[col_kww + 2] > 0
         if np.any(valid):
             ax.errorbar(
@@ -447,7 +490,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_kww,
                 alpha=alpha,
             )
-        # Method 6 (Burr fit).
+        # Method 7 (Burr fit).
         valid = data[col_bur + 2] > 0
         if np.any(valid):
             ax.errorbar(
@@ -487,7 +530,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_true,
                 alpha=alpha,
             )
-        # Method 5 (Kohlrausch fit).
+        # Method 6 (Kohlrausch fit).
         valid = data[col_kww + 4] > 0
         if np.any(valid):
             ax.errorbar(
@@ -499,7 +542,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_kww,
                 alpha=alpha,
             )
-        # Method 6 (Burr fit).
+        # Method 7 (Burr fit).
         valid = data[col_bur + 4] > 0
         if np.any(valid):
             ax.errorbar(
@@ -537,7 +580,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_true,
                 alpha=alpha,
             )
-        # Method 6 (Burr fit).
+        # Method 7 (Burr fit).
         valid = data[col_bur + 6] > 0
         if np.any(valid):
             ax.errorbar(
@@ -565,17 +608,17 @@ if __name__ == "__main__":  # noqa: C901
         # Plot R^2 value of the fits.
         fig, ax = plt.subplots(clear=True)
         # R^2 of the remain probability to the true survival function.
-        valid = data[38] > 0
+        valid = data[col_dst + 8] > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[38][valid],
+                data[col_dst + 8][valid],
                 label="Model",
                 color=color_true,
                 marker=marker_true,
                 alpha=alpha,
             )
-        # Method 5 (Kohlrausch fit).
+        # Method 6 (Kohlrausch fit).
         valid = data[col_kww + 6] > 0
         if np.any(valid):
             ax.plot(
@@ -586,7 +629,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_kww,
                 alpha=alpha,
             )
-        # Method 6 (Burr fit).
+        # Method 7 (Burr fit).
         valid = data[col_bur + 8] > 0
         if np.any(valid):
             ax.plot(
@@ -612,17 +655,17 @@ if __name__ == "__main__":  # noqa: C901
         # Plot root-mean-square error.
         fig, ax = plt.subplots(clear=True)
         # RMSE of the remain probability to the true survival function.
-        valid = data[39] > 0
+        valid = data[col_dst + 9] > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[39][valid],
+                data[col_dst + 9][valid],
                 label="Model",
                 color=color_true,
                 marker=marker_true,
                 alpha=alpha,
             )
-        # Method 5 (Kohlrausch fit).
+        # Method 6 (Kohlrausch fit).
         valid = data[col_kww + 7] > 0
         if np.any(valid):
             ax.plot(
@@ -633,7 +676,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_kww,
                 alpha=alpha,
             )
-        # Method 6 (Burr fit).
+        # Method 7 (Burr fit).
         valid = data[col_bur + 9] > 0
         if np.any(valid):
             ax.plot(
@@ -659,9 +702,9 @@ if __name__ == "__main__":  # noqa: C901
 
         # Plot end of fit region.
         fig, ax = plt.subplots(clear=True)
-        valid = data[26] > 0
+        valid = data[col_fit_end] > 0
         if np.any(valid):
-            ax.plot(xdata[valid], data[26][valid], marker="v")
+            ax.plot(xdata[valid], data[col_fit_end][valid], marker="v")
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
         ax.set_yscale("log", base=10, subs=np.arange(2, 10))
         ax.set(xlabel=xlabel, ylabel=r"End of Fit Region / Frames", xlim=xlim)
