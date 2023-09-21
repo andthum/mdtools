@@ -84,6 +84,7 @@ __author__ = "Andreas Thum"
 import argparse
 import os
 import sys
+import warnings
 from datetime import datetime, timedelta
 
 # Third-party libraries
@@ -92,12 +93,327 @@ import numpy as np
 import psutil
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
+from scipy import stats
 from scipy.special import gamma
-from scipy.stats import burr12, gengamma
 
 # First-party libraries
 import mdtools as mdt
 import mdtools.plot as mdtplt  # Load MDTools plot style  # noqa: F401
+
+
+def dist_charac(a, axis=-1):
+    """
+    Calculate distribution characteristics of a given sample.
+
+    Parameters
+    ----------
+    a : array_like
+        Array of samples.
+    axis : int, optional
+        The axis along which to compute the distribution
+        characteristics.
+
+    Returns
+    -------
+    charac : numpy.ndarray
+        Array of shape ``(8, )`` containing the
+
+            1. Sample mean
+            2. Corrected sample standard deviation
+            3. Unbiased sample skewness
+            4. Unbiased sample excess kurtosis (according to Fisher)
+            5. Sample median
+            6. Sample minimum
+            7. Sample maximum
+            8. Number of samples
+
+    """
+    a = np.asarray(a)
+    nobs, min_max, mean, var, skew, kurt = stats.describe(
+        a, axis=axis, ddof=1, bias=False
+    )
+    median = np.median(a, axis=axis)
+    charac = np.array(
+        [
+            mean,  # Sample mean.
+            np.sqrt(var),  # Corrected sample standard deviation.
+            skew,  # Unbiased sample skewness.
+            kurt,  # Unbiased sample excess kurtosis (Fisher).
+            median,  # Median of the sample.
+            min_max[0],  # Minimum value of the sample.
+            min_max[1],  # Maximum value of the sample.
+            nobs,  # Number of observations (sample points).
+        ]
+    )
+    return charac
+
+
+def raw_moment_integrate(sf, x, n=1):
+    r"""
+    Calculate the :math:`n`-th raw moment through numerical integration
+    of the survival function using of the alternative expectation
+    formula.
+    [1]_
+
+    .. math::
+
+        \langle x^n \rangle =
+        n \int_{-\infty}^\infty x^{n-1} S(x) \text{ d}x
+
+    Here, :math:`S(x)` is the survival function of the probability
+    density function of :math:`x`.  The integral is evaluated
+    numerically using :func:`numpy.trapz`.
+
+    Parameters
+    ----------
+    sf : array_like
+        Values of the survival function :math:`S(x)`.
+    x : array_like
+        Corresponding :math:`x` values.
+    n : int, optional
+        Order of the moment.
+
+    Returns
+    -------
+    rm_n : float
+        The :math:`n`-th raw moment.
+
+    Notes
+    -----
+    Values were `sf` or `x` are NaN or infinite are removed prior to
+    computing the integral.
+
+    References
+    ----------
+    .. [1] S. Chakraborti, F. Jardim, E. Epprecht,
+        `Higher-order moments using the survival function: The
+        alternative expectation formula
+        <https://doi.org/10.1080/00031305.2017.1356374>`_,
+        The American Statistician, 2019, 73, 2, 191-194.
+    """
+    valid = np.isfinite(x) & np.isfinite(sf)
+    if not np.any(valid):
+        warnings.warn("No valid values for numerical integration")
+        return np.nan
+    if n < 1 or np.any(np.modf(n)[0] != 0):
+        raise ValueError(
+            "The moment order, `n` ({}), must be a positive integer".format(n)
+        )
+    integrand = x[valid] ** (n - 1)
+    integrand *= sf[valid]
+    integral = np.trapz(y=integrand, x=x[valid])
+    integral *= n
+    return integral
+
+
+def raw_moment_weibull(tau0, beta, n=1):
+    r"""
+    Calculate the :math:`n`-th raw moment of the Weibull distribution.
+
+    .. math::
+
+        \langle t^n \rangle =
+        \tau_0^n \Gamma(1 + \frac{n}{\beta})
+
+    Parameters
+    ----------
+    tau0 : scalar or array_like
+        The scale parameter of the Weibull distribution.
+    beta : scalar or array_like
+        The shape parameter of the Weibull distribution.
+    n : int or array of int, optional
+        Order of the moment.
+
+    Returns
+    -------
+    rm_n : scalar or numpy.ndarray
+        The :math:`n`-th raw moment.
+
+    Notes
+    -----
+    If more than one input argument is an array, all arrays must be
+    broadcastable.
+    """
+    rm_n = np.power(tau0, n)
+    rm_n *= gamma(1 + np.divide(n, beta))
+    return rm_n
+
+
+def raw_moment_burr12(tau0, beta, delta, n=1):
+    r"""
+    Calculate the :math:`n`-th raw moment of the Burr Type XII
+    distribution.
+
+    .. math::
+
+        \langle t^n \rangle =
+        \tau_0^n
+        \frac{
+            \Gamma\left( \delta - \frac{n}{\beta} \right)
+            \Gamma\left( 1      + \frac{n}{\beta} \right)
+        }{
+            \Gamma(\delta)
+        }
+
+    Parameters
+    ----------
+    tau0 : scalar or array_like
+        The scale parameter of the Burr Type XII distribution.
+    beta, delta : scalar or array_like
+        The shape parameters of the Burr Type XII distribution.
+    n : int or array of int, optional
+        Order of the moment.
+
+    Returns
+    -------
+    rm_n : scalar or numpy.ndarray
+        The :math:`n`-th raw moment.
+
+    Notes
+    -----
+    If more than one input argument is an array, all arrays must be
+    broadcastable.
+    """
+    rm_n = np.power(tau0, n)
+    rm_n *= gamma(np.subtract(delta, np.divide(n, beta)))
+    rm_n *= gamma(1 + np.divide(n, beta))
+    rm_n /= gamma(delta)
+    return rm_n
+
+
+def skewness(mu2, mu3):
+    r"""
+    Calculate the skewness of a distribution from the second and third
+    central moment.
+
+    .. math::
+
+        \gamma_1 = \frac{\mu_3}{\mu_2^{3/2}}
+
+    Here, :math:`\mu_n = \langle (x - \mu)^n \rangle` is the
+    :math:`n`-th central moment.
+
+    Parameters
+    ----------
+    mu2, mu3 : scalar or array_like
+        The second and third central moment.
+
+    Returns
+    -------
+    skew : scalar or numpy.ndarray
+        The skewness of the distribution.
+
+    Notes
+    -----
+    If more than one input argument is an array, all arrays must be
+    broadcastable.
+    """
+    return np.divide(mu3, np.power(mu2, 3 / 2))
+
+
+def kurtosis(mu2, mu4):
+    r"""
+    Calculate the excess kurtosis (according to Fisher) of a
+    distribution from the second and fourth central moment.
+
+    .. math::
+
+        \gamma_2 = \frac{\mu_4}{\mu_2^2} - 3
+
+    Here, :math:`\mu_n = \langle (x - \mu)^n \rangle` is the
+    :math:`n`-th central moment.
+
+    Parameters
+    ----------
+    mu2, mu4 : scalar or array_like
+        The second and fourth central moment.
+
+    Returns
+    -------
+    kurt : scalar or numpy.ndarray
+        The excess kurtosis of the distribution.
+
+    Notes
+    -----
+    If more than one input argument is an array, all arrays must be
+    broadcastable.
+    """
+    return np.divide(mu4, np.power(mu2, 2)) - 3
+
+
+def cross(y, x, f):
+    r"""
+    Return the `x` value where the array `f` falls below the given `y`
+    value for the first time.
+
+    If `f` never falls below the given `y` value, ``numpy.nan`` is
+    returned.
+
+    If `f` falls immediately below the given `y` value, ``0`` is
+    returned.
+
+    Parameters
+    ----------
+    y : scalar
+        The `y` value for which to get the `x` value.
+    x, f : array_like
+        The `x` values and corresponding `f` values.
+
+    Returns
+    -------
+    x_of_y : scalar
+        The `x` value that belongs to the given `y` value.
+    """
+    ix_y = np.nanargmax(f <= y)
+    if f[ix_y] > y:
+        # `f` never falls below the given `y` value.
+        return np.nan
+    elif ix_y < 1:
+        # `f` falls immediately below the given `y` value.
+        return 0
+    elif f[ix_y] == y:
+        return x[ix_y]
+    else:
+        # Linearly interpolate between `f[ix_y]` and `f[ix_y - 1]` to
+        # estimate the `x` value that belongs to the given `y` value.
+        slope = f[ix_y] - f[ix_y - 1]
+        slope /= x[ix_y] - x[ix_y - 1]
+        intercept = f[ix_y] - slope * x[ix_y]
+        return (y - intercept) / slope
+
+
+def fit_goodness(data, fit):
+    """
+    Calculate quantities to assess the goodness of a fit.
+
+    Parameters
+    ----------
+    data : array_like
+        The true data.
+    fit : array_like
+        Array of the same shape as `data` containing the corresponding
+        fit/model values.
+
+    Returns
+    -------
+    r2 : scalar
+        Coefficient of determination.
+    rmse : scalar
+        The root-mean-square error, also known as root-mean-square
+        residuals.
+    """
+    data = np.asarray(data)
+    fit = np.asarray(fit)
+    # Residual sum of squares.
+    ss_res = np.sum((data - fit) ** 2)
+    # Root-mean-square error / root-mean-square residuals.
+    rmse = np.sqrt(ss_res / len(fit))
+    # Total sum of squares.
+    ss_tot = np.sum((data - np.mean(data)) ** 2)
+    # (Pseudo) coefficient of determination (R^2).
+    # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
+    r2 = 1 - (ss_res / ss_tot)
+    return r2, rmse
 
 
 if __name__ == "__main__":  # noqa: C901
@@ -189,13 +505,17 @@ if __name__ == "__main__":  # noqa: C901
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
 
+    # Number of moments to calculate.  For calculating the skewness, the
+    # 2nd and 3rd (central) moments are required, for the kurtosis the
+    # 2nd and 4th (central) moments are required.
+    n_moms = 4
     # Fit method of `scipy.optimize.curve_fit` to use for all fits.
     fit_method = "trf"
-
     # Conversion factor to convert "trajectory steps" to some physical
     # time unit (e.g. ns).
     time_conv = 1
 
+    ####################################################################
     print("\n")
     print("Calculating lifetimes directly from `dtrj`...")
     timer = datetime.now()
@@ -205,12 +525,15 @@ if __name__ == "__main__":  # noqa: C901
     # Method 1: Calculate the average lifetime by counting the number of
     # frames that a given compound stays in a given state including
     # truncated states at the trajectory edges -> censored.
-    lts_cnt_cen, states_cnt_cen = mdt.dtrj.lifetimes_per_state(
+    lts_cnt_cen, states = mdt.dtrj.lifetimes_per_state(
         dtrj, uncensored=False, return_states=True
     )
     lts_cnt_cen = [lts * time_conv for lts in lts_cnt_cen]
-    lts_cnt_cen_mom1 = np.array([np.mean(lts) for lts in lts_cnt_cen])
-    lts_cnt_cen_mom2 = np.array([np.mean(lts**2) for lts in lts_cnt_cen])
+    n_states = len(states)
+    lts_cnt_cen_characs = np.full((n_states, 8), np.nan, dtype=np.float64)
+    lts_cnt_cen_characs[:, -1] = 0  # Default number of observations.
+    for i, lts in enumerate(lts_cnt_cen):
+        lts_cnt_cen_characs[i] = dist_charac(lts)
     del lts_cnt_cen
 
     # Method 2: Calculate the average lifetime by counting the number of
@@ -220,25 +543,19 @@ if __name__ == "__main__":  # noqa: C901
         dtrj, uncensored=True, return_states=True
     )
     lts_cnt_unc = [lts * time_conv for lts in lts_cnt_unc]
-    lts_cnt_unc_mom1 = np.array(
-        [np.mean(lts) for lts in lts_cnt_unc if len(lts) > 0]
-    )
-    lts_cnt_unc_mom2 = np.array(
-        [np.mean(lts**2) for lts in lts_cnt_unc if len(lts) > 0]
-    )
-    if not np.all(np.isin(states_cnt_unc, states_cnt_cen)):
+    if not np.all(np.isin(states_cnt_unc, states)):
         raise ValueError(
-            "`states_cnt_unc` ({}) is not fully contained in `states_cnt_cen`"
-            " ({})".format(states_cnt_unc, states_cnt_cen)
+            "`states_cnt_unc` ({}) is not fully contained in `states`"
+            " ({})".format(states_cnt_unc, states)
         )
-    # If a state is always truncated at the trajectory edges, i.e. when
-    # it never fully lies within the trajectory, it is not contained in
-    # the output of `mdtools.dtrj.lifetimes_per_state(uncensored=True)`.
-    states_missing = np.setdiff1d(states_cnt_cen, states_cnt_unc)
-    ix_insert = np.searchsorted(states_cnt_unc, states_missing)
-    lts_cnt_unc_mom1 = np.insert(lts_cnt_unc_mom1, ix_insert, np.nan)
-    lts_cnt_unc_mom2 = np.insert(lts_cnt_unc_mom2, ix_insert, np.nan)
-    del lts_cnt_unc, states_cnt_unc, states_missing, ix_insert
+    lts_cnt_unc_characs = np.full((n_states, 8), np.nan, dtype=np.float64)
+    lts_cnt_unc_characs[:, -1] = 0  # Default number of observations.
+    for i, lts in enumerate(lts_cnt_unc):
+        if len(lts) == 0:
+            continue
+        else:
+            lts_cnt_unc_characs[i] = dist_charac(lts)
+    del lts_cnt_unc, states_cnt_unc
 
     # Method 3: Calculate the transition rate as the number of
     # transitions leading out of a given state divided by the number of
@@ -246,22 +563,22 @@ if __name__ == "__main__":  # noqa: C901
     # lifetime is calculated as the inverse transition rate.
     rates, states_k = mdt.dtrj.trans_rate_per_state(dtrj, return_states=True)
     lts_k = time_conv / rates
-    if not np.array_equal(states_k, states_cnt_cen):
+    if not np.array_equal(states_k, states):
         raise ValueError(
-            "`states_k` ({}) != `states_cnt_cen`"
-            " ({})".format(states_k, states_cnt_cen)
+            "`states_k` ({}) != `states` ({})".format(states_k, states)
         )
     del dtrj, rates, states_k
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
+    ####################################################################
     print("\n")
     print("Calculating lifetimes from the remain probability...")
     timer = datetime.now()
 
     # Read remain probabilities from file.
     remain_props = np.loadtxt(args.INFILE_RP)
-    states = remain_props[0, 1:]  # State indices.
+    states_rp = remain_props[0, 1:]  # State indices.
     times = remain_props[1:, 0]  # Lag times in trajectory steps.
     remain_props = remain_props[1:, 1:]  # Remain probability functions.
     if np.any(remain_props < 0) or np.any(remain_props > 1):
@@ -272,80 +589,45 @@ if __name__ == "__main__":  # noqa: C901
     if not np.array_equal(times, np.arange(n_frames)):
         raise ValueError("`times` != `np.arange(n_frames)`")
     times *= time_conv  # Lag times in the given physical time unit.
-    if np.any(np.modf(states)[0] != 0):
+    if np.any(np.modf(states_rp)[0] != 0):
         raise ValueError(
-            "Some state indices are not integers but floats.  states ="
-            " {}".format(states)
+            "Some state indices are not integers but floats.  `states_rp` ="
+            " {}".format(states_rp)
         )
-    if not np.array_equal(states, states_cnt_cen):
+    if not np.array_equal(states_rp, states):
         raise ValueError(
-            "`states` ({}) != `states_cnt_cen`"
-            " ({})".format(states, states_cnt_cen)
+            "`states_rp` ({}) != `states` ({})".format(states_rp, states)
         )
-    del states_cnt_cen
-    states = states.astype(np.int32)
-    n_states = len(states)
+    del states_rp
 
     # Method 4: Set the lifetime to the lag time at which the remain
     # probability crosses 1/e.
-    thresh = 1 / np.e
-    ix_thresh = np.nanargmax(remain_props <= thresh, axis=0)
-    lts_e = np.full(n_states, np.nan, dtype=np.float64)
-    for i, rp in enumerate(remain_props.T):
-        if rp[ix_thresh[i]] > thresh:
-            # The remain probability never falls below the threshold.
-            lts_e[i] = np.nan
-        elif ix_thresh[i] < 1:
-            # The remain probability immediately falls below the
-            # threshold.
-            lts_e[i] = 0
-        elif rp[ix_thresh[i] - 1] < thresh:
-            raise ValueError(
-                "The threshold ({}) does not lie within the remain probability"
-                " interval ([{}, {}]) at the found indices ({}, {}).  This"
-                " should not have happened.".format(
-                    thresh,
-                    rp[ix_thresh[i]],
-                    rp[ix_thresh[i] - 1],
-                    ix_thresh[i],
-                    ix_thresh[i] - 1,
-                )
-            )
-        else:
-            slope = rp[ix_thresh[i]] - rp[ix_thresh[i] - 1]
-            slope /= times[ix_thresh[i]] - times[ix_thresh[i] - 1]
-            intercept = rp[ix_thresh[i]] - slope * times[ix_thresh[i]]
-            lts_e[i] = (thresh - intercept) / slope
-            if (
-                times[ix_thresh[i] - 1] > lts_e[i]
-                or times[ix_thresh[i]] < lts_e[i]
-            ):
-                raise ValueError(
-                    "The lifetime ({}) does not lie within the time interval"
-                    " ([{}, {}]) at the found indices ({}, {}).  This should"
-                    " not have happened.".format(
-                        lts_e[i],
-                        times[ix_thresh[i] - 1],
-                        times[ix_thresh[i]],
-                        ix_thresh[i] - 1,
-                        ix_thresh[i],
-                    )
-                )
+    lts_e = np.array(
+        [cross(y=1 / np.e, x=times, f=rp) for rp in remain_props.T]
+    )
 
     # Method 5: Calculate the lifetime as the integral of the remain
-    # probability p(t):
-    #   <t^n> = n * int_0^inf t^(n-1) * p(t) dt
-    lts_int_mom1 = np.full(n_states, np.nan, dtype=np.float64)
-    lts_int_mom2 = np.full(n_states, np.nan, dtype=np.float64)
+    # probability p(t).
+    lts_int_characs = np.full((n_states, 5), np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
-        valid = ~np.isnan(rp)
-        lts_int_mom1[i] = np.trapz(y=rp[valid], x=times[valid])
-        lts_int_mom2[i] = np.trapz(y=rp[valid] * times[valid], x=times[valid])
-        lts_int_mom2[i] *= 2
-    invalid = np.all(remain_props > args.INT_THRESH, axis=0)
-    lts_int_mom1[invalid] = np.nan
-    lts_int_mom2[invalid] = np.nan
-    del valid, invalid
+        raw_moms = np.full(n_moms, np.nan, dtype=np.float64)
+        cen_moms = np.full(n_moms, np.nan, dtype=np.float64)
+        if np.any(rp <= args.INT_THRESH):
+            # Only calculate the (raw) moments by numerically
+            # integrating the remain probability if the remain
+            # probability falls below the given threshold.
+            for n in range(n_moms):
+                raw_moms[n] = raw_moment_integrate(sf=rp, x=times, n=n + 1)
+                cen_moms[n] = mdt.stats.moment_raw2cen(raw_moms[: n + 1])
+        skew = skewness(mu2=cen_moms[1], mu3=cen_moms[2])
+        kurt = kurtosis(mu2=cen_moms[1], mu4=cen_moms[3])
+        # Estimate of the median assuming that the remain probability is
+        # equal to the survival function of the underlying distribution
+        # of lifetimes.
+        median = cross(y=0.5, x=times, f=rp)
+        lts_int_characs[i] = np.array(
+            [raw_moms[0], np.sqrt(cen_moms[1]), skew, kurt, median]
+        )
 
     # Get fit region for fitting methods.
     if args.ENDFIT is None:
@@ -359,7 +641,7 @@ if __name__ == "__main__":  # noqa: C901
     fit_stop = np.zeros(n_states, dtype=np.uint32)  # Exclusive.
     for i, rp in enumerate(remain_props.T):
         stop_fit = np.nanargmax(rp < args.STOPFIT)
-        if stop_fit == 0 and rp[stop_fit] >= args.STOPFIT:
+        if rp[stop_fit] >= args.STOPFIT:
             # The remain probability never falls below `args.STOPFIT`.
             stop_fit = len(rp)
         elif stop_fit < 2:
@@ -377,9 +659,10 @@ if __name__ == "__main__":  # noqa: C901
     bounds_kww = ([0, 0], [np.inf, 10])
     popt_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
     perr_kww = np.full((n_states, 2), np.nan, dtype=np.float64)
-    fit_r2_kww = np.full(n_states, np.nan, dtype=np.float64)
-    fit_rmse_kww = np.full(n_states, np.nan, dtype=np.float64)
+    lts_kww_fit_goodness = np.full((n_states, 2), np.nan, dtype=np.float64)
+    lts_kww_characs = np.full((n_states, 5), np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
+        # Fit remain probability.
         times_fit = times[fit_start[i] : fit_stop[i]]
         rp_fit = rp[fit_start[i] : fit_stop[i]]
         popt_kww[i], perr_kww[i], valid = mdt.func.fit_kww(
@@ -389,26 +672,24 @@ if __name__ == "__main__":  # noqa: C901
             bounds=bounds_kww,
             method=fit_method,
         )
-        times_fit = times_fit[valid]
-        rp_fit = rp_fit[valid]
-        if np.any(np.isnan(popt_kww[i])):
-            fit_rmse_kww[i] = np.nan
-            fit_r2_kww[i] = np.nan
-        else:
-            fit = mdt.func.kww(times_fit, *popt_kww[i])
-            # Residual sum of squares.
-            ss_res = np.sum((rp_fit - fit) ** 2)
-            # Root-mean-square error / root-mean-square residuals.
-            fit_rmse_kww[i] = np.sqrt(ss_res / len(fit))
-            # Total sum of squares.
-            ss_tot = np.sum((rp_fit - np.mean(rp_fit)) ** 2)
-            # (Pseudo) coefficient of determination (R^2).
-            # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
-            fit_r2_kww[i] = 1 - (ss_res / ss_tot)
+        fit = mdt.func.kww(times_fit[valid], *popt_kww[i])
+        r2, rmse = fit_goodness(data=rp_fit[valid], fit=fit)
+        lts_kww_fit_goodness[i] = np.array([r2, rmse])
+        # Calculate distribution characteristics.
+        raw_moms = np.full(n_moms, np.nan, dtype=np.float64)
+        cen_moms = np.full(n_moms, np.nan, dtype=np.float64)
+        for n in range(n_moms):
+            raw_moms[n] = raw_moment_weibull(*popt_kww[i], n=n + 1)
+            cen_moms[n] = mdt.stats.moment_raw2cen(raw_moms[: n + 1])
+        skew = skewness(mu2=cen_moms[1], mu3=cen_moms[2])
+        kurt = kurtosis(mu2=cen_moms[1], mu4=cen_moms[3])
+        # Median = tau_0 * ln(2)^(1/beta)
+        median = popt_kww[i][0] * np.log(2) ** (1 / popt_kww[i][1])
+        lts_kww_characs[i] = np.array(
+            [raw_moms[0], np.sqrt(cen_moms[1]), skew, kurt, median]
+        )
     tau0_kww, beta_kww = popt_kww.T
     tau0_kww_sd, beta_kww_sd = perr_kww.T
-    lts_kww_mom1 = tau0_kww * gamma(1 + 1 / beta_kww)
-    lts_kww_mom2 = tau0_kww**2 * gamma(1 + 2 / beta_kww)
 
     # Method 7: Fit the remain probability with the survival function of
     # a Burr Type XII distribution and calculate the lifetime as the
@@ -420,9 +701,10 @@ if __name__ == "__main__":  # noqa: C901
     bounds_bur = ([0, 0, 1 + 1e-6], [np.inf, 10, 100])
     popt_bur = np.full((n_states, 3), np.nan, dtype=np.float64)
     perr_bur = np.full((n_states, 3), np.nan, dtype=np.float64)
-    fit_r2_bur = np.full(n_states, np.nan, dtype=np.float64)
-    fit_rmse_bur = np.full(n_states, np.nan, dtype=np.float64)
+    lts_bur_fit_goodness = np.full((n_states, 2), np.nan, dtype=np.float64)
+    lts_bur_characs = np.full((n_states, 5), np.nan, dtype=np.float64)
     for i, rp in enumerate(remain_props.T):
+        # Fit remain probability.
         times_fit = times[fit_start[i] : fit_stop[i]]
         rp_fit = rp[fit_start[i] : fit_stop[i]]
         popt_bur[i], perr_bur[i], valid = mdt.func.fit_burr12_sf_alt(
@@ -432,22 +714,25 @@ if __name__ == "__main__":  # noqa: C901
             bounds=bounds_bur,
             method=fit_method,
         )
-        times_fit = times_fit[valid]
-        rp_fit = rp_fit[valid]
-        if np.any(np.isnan(popt_bur[i])):
-            fit_rmse_bur[i] = np.nan
-            fit_r2_bur[i] = np.nan
-        else:
-            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
-            # Residual sum of squares.
-            ss_res = np.sum((rp_fit - fit) ** 2)
-            # Root-mean-square error / root-mean-square residuals.
-            fit_rmse_bur[i] = np.sqrt(ss_res / len(fit))
-            # Total sum of squares.
-            ss_tot = np.sum((rp_fit - np.mean(rp_fit)) ** 2)
-            # (Pseudo) coefficient of determination (R^2).
-            # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
-            fit_r2_bur[i] = 1 - (ss_res / ss_tot)
+        fit = mdt.func.burr12_sf_alt(times_fit[valid], *popt_bur[i])
+        r2, rmse = fit_goodness(data=rp_fit[valid], fit=fit)
+        lts_bur_fit_goodness[i] = np.array([r2, rmse])
+        # Calculate distribution characteristics.
+        tau0 = popt_bur[i][0]
+        beta = popt_bur[i][1]
+        delta = popt_bur[i][2] / beta
+        raw_moms = np.full(n_moms, np.nan, dtype=np.float64)
+        cen_moms = np.full(n_moms, np.nan, dtype=np.float64)
+        for n in range(n_moms):
+            raw_moms[n] = raw_moment_burr12(tau0, beta, delta, n=n + 1)
+            cen_moms[n] = mdt.stats.moment_raw2cen(raw_moms[: n + 1])
+        skew = skewness(mu2=cen_moms[1], mu3=cen_moms[2])
+        kurt = kurtosis(mu2=cen_moms[1], mu4=cen_moms[3])
+        # Median = tau_0 * (2^(1/delta) - 1)^(1/beta)
+        median = tau0 * (2 ** (1 / delta) - 1) ** (1 / beta)
+        lts_bur_characs[i] = np.array(
+            [raw_moms[0], np.sqrt(cen_moms[1]), skew, kurt, median]
+        )
     tau0_bur, beta_bur, d_bur = popt_bur.T
     tau0_bur_sd, beta_bur_sd, d_bur_sd = perr_bur.T
     delta_bur = d_bur / beta_bur
@@ -459,43 +744,25 @@ if __name__ == "__main__":  # noqa: C901
             - 2 * d_bur_sd * beta_bur_sd / (d_bur * beta_bur)
         )
     )
-    lts_bur_mom1 = (
-        tau0_bur
-        * gamma(delta_bur - 1 / beta_bur)
-        * gamma(1 + 1 / beta_bur)
-        / gamma(delta_bur)
-    )
-    lts_bur_mom2 = (
-        tau0_bur**2
-        * gamma(delta_bur - 2 / beta_bur)
-        * gamma(1 + 2 / beta_bur)
-        / gamma(delta_bur)
-    )
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
+    ####################################################################
     if args.INFILE_PARAM is not None:
         print("\n")
         print("Reading true lifetimes from parameters file...")
-        params = np.loadtxt(args.INFILE_PARAM, unpack=True)
-        states_true = params[0]
+        params = np.loadtxt(args.INFILE_PARAM, usecols=np.arange(4))
+        states_true = params[:, 0]
         if not np.all(np.isin(states, states_true)):
             raise ValueError(
                 "`states` ({}) is not fully contained in `states_true`"
                 " ({})".format(states, states_true)
             )
         del states_true
-        params = params[:, states]
+        params = params[states]
         # Parameters of the true lifetime distribution.
-        beta_true, delta_true, tau0_true = params[1:4]
-        # Moments of the true lifetime distribution.
-        lts_dst_mom1, lts_dst_mom2 = params[4:6]
-        # Moments of the drawn lifetimes.
-        lts_drw_mom1, lts_drw_mom2 = params[6:8]
-        # Moments of the uncensored lifetimes.
-        lts_unc_mom1, lts_unc_mom2 = params[8:10]
-        # Moments of the censored lifetimes.
-        lts_cen_mom1, lts_cen_mom2 = params[10:12]
+        beta_true, delta_true, tau0_true = params[:, 1:4].T
+        dist_params = np.column_stack([tau0_true, beta_true, delta_true])
 
         # Lifetime distributions used to generate the trajectory.
         dist = None
@@ -511,7 +778,7 @@ if __name__ == "__main__":  # noqa: C901
             )
         elif dist == "generalized_gamma":
             lt_dists = [
-                gengamma(
+                stats.gengamma(
                     a=delta_true[i] / beta_true[i],
                     c=beta_true[i],
                     loc=0,
@@ -521,7 +788,7 @@ if __name__ == "__main__":  # noqa: C901
             ]
         elif dist == "burr12":
             lt_dists = [
-                burr12(
+                stats.burr12(
                     c=beta_true[i], d=delta_true[i], loc=0, scale=tau0_true[i]
                 )
                 for i in range(n_states)
@@ -529,70 +796,69 @@ if __name__ == "__main__":  # noqa: C901
         else:
             raise ValueError("Unknown lifetime distribution: {}".format(dist))
 
-        # R^2 and RMSE if we treat the remain probability as fit of the
-        # true survival function.
-        rp_r2 = np.full(n_states, np.nan, dtype=np.float64)
-        rp_rmse = np.full(n_states, np.nan, dtype=np.float64)
+        lts_true_rp_goodness = np.full((n_states, 2), np.nan, dtype=np.float64)
+        lts_true_characs = np.full((n_states, 5), np.nan, dtype=np.float64)
         for i, rp in enumerate(remain_props.T):
+            # R^2 and RMSE if the remain probability is seen as fit of
+            # the true survival function.
             valid = np.isfinite(rp)
-            rp_valid = rp[valid]
-            # True survival function.
             sf_true = lt_dists[i].sf(times[valid])
-            # Residual sum of squares.
-            ss_res = np.sum((sf_true - rp_valid) ** 2)
-            # Root-mean-square error / root-mean-square residuals.
-            rp_rmse[i] = np.sqrt(ss_res / len(rp_valid))
-            # Total sum of squares.
-            ss_tot = np.sum((sf_true - np.mean(sf_true)) ** 2)
-            # (Pseudo) coefficient of determination (R^2).
-            # https://www.r-bloggers.com/2021/03/the-r-squared-and-nonlinear-regression-a-difficult-marriage/
-            rp_r2[i] = 1 - (ss_res / ss_tot)
+            r2, rmse = fit_goodness(data=sf_true, fit=rp[valid])
+            lts_true_rp_goodness[i] = np.array([r2, rmse])
+            # Calculate distribution characteristics.
+            lts_true_characs[i] = np.array(
+                [
+                    # Mean, variance, skewness, kurtosis.
+                    *lt_dists[i].stats("mvsk"),
+                    # Median
+                    lt_dists[i].median(),
+                ]
+            )
+            # Variance -> Standard deviation.
+            lts_true_characs[i, 1] = np.sqrt(lts_true_characs[i, 1])
 
+    ####################################################################
     print("\n")
     print("Creating text output...")
     timer = datetime.now()
     data = [
         states,  # 1
         # Method 1 (censored counting).
-        lts_cnt_cen_mom1,  # 2
-        lts_cnt_cen_mom2,  # 3
+        lts_cnt_cen_characs,  # 2-9
         # Method 2 (uncensored counting).
-        lts_cnt_unc_mom1,  # 4
-        lts_cnt_unc_mom2,  # 5
+        lts_cnt_unc_characs,  # 10-17
         # Method 3 (inverse transition rate).
-        lts_k,  # 6
+        lts_k,  # 18
         # Method 4 (1/e criterion).
-        lts_e,  # 7
+        lts_e,  # 19
         # Method 5 (direct integral).
-        lts_int_mom1,  # 8
-        lts_int_mom2,  # 9
+        lts_int_characs,  # 20-24
         # Method 6 (integral of Kohlrausch fit).
-        lts_kww_mom1,  # 10
-        lts_kww_mom2,  # 11
-        tau0_kww,  # 12
-        tau0_kww_sd,  # 13
-        beta_kww,  # 14
-        beta_kww_sd,  # 15
-        fit_r2_kww,  # 16
-        fit_rmse_kww,  # 17
+        lts_kww_characs,  # 25-29
+        tau0_kww,  # 30
+        tau0_kww_sd,  # 31
+        beta_kww,  # 32
+        beta_kww_sd,  # 33
+        lts_kww_fit_goodness,  # 34-35
         # Method 7 (integral of Burr fit).
-        lts_bur_mom1,  # 18
-        lts_bur_mom2,  # 19
-        tau0_bur,  # 20
-        tau0_bur_sd,  # 21
-        beta_bur,  # 22
-        beta_bur_sd,  # 23
-        delta_bur,  # 24
-        delta_bur_sd,  # 25
-        fit_r2_bur,  # 26
-        fit_rmse_bur,  # 27
+        lts_bur_characs,  # 36-40
+        tau0_bur,  # 41
+        tau0_bur_sd,  # 42
+        beta_bur,  # 43
+        beta_bur_sd,  # 44
+        delta_bur,  # 45
+        delta_bur_sd,  # 46
+        lts_bur_fit_goodness,  # 47-48
         # Fit region
-        fit_start,  # 28
-        fit_stop - 1,  # 29
+        fit_start,  # 49
+        fit_stop - 1,  # 50
     ]
     if args.INFILE_PARAM is not None:
-        data += params[1:12].tolist()
-        data += [rp_r2, rp_rmse]
+        data += [
+            lts_true_characs,  # 51-55
+            dist_params,  # 56-58
+            lts_true_rp_goodness,  # 59-60
+        ]
     data = np.column_stack(data)
     header = (
         "State lifetimes.\n"
@@ -632,8 +898,9 @@ if __name__ == "__main__":  # noqa: C901
         + "\n"
         + "3) The average transition rate <k> is calculated as the number of\n"
         + "   transitions leading out of a given state divided by the number\n"
-        + "   frames that compounds have spent in this state.  The average\n"
-        + "   lifetime <t_k> is calculated as the inverse transition rate:\n"
+        + "   of frames that compounds have spent in this state.  The\n"
+        + "   average lifetime <t_k> is calculated as the inverse transition\n"
+        + "   rate:\n"
         + "     <t_k> = 1 / <k>\n"
         + "\n"
         + "4) The average lifetime <t_e> is set to the lag time at which the\n"
@@ -679,8 +946,7 @@ if __name__ == "__main__":  # noqa: C901
             bounds_bur[0][2], bounds_bur[1][2]
         )
         + "   The average lifetime <t_bur^n> is calculated according to the\n"
-        + "   alternative expectation\n"
-        + "   formula [1]:\n"
+        + "   alternative expectation formula [1]:\n"
         + "     <t_bur^n> = n * int_0^inf t^(n-1) I_bur(t) dt\n"
         + "               = tau0_bur^n * Gamma(delta_bur - n/beta_bur) *\n"
         + "                 Gamma(1 + n/beta_bur) / Gamma(delta_bur)\n"
@@ -706,68 +972,62 @@ if __name__ == "__main__":  # noqa: C901
         + "  1 State index (zero-based)\n"
         + "\n"
         + "  Lifetime from Method 1 (censored counting)\n"
-        + "  2 1st moment <t_cnt_cen> / frames\n"
-        + "  3 2nd moment <t_cnt_cen^2> / frames^2\n"
+        + "  2 Sample mean <t_cnt_cen> / frames\n"
+        + "  3 Corrected sample standard deviation / frames\n"
+        + "  4 Unbiased sample skewness\n"
+        + "  5 Unbiased sample excess kurtosis (Fisher)\n"
+        + "  6 Sample median / frames\n"
+        + "  7 Sample minimum / frames\n"
+        + "  8 Sample maximum / frames\n"
+        + "  9 Number of observations/samples\n"
         + "\n"
         + "  Lifetime from Method 2 (uncensored counting)\n"
-        + "  4 1st moment <t_cnt_unc> / frames\n"
-        + "  5 2nd moment <t_cnt_unc^2> / frames^2\n"
+        + " 10-17 As Method 1\n"
         + "\n"
         + "  Lifetime from Method 3 (inverse transition rate)\n"
-        + "  6 <t_k> / frames\n"
+        + " 18 <t_k> / frames\n"
         + "\n"
         + "  Lifetime from Method 4 (1/e criterion)\n"
-        + "  7 <t_e> / frames\n"
+        + " 19 <t_e> / frames\n"
         + "\n"
         + "  Lifetime from Method 5 (direct integral)\n"
-        + "  8 1st moment <t_int> / frames\n"
-        + "  9 2nd moment <t_int^2> / frames^2\n"
+        + " 20 Mean <t_int> / frames\n"
+        + " 21 Standard deviation / frames\n"
+        + " 22 Skewness\n"
+        + " 23 Excess kurtosis (Fisher)\n"
+        + " 24 Median / frames\n"
         + "\n"
         + "  Lifetime from Method 6 (integral of Kohlrausch fit)\n"
-        + " 10 1st moment <t_kww> / frames\n"
-        + " 11 2nd moment <t_kww^2> / frames^2\n"
-        + " 12 Fit parameter tau0_kww / frames\n"
-        + " 13 Standard deviation of tau0_kww / frames\n"
-        + " 14 Fit parameter beta_kww\n"
-        + " 15 Standard deviation of beta_kww\n"
-        + " 16 Coefficient of determination of the fit (R^2 value)\n"
-        + " 17 Root-mean-square error (RMSE) of the fit\n"
+        + " 25-29 As Method 5\n"
+        + " 30 Fit parameter tau0_kww / frames\n"
+        + " 31 Standard deviation of tau0_kww / frames\n"
+        + " 32 Fit parameter beta_kww\n"
+        + " 33 Standard deviation of beta_kww\n"
+        + " 34 Coefficient of determination of the fit (R^2 value)\n"
+        + " 35 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Lifetime from Method 7 (integral of Burr fit)\n"
-        + " 18 1st moment <t_bur> / frames\n"
-        + " 19 2nd moment <t_bur^2> / frames^2\n"
-        + " 20 Fit parameter tau0_burr / frames\n"
-        + " 21 Standard deviation of tau0_burr / frames\n"
-        + " 22 Fit parameter beta_burr\n"
-        + " 23 Standard deviation of beta_burr\n"
-        + " 24 Fit parameter delta_burr\n"
-        + " 25 Standard deviation of delta_burr\n"
-        + " 26 Coefficient of determination of the fit (R^2 value)\n"
-        + " 27 Root-mean-square error (RMSE) of the fit\n"
+        + " 36-44 As Method 6\n"
+        + " 45 Fit parameter delta_burr\n"
+        + " 46 Standard deviation of delta_burr\n"
+        + " 47 Coefficient of determination of the fit (R^2 value)\n"
+        + " 48 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Fit region for all fitting methods\n"
-        + " 28 Start of fit region (inclusive) / frames\n"
-        + " 29 End of fit region (exclusive) / frames\n"
+        + " 49 Start of fit region (inclusive) / frames\n"
+        + " 50 End of fit region (exclusive) / frames\n"
     )
     if args.INFILE_PARAM is not None:
         header += (
             "\n"
             + "  True state lifetimes\n"
-            + " 30 Shape parameter beta of the true distribution\n"
-            + " 31 Shape parameter delta of the true distribution\n"
-            + " 32 Scale parameter tau0 of the true distribution\n"
-            + " 33 1st moment of the true distribution <t_dst> / frames\n"
-            + " 34 2nd moment of the true distribution <t_dst^2> / frames^2\n"
-            + " 35 1st moment of the drawn lifetimes <t_drw> / frames\n"
-            + " 36 2nd moment of the drawn lifetimes <t_drw^2> / frames^2\n"
-            + " 37 1st moment of the uncensored lifetimes <t_unc> / frames\n"
-            + " 38 2nd moment of the uncensored lifetimes <t_unc^2> /"
-            + " frames^2\n"
-            + " 39 1st moment of the censored lifetimes <t_cen> / frames\n"
-            + " 40 2nd moment of the censored lifetimes <t_cen^2> / frames^2\n"
-            + " 41 R^2 if the remain probability is seen as fit of the\n"
+            + " 51-55 As Method 5\n"
+            + " 56 Scale parameter tau0 of the true distribution\n"
+            + " 57 Shape parameter beta of the true distribution\n"
+            + " 58 Shape parameter delta of the true distribution\n"
+            + " 59 R^2 if the remain probability is seen as fit of the\n"
             + "    survival function (SF) of the true distribution\n"
-            + " 42 RMSE of the remain probability to the true SF\n"
+            + " 60 RMSE of the remain probability to the true SF\n"
         )
     header += "\n" + "Column number:\n"
     header += "{:>14d}".format(1)
@@ -779,66 +1039,40 @@ if __name__ == "__main__":  # noqa: C901
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
+    ####################################################################
     print("\n")
     print("Creating plot(s)...")
     timer = datetime.now()
-    lts_mom1s = [
-        lts_cnt_cen_mom1,
-        lts_cnt_unc_mom1,
-        lts_k,
-        lts_e,
-        lts_int_mom1,
-        lts_kww_mom1,
-        lts_bur_mom1,
-    ]
-    tau0s = [tau0_kww, tau0_bur]
-    betas = [beta_kww, beta_bur]
-    deltas = [delta_bur]
-    fit_r2s = [fit_r2_kww, fit_r2_bur]
-    fit_rmses = [fit_rmse_kww, fit_rmse_bur]
-    if args.INFILE_PARAM is not None:
-        lts_mom1s.append(params[[4, 8, 10]])  # lts_dst, lts_unc, lts_cen
-        tau0s.append(tau0_true)
-        betas.append(beta_true)
-        deltas.append(delta_true)
-        fit_r2s.append(rp_r2)
-        fit_rmses.append(rp_rmse)
-    lts_mom1s = np.vstack(lts_mom1s)
-    tau0s = np.vstack(tau0s)
-    betas = np.vstack(betas)
-    deltas = np.vstack(deltas)
-    fit_r2s = np.vstack(fit_r2s)
-    fit_rmses = np.vstack(fit_rmses)
 
     label_true = "True"
-    label_cen = "True Cens."
-    label_unc = "True Uncen."
-    label_cnt_cen = "Count Cens."
-    label_cnt_unc = "Count Uncens."
+    # label_cen = "True Cens."
+    # label_unc = "True Uncen."
+    label_cnt_cen = "Cens."  # Count
+    label_cnt_unc = "Uncens."  # Count
     label_k = "Rate"
-    label_e = r"$1/e$"
+    # label_e = r"$1/e$"
     label_int = "Area"
     label_kww = "Kohl."
     label_bur = "Burr"
 
     color_true = "tab:green"
-    color_cen = "tab:olive"
-    color_unc = "darkolivegreen"
+    # color_cen = "tab:olive"
+    # color_unc = "darkolivegreen"
     color_cnt_cen = "tab:orange"
     color_cnt_unc = "tab:red"
     color_k = "tab:brown"
-    color_e = "tab:pink"
+    # color_e = "tab:pink"
     color_int = "tab:purple"
     color_kww = "tab:blue"
     color_bur = "tab:cyan"
 
     marker_true = "s"
-    marker_cen = "D"
-    marker_unc = "d"
+    # marker_cen = "D"
+    # marker_unc = "d"
     marker_cnt_cen = "H"
     marker_cnt_unc = "h"
     marker_k = "p"
-    marker_e = "<"
+    # marker_e = "<"
     marker_int = ">"
     marker_kww = "^"
     marker_bur = "v"
@@ -855,241 +1089,246 @@ if __name__ == "__main__":  # noqa: C901
     outfile = args.OUTFILE + ".pdf"
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
-        # Plot lifetimes vs. state indices.
-        fig, ax = plt.subplots(clear=True)
-        if args.INFILE_PARAM is not None:
-            # True lifetimes (from distribution).
-            ax.errorbar(
+        # Plot distribution characteristics vs. state indices.
+        ylabels = (
+            "Average Lifetime / Frames",
+            "Std. Dev. / Frames",
+            "Skewness",
+            "Excess Kurtosis",
+            "Median / Frames",
+        )
+        for i, ylabel in enumerate(ylabels):
+            fig, ax = plt.subplots(clear=True)
+            if args.INFILE_PARAM is not None:
+                # True lifetimes distribution.
+                ax.plot(
+                    states,
+                    lts_true_characs[:, i],
+                    label=label_true,
+                    color=color_true,
+                    marker=marker_true,
+                    alpha=alpha,
+                )
+            # Method 1 (censored counting).
+            ax.plot(
                 states,
-                lts_dst_mom1,
-                yerr=np.sqrt(lts_dst_mom2 - lts_dst_mom1**2),
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
+                lts_cnt_cen_characs[:, i],
+                label=label_cnt_cen,
+                color=color_cnt_cen,
+                marker=marker_cnt_cen,
                 alpha=alpha,
             )
-            # True uncensored lifetimes.
-            ax.errorbar(
+            # Method 2 (uncensored counting).
+            ax.plot(
                 states,
-                lts_unc_mom1,
-                yerr=np.sqrt(lts_unc_mom2 - lts_unc_mom1**2),
-                label=label_unc,
-                color=color_unc,
-                marker=marker_unc,
+                lts_cnt_unc_characs[:, i],
+                label=label_cnt_unc,
+                color=color_cnt_unc,
+                marker=marker_cnt_unc,
                 alpha=alpha,
             )
-            # True censored lifetimes.
-            ax.errorbar(
+            if i == 0:
+                # Method 3 (inverse transition rate).
+                ax.plot(
+                    states,
+                    lts_k,
+                    label=label_k,
+                    color=color_k,
+                    marker=marker_k,
+                    alpha=alpha,
+                )
+                # # Method 4 (1/e criterion).
+                # ax.plot(
+                #     states,
+                #     lts_e,
+                #     label=label_e,
+                #     color=color_e,
+                #     marker=marker_e,
+                #     alpha=alpha,
+                # )
+            # Method 5 (direct integral)
+            ax.plot(
                 states,
-                lts_cen_mom1,
-                yerr=np.sqrt(lts_cen_mom2 - lts_cen_mom1**2),
-                label=label_cen,
-                color=color_cen,
-                marker=marker_cen,
+                lts_int_characs[:, i],
+                label=label_int,
+                color=color_int,
+                marker=marker_int,
                 alpha=alpha,
             )
-        # Method 1 (censored counting).
-        ax.errorbar(
-            states,
-            lts_cnt_cen_mom1,
-            yerr=np.sqrt(lts_cnt_cen_mom2 - lts_cnt_cen_mom1**2),
-            label=label_cnt_cen,
-            color=color_cnt_cen,
-            marker=marker_cnt_cen,
-            alpha=alpha,
-        )
-        # Method 2 (uncensored counting).
-        ax.errorbar(
-            states,
-            lts_cnt_unc_mom1,
-            yerr=np.sqrt(lts_cnt_unc_mom2 - lts_cnt_unc_mom1**2),
-            label=label_cnt_unc,
-            color=color_cnt_unc,
-            marker=marker_cnt_unc,
-            alpha=alpha,
-        )
-        # Method 3 (inverse transition rate).
-        ax.errorbar(
-            states,
-            lts_k,
-            yerr=None,
-            label=label_k,
-            color=color_k,
-            marker=marker_k,
-            alpha=alpha,
-        )
-        # Method 4 (1/e criterion).
-        ax.errorbar(
-            states,
-            lts_e,
-            yerr=None,
-            label=label_e,
-            color=color_e,
-            marker=marker_e,
-            alpha=alpha,
-        )
-        # Method 5 (direct integral)
-        ax.errorbar(
-            states,
-            lts_int_mom1,
-            yerr=np.sqrt(lts_int_mom2 - lts_int_mom1**2),
-            label=label_int,
-            color=color_int,
-            marker=marker_int,
-            alpha=alpha,
-        )
-        # Method 6 (integral of Kohlrausch fit).
-        ax.errorbar(
-            states,
-            lts_kww_mom1,
-            yerr=np.sqrt(lts_kww_mom2 - lts_kww_mom1**2),
-            label=label_kww,
-            color=color_kww,
-            marker=marker_kww,
-            alpha=alpha,
-        )
-        # Method 7 (integral of Burr fit).
-        ax.errorbar(
-            states,
-            lts_bur_mom1,
-            yerr=np.sqrt(lts_bur_mom2 - lts_bur_mom1**2),
-            label=label_bur,
-            color=color_bur,
-            marker=marker_bur,
-            alpha=alpha,
-        )
-        ax.set(xlabel=xlabel, ylabel=r"Average Lifetime / Frames", xlim=xlim)
-        ylim = ax.get_ylim()
-        if ylim[0] < 0:
-            ax.set_ylim(0, ylim[1])
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.set_xticks([], minor=True)
-        ax.legend(loc="upper left", ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL)
-        pdf.savefig()
-        valid = np.isfinite(lts_mom1s) & (lts_mom1s > 0)
-        if np.any(valid):
-            # Set y axis to log scale (lifetimes vs. state indices).
-            # Round y limits to next lower and higher power of ten.
+            # Method 6 (integral of Kohlrausch fit).
+            ax.plot(
+                states,
+                lts_kww_characs[:, i],
+                label=label_kww,
+                color=color_kww,
+                marker=marker_kww,
+                alpha=alpha,
+            )
+            # Method 7 (integral of Burr fit).
+            ax.plot(
+                states,
+                lts_bur_characs[:, i],
+                label=label_bur,
+                color=color_bur,
+                marker=marker_bur,
+                alpha=alpha,
+            )
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(lts_mom1s[valid])))
-            ymax = 10 ** np.ceil(np.log10(ylim[1]))
-            ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            if i not in (2, 3) and ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            ax.set_xticks([], minor=True)
+            ax.legend(ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
-        plt.close()
+            ydata = [line.get_ydata() for line in ax.get_lines()]
+            yd_min = np.array(
+                [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+            )
+            yd_max = np.array(
+                [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+            )
+            if i not in (2, 3) and len(yd_min) > 0:
+                # Set y axis to log scale.
+                # Round y limits to next lower and higher power of ten.
+                ylim = ax.get_ylim()
+                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
+                ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
+                ax.set_ylim(
+                    ymin if np.isfinite(ymin) else None,
+                    ymax if np.isfinite(ymax) else None,
+                )
+                ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                pdf.savefig()
+            plt.close()
 
-        # Plot fit parameter tau0.
-        fig, ax = plt.subplots(clear=True)
-        if args.INFILE_PARAM is not None:
-            # True tau0 (from distribution).
-            ax.errorbar(
+        # Plot number of min, max and number of samples for count
+        # methods.
+        ylabels = (
+            "Min. Lifetime / Frames",
+            "Max. Lifetime / Frames",
+            "No. of Samples",
+        )
+        for i, ylabel in enumerate(ylabels):
+            fig, ax = plt.subplots(clear=True)
+            # Method 1 (censored counting).
+            ax.plot(
                 states,
-                tau0_true,
-                yerr=None,
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
+                lts_cnt_cen_characs[:, 5 + i],
+                label=label_cnt_cen,
+                color=color_cnt_cen,
+                marker=marker_cnt_cen,
                 alpha=alpha,
             )
-        # Method 6 (Kohlrausch fit).
-        ax.errorbar(
-            states,
-            tau0_kww,
-            yerr=tau0_kww_sd,
-            label=label_kww,
-            color=color_kww,
-            marker=marker_kww,
-            alpha=alpha,
-        )
-        # Method 7 (Burr fit).
-        ax.errorbar(
-            states,
-            tau0_bur,
-            yerr=tau0_bur_sd,
-            label=label_bur,
-            color=color_bur,
-            marker=marker_bur,
-            alpha=alpha,
-        )
-        ax.set(
-            xlabel=xlabel, ylabel=r"Fit Parameter $\tau_0$ / Frames", xlim=xlim
-        )
-        ylim = ax.get_ylim()
-        if ylim[0] < 0:
-            ax.set_ylim(0, ylim[1])
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.set_xticks([], minor=True)
-        ax.legend(loc="upper left", **mdtplt.LEGEND_KWARGS_XSMALL)
-        pdf.savefig()
-        valid = np.isfinite(tau0s) & (tau0s > 0)
-        if np.any(valid):
-            # Set y axis to log scale (fit parameter tau0).
-            # Round y limits to next lower and higher power of ten.
+            # Method 2 (uncensored counting).
+            ax.plot(
+                states,
+                lts_cnt_unc_characs[:, 5 + i],
+                label=label_cnt_unc,
+                color=color_cnt_unc,
+                marker=marker_cnt_unc,
+                alpha=alpha,
+            )
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(tau0s[valid])))
-            ymax = 10 ** np.ceil(np.log10(ylim[1]))
-            ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            if ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            ax.set_xticks([], minor=True)
+            ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
-        plt.close()
+            ydata = [line.get_ydata() for line in ax.get_lines()]
+            yd_min = np.array(
+                [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+            )
+            yd_max = np.array(
+                [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+            )
+            if len(yd_min) > 0:
+                # Set y axis to log scale (fit parameter delta).
+                # Round y limits to next lower and higher power of ten.
+                ylim = ax.get_ylim()
+                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
+                ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
+                ax.set_ylim(
+                    ymin if np.isfinite(ymin) else None,
+                    ymax if np.isfinite(ymax) else None,
+                )
+                ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                pdf.savefig()
+            plt.close()
 
-        # Plot fit parameter beta.
-        fig, ax = plt.subplots(clear=True)
-        if args.INFILE_PARAM is not None:
-            # True beta (from distribution).
+        # Plot fit parameters tau0 and beta.
+        ylabels = (
+            r"Fit Parameter $\tau_0$ / Frames",
+            r"Fit Parameter $\beta$",
+        )
+        for i, ylabel in enumerate(ylabels):
+            fig, ax = plt.subplots(clear=True)
+            if args.INFILE_PARAM is not None:
+                # True distribution.
+                ax.errorbar(
+                    states,
+                    dist_params[:, i],
+                    yerr=None,
+                    label=label_true,
+                    color=color_true,
+                    marker=marker_true,
+                    alpha=alpha,
+                )
+            # Method 6 (Kohlrausch fit).
             ax.errorbar(
                 states,
-                beta_true,
-                yerr=None,
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
+                popt_kww[:, i],
+                yerr=perr_kww[:, i],
+                label=label_kww,
+                color=color_kww,
+                marker=marker_kww,
                 alpha=alpha,
             )
-        # Method 6 (Kohlrausch fit).
-        ax.errorbar(
-            states,
-            beta_kww,
-            yerr=beta_kww_sd,
-            label=label_kww,
-            color=color_kww,
-            marker=marker_kww,
-            alpha=alpha,
-        )
-        # Method 7 (Burr fit).
-        ax.errorbar(
-            states,
-            beta_bur,
-            yerr=beta_bur_sd,
-            label=label_bur,
-            color=color_bur,
-            marker=marker_bur,
-            alpha=alpha,
-        )
-        ax.set(xlabel=xlabel, ylabel=r"Fit Parameter $\beta$", xlim=xlim)
-        ylim = ax.get_ylim()
-        if ylim[0] < 0:
-            ax.set_ylim(0, ylim[1])
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.set_xticks([], minor=True)
-        ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
-        pdf.savefig()
-        valid = np.isfinite(betas) & (betas > 0)
-        if np.any(valid):
-            # Set y axis to log scale (fit parameter beta).
-            # Round y limits to next lower and higher power of ten.
+            # Method 7 (Burr fit).
+            ax.errorbar(
+                states,
+                popt_bur[:, i],
+                yerr=perr_bur[:, i],
+                label=label_bur,
+                color=color_bur,
+                marker=marker_bur,
+                alpha=alpha,
+            )
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(betas[valid])))
-            ymax = 10 ** np.ceil(np.log10(ylim[1]))
-            ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            if ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            ax.set_xticks([], minor=True)
+            ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
-        plt.close()
+            ydata = [line.get_ydata() for line in ax.get_lines()]
+            yd_min = np.array(
+                [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+            )
+            yd_max = np.array(
+                [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+            )
+            if len(yd_min) > 0:
+                # Set y axis to log scale.
+                # Round y limits to next lower and higher power of ten.
+                ylim = ax.get_ylim()
+                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
+                ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
+                ax.set_ylim(
+                    ymin if np.isfinite(ymin) else None,
+                    ymax if np.isfinite(ymax) else None,
+                )
+                ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                pdf.savefig()
+            plt.close()
 
         # Plot fit parameter delta.
         fig, ax = plt.subplots(clear=True)
         if args.INFILE_PARAM is not None:
-            # True delta (from distribution).
+            # True distribution.
             ax.errorbar(
                 states,
                 delta_true,
@@ -1117,121 +1356,90 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        valid = np.isfinite(deltas) & (deltas > 0)
-        if np.any(valid):
+        ydata = [line.get_ydata() for line in ax.get_lines()]
+        yd_min = np.array(
+            [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+        )
+        yd_max = np.array(
+            [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+        )
+        if len(yd_min) > 0:
             # Set y axis to log scale (fit parameter delta).
             # Round y limits to next lower and higher power of ten.
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(deltas[valid])))
-            ymax = 10 ** np.ceil(np.log10(ylim[1]))
-            ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
+            ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
+            ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
+            ax.set_ylim(
+                ymin if np.isfinite(ymin) else None,
+                ymax if np.isfinite(ymax) else None,
+            )
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
             pdf.savefig()
         plt.close()
 
-        # Plot R^2 value of the fits.
-        fig, ax = plt.subplots(clear=True)
-        if args.INFILE_PARAM is not None:
-            # R^2 of the remain probability to the true survival
-            # function.
+        # Plot goodness of fit quantities.
+        ylabels = (r"Coeff. of Determ. $R^2$", "RMSE")
+        for i, ylabel in enumerate(ylabels):
+            fig, ax = plt.subplots(clear=True)
+            if args.INFILE_PARAM is not None:
+                # Remain probability to the true survival function.
+                ax.plot(
+                    states,
+                    lts_true_rp_goodness[:, i],
+                    label=r"$C(t)$",
+                    color=color_true,
+                    marker=marker_true,
+                    alpha=alpha,
+                )
+            # Method 6 (Kohlrausch fit).
             ax.plot(
                 states,
-                rp_r2,
-                label=r"$S(t)$",
-                color=color_true,
-                marker=marker_true,
+                lts_kww_fit_goodness[:, i],
+                label=label_kww,
+                color=color_kww,
+                marker=marker_kww,
                 alpha=alpha,
             )
-        # Method 6 (Kohlrausch fit).
-        ax.plot(
-            states,
-            fit_r2_kww,
-            label=label_kww,
-            color=color_kww,
-            marker=marker_kww,
-            alpha=alpha,
-        )
-        # Method 7 (Burr fit).
-        ax.plot(
-            states,
-            fit_r2_bur,
-            label=label_bur,
-            color=color_bur,
-            marker=marker_bur,
-            alpha=alpha,
-        )
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Coeff. of Determ. $R^2$",
-            xlim=xlim,
-            ylim=(0, 1.05),
-        )
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.set_xticks([], minor=True)
-        ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
-        pdf.savefig()
-        valid = np.isfinite(fit_r2s) & (fit_r2s > 0)
-        if np.any(valid):
-            # Set y axis to log scale (R^2 value of the fits).
-            # Round `ymin` to next lower power of ten.
-            ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_r2s[valid])))
-            ymax = 2
-            ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            pdf.savefig()
-        plt.close()
-
-        # Plot root-mean-square error.
-        fig, ax = plt.subplots(clear=True)
-        if args.INFILE_PARAM is not None:
-            # RMSE of the remain probability to the true survival
-            # function.
+            # Method 7 (Burr fit).
             ax.plot(
                 states,
-                rp_rmse,
-                label=r"$S(t)$",
-                color=color_true,
-                marker=marker_true,
+                lts_bur_fit_goodness[:, i],
+                label=label_bur,
+                color=color_bur,
+                marker=marker_bur,
                 alpha=alpha,
             )
-        # Method 6 (Kohlrausch fit).
-        ax.plot(
-            states,
-            fit_rmse_kww,
-            label=label_kww,
-            color=color_kww,
-            marker=marker_kww,
-            alpha=alpha,
-        )
-        # Method 7 (Burr fit).
-        ax.plot(
-            states,
-            fit_rmse_bur,
-            label=label_bur,
-            color=color_bur,
-            marker=marker_bur,
-            alpha=alpha,
-        )
-        ax.set(xlabel=xlabel, ylabel=r"RMSE", xlim=xlim)
-        ylim = ax.get_ylim()
-        if ylim[0] < 0:
-            ax.set_ylim(0, ylim[1])
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.set_xticks([], minor=True)
-        ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
-        pdf.savefig()
-        valid = np.isfinite(fit_rmses) & (fit_rmses > 0)
-        if np.any(valid):
-            # Set y axis to log scale (root-mean-square error).
-            # Round y limits to next lower and higher power of ten.
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.nanmin(fit_rmses[valid])))
-            ymax = 10 ** np.ceil(np.log10(ylim[1]))
-            ax.set_ylim(ymin if np.isfinite(ymin) else None, ymax)
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            if ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            ax.set_xticks([], minor=True)
+            ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
-        plt.close()
+            ydata = [line.get_ydata() for line in ax.get_lines()]
+            yd_min = np.array(
+                [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+            )
+            yd_max = np.array(
+                [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
+            )
+            if len(yd_min) > 0:
+                # Set y axis to log scale (R^2 value of the fits).
+                # Round `ymin` to next lower power of ten.
+                ylim = ax.get_ylim()
+                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
+                if i == 0:
+                    ymax = 2
+                else:
+                    ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
+                ax.set_ylim(
+                    ymin if np.isfinite(ymin) else None,
+                    ymax if np.isfinite(ymax) else None,
+                )
+                ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                pdf.savefig()
+            plt.close()
 
         # Plot end of fit region.
         fig, ax = plt.subplots(clear=True)
@@ -1259,14 +1467,14 @@ if __name__ == "__main__":  # noqa: C901
                 ax.plot(
                     times,
                     lt_dists[i].sf(times),
-                    label="True SF" if i == n_states - 1 else None,
+                    label=r"True $S(t)$" if i == n_states - 1 else None,
                     linestyle="dashed",
                     color=lines[0].get_color(),
                     alpha=alpha,
                 )
             ax.set(
-                xlabel="Lag Time / Frames",
-                ylabel="Decay Law",
+                xlabel="Time / Frames",
+                ylabel=r"Autocorrelation $C(t)$",
                 xlim=(times[1], times[-1]),
                 ylim=(0, 1),
             )
@@ -1289,8 +1497,8 @@ if __name__ == "__main__":  # noqa: C901
                 res = lt_dists[i].sf(times) - rp
                 ax.plot(times, res, label=r"$%d$" % states[i], alpha=alpha)
             ax.set(
-                xlabel="Lag Time / Frames",
-                ylabel=r"True SF $-$ Remain Prob.",
+                xlabel="Time / Frames",
+                ylabel=r"$S(t) - C(t)$",
                 xlim=(times[1], times[-1]),
             )
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
@@ -1322,8 +1530,8 @@ if __name__ == "__main__":  # noqa: C901
                 alpha=alpha,
             )
         ax.set(
-            xlabel="Lag Time / Frames",
-            ylabel="Decay Law",
+            xlabel="Time / Frames",
+            ylabel=r"Autocorrelation $C(t)$",
             xlim=(times[1], times[-1]),
             ylim=(0, 1),
         )
@@ -1347,7 +1555,7 @@ if __name__ == "__main__":  # noqa: C901
             res = rp[fit_start[i] : fit_stop[i]] - fit
             ax.plot(times_fit, res, label=r"$%d$" % states[i], alpha=alpha)
         ax.set(
-            xlabel="Lag Time / Frames",
+            xlabel="Time / Frames",
             ylabel="Kohlrausch Fit Residuals",
             xlim=(times[1], times[-1]),
         )
@@ -1380,8 +1588,8 @@ if __name__ == "__main__":  # noqa: C901
                 alpha=alpha,
             )
         ax.set(
-            xlabel="Lag Time / Frames",
-            ylabel="Decay Law",
+            xlabel="Time / Frames",
+            ylabel=r"Autocorrelation $C(t)$",
             xlim=(times[1], times[-1]),
             ylim=(0, 1),
         )
@@ -1405,7 +1613,7 @@ if __name__ == "__main__":  # noqa: C901
             res = rp[fit_start[i] : fit_stop[i]] - fit
             ax.plot(times_fit, res, label=r"$%d$" % states[i], alpha=alpha)
         ax.set(
-            xlabel="Lag Time / Frames",
+            xlabel="Time / Frames",
             ylabel="Burr Fit Residuals",
             xlim=(times[1], times[-1]),
         )
