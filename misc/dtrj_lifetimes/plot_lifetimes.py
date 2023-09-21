@@ -137,16 +137,22 @@ if __name__ == "__main__":  # noqa: C901
     elif sort_by == "beta_true":
         sort_ix = np.argsort(data[col_dist_params + 1])
         xdata = data[col_dist_params + 1][sort_ix]
-        xlim = (2e-1, 5e0)
         xlabel = r"Shape Parameter $\beta$"
         legend_title = (
             dist_name + r", $\tau_0 = %d$" % data[col_dist_params][0]
         )
+        if dist_name == "Log-Logistic Dist.":
+            xlim = (1e0, 2e1)
+        else:
+            xlim = (2e-1, 5e0)
     elif sort_by == "delta_true":
         sort_ix = np.argsort(data[col_dist_params + 2])
         xdata = data[col_dist_params + 2][sort_ix]
-        xlim = (2e-1, 5e0)
         xlabel = r"Shape Parameter $\delta$"
+        if dist_name in ("Chi Dist.", "Lomax Dist."):
+            xlim = (1e0, 2e1)
+        else:
+            xlim = (2e-1, 5e0)
         if dist_name == "Chi Dist.":
             legend_title = dist_name
         else:
@@ -163,6 +169,43 @@ if __name__ == "__main__":  # noqa: C901
     ylims_fit_params = [(None, None) for i in range(3)]
     ylims_fit_goodness = [(None, None) for i in range(3)]
     ylims_fit_region = [(None, None)]
+    if dist_name == "Exp. Dist." and sort_by == "n_cmps":
+        ylims_characs = [
+            (2e0, 3e2),  # Mean.
+            (1e0, 2e2),  # Standard deviation.
+            (2e-1, 3e0),  # Skewness.
+            (6e-1, 2e1),  # Excess kurtosis.
+            (2e0, 2e2),  # Median.
+        ]
+    if dist_name == "Exp. Dist." and sort_by == "n_frames":
+        ylims_characs = [
+            (8e0, 3e2),  # Mean.
+            (9e1, 3e2),  # Standard deviation.
+            (4e-1, 3e0),  # Skewness.
+            (4e-1, 2e1),  # Excess kurtosis.
+            (1e0, 1e3),  # Median.
+        ]
+    if dist_name == "Exp. Dist." and sort_by == "tau0_true":
+        ylims_characs = [
+            (2e1, 5e2),  # Mean.
+            (2e1, 5e2),  # Standard deviation.
+            (1e0, 3e0),  # Skewness.
+            (5e0, 1e1),  # Excess kurtosis.
+            (1e1, 4e2),  # Median.
+        ]
+    if dist_name == "Gamma Dist." and sort_by == "delta_true":
+        ylims_characs = [
+            (2e1, 5e2),  # Mean.
+            (4e1, 3e2),  # Standard deviation.
+            (9e-1, 5e0),  # Skewness.
+            (1e0, 3e1),  # Excess kurtosis.
+            (3e0, 5e2),  # Median.
+        ]
+        ylims_cnt = [(9e-1, 2e1), (9e2, 3e3), (1e4, 9e4)]
+    if dist_name == "Chi Dist." and sort_by == "delta_true":
+        ylims_cnt = [(8e-2, 1.2e1), (4e0, 1e1), (1e6, 4e6)]
+    if dist_name == "Log-Logistic Dist." and sort_by == "beta_true":
+        ylims_cnt = [(8e-1, 6e1), (1e2, 2e4), (1e4, 5e4)]
 
     label_true = "True"
     # label_cen = "True Cens."
