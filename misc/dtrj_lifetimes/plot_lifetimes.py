@@ -70,23 +70,18 @@ if __name__ == "__main__":  # noqa: C901
     outfile = outfile.replace("*", "N")
 
     # Column indices for the input file(s).
-    col_state = 0
-    col_beta_true = 29
-    col_delta_true = 30
-    col_tau0_true = 31
-    col_fit_end = 28
-    # Average lifetimes from the different methods.
-    col_cnt_cen = 1
-    col_cnt_unc = 3
-    col_rate = 5
-    # col_e = 6
-    col_int = 7
-    col_kww = 9
-    col_bur = 17
-    col_dst = 32
-    # col_drw = 34
-    # col_unc = 36
-    # col_cen = 38
+    col_states = 0
+    col_dist_params = 55  # to 57 (tau0, beta, delta)
+    col_fit_end = 49
+    # Lifetimes from the different methods.
+    col_cnt_cen = 1  # to 8 (mean, std, skew, kurt, median, min, max, nobs)
+    col_cnt_unc = 9  # to 16 (as col_cnt_cen)
+    col_rate = 17
+    # col_e = 18
+    col_int = 19  # to 23 (mean, std, skew, kurt, median)
+    col_kww = 24  # to 34 (mean, std, skew, kurt, median, fit params)
+    col_bur = 35  # to 47 (as col_kww)
+    col_dst = 50  # to 54 (as col_int)
 
     # Read data.
     infiles = glob.glob(infile_pattern)
@@ -100,7 +95,7 @@ if __name__ == "__main__":  # noqa: C901
     for infile in infiles:
         data_file = np.loadtxt(infile, ndmin=2)
         # Only keep the row that contains the data for state 1.
-        valid = data_file[:, col_state] == 1
+        valid = data_file[:, col_states] == 1
         if not np.any(valid):
             continue
         elif np.count_nonzero(valid) != 1:
@@ -121,57 +116,53 @@ if __name__ == "__main__":  # noqa: C901
         sort_ix = np.argsort(shapes[0])
         xdata = shapes[0][sort_ix]
         xlim = (5e-1, 2e5)
-        ylim_lt_mom1 = (2e0, 3e2)  # y limits for 1st moment lifetime plot
-        ylim_lt_mom2 = (1e0, 3e2)  # y limits for 2nd moment lifetime plot
         xlabel = "Number of Particles"
         legend_title = (
-            dist_name + r", $\tau_0 = %.2f$" % data[col_tau0_true][0]
+            dist_name + r", $\tau_0 = %.2f$" % data[col_dist_params][0]
         )
     elif sort_by == "n_frames":
         sort_ix = np.argsort(shapes[1])
         xdata = shapes[1][sort_ix]
         xlim = (5e0, 2e5)
-        ylim_lt_mom1 = (2e0, 3e2)  # y limits for 1st moment lifetime plot
-        ylim_lt_mom2 = (1e0, 3e2)  # y limits for 2nd moment lifetime plot
         xlabel = "Number of Frames"
         legend_title = (
-            dist_name + r", $\tau_0 = %.2f$" % data[col_tau0_true][0]
+            dist_name + r", $\tau_0 = %.2f$" % data[col_dist_params][0]
         )
+    elif sort_by == "tau0_true":
+        sort_ix = np.argsort(data[col_dist_params])
+        xdata = data[col_dist_params][sort_ix]
+        xlim = (2e1, 5e2)
+        xlabel = r"Scale Parameter $\tau_0$ / Frames"
+        legend_title = dist_name
     elif sort_by == "beta_true":
-        sort_ix = np.argsort(data[col_beta_true])
-        xdata = data[col_beta_true][sort_ix]
+        sort_ix = np.argsort(data[col_dist_params + 1])
+        xdata = data[col_dist_params + 1][sort_ix]
         xlim = (2e-1, 5e0)
-        ylim_lt_mom1 = (None, None)  # y limits for 1st moment lifetime plot
-        ylim_lt_mom2 = (None, None)  # y limits for 2nd moment lifetime plot
         xlabel = r"Shape Parameter $\beta$"
         legend_title = (
-            dist_name + r", $\tau_0 = %.2f$" % data[col_tau0_true][0]
+            dist_name + r", $\tau_0 = %.2f$" % data[col_dist_params][0]
         )
     elif sort_by == "delta_true":
-        sort_ix = np.argsort(data[col_delta_true])
-        xdata = data[col_delta_true][sort_ix]
+        sort_ix = np.argsort(data[col_dist_params + 2])
+        xdata = data[col_dist_params + 2][sort_ix]
         xlim = (2e-1, 5e0)
-        ylim_lt_mom1 = (None, None)  # y limits for 1st moment lifetime plot
-        ylim_lt_mom2 = (None, None)  # y limits for 2nd moment lifetime plot
         xlabel = r"Shape Parameter $\delta$"
         if dist_name == "Chi Dist.":
             legend_title = dist_name
         else:
             legend_title = (
-                dist_name + r", $\tau_0 = %.2f$" % data[col_tau0_true][0]
+                dist_name + r", $\tau_0 = %.2f$" % data[col_dist_params][0]
             )
-    elif sort_by == "tau0_true":
-        sort_ix = np.argsort(data[col_tau0_true])
-        xdata = data[col_tau0_true][sort_ix]
-        xlim = (2e1, 5e2)
-        ylim_lt_mom1 = xlim  # y limits for 1st moment lifetime plot
-        ylim_lt_mom2 = xlim  # y limits for 2nd moment lifetime plot
-        xlabel = r"Scale Parameter $\tau_0$ / Frames"
-        legend_title = dist_name
     else:
         raise ValueError("Unknown value for `sort_by`: {}".format(sort_by))
     shapes = shapes[:, sort_ix]
     data = data[:, sort_ix]
+
+    ylims_characs = [(None, None) for i in range(5)]
+    ylims_cnt = [(None, None) for i in range(3)]
+    ylims_fit_params = [(None, None) for i in range(3)]
+    ylims_fit_goodness = [(None, None) for i in range(3)]
+    ylims_fit_region = [(None, None)]
 
     label_true = "True"
     # label_cen = "True Cens."
@@ -210,370 +201,253 @@ if __name__ == "__main__":  # noqa: C901
 
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
-        # Plot lifetimes.
-        fig, ax = plt.subplots(clear=True)
-        # True lifetimes (from distribution).
-        valid = data[col_dst] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_dst][valid],
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
-                alpha=alpha,
-            )
-        # # True censored lifetimes.
-        # valid = data[col_cen] > 0
-        # if np.any(valid):
-        #     ax.plot(
-        #         xdata[valid],
-        #         data[col_cen][valid],
-        #         label=label_cen,
-        #         color=color_cen,
-        #         marker=marker_cen,
-        #         alpha=alpha,
-        #     )
-        # # True uncensored lifetimes.
-        # valid = data[col_unc] > 0
-        # if np.any(valid):
-        #     ax.plot(
-        #         xdata[valid],
-        #         data[col_unc][valid],
-        #         label=label_unc,
-        #         color=color_unc,
-        #         marker=marker_unc,
-        #         alpha=alpha,
-        #     )
-        # Method 1 (censored counting).
-        valid = data[col_cnt_cen] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_cnt_cen][valid],
-                label=label_cnt_cen,
-                color=color_cnt_cen,
-                marker=marker_cnt_cen,
-                alpha=alpha,
-            )
-        # Method 2 (uncensored counting).
-        valid = data[col_cnt_unc] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_cnt_unc][valid],
-                label=label_cnt_unc,
-                color=color_cnt_unc,
-                marker=marker_cnt_unc,
-                alpha=alpha,
-            )
-        # Method 3 (inverse transition rate).
-        valid = data[col_rate] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_rate][valid],
-                label=label_rate,
-                color=color_rate,
-                marker=marker_rate,
-                alpha=alpha,
-            )
-        # # Method 4 (1/e criterion).
-        # valid = data[col_e] > 0
-        # if np.any(valid):
-        #     ax.plot(
-        #         xdata[valid],
-        #         data[col_e][valid],
-        #         label=label_e,
-        #         color=color_e,
-        #         marker=marker_e,
-        #         alpha=alpha,
-        #     )
-        # Method 5 (direct integral).
-        valid = data[col_int] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_int][valid],
-                label=label_int,
-                color=color_int,
-                marker=marker_int,
-                alpha=alpha,
-            )
-        # Method 6 (integral of Kohlrausch fit).
-        valid = data[col_kww] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_kww][valid],
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
-                alpha=alpha,
-            )
-        # Method 7 (integral of Burr fit).
-        valid = data[col_bur] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_bur][valid],
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
-                alpha=alpha,
-            )
-        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Average Lifetime / Frames",
-            xlim=xlim,
-            ylim=ylim_lt_mom1,
+        # Plot distribution characteristics.
+        ylabels = (
+            "Average Lifetime / Frames",
+            "Std. Dev. / Frames",
+            "Skewness",
+            "Excess Kurtosis",
+            "Median / Frames",
         )
-        handles, labels = ax.get_legend_handles_labels()
-        legend = ax.legend(
-            title=legend_title, ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        plt.close()
+        for i, ylabel in enumerate(ylabels):
+            fig, ax = plt.subplots(clear=True)
+            # True lifetimes (from distribution).
+            valid = data[col_dst + i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_dst + i][valid],
+                    label=label_true,
+                    color=color_true,
+                    marker=marker_true,
+                    alpha=alpha,
+                )
+            # Method 1 (censored counting).
+            valid = data[col_cnt_cen + i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_cnt_cen + i][valid],
+                    label=label_cnt_cen,
+                    color=color_cnt_cen,
+                    marker=marker_cnt_cen,
+                    alpha=alpha,
+                )
+            # Method 2 (uncensored counting).
+            valid = data[col_cnt_unc + i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_cnt_unc + i][valid],
+                    label=label_cnt_unc,
+                    color=color_cnt_unc,
+                    marker=marker_cnt_unc,
+                    alpha=alpha,
+                )
+            # Method 3 (inverse transition rate).
+            if i == 0:
+                valid = data[col_rate] > 0
+                if np.any(valid):
+                    ax.plot(
+                        xdata[valid],
+                        data[col_rate][valid],
+                        label=label_rate,
+                        color=color_rate,
+                        marker=marker_rate,
+                        alpha=alpha,
+                    )
+                # # Method 4 (1/e criterion).
+                # valid = data[col_e] > 0
+                # if np.any(valid):
+                #     ax.plot(
+                #         xdata[valid],
+                #         data[col_e][valid],
+                #         label=label_e,
+                #         color=color_e,
+                #         marker=marker_e,
+                #         alpha=alpha,
+                #     )
+            # Method 5 (direct integral).
+            valid = data[col_int + i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_int + i][valid],
+                    label=label_int,
+                    color=color_int,
+                    marker=marker_int,
+                    alpha=alpha,
+                )
+            # Method 6 (integral of Kohlrausch fit).
+            valid = data[col_kww + i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_kww + i][valid],
+                    label=label_kww,
+                    color=color_kww,
+                    marker=marker_kww,
+                    alpha=alpha,
+                )
+            # Method 7 (integral of Burr fit).
+            valid = data[col_bur + i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_bur + i][valid],
+                    label=label_bur,
+                    color=color_bur,
+                    marker=marker_bur,
+                    alpha=alpha,
+                )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(
+                xlabel=xlabel,
+                ylabel=ylabel,
+                xlim=xlim,
+                ylim=ylims_characs[i],
+            )
+            legend = ax.legend(
+                title=legend_title, ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
 
-        # Plot standard deviation of the lifetime distribution.
-        fig, ax = plt.subplots(clear=True)
-        # True lifetimes (from distribution).
-        std = np.sqrt(data[col_dst + 1] - data[col_dst] ** 2)
-        valid = std > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                std[valid],
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
-                alpha=alpha,
-            )
-        # # True censored lifetimes.
-        # std = np.sqrt(data[col_cen + 1] - data[col_cen] ** 2)
-        # valid = std > 0
-        # if np.any(valid):
-        #     ax.plot(
-        #         xdata[valid],
-        #         std[valid],
-        #         label=label_cen,
-        #         color=color_cen,
-        #         marker=marker_cen,
-        #         alpha=alpha,
-        #     )
-        # # True uncensored lifetimes.
-        # std = np.sqrt(data[col_unc + 1] - data[col_unc] ** 2)
-        # valid = std > 0
-        # if np.any(valid):
-        #     ax.plot(
-        #         xdata[valid],
-        #         std[valid],
-        #         label=label_unc,
-        #         color=color_unc,
-        #         marker=marker_unc,
-        #         alpha=alpha,
-        #     )
-        # Method 1 (censored counting).
-        std = np.sqrt(data[col_cnt_cen + 1] - data[col_cnt_cen] ** 2)
-        valid = std > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                std[valid],
-                label=label_cnt_cen,
-                color=color_cnt_cen,
-                marker=marker_cnt_cen,
-                alpha=alpha,
-            )
-        # Method 2 (uncensored counting).
-        std = np.sqrt(data[col_cnt_unc + 1] - data[col_cnt_unc] ** 2)
-        valid = std > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                std[valid],
-                label=label_cnt_unc,
-                color=color_cnt_unc,
-                marker=marker_cnt_unc,
-                alpha=alpha,
-            )
-        # Method 5 (direct integral).
-        std = np.sqrt(data[col_int + 1] - data[col_int] ** 2)
-        valid = std > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                std[valid],
-                label=label_int,
-                color=color_int,
-                marker=marker_int,
-                alpha=alpha,
-            )
-        # Method 6 (integral of Kohlrausch fit).
-        std = np.sqrt(data[col_kww + 1] - data[col_kww] ** 2)
-        valid = std > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                std[valid],
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
-                alpha=alpha,
-            )
-        # Method 7 (integral of Burr fit).
-        std = np.sqrt(data[col_bur + 1] - data[col_bur] ** 2)
-        valid = std > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                std[valid],
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
-                alpha=alpha,
-            )
-        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Est. Std. Dev. / Frames",
-            xlim=xlim,
-            ylim=ylim_lt_mom2,
+        # Plot number of min, max and number of samples for count
+        # methods.
+        ylabels = (
+            "Min. Lifetime / Frames",
+            "Max. Lifetime / Frames",
+            "No. of Samples",
         )
-        handles, labels = ax.get_legend_handles_labels()
-        legend = ax.legend(
-            title=legend_title, ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        plt.close()
+        for i, ylabel in enumerate(ylabels):
+            fig, ax = plt.subplots(clear=True)
+            # Method 1 (censored counting).
+            valid = data[col_cnt_cen + len(ylims_characs) + i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_cnt_cen + len(ylims_characs) + i][valid],
+                    label=label_cnt_cen,
+                    color=color_cnt_cen,
+                    marker=marker_cnt_cen,
+                    alpha=alpha,
+                )
+            # Method 2 (uncensored counting).
+            valid = data[col_cnt_unc + len(ylims_characs) + i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_cnt_unc + len(ylims_characs) + i][valid],
+                    label=label_cnt_unc,
+                    color=color_cnt_unc,
+                    marker=marker_cnt_unc,
+                    alpha=alpha,
+                )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(
+                xlabel=xlabel,
+                ylabel=ylabel,
+                xlim=xlim,
+                ylim=ylims_cnt[i],
+            )
+            handles, labels = ax.get_legend_handles_labels()
+            legend = ax.legend(
+                title=legend_title,
+                ncol=max(len(handles), 1),
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
 
-        # Plot fit parameter tau0.
-        fig, ax = plt.subplots(clear=True)
-        # True tau0 (from distribution).
-        valid = data[col_tau0_true] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_tau0_true][valid],
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
-                alpha=alpha,
-            )
-        # Method 6 (Kohlrausch fit).
-        valid = data[col_kww + 2] > 0
-        if np.any(valid):
-            ax.errorbar(
-                xdata[valid],
-                data[col_kww + 2][valid],
-                yerr=data[col_kww + 3],
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
-                alpha=alpha,
-            )
-        # Method 7 (Burr fit).
-        valid = data[col_bur + 2] > 0
-        if np.any(valid):
-            ax.errorbar(
-                xdata[valid],
-                data[col_bur + 2][valid],
-                yerr=data[col_bur + 3],
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
-                alpha=alpha,
-            )
-        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(
-            xlabel=xlabel, ylabel=r"Fit Parameter $\tau_0$ / Frames", xlim=xlim
+        # Plot fit parameters tau0 and beta.
+        ylabels = (
+            r"Fit Parameter $\tau_0$ / Frames",
+            r"Fit Parameter $\beta$",
         )
-        handles, labels = ax.get_legend_handles_labels()
-        legend = ax.legend(
-            title=legend_title,
-            ncol=max(len(handles), 1),
-            **mdtplt.LEGEND_KWARGS_XSMALL,
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        plt.close()
-
-        # Plot fit parameter beta.
-        fig, ax = plt.subplots(clear=True)
-        # True beta (from distribution).
-        valid = data[col_beta_true] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_beta_true][valid],
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
-                alpha=alpha,
+        for i, ylabel in enumerate(ylabels):
+            fig, ax = plt.subplots(clear=True)
+            # True distribution.
+            valid = data[col_dist_params + i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_dist_params + i][valid],
+                    label=label_true,
+                    color=color_true,
+                    marker=marker_true,
+                    alpha=alpha,
+                )
+            # Method 6 (Kohlrausch fit).
+            col_kww_i = len(ylims_characs) + 2 * i
+            valid = data[col_kww + col_kww_i] > 0
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_kww + col_kww_i][valid],
+                    yerr=data[col_kww + col_kww_i + 1][valid],
+                    label=label_kww,
+                    color=color_kww,
+                    marker=marker_kww,
+                    alpha=alpha,
+                )
+            # Method 7 (Burr fit).
+            col_bur_i = len(ylims_characs) + 2 * i
+            valid = data[col_bur + col_bur_i] > 0
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_bur + col_bur_i][valid],
+                    yerr=data[col_bur + col_bur_i + 1][valid],
+                    label=label_bur,
+                    color=color_bur,
+                    marker=marker_bur,
+                    alpha=alpha,
+                )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(
+                xlabel=xlabel,
+                ylabel=ylabel,
+                xlim=xlim,
+                ylim=ylims_fit_params[i],
             )
-        # Method 6 (Kohlrausch fit).
-        valid = data[col_kww + 4] > 0
-        if np.any(valid):
-            ax.errorbar(
-                xdata[valid],
-                data[col_kww + 4][valid],
-                yerr=data[col_kww + 5],
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
-                alpha=alpha,
+            handles, labels = ax.get_legend_handles_labels()
+            legend = ax.legend(
+                title=legend_title,
+                ncol=max(len(handles), 1),
+                **mdtplt.LEGEND_KWARGS_XSMALL,
             )
-        # Method 7 (Burr fit).
-        valid = data[col_bur + 4] > 0
-        if np.any(valid):
-            ax.errorbar(
-                xdata[valid],
-                data[col_bur + 4][valid],
-                yerr=data[col_bur + 5],
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
-                alpha=alpha,
-            )
-        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(xlabel=xlabel, ylabel=r"Fit Parameter $\beta$", xlim=xlim)
-        handles, labels = ax.get_legend_handles_labels()
-        legend = ax.legend(
-            title=legend_title,
-            ncol=max(len(handles), 1),
-            **mdtplt.LEGEND_KWARGS_XSMALL,
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        plt.close()
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
 
         # Plot fit parameter delta.
         fig, ax = plt.subplots(clear=True)
         # True delta (from distribution).
-        valid = data[col_delta_true] > 0
+        col_true_i = 2
+        valid = data[col_dist_params + col_true_i] > 0
         if np.any(valid):
             ax.plot(
                 xdata[valid],
-                data[col_delta_true][valid],
+                data[col_dist_params + col_true_i][valid],
                 label=label_true,
                 color=color_true,
                 marker=marker_true,
                 alpha=alpha,
             )
         # Method 7 (Burr fit).
-        valid = data[col_bur + 6] > 0
+        col_bur_i = 9
+        valid = data[col_bur + col_bur_i] > 0
         if np.any(valid):
             ax.errorbar(
                 xdata[valid],
-                data[col_bur + 6][valid],
-                yerr=data[col_bur + 7],
+                data[col_bur + col_bur_i][valid],
+                yerr=data[col_bur + col_bur_i + 1][valid],
                 label=label_bur,
                 color=color_bur,
                 marker=marker_bur,
@@ -581,7 +455,12 @@ if __name__ == "__main__":  # noqa: C901
             )
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
         ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(xlabel=xlabel, ylabel=r"Fit Parameter $\delta$", xlim=xlim)
+        ax.set(
+            xlabel=xlabel,
+            ylabel=r"Fit Parameter $\delta$",
+            xlim=xlim,
+            ylim=ylims_fit_params[2],
+        )
         handles, labels = ax.get_legend_handles_labels()
         legend = ax.legend(
             title=legend_title,
@@ -592,100 +471,64 @@ if __name__ == "__main__":  # noqa: C901
         pdf.savefig()
         plt.close()
 
-        # Plot R^2 value of the fits.
-        fig, ax = plt.subplots(clear=True)
-        # R^2 of the remain probability to the true survival function.
-        valid = data[col_dst + 8] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_dst + 8][valid],
-                label=r"$S(t)$",
-                color=color_true,
-                marker=marker_true,
-                alpha=alpha,
+        # Plot goodness of fit quantities.
+        ylabels = (r"Coeff. of Determ. $R^2$", "RMSE")
+        for i, ylabel in enumerate(ylabels):
+            fig, ax = plt.subplots(clear=True)
+            # Remain probability to the true survival function.
+            col_true_i = 8 + i
+            valid = data[col_dst + col_true_i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_dst + col_true_i][valid],
+                    label=r"$C(t)$",
+                    color=color_true,
+                    marker=marker_true,
+                    alpha=alpha,
+                )
+            # Method 6 (Kohlrausch fit).
+            col_kww_i = 9 + i
+            valid = data[col_kww + col_kww_i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_kww + col_kww_i][valid],
+                    label=label_kww,
+                    color=color_kww,
+                    marker=marker_kww,
+                    alpha=alpha,
+                )
+            # Method 7 (Burr fit).
+            col_bur_i = 11 + i
+            valid = data[col_bur + col_bur_i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_bur + col_bur_i][valid],
+                    label=label_bur,
+                    color=color_bur,
+                    marker=marker_bur,
+                    alpha=alpha,
+                )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            if i > 0:
+                ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(
+                xlabel=xlabel,
+                ylabel=ylabel,
+                xlim=xlim,
+                ylim=ylims_fit_goodness[i],
             )
-        # Method 6 (Kohlrausch fit).
-        valid = data[col_kww + 6] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_kww + 6][valid],
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
-                alpha=alpha,
+            handles, labels = ax.get_legend_handles_labels()
+            legend = ax.legend(
+                title=legend_title,
+                ncol=max(len(handles), 1),
+                **mdtplt.LEGEND_KWARGS_XSMALL,
             )
-        # Method 7 (Burr fit).
-        valid = data[col_bur + 8] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_bur + 8][valid],
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
-                alpha=alpha,
-            )
-        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(xlabel=xlabel, ylabel=r"Coeff. of Determ. $R^2$", xlim=xlim)
-        handles, labels = ax.get_legend_handles_labels()
-        legend = ax.legend(
-            title=legend_title,
-            ncol=max(len(handles), 1),
-            **mdtplt.LEGEND_KWARGS_XSMALL,
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        plt.close()
-
-        # Plot root-mean-square error.
-        fig, ax = plt.subplots(clear=True)
-        # RMSE of the remain probability to the true survival function.
-        valid = data[col_dst + 9] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_dst + 9][valid],
-                label=r"$S(t)$",
-                color=color_true,
-                marker=marker_true,
-                alpha=alpha,
-            )
-        # Method 6 (Kohlrausch fit).
-        valid = data[col_kww + 7] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_kww + 7][valid],
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
-                alpha=alpha,
-            )
-        # Method 7 (Burr fit).
-        valid = data[col_bur + 9] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_bur + 9][valid],
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
-                alpha=alpha,
-            )
-        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(xlabel=xlabel, ylabel=r"RMSE", xlim=xlim)
-        handles, labels = ax.get_legend_handles_labels()
-        legend = ax.legend(
-            title=legend_title,
-            ncol=max(len(handles), 1),
-            **mdtplt.LEGEND_KWARGS_XSMALL,
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        plt.close()
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
 
         # Plot end of fit region.
         fig, ax = plt.subplots(clear=True)
@@ -694,7 +537,12 @@ if __name__ == "__main__":  # noqa: C901
             ax.plot(xdata[valid], data[col_fit_end][valid], marker="v")
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
         ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(xlabel=xlabel, ylabel="End of Fit Region / Frames", xlim=xlim)
+        ax.set(
+            xlabel=xlabel,
+            ylabel="End of Fit Region / Frames",
+            xlim=xlim,
+            ylim=ylims_fit_region[0],
+        )
         legend = ax.legend(title=legend_title, **mdtplt.LEGEND_KWARGS_XSMALL)
         legend.get_title().set_multialignment("center")
         pdf.savefig()
