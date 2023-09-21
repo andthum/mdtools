@@ -118,7 +118,7 @@ if __name__ == "__main__":  # noqa: C901
         xlim = (5e-1, 2e5)
         xlabel = "Number of Particles"
         legend_title = (
-            dist_name + r", $\tau_0 = %.2f$" % data[col_dist_params][0]
+            dist_name + r", $\tau_0 = %d$" % data[col_dist_params][0]
         )
     elif sort_by == "n_frames":
         sort_ix = np.argsort(shapes[1])
@@ -126,7 +126,7 @@ if __name__ == "__main__":  # noqa: C901
         xlim = (5e0, 2e5)
         xlabel = "Number of Frames"
         legend_title = (
-            dist_name + r", $\tau_0 = %.2f$" % data[col_dist_params][0]
+            dist_name + r", $\tau_0 = %d$" % data[col_dist_params][0]
         )
     elif sort_by == "tau0_true":
         sort_ix = np.argsort(data[col_dist_params])
@@ -140,7 +140,7 @@ if __name__ == "__main__":  # noqa: C901
         xlim = (2e-1, 5e0)
         xlabel = r"Shape Parameter $\beta$"
         legend_title = (
-            dist_name + r", $\tau_0 = %.2f$" % data[col_dist_params][0]
+            dist_name + r", $\tau_0 = %d$" % data[col_dist_params][0]
         )
     elif sort_by == "delta_true":
         sort_ix = np.argsort(data[col_dist_params + 2])
@@ -151,7 +151,7 @@ if __name__ == "__main__":  # noqa: C901
             legend_title = dist_name
         else:
             legend_title = (
-                dist_name + r", $\tau_0 = %.2f$" % data[col_dist_params][0]
+                dist_name + r", $\tau_0 = %d$" % data[col_dist_params][0]
             )
     else:
         raise ValueError("Unknown value for `sort_by`: {}".format(sort_by))
