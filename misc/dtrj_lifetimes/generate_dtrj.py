@@ -392,7 +392,102 @@ Burr Type XII Distribution
                 --seed 5462489434968436
         done
 
-"""
+Generate artificial discrete trajectories that resemble true discrete
+trajectories.
+
+    Layer residence times (exponential distribution).
+
+    .. code-block:: bash
+
+        beta=1
+        delta=1
+        n_cmps=128
+        n_frames=500001
+        discard=100000
+        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_6_50_5_15_13_13_13_13_13_13_13_13_13_13_13_14_15_7_150_3250_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        python3 generate_dtrj.py \
+            --dtrj-out "${fname}.npz" \
+            --param-out "${fname}_param.txt.gz" \
+            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            --dist generalized_gamma \
+            --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
+            --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
+            --tau0 6 50 5 15 13 13 13 13 13 13 13 13 13 13 13 14 15 7 150 3250 \
+            --shape "${n_cmps}" "${n_frames}" \
+            --discard "${discard}" \
+            --seed 5462489434968436 \
+            --adjacent
+
+    Layer residence times (Erlang distribution).
+
+    .. code-block:: bash
+
+        beta=1
+        delta=2
+        n_cmps=128
+        n_frames=500001
+        discard=100000
+        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_6_50_5_15_13_13_13_13_13_13_13_13_13_13_13_14_15_7_150_3250_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        python3 generate_dtrj.py \
+            --dtrj-out "${fname}.npz" \
+            --param-out "${fname}_param.txt.gz" \
+            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            --dist generalized_gamma \
+            --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
+            --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
+            --tau0 6 50 5 15 13 13 13 13 13 13 13 13 13 13 13 14 15 7 150 3250 \
+            --shape "${n_cmps}" "${n_frames}" \
+            --discard "${discard}" \
+            --seed 5462489434968436 \
+            --adjacent
+
+    Renewal times (exponential distribution).
+
+    .. code-block:: bash
+
+        beta=1
+        delta=1
+        n_cmps=128
+        n_frames=500001
+        discard=100000
+        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_150000_125000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_150000_200000_375000_400000_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        python3 generate_dtrj.py \
+            --dtrj-out "${fname}.npz" \
+            --param-out "${fname}_param.txt.gz" \
+            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            --dist generalized_gamma \
+            --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
+            --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
+            --tau0 150000 125000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 150000 200000 375000 400000 \
+            --shape "${n_cmps}" "${n_frames}" \
+            --discard "${discard}" \
+            --seed 5462489434968436 \
+            --adjacent
+
+    Renewal times (Erlang distribution).
+
+    .. code-block:: bash
+
+        beta=1
+        delta=6
+        n_cmps=128
+        n_frames=500001
+        discard=100000
+        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_15000_12500_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_15000_20000_37500_40000_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        python3 generate_dtrj.py \
+            --dtrj-out "${fname}.npz" \
+            --param-out "${fname}_param.txt.gz" \
+            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            --dist generalized_gamma \
+            --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
+            --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
+            --tau0 15000 12500 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 15000 20000 37500 40000 \
+            --shape "${n_cmps}" "${n_frames}" \
+            --discard "${discard}" \
+            --seed 5462489434968436 \
+            --adjacent
+
+"""  # noqa: E501, W505
 
 
 __author__ = "Andreas Thum"
