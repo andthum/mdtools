@@ -110,13 +110,13 @@ repos:
   ######################################################################
 
   - repo: "https://github.com/pre-commit-ci/pre-commit-ci-config"
-    rev: "v1.5.1"
+    rev: "v1.6.1"
     hooks:
       # Validate pre-commit.ci configuration.
       - id: "check-pre-commit-ci-config"
 
   - repo: "https://github.com/python-jsonschema/check-jsonschema"
-    rev: "0.23.2"
+    rev: "0.27.0"
     hooks:
       # Validate Dependabot Config (v2) against the schema provided by
       # SchemaStore.
@@ -177,7 +177,7 @@ repos:
     # to XX but somehow the pre-commit hook has version YY when
     # specifying the hook version without the prefix.  See
     # https://github.com/psf/black/issues/2493#issuecomment-1081987650
-    rev: "refs/tags/23.3.0:refs/tags/23.3.0"
+    rev: "23.9.1"
     hooks:
       # Format Python code with black.
       - id: "black"
@@ -190,7 +190,7 @@ repos:
           - "--color"
 
   - repo: "https://github.com/PyCQA/flake8"
-    rev: "6.0.0"
+    rev: "6.1.0"
     hooks:
       # Lint Python code with Flake8.
       - id: "flake8"
@@ -234,7 +234,7 @@ repos:
   ######################################################################
 
   - repo: "https://github.com/maxwinterstein/shfmt-py"
-    rev: "v3.4.3.1"
+    rev: "v3.7.0.1"
     hooks:
       # Format shell scripts with shfmt.
       # NOTE: The official shfmt hook from
@@ -255,7 +255,7 @@ repos:
           - "-l"
 
   - repo: "https://github.com/shellcheck-py/shellcheck-py"
-    rev: "v0.9.0.5"
+    rev: "v0.9.0.6"
     hooks:
       # Lint shell scripts with shellcheck.
       # NOTE: The official shellcheck hook from
@@ -281,7 +281,7 @@ repos:
     # v0.12.0 requires ruby2.7
     # v0.11.0 and v0.10.0 require ruby2.6
     # => stay at v0.9.0
-    rev: "v0.9.0"
+    rev: "v0.12.0"
     hooks:
       # Lint Markdown files with markdownlint.
       - id: "markdownlint"
