@@ -209,6 +209,76 @@ Generalized Gamma Distribution
                 --seed 5462489434968436
         done
 
+    Generate one long trajectory that can be used to generate
+    sub-trajectories that contain only every n-th frame of the original
+    trajectory.
+
+    .. code-block:: bash
+
+        beta=1
+        delta=1
+        tau0=100
+        n_cmps=100
+        n_frames=39999601
+        discard=1000
+        fname="dtrj_gengamma_beta_1_${beta}_delta_1_${delta}_tau0_${tau0}_${tau0}_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        python3 generate_dtrj.py \
+            --dtrj-out "${fname}.npz" \
+            --param-out "${fname}_param.txt.gz" \
+            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+            --dist generalized_gamma \
+            --beta 1 "${beta}" \
+            --delta 1 "${delta}" \
+            --tau0 "${tau0}" "${tau0}" \
+            --shape "${n_cmps}" "${n_frames}" \
+            --discard "${discard}" \
+            --seed 5462489434968436
+
+    .. code-block:: python
+
+        import mdtools as mdt
+        beta = 1
+        delta = 1
+        tau0 = 100
+        n_cmps = 100
+        n_frames = 39999601
+        discard = 1000
+        fname = (
+            "dtrj_gengamma"
+            + "_beta_1_"
+            + str(beta)
+            + "_delta_1_"
+            + str(delta)
+            + "_tau0_"
+            + str(tau0)
+            + "_"
+            + str(tau0)
+            + "_shape_"
+            + str(n_cmps)
+            + "_"
+            + str(n_frames)
+            + "_discard_"
+            + str(discard)
+            + "_seed_5462_4894_3496_8436.npz"
+        )
+        dtrj = mdt.fh.load_dtrj(fname)
+        n_frames_tot = 100000
+        for every in (1, 25, 50, 100, 200, 400):
+            fname_every = fname[:-4] + "_every_" + str(every) + ".npz"
+            shape_old = "_shape_" + str(n_cmps) + "_" + str(n_frames)
+            shape_new = (
+                "_shape_" + str(n_cmps) + "_" + str(n_frames_tot)
+            )
+            fname_every = fname_every.replace(shape_old, shape_new)
+            dtrj_every = dtrj[:, ::every]
+            dtrj_every = dtrj_every[:, :n_frames_tot]
+            if dtrj_every.shape != (n_cmps, n_frames_tot):
+                raise ValueError(
+                    "`dtrj_every` has the wrong shape:"
+                    " {}".format(dtrj_every.shape)
+                )
+            mdt.fh.save_dtrj(fname_every, dtrj_every)
+
     **Dependence on lifetime distribution**
 
     Generate discrete trajectories with different :math:`\tau_0` values
