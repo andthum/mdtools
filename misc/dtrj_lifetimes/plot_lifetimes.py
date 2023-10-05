@@ -55,6 +55,7 @@ if __name__ == "__main__":  # noqa: C901
     shape = "_shape_*_10"  # n_cmps, n_frames
     discard = "_discard_1000"
     seed = "_seed_5462_4894_3496_8436"
+    every = ""
     infile_pattern = (
         "dtrj"
         + dist
@@ -64,6 +65,7 @@ if __name__ == "__main__":  # noqa: C901
         + shape
         + discard
         + seed
+        + every
         + "_compare_dtrj_lifetime_methods.txt.gz"
     )
     outfile = infile_pattern.replace(".txt.gz", ".pdf")
@@ -128,6 +130,20 @@ if __name__ == "__main__":  # noqa: C901
         legend_title = (
             dist_name + r", $\tau_0 = %d$" % data[col_dist_params][0]
         )
+    elif sort_by == "every":
+        every_n = np.array(
+            [
+                int(infile.split("_every_")[1].split("_")[0])
+                for infile in infiles
+            ]
+        )
+        sort_ix = np.argsort(every_n)
+        xdata = every_n[sort_ix]
+        xlim = (8e-1, 5e2)
+        xlabel = "Sample Interval / Frames"
+        legend_title = (
+            dist_name + r", $\tau_0 = %d$" % data[col_dist_params][0]
+        )
     elif sort_by == "tau0_true":
         sort_ix = np.argsort(data[col_dist_params])
         xdata = data[col_dist_params][sort_ix]
@@ -184,6 +200,14 @@ if __name__ == "__main__":  # noqa: C901
             (4e-1, 3e0),  # Skewness.
             (4e-1, 2e1),  # Excess kurtosis.
             (1e0, 1e3),  # Median.
+        ]
+    if dist_name == "Exp. Dist." and sort_by == "every":
+        ylims_characs = [
+            (9e1, 9e2),  # Mean.
+            (9e1, 7e2),  # Standard deviation.
+            (1e0, 4e0),  # Skewness.
+            (5e0, 1e1),  # Excess kurtosis.
+            (6e1, 9e2),  # Median.
         ]
     if dist_name == "Exp. Dist." and sort_by == "tau0_true":
         ylims_characs = [
