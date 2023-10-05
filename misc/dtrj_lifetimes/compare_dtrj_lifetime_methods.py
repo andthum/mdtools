@@ -54,6 +54,9 @@ Options
     Stop fitting the remain probability as soon as it falls below the
     given value.  The fitting is stopped by whatever happens earlier:
     \--end-fit or \--stop-fit.  Default: ``0.01``.
+--time-conv
+    Time conversion factor.  Multiply times by this factor.  Default:
+    ``1``.
 
 See Also
 --------
@@ -502,6 +505,14 @@ if __name__ == "__main__":  # noqa: C901
             " earlier: --end-fit or --stop-fit.  Default: %(default)s"
         ),
     )
+    parser.add_argument(
+        "--time-conv",
+        dest="TIME_CONV",
+        type=float,
+        required=False,
+        default=1,
+        help="Time conversion factor.  Default: %(default)s",
+    )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
 
@@ -511,9 +522,6 @@ if __name__ == "__main__":  # noqa: C901
     n_moms = 4
     # Fit method of `scipy.optimize.curve_fit` to use for all fits.
     fit_method = "trf"
-    # Conversion factor to convert "trajectory steps" to some physical
-    # time unit (e.g. ns).
-    time_conv = 1
 
     ####################################################################
     print("\n")
@@ -528,7 +536,7 @@ if __name__ == "__main__":  # noqa: C901
     lts_cnt_cen, states = mdt.dtrj.lifetimes_per_state(
         dtrj, uncensored=False, return_states=True
     )
-    lts_cnt_cen = [lts * time_conv for lts in lts_cnt_cen]
+    lts_cnt_cen = [lts * args.TIME_CONV for lts in lts_cnt_cen]
     n_states = len(states)
     lts_cnt_cen_characs = np.full((n_states, 8), np.nan, dtype=np.float64)
     lts_cnt_cen_characs[:, -1] = 0  # Default number of observations.
@@ -542,7 +550,7 @@ if __name__ == "__main__":  # noqa: C901
     lts_cnt_unc, states_cnt_unc = mdt.dtrj.lifetimes_per_state(
         dtrj, uncensored=True, return_states=True
     )
-    lts_cnt_unc = [lts * time_conv for lts in lts_cnt_unc]
+    lts_cnt_unc = [lts * args.TIME_CONV for lts in lts_cnt_unc]
     if not np.all(np.isin(states_cnt_unc, states)):
         raise ValueError(
             "`states_cnt_unc` ({}) is not fully contained in `states`"
@@ -562,7 +570,7 @@ if __name__ == "__main__":  # noqa: C901
     # frames that compounds have spent in this state.  The average
     # lifetime is calculated as the inverse transition rate.
     rates, states_k = mdt.dtrj.trans_rate_per_state(dtrj, return_states=True)
-    lts_k = time_conv / rates
+    lts_k = args.TIME_CONV / rates
     if not np.array_equal(states_k, states):
         raise ValueError(
             "`states_k` ({}) != `states` ({})".format(states_k, states)
@@ -588,7 +596,7 @@ if __name__ == "__main__":  # noqa: C901
         )
     if not np.array_equal(times, np.arange(n_frames)):
         raise ValueError("`times` != `np.arange(n_frames)`")
-    times *= time_conv  # Lag times in the given physical time unit.
+    times *= args.TIME_CONV  # Lag times in the given physical time unit.
     if np.any(np.modf(states_rp)[0] != 0):
         raise ValueError(
             "Some state indices are not integers but floats.  `states_rp` ="
