@@ -1196,7 +1196,7 @@ if __name__ == "__main__":  # noqa: C901
             yd_max = np.array(
                 [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
             )
-            if i not in (2, 3) and len(yd_min) > 0:
+            if len(yd_min) > 0:
                 # Set y axis to log scale.
                 # Round y limits to next lower and higher power of ten.
                 ylim = ax.get_ylim()
