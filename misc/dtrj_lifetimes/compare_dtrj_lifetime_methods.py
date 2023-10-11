@@ -119,16 +119,17 @@ def dist_charac(a, axis=-1):
     Returns
     -------
     charac : numpy.ndarray
-        Array of shape ``(8, )`` containing the
+        Array of shape ``(9, )`` containing the
 
             1. Sample mean
-            2. Corrected sample standard deviation
-            3. Unbiased sample skewness
-            4. Unbiased sample excess kurtosis (according to Fisher)
-            5. Sample median
-            6. Sample minimum
-            7. Sample maximum
-            8. Number of samples
+            2. Uncertainty of the sample mean (standard error)
+            3. Corrected sample standard deviation
+            4. Unbiased sample skewness
+            5. Unbiased sample excess kurtosis (according to Fisher)
+            6. Sample median
+            7. Sample minimum
+            8. Sample maximum
+            9. Number of samples
 
     """
     a = np.asarray(a)
@@ -139,6 +140,7 @@ def dist_charac(a, axis=-1):
     charac = np.array(
         [
             mean,  # Sample mean.
+            np.sqrt(np.divide(var, nobs)),  # Uncertainty of sample mean
             np.sqrt(var),  # Corrected sample standard deviation.
             skew,  # Unbiased sample skewness.
             kurt,  # Unbiased sample excess kurtosis (Fisher).
@@ -566,7 +568,7 @@ if __name__ == "__main__":  # noqa: C901
     )
     lts_cnt_cen = [lts * args.TIME_CONV for lts in lts_cnt_cen]
     n_states = len(states)
-    lts_cnt_cen_characs = np.full((n_states, 8), np.nan, dtype=np.float64)
+    lts_cnt_cen_characs = np.full((n_states, 9), np.nan, dtype=np.float64)
     lts_cnt_cen_characs[:, -1] = 0  # Default number of observations.
     for i, lts in enumerate(lts_cnt_cen):
         lts_cnt_cen_characs[i] = dist_charac(lts)
@@ -584,7 +586,7 @@ if __name__ == "__main__":  # noqa: C901
             "`states_cnt_unc` ({}) is not fully contained in `states`"
             " ({})".format(states_cnt_unc, states)
         )
-    lts_cnt_unc_characs = np.full((n_states, 8), np.nan, dtype=np.float64)
+    lts_cnt_unc_characs = np.full((n_states, 9), np.nan, dtype=np.float64)
     lts_cnt_unc_characs[:, -1] = 0  # Default number of observations.
     for i, lts in enumerate(lts_cnt_unc):
         if len(lts) == 0:
@@ -860,40 +862,40 @@ if __name__ == "__main__":  # noqa: C901
     data = [
         states,  # 1
         # Method 1 (censored counting).
-        lts_cnt_cen_characs,  # 2-9
+        lts_cnt_cen_characs,  # 2-10
         # Method 2 (uncensored counting).
-        lts_cnt_unc_characs,  # 10-17
+        lts_cnt_unc_characs,  # 11-19
         # Method 3 (inverse transition rate).
-        lts_k,  # 18
+        lts_k,  # 20
         # Method 4 (1/e criterion).
-        lts_e,  # 19
+        lts_e,  # 21
         # Method 5 (direct integral).
-        lts_int_characs,  # 20-24
+        lts_int_characs,  # 22-26
         # Method 6 (integral of Kohlrausch fit).
-        lts_kww_characs,  # 25-29
-        tau0_kww,  # 30
-        tau0_kww_sd,  # 31
-        beta_kww,  # 32
-        beta_kww_sd,  # 33
-        lts_kww_fit_goodness,  # 34-35
+        lts_kww_characs,  # 27-31
+        tau0_kww,  # 32
+        tau0_kww_sd,  # 33
+        beta_kww,  # 34
+        beta_kww_sd,  # 35
+        lts_kww_fit_goodness,  # 36-37
         # Method 7 (integral of Burr fit).
-        lts_bur_characs,  # 36-40
-        tau0_bur,  # 41
-        tau0_bur_sd,  # 42
-        beta_bur,  # 43
-        beta_bur_sd,  # 44
-        delta_bur,  # 45
-        delta_bur_sd,  # 46
-        lts_bur_fit_goodness,  # 47-48
+        lts_bur_characs,  # 38-42
+        tau0_bur,  # 43
+        tau0_bur_sd,  # 44
+        beta_bur,  # 45
+        beta_bur_sd,  # 46
+        delta_bur,  # 47
+        delta_bur_sd,  # 48
+        lts_bur_fit_goodness,  # 49-50
         # Fit region
-        fit_start,  # 49
-        fit_stop - 1,  # 50
+        fit_start,  # 51
+        fit_stop - 1,  # 52
     ]
     if args.INFILE_PARAM is not None:
         data += [
-            lts_true_characs,  # 51-55
-            dist_params,  # 56-58
-            lts_true_rp_goodness,  # 59-60
+            lts_true_characs,  # 53-57
+            dist_params,  # 58-60
+            lts_true_rp_goodness,  # 61-62
         ]
     data = np.column_stack(data)
     header = (
@@ -1009,61 +1011,62 @@ if __name__ == "__main__":  # noqa: C901
         + "\n"
         + "  Lifetime from Method 1 (censored counting)\n"
         + "  2 Sample mean <t_cnt_cen> / frames\n"
-        + "  3 Corrected sample standard deviation / frames\n"
-        + "  4 Unbiased sample skewness\n"
-        + "  5 Unbiased sample excess kurtosis (Fisher)\n"
-        + "  6 Sample median / frames\n"
-        + "  7 Sample minimum / frames\n"
-        + "  8 Sample maximum / frames\n"
-        + "  9 Number of observations/samples\n"
+        + "  3 Uncertainty of the sample mean (standard error) / frames\n"
+        + "  4 Corrected sample standard deviation / frames\n"
+        + "  5 Unbiased sample skewness\n"
+        + "  6 Unbiased sample excess kurtosis (Fisher)\n"
+        + "  7 Sample median / frames\n"
+        + "  8 Sample minimum / frames\n"
+        + "  9 Sample maximum / frames\n"
+        + " 10 Number of observations/samples\n"
         + "\n"
         + "  Lifetime from Method 2 (uncensored counting)\n"
-        + " 10-17 As Method 1\n"
+        + " 11-19 As Method 1\n"
         + "\n"
         + "  Lifetime from Method 3 (inverse transition rate)\n"
-        + " 18 <t_k> / frames\n"
+        + " 20 <t_k> / frames\n"
         + "\n"
         + "  Lifetime from Method 4 (1/e criterion)\n"
-        + " 19 <t_e> / frames\n"
+        + " 21 <t_e> / frames\n"
         + "\n"
         + "  Lifetime from Method 5 (direct integral)\n"
-        + " 20 Mean <t_int> / frames\n"
-        + " 21 Standard deviation / frames\n"
-        + " 22 Skewness\n"
-        + " 23 Excess kurtosis (Fisher)\n"
-        + " 24 Median / frames\n"
+        + " 22 Mean <t_int> / frames\n"
+        + " 23 Standard deviation / frames\n"
+        + " 24 Skewness\n"
+        + " 25 Excess kurtosis (Fisher)\n"
+        + " 26 Median / frames\n"
         + "\n"
         + "  Lifetime from Method 6 (integral of Kohlrausch fit)\n"
-        + " 25-29 As Method 5\n"
-        + " 30 Fit parameter tau0_kww / frames\n"
-        + " 31 Standard deviation of tau0_kww / frames\n"
-        + " 32 Fit parameter beta_kww\n"
-        + " 33 Standard deviation of beta_kww\n"
-        + " 34 Coefficient of determination of the fit (R^2 value)\n"
-        + " 35 Root-mean-square error (RMSE) of the fit\n"
+        + " 27-31 As Method 5\n"
+        + " 32 Fit parameter tau0_kww / frames\n"
+        + " 33 Standard deviation of tau0_kww / frames\n"
+        + " 34 Fit parameter beta_kww\n"
+        + " 35 Standard deviation of beta_kww\n"
+        + " 36 Coefficient of determination of the fit (R^2 value)\n"
+        + " 37 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Lifetime from Method 7 (integral of Burr fit)\n"
-        + " 36-44 As Method 6\n"
-        + " 45 Fit parameter delta_burr\n"
-        + " 46 Standard deviation of delta_burr\n"
-        + " 47 Coefficient of determination of the fit (R^2 value)\n"
-        + " 48 Root-mean-square error (RMSE) of the fit\n"
+        + " 38-46 As Method 6\n"
+        + " 47 Fit parameter delta_burr\n"
+        + " 48 Standard deviation of delta_burr\n"
+        + " 49 Coefficient of determination of the fit (R^2 value)\n"
+        + " 50 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Fit region for all fitting methods\n"
-        + " 49 Start of fit region (inclusive) / frames\n"
-        + " 50 End of fit region (exclusive) / frames\n"
+        + " 51 Start of fit region (inclusive) / frames\n"
+        + " 52 End of fit region (exclusive) / frames\n"
     )
     if args.INFILE_PARAM is not None:
         header += (
             "\n"
             + "  True state lifetimes\n"
-            + " 51-55 As Method 5\n"
-            + " 56 Scale parameter tau0 of the true distribution\n"
-            + " 57 Shape parameter beta of the true distribution\n"
-            + " 58 Shape parameter delta of the true distribution\n"
-            + " 59 R^2 if the remain probability is seen as fit of the\n"
+            + " 53-57 As Method 5\n"
+            + " 58 Scale parameter tau0 of the true distribution\n"
+            + " 59 Shape parameter beta of the true distribution\n"
+            + " 60 Shape parameter delta of the true distribution\n"
+            + " 61 R^2 if the remain probability is seen as fit of the\n"
             + "    survival function (SF) of the true distribution\n"
-            + " 60 RMSE of the remain probability to the true SF\n"
+            + " 62 RMSE of the remain probability to the true SF\n"
         )
     header += "\n" + "Column number:\n"
     header += "{:>14d}".format(1)
@@ -1134,6 +1137,10 @@ if __name__ == "__main__":  # noqa: C901
             "Median / Frames",
         )
         for i, ylabel in enumerate(ylabels):
+            if i == 0:
+                offset_i_cnt = 0
+            else:
+                offset_i_cnt = 1
             fig, ax = plt.subplots(clear=True)
             if i == 2:
                 # Skewness of exponential distribution is 2.
@@ -1147,27 +1154,30 @@ if __name__ == "__main__":  # noqa: C901
                 )
             if args.INFILE_PARAM is not None:
                 # True lifetimes distribution.
-                ax.plot(
+                ax.errorbar(
                     states,
                     lts_true_characs[:, i],
+                    yerr=None,
                     label=label_true,
                     color=color_true,
                     marker=marker_true,
                     alpha=alpha,
                 )
             # Method 1 (censored counting).
-            ax.plot(
+            ax.errorbar(
                 states,
-                lts_cnt_cen_characs[:, i],
+                lts_cnt_cen_characs[:, i + offset_i_cnt],
+                yerr=lts_cnt_cen_characs[:, i + 1] if i == 0 else None,
                 label=label_cnt_cen,
                 color=color_cnt_cen,
                 marker=marker_cnt_cen,
                 alpha=alpha,
             )
             # Method 2 (uncensored counting).
-            ax.plot(
+            ax.errorbar(
                 states,
-                lts_cnt_unc_characs[:, i],
+                lts_cnt_unc_characs[:, i + offset_i_cnt],
+                yerr=lts_cnt_unc_characs[:, i + 1] if i == 0 else None,
                 label=label_cnt_unc,
                 color=color_cnt_unc,
                 marker=marker_cnt_unc,
@@ -1175,45 +1185,50 @@ if __name__ == "__main__":  # noqa: C901
             )
             if i == 0:
                 # Method 3 (inverse transition rate).
-                ax.plot(
+                ax.errorbar(
                     states,
                     lts_k,
+                    yerr=None,
                     label=label_k,
                     color=color_k,
                     marker=marker_k,
                     alpha=alpha,
                 )
                 # # Method 4 (1/e criterion).
-                # ax.plot(
+                # ax.errorbar(
                 #     states,
                 #     lts_e,
+                #     yerr=None,
                 #     label=label_e,
                 #     color=color_e,
                 #     marker=marker_e,
                 #     alpha=alpha,
                 # )
             # Method 5 (direct integral)
-            ax.plot(
+            ax.errorbar(
                 states,
                 lts_int_characs[:, i],
+                yerr=None,
                 label=label_int,
                 color=color_int,
                 marker=marker_int,
                 alpha=alpha,
             )
             # Method 6 (integral of Kohlrausch fit).
-            ax.plot(
+            ax.errorbar(
                 states,
                 lts_kww_characs[:, i],
+                yerr=None,
                 label=label_kww,
                 color=color_kww,
                 marker=marker_kww,
                 alpha=alpha,
             )
             # Method 7 (integral of Burr fit).
-            ax.plot(
+            ax.errorbar(
                 states,
                 lts_bur_characs[:, i],
+                yerr=None,
                 label=label_bur,
                 color=color_bur,
                 marker=marker_bur,
@@ -1254,7 +1269,7 @@ if __name__ == "__main__":  # noqa: C901
             # Method 1 (censored counting).
             ax.plot(
                 states,
-                lts_cnt_cen_characs[:, 5 + i],
+                lts_cnt_cen_characs[:, 6 + i],
                 label=label_cnt_cen,
                 color=color_cnt_cen,
                 marker=marker_cnt_cen,
@@ -1263,7 +1278,7 @@ if __name__ == "__main__":  # noqa: C901
             # Method 2 (uncensored counting).
             ax.plot(
                 states,
-                lts_cnt_unc_characs[:, 5 + i],
+                lts_cnt_unc_characs[:, 6 + i],
                 label=label_cnt_unc,
                 color=color_cnt_unc,
                 marker=marker_cnt_unc,
