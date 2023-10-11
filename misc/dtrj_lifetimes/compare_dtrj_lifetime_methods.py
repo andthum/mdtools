@@ -419,6 +419,34 @@ def fit_goodness(data, fit):
     return r2, rmse
 
 
+def get_ydata_min_max(ax):
+    """
+    Get the minimum and maximum y value of the data plotted in an
+    :class:`matplotlib.axes.Axes`.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The :class:`~matplotlib.axes.Axes` from which to get the data.
+
+    Returns
+    -------
+    yd_min, yd_max : numpy.ndarray
+        Array of minimum and maximum values of the y data plotted in the
+        given :class:`~matplotlib.axes.Axes`.  Each value in the array
+        corresponds to one plotted :class:`matplotlib.lines.Line2D` in
+        the :class:`~matplotlib.axes.Axes`.
+    """
+    ydata = [line.get_ydata() for line in ax.get_lines()]
+    yd_min, yd_max = [], []
+    for yd in ydata:
+        if isinstance(yd, np.ndarray) and np.any(yd > 0):
+            yd_min.append(np.min(yd[yd > 0]))
+            yd_max.append(np.max(yd[yd > 0]))
+    yd_min, yd_max = np.array(yd_min), np.array(yd_max)
+    return yd_min, yd_max
+
+
 if __name__ == "__main__":  # noqa: C901
     timer_tot = datetime.now()
     proc = psutil.Process()
@@ -1107,6 +1135,16 @@ if __name__ == "__main__":  # noqa: C901
         )
         for i, ylabel in enumerate(ylabels):
             fig, ax = plt.subplots(clear=True)
+            if i == 2:
+                # Skewness of exponential distribution is 2.
+                ax.axhline(
+                    y=2, color="black", linestyle="dashed", label="Exp. Dist."
+                )
+            elif i == 3:
+                # Excess kurtosis of exponential distribution is 6
+                ax.axhline(
+                    y=6, color="black", linestyle="dashed", label="Exp. Dist."
+                )
             if args.INFILE_PARAM is not None:
                 # True lifetimes distribution.
                 ax.plot(
@@ -1189,13 +1227,7 @@ if __name__ == "__main__":  # noqa: C901
             ax.set_xticks([], minor=True)
             ax.legend(ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
-            ydata = [line.get_ydata() for line in ax.get_lines()]
-            yd_min = np.array(
-                [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-            )
-            yd_max = np.array(
-                [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-            )
+            yd_min, yd_max = get_ydata_min_max(ax)
             if len(yd_min) > 0:
                 # Set y axis to log scale.
                 # Round y limits to next lower and higher power of ten.
@@ -1245,13 +1277,7 @@ if __name__ == "__main__":  # noqa: C901
             ax.set_xticks([], minor=True)
             ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
-            ydata = [line.get_ydata() for line in ax.get_lines()]
-            yd_min = np.array(
-                [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-            )
-            yd_max = np.array(
-                [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-            )
+            yd_min, yd_max = get_ydata_min_max(ax)
             if len(yd_min) > 0:
                 # Set y axis to log scale (fit parameter delta).
                 # Round y limits to next lower and higher power of ten.
@@ -1312,13 +1338,7 @@ if __name__ == "__main__":  # noqa: C901
             ax.set_xticks([], minor=True)
             ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
-            ydata = [line.get_ydata() for line in ax.get_lines()]
-            yd_min = np.array(
-                [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-            )
-            yd_max = np.array(
-                [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-            )
+            yd_min, yd_max = get_ydata_min_max(ax)
             if len(yd_min) > 0:
                 # Set y axis to log scale.
                 # Round y limits to next lower and higher power of ten.
@@ -1364,13 +1384,7 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        ydata = [line.get_ydata() for line in ax.get_lines()]
-        yd_min = np.array(
-            [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-        )
-        yd_max = np.array(
-            [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-        )
+        yd_min, yd_max = get_ydata_min_max(ax)
         if len(yd_min) > 0:
             # Set y axis to log scale (fit parameter delta).
             # Round y limits to next lower and higher power of ten.
@@ -1425,13 +1439,7 @@ if __name__ == "__main__":  # noqa: C901
             ax.set_xticks([], minor=True)
             ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
-            ydata = [line.get_ydata() for line in ax.get_lines()]
-            yd_min = np.array(
-                [np.min(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-            )
-            yd_max = np.array(
-                [np.max(yd[yd > 0]) for yd in ydata if np.any(yd > 0)]
-            )
+            yd_min, yd_max = get_ydata_min_max(ax)
             if len(yd_min) > 0:
                 # Set y axis to log scale (R^2 value of the fits).
                 # Round `ymin` to next lower power of ten.
