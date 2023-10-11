@@ -1054,7 +1054,7 @@ if __name__ == "__main__":  # noqa: C901
         + "\n"
         + "  Fit region for all fitting methods\n"
         + " 51 Start of fit region (inclusive) / frames\n"
-        + " 52 End of fit region (exclusive) / frames\n"
+        + " 52 End of fit region (inclusive) / frames\n"
     )
     if args.INFILE_PARAM is not None:
         header += (
