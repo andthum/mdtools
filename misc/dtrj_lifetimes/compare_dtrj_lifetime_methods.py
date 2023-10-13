@@ -1142,16 +1142,6 @@ if __name__ == "__main__":  # noqa: C901
             else:
                 offset_i_cnt = 1
             fig, ax = plt.subplots(clear=True)
-            if i == 2:
-                # Skewness of exponential distribution is 2.
-                ax.axhline(
-                    y=2, color="black", linestyle="dashed", label="Exp. Dist."
-                )
-            elif i == 3:
-                # Excess kurtosis of exponential distribution is 6
-                ax.axhline(
-                    y=6, color="black", linestyle="dashed", label="Exp. Dist."
-                )
             if args.INFILE_PARAM is not None:
                 # True lifetimes distribution.
                 ax.errorbar(
