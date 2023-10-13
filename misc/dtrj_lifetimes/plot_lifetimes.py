@@ -192,19 +192,19 @@ if __name__ == "__main__":  # noqa: C901
             (1e0, 2e2),  # Standard deviation.
             (2e-1, 3e0),  # Skewness.
             (6e-1, 2e1),  # Excess kurtosis.
-            (2e0, 2e2),  # Median.
+            (2e0, 3e2),  # Median.
         ]
     if dist_name == "Exp. Dist." and sort_by == "n_frames":
         ylims_characs = [
-            (8e0, 3e2),  # Mean.
+            (8e0, 4e2),  # Mean.
             (9e1, 3e2),  # Standard deviation.
             (4e-1, 3e0),  # Skewness.
             (4e-1, 2e1),  # Excess kurtosis.
-            (1e0, 1e3),  # Median.
+            (8e0, 4e2),  # Median.
         ]
     if dist_name == "Exp. Dist." and sort_by == "every":
         ylims_characs = [
-            (9e1, 9e2),  # Mean.
+            (6e1, 9e2),  # Mean.
             (9e1, 7e2),  # Standard deviation.
             (1e0, 4e0),  # Skewness.
             (5e0, 1e1),  # Excess kurtosis.
@@ -212,11 +212,11 @@ if __name__ == "__main__":  # noqa: C901
         ]
     if dist_name == "Exp. Dist." and sort_by == "tau0_true":
         ylims_characs = [
-            (2e1, 5e2),  # Mean.
+            (1e1, 5e2),  # Mean.
             (2e1, 5e2),  # Standard deviation.
             (1e0, 3e0),  # Skewness.
             (5e0, 1e1),  # Excess kurtosis.
-            (1e1, 4e2),  # Median.
+            (1e1, 5e2),  # Median.
         ]
     if dist_name == "Gamma Dist." and sort_by == "delta_true":
         ylims_characs = [
