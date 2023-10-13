@@ -192,7 +192,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}
             ${{ runner.os }}
-      - name: "Install/Upgrade setuptools, wheel and python-dev-tools"
+      - name: "Install/Upgrade setuptools and wheel"
+        # MDAnalysis requires NumPy (>=1.19.2) for setup (see also
+        # https://github.com/MDAnalysis/mdanalysis/issues/3374#issuecomment-889189979).
+        # MDAnalysis <3.0 requires Cython <3.0 (see
+        # https://github.com/MDAnalysis/mdanalysis/pull/4129 and
+        # https://github.com/cython/cython/issues/3690).
         # Without `python-dev-tools` the installation of MDAnalysis
         # fails on MacOS-latest with Python 3.9 while building the wheel
         # for MDAnalysis.  Strangely, the MDAnalysis wheel is only build
@@ -201,9 +206,11 @@ jobs:
         run: |
           python -m pip install --user --upgrade setuptools wheel
           python -m pip install --user --upgrade python-dev-tools
+          python -m pip install --user "Cython <3.0"
+          python -m pip install --user "numpy >=1.19.2"
       - name: "Test installation of MDTools"
         run: |
-          python -m pip install --user --upgrade .
+          python -m pip install --user .
           python -c "import mdtools"
           # Test import of all modules that must be loaded explicitly.
           python -c "import mdtools.plot"

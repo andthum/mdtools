@@ -25,6 +25,7 @@ import warnings
 # Third-party libraries
 import numpy as np
 from scipy import constants, special
+from scipy.special import comb
 from scipy.stats import norm
 
 # First-party libraries
@@ -1971,3 +1972,133 @@ def block_average(data, axis=0, ddof=0, dtype=np.float64):
     # the same inside the error region.
     np.divide(sd, np.sqrt(num_measurements), out=sd, dtype=dtype)
     return mean, sd
+
+
+def moment_raw2cen(rm, axis=-1):
+    r"""
+    Calculate the :math:`n`-th central moment :math:`\mu_n` from the
+    first :math:`n` raw moments :math:`m_n`.
+    [#]_
+
+    .. math::
+
+        \mu_n =
+        \langle (x - \mu)^n \rangle =
+        \sum_{k=0}^{n} {n \choose k} (-1)^{n-k} m_k \mu^{n-k}
+
+    with the :math:`k`-th raw moment :math:`m_k = \langle x^k \rangle`
+    and the mean :math:`\mu = m_1`.
+
+    Parameters
+    ----------
+    rm : array_like
+        Array containing the first :math:`n` raw moments.  The raw
+        moments must be ordered along the given axis by the raw moments'
+        order (i.e. 1st raw moment first, 2nd raw moment second, ...).
+        The array must not contain the :math:`0`-th raw moment (which is
+        anyway always 1).
+    axis : int, optional
+        The axis along which the raw moments are ordered.
+
+    Returns
+    -------
+    cm : scalar or numpy.ndarray
+        The :math:`n`-th central moment, where :math:`n` is given by
+        ``numpy.asarray(rm).shape[-1]``.
+
+    Notes
+    -----
+    This function cannot return the :math:`0`-th central moment.
+    Anyway, this is always 1.
+
+    References
+    ----------
+    .. [#] Wikipedia `Central moment § Relation to moments about the
+        origin
+        <https://en.wikipedia.org/wiki/Central_moment#Relation_to_moments_about_the_origin>`_
+
+    Examples
+    --------
+    1-dimensional input arrays:
+
+    >>> # 1st central moment (is always zero).
+    >>> rm = np.array([3])
+    >>> mdt.stats.moment_raw2cen(rm)
+    0
+    >>> # 2nd central moment (<x^2> - <x>^2 = variance)
+    >>> rm = np.array([ 3, 11])
+    >>> mdt.stats.moment_raw2cen(rm)
+    2
+    >>> # 3rd central moment
+    >>> rm = np.array([ 3, 11, 49])
+    >>> mdt.stats.moment_raw2cen(rm)
+    4
+    >>> # 4th central moment
+    >>> rm = np.array([  3,  11,  49, 253])
+    >>> mdt.stats.moment_raw2cen(rm)
+    16
+    >>> # The first central moment is always zero.
+    >>> [mdt.stats.moment_raw2cen([rm]) for rm in [0, 1/3, 4, 7/3]]
+    [0, 0.0, 0, 0.0]
+
+    2-dimensional input arrays:
+
+    >>> rm = np.array([[ 3, 11, 49]])
+    >>> mdt.stats.moment_raw2cen(rm)
+    array([4])
+    >>> ax = 0
+    >>> rm = np.array([[   3,   11,   49],
+    ...                [  13,  121, 2403]])
+    >>> mdt.stats.moment_raw2cen(rm, axis=ax)
+    array([4, 0, 2])
+    >>> ax = 1
+    >>> mdt.stats.moment_raw2cen(rm, axis=ax)
+    array([   4, 2078])
+
+    3-dimensional input arrays:
+
+    >>> rm = np.array([[[ 3, 11, 49]]])
+    >>> mdt.stats.moment_raw2cen(rm)
+    array([[4]])
+    >>> ax = 0
+    >>> rm = np.array([[[   3,   11,   49],
+    ...                 [  13,  121, 2403]],
+    ...
+    ...                [[   1,    9,    51],
+    ...                 [   2,   87,  2605]]])
+    >>> mdt.stats.moment_raw2cen(rm, axis=ax)
+    array([[      -8,     -112,    -2350],
+           [    -167,   -14554, -5771804]])
+    >>> ax = 1
+    >>> mdt.stats.moment_raw2cen(rm, axis=ax)
+    array([[4, 0, 2],
+           [1, 6, 4]])
+    >>> ax = 2
+    >>> mdt.stats.moment_raw2cen(rm, axis=ax)
+    array([[   4, 2078],
+           [  26, 2099]])
+    """
+    rm = np.asarray(rm)
+    if rm.ndim == 0:
+        raise ValueError("`rm` must be at least 1-dimensional")
+    n = rm.shape[axis]
+
+    # Prepend the 0-th raw moment to the array of raw moments.
+    # 0-th raw moment is always <x^0> = 1.
+    shape = list(rm.shape)
+    shape[axis] = 1
+    rm0 = np.ones(shape, dtype=rm.dtype)
+    rm = np.concatenate([rm0, rm], axis=axis)
+
+    # Mean = 1st raw moment.
+    mean = np.squeeze(mdt.nph.take(rm, start=1, stop=2, axis=axis))
+    # Powers of the mean: (-1)^{n-k} * \mu^{n-k} = (-\mu)^{n-k}.
+    mean_pows = np.stack([(-mean) ** (n - k) for k in range(n + 1)], axis=axis)
+
+    # Binomial coefficients: {n \choose k}.
+    coeffs = np.array([comb(n, k, exact=True) for k in range(n + 1)])
+    shape = [1 for dim in rm.shape]
+    shape[axis] = rm.shape[axis]
+    coeffs = coeffs.reshape(shape)
+
+    return np.sum(coeffs * mean_pows * rm, axis=axis)

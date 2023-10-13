@@ -113,7 +113,7 @@ MDTools.  Here is a list of the most notable of these packages:
 
 This list is not comprehensive and only includes packages that we are
 aware of.  Also have a look at the `projects that are based on
-MDAnalysis <https://www.mdanalysis.org/pages/used-by/>`_.
+MDAnalysis <https://www.mdanalysis.org/pages/mdakits/>`_.
 
 
 Getting started

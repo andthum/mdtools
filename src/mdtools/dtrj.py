@@ -1140,7 +1140,7 @@ def trans_rate(
             trans_ix_end = tuple(trans_ix_end)
             valid_end = dtrj[trans_ix_end] >= 0
             # Remove frames in which a compound resides in a positive
-            # state that if followed by a negative state from the number
+            # state that is followed by a negative state from the number
             # of valid frames:
             # Start points of single compound trajectories.
             trj_starts = np.diff(trans_ix[ax_cmp])
@@ -1177,7 +1177,7 @@ def trans_rate(
     cmp_ix_trans, n_trans = np.unique(cmp_ix_trans, return_counts=True)
     if np.any(np.isin(cmp_ix_always_neg, cmp_ix_trans)):
         raise ValueError(
-            "At least one compound that is considered to always be in a"
+            "At least one compound that is considered to be always in a"
             " negative state is also listed as compound that undergoes valid"
             " state transition(s).  This should not have happened."
         )
@@ -1384,13 +1384,25 @@ def trans_rate_per_state(
     array([0.8       , 1.        , 0.58333333, 1.        , 0.        ])
     >>> states_start
     array([1, 2, 3, 4, 6])
-    >>> trans_rates_all, states_all = mdt.dtrj.trans_rate_per_state(
-    ...     dtrj, axis=ax, discard_all_neg=True, return_states=True
-    ... )
-    >>> trans_rates_all
-    array([1.        , 0.58333333, 0.        ])
-    >>> states_all
-    array([1, 3, 6])
+
+    .. The following example *sometimes* fails when running Sphinx's
+        `make doctest` as GitHub Action on Ubuntu 22.04 with Python 3.9.
+        This seems somehow related to the Action's cache, but we could
+        not resolve this so far.  With other operating systems and
+        Python versions the example succeeds.  For now, we skip this
+        test when running on Linux with Python 3.9.
+
+    .. doctest::
+        :skipif: platform.system() == "Linux" and \
+                 platform.python_version().startswith("3.9.")
+
+        >>> trans_rates_all, states_all = mdt.dtrj.trans_rate_per_state(
+        ...     dtrj, axis=ax, discard_all_neg=True, return_states=True
+        ... )
+        >>> trans_rates_all
+        array([1.        , 0.58333333, 0.        ])
+        >>> states_all
+        array([1, 3, 6])
     """
     dtrj = mdt.check.dtrj(dtrj)
     ax_cmp, ax_fr = mdt.dtrj.get_ax(ax_fr=axis)
@@ -1434,9 +1446,9 @@ def trans_rate_per_state(
             n_trans_invalid = np.count_nonzero(trans_invalid)
             if n_trans_invalid > n_trans:
                 raise ValueError(
-                    "The number of invalid transitions is greater than the"
-                    " total number of transitions.  This should not have"
-                    " happened "
+                    "The number of invalid transitions ({}) is greater than"
+                    " the total number of transitions ({}).  This should not"
+                    " have happened".format(n_trans_invalid, n_trans)
                 )
             n_trans -= n_trans_invalid
             # Subtract the number of invalid frames, i.e. frames in
@@ -1448,7 +1460,7 @@ def trans_rate_per_state(
             # total number of frames in which compounds reside in
             # `state`.
             # Get all end and start points of all `state` sequences.
-            insertion = np.zeros(n_cmps, dtype=bool)
+            insertion = np.zeros(n_cmps, dtype=dtrj_state.dtype)
             dtrj_state = np.insert(
                 dtrj_state, n_frames_tot, insertion, axis=ax_fr
             )
@@ -1486,27 +1498,28 @@ def trans_rate_per_state(
             if np.any(lifetimes_invalid < 1):
                 raise ValueError(
                     "At least one invalid state sequence is shorter than one"
-                    " frame.  This should not have happened "
+                    " frame.  This should not have happened"
                 )
             # Get the number of invalid frames.
             n_frames_invalid = np.sum(lifetimes_invalid)
             if n_frames_invalid > n_frames:
                 raise ValueError(
-                    "The number of invalid frames is greater than the total"
-                    " number of frames.  This should not have happened "
+                    "The number of invalid frames ({}) is greater than the"
+                    " total number of frames ({}).  This should not have"
+                    " happened".format(n_frames_invalid, n_frames)
                 )
             # Subtract the number of invalid frames.
             n_frames -= n_frames_invalid
-            if n_frames == 0 and n_trans > 0:
-                raise ValueError(
-                    "The number of valid frames is zero but the number of"
-                    " valid transitions {}.  This should not have"
-                    " happened".format(n_trans)
-                )
-            elif n_frames == 0 and n_trans == 0:
+            if n_frames == 0 and n_trans == 0:
                 # All `state` sequences are followed by negative states.
                 trans_rates[six] = np.nan
                 continue
+            elif n_frames == 0 and n_trans > 0:
+                raise ValueError(
+                    "The number of valid frames is zero but the number of"
+                    " valid transitions is {}.  This should not have"
+                    " happened".format(n_trans)
+                )
         trans_rates[six] = n_trans / n_frames
     del dtrj_state, trans, n_trans, n_frames
 
@@ -1529,6 +1542,7 @@ def trans_rate_per_state(
 def lifetimes(
     dtrj,
     axis=-1,
+    uncensored=False,
     discard_neg_start=False,
     discard_all_neg=False,
     return_states=False,
@@ -1548,6 +1562,12 @@ def lifetimes(
         the number of frames, set `axis` to ``-1``.  If you parse a
         transposed discrete trajectory of shape ``(f, n)``, set `axis`
         to ``0``.
+    uncensored : bool, optional
+        If ``True`` only take into account uncensored states, i.e.
+        states whose start and end lie within the trajectory.  In other
+        words, discard the truncated (censored) states at the beginning
+        and end of the trajectory.  For these states the start/end time
+        is unknown.
     discard_neg_start : bool, optional
         If ``True``, discard the lifetimes of all negative states (see
         notes).  This is equivalent to discarding all transitions
@@ -1598,13 +1618,20 @@ def lifetimes(
     -----
     State lifetimes are calculated by simply counting the number of
     frames a given compound stays in a given state.  Note that lifetimes
-    calculated in this way can at maximum be as long as the trajectory
-    and are usually biased to lower values because of edge effects:  At
-    the beginning and end of the trajectory it is impossible to say how
-    long a compound has already been it's initial state or how long it
-    will stay in it's final state.  For unbiased estimates of the
-    average state lifetime use :func:`mdtools.dtrj.trans_rate` or
-    :func:`mdtools.dtrj.remain_prob`.
+    calculated in this way are usually biased to lower values because of
+    the limited length of the trajectory and because of
+    truncation/censoring at the trajectory edges: At the beginning and
+    end of the trajectory it is impossible to say how long a compound
+    has already been it's initial state or how long it will stay in it's
+    final state.  For better estimates of the average state lifetime use
+    :func:`mdtools.dtrj.trans_rate` or :func:`mdtools.dtrj.remain_prob`.
+
+    If `uncensored` is ``True``, the truncated states at the trajectory
+    edges are ignored.  Thus, lifetimes calculated in this way can at
+    maximum be as long as the trajectory minus the first and last frame.
+    Depending on the length of the trajectory and the average state
+    lifetime, uncensored counting might waste a significant amount of
+    the trajectory.
 
     **Valid and Invalid States**
 
@@ -1646,45 +1673,6 @@ def lifetimes(
     --------
     >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
     ...                  [2, 2, 3, 3, 3, 1],
-    ...                  [3, 3, 3, 1, 2, 2],
-    ...                  [1, 3, 3, 3, 2, 2]])
-    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
-    ...     dtrj, return_states=True, return_cmp_ix=True
-    ... )
-    >>> lt
-    array([1, 2, 3, 2, 3, 1, 3, 1, 2, 1, 3, 2])
-    >>> states
-    array([1, 2, 3, 2, 3, 1, 3, 1, 2, 1, 3, 2])
-    >>> cmp_ix
-    array([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
-    >>> mdt.nph.group_by(states, lt)
-    [array([1, 1, 1, 1]), array([2, 2, 2, 2]), array([3, 3, 3, 3])]
-    >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
-    [array([1, 2, 3]), array([2, 3, 1]), array([3, 1, 2]), array([1, 3, 2])]
-    >>> np.mean(lt)
-    2.0
-    >>> np.std(lt, ddof=1)
-    0.8528028654224418
-    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
-    ...     dtrj, axis=0, return_states=True, return_cmp_ix=True
-    ... )
-    >>> lt
-    array([1, 1, 1, 1, 2, 2, 1, 3, 2, 1, 1, 2, 2, 1, 1, 2])
-    >>> states
-    array([1, 2, 3, 1, 2, 3, 2, 3, 3, 1, 3, 3, 2, 3, 1, 2])
-    >>> cmp_ix
-    array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5])
-    >>> mdt.nph.group_by(states, lt)
-    [array([1, 1, 1, 1]), array([1, 2, 1, 2, 2]), array([1, 2, 3, 2, 1, 2, 1])]
-    >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
-    [array([1, 1, 1, 1]), array([2, 2]), array([1, 3]), array([2, 1, 1]), array([2, 2]), array([1, 1, 2])]
-    >>> np.mean(lt)
-    1.5
-    >>> np.std(lt, ddof=1)
-    0.6324555320336759
-
-    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
-    ...                  [2, 2, 3, 3, 3, 1],
     ...                  [6, 6, 6, 1, 4, 4],
     ...                  [1, 6, 6, 6, 4, 4]])
     >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
@@ -1714,6 +1702,71 @@ def lifetimes(
     >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
     [array([1, 1, 1, 1]), array([2, 2]), array([1, 1, 2]), array([2, 1, 1]), array([2, 2]), array([1, 1, 2])]
 
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
+    ...     dtrj, return_states=True, return_cmp_ix=True
+    ... )
+    >>> lt
+    array([1, 2, 3, 2, 3, 1, 3, 1, 2, 1, 3, 2])
+    >>> states
+    array([1, 2, 3, 2, 3, 1, 3, 1, 2, 1, 3, 2])
+    >>> cmp_ix
+    array([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+    >>> mdt.nph.group_by(states, lt)
+    [array([1, 1, 1, 1]), array([2, 2, 2, 2]), array([3, 3, 3, 3])]
+    >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
+    [array([1, 2, 3]), array([2, 3, 1]), array([3, 1, 2]), array([1, 3, 2])]
+    >>> np.mean(lt)
+    2.0
+    >>> np.std(lt, ddof=1)
+    0.8528028654224418
+    >>> lt_unc, states_unc, cmp_ix_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt_unc
+    array([2, 3, 1, 3])
+    >>> states_unc
+    array([2, 3, 1, 3])
+    >>> cmp_ix_unc
+    array([0, 1, 2, 3])
+    >>> ax = 0
+    >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
+    ...     dtrj, axis=ax, return_states=True, return_cmp_ix=True
+    ... )
+    >>> lt
+    array([1, 1, 1, 1, 2, 2, 1, 3, 2, 1, 1, 2, 2, 1, 1, 2])
+    >>> states
+    array([1, 2, 3, 1, 2, 3, 2, 3, 3, 1, 3, 3, 2, 3, 1, 2])
+    >>> cmp_ix
+    array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5])
+    >>> mdt.nph.group_by(states, lt)
+    [array([1, 1, 1, 1]), array([1, 2, 1, 2, 2]), array([1, 2, 3, 2, 1, 2, 1])]
+    >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
+    [array([1, 1, 1, 1]), array([2, 2]), array([1, 3]), array([2, 1, 1]), array([2, 2]), array([1, 1, 2])]
+    >>> np.mean(lt)
+    1.5
+    >>> np.std(lt, ddof=1)
+    0.6324555320336759
+    >>> lt_unc, states_unc, cmp_ix_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt_unc
+    array([1, 1, 1, 1])
+    >>> states_unc
+    array([2, 3, 1, 1])
+    >>> cmp_ix_unc
+    array([0, 0, 3, 5])
+
     >>> dtrj = np.array([[ 1,  2,  2,  1,  1,  1],
     ...                  [ 2,  2,  3,  3,  3,  2],
     ...                  [-3, -3, -3, -1,  2,  2],
@@ -1731,6 +1784,18 @@ def lifetimes(
     [array([3]), array([2]), array([1]), array([1, 3]), array([2, 2, 1, 2, 1]), array([3, 3])]
     >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
     [array([1, 2, 3]), array([2, 3, 1]), array([3, 1, 2]), array([1, 3, 2])]
+    >>> lt_unc, states_unc, cmp_ix_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True
+    ... )
+    >>> lt_unc
+    array([2, 3, 1, 3])
+    >>> states_unc
+    array([ 2,  3, -1,  3])
+    >>> cmp_ix_unc
+    array([0, 1, 2, 3])
     >>> lt_start, states_start, cmp_ix_start = mdt.dtrj.lifetimes(
     ...     dtrj,
     ...     discard_neg_start=True,
@@ -1747,6 +1812,19 @@ def lifetimes(
     [array([1, 3]), array([2, 2, 1, 2, 1]), array([3, 3])]
     >>> mdt.nph.group_by(cmp_ix_start, lt_start, assume_sorted=True)
     [array([1, 2, 3]), array([2, 3, 1]), array([2]), array([1, 3])]
+    >>> lt_start_unc, states_start_unc, cmp_ix_start_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     discard_neg_start=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True
+    ... )
+    >>> lt_start_unc
+    array([2, 3, 3])
+    >>> states_start_unc
+    array([2, 3, 3])
+    >>> cmp_ix_start_unc
+    array([0, 1, 3])
     >>> lt_all, states_all, cmp_ix_all = mdt.dtrj.lifetimes(
     ...     dtrj,
     ...     discard_all_neg=True,
@@ -1763,6 +1841,19 @@ def lifetimes(
     [array([1, 3]), array([2, 2, 1, 2, 1]), array([3])]
     >>> mdt.nph.group_by(cmp_ix_all, lt_all, assume_sorted=True)
     [array([1, 2, 3]), array([2, 3, 1]), array([2]), array([1])]
+    >>> lt_all_unc, states_all_unc, cmp_ix_all_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     discard_all_neg=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True
+    ... )
+    >>> lt_all_unc
+    array([2, 3])
+    >>> states_all_unc
+    array([2, 3])
+    >>> cmp_ix_all_unc
+    array([0, 1])
     >>> ax = 0
     >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
     ...     dtrj, axis=ax, return_states=True, return_cmp_ix=True
@@ -1774,6 +1865,19 @@ def lifetimes(
             2, -2,  1,  2, -2])
     >>> cmp_ix
     array([0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5])
+    >>> lt_unc, states_unc, cmp_ix_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True
+    ... )
+    >>> lt_unc
+    array([1, 1, 1, 1, 1, 1, 1, 1, 1, 2])
+    >>> states_unc
+    array([ 2, -3, -3,  3, -3,  3, -1,  3,  2,  2])
+    >>> cmp_ix_unc
+    array([0, 0, 1, 2, 2, 3, 3, 4, 4, 5])
     >>> lt_start, states_start, cmp_ix_start = mdt.dtrj.lifetimes(
     ...     dtrj,
     ...     axis=ax,
@@ -1787,6 +1891,20 @@ def lifetimes(
     array([1, 2, 2, 2, 3, 2, 3, 3, 1, 3, 3, 1, 3, 2, 1, 2])
     >>> cmp_ix_start
     array([0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5])
+    >>> lt_start_unc, states_start_unc, cmp_ix_start_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     uncensored=True,
+    ...     discard_neg_start=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True
+    ... )
+    >>> lt_start_unc
+    array([1, 1, 1, 1, 1, 2])
+    >>> states_start_unc
+    array([2, 3, 3, 3, 2, 2])
+    >>> cmp_ix_start_unc
+    array([0, 2, 3, 4, 4, 5])
     >>> lt_all, states_all, cmp_ix_all = mdt.dtrj.lifetimes(
     ...     dtrj,
     ...     axis=ax,
@@ -1800,6 +1918,20 @@ def lifetimes(
     array([1, 2, 3, 2, 3, 1, 3, 1, 3, 1])
     >>> cmp_ix_all
     array([0, 0, 1, 2, 2, 3, 3, 4, 4, 5])
+    >>> lt_all_unc, states_all_unc, cmp_ix_all_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     uncensored=True,
+    ...     discard_all_neg=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True
+    ... )
+    >>> lt_all_unc
+    array([1])
+    >>> states_all_unc
+    array([3])
+    >>> cmp_ix_all_unc
+    array([4])
 
     >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
     ...                  [-2, -2,  3,  3,  3,  1],
@@ -1819,6 +1951,18 @@ def lifetimes(
     [array([2, 2, 2, 2]), array([1]), array([1, 1, 1, 1, 1]), array([3, 3, 3, 3]), array([4])]
     >>> mdt.nph.group_by(cmp_ix, lt, assume_sorted=True)
     [array([1, 2, 3]), array([2, 3, 1]), array([3, 1, 2]), array([1, 3, 2]), array([1, 4, 1])]
+    >>> lt_unc, states_unc, cmp_ix_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt_unc
+    array([2, 3, 1, 3, 4])
+    >>> states_unc
+    array([-2,  3,  1,  3,  4])
+    >>> cmp_ix_unc
+    array([0, 1, 2, 3, 4])
     >>> lt_start, states_start, cmp_ix_start = mdt.dtrj.lifetimes(
     ...     dtrj,
     ...     discard_neg_start=True,
@@ -1835,6 +1979,19 @@ def lifetimes(
     [array([1, 1, 1, 1, 1]), array([3, 3, 3, 3]), array([4])]
     >>> mdt.nph.group_by(cmp_ix_start, lt_start, assume_sorted=True)
     [array([1, 3]), array([3, 1]), array([3, 1]), array([1, 3]), array([1, 4])]
+    >>> lt_start_unc, states_start_unc, cmp_ix_start_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     discard_neg_start=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt_start_unc
+    array([3, 1, 3, 4])
+    >>> states_start_unc
+    array([3, 1, 3, 4])
+    >>> cmp_ix_start_unc
+    array([1, 2, 3, 4])
     >>> lt_all, states_all, cmp_ix_all = mdt.dtrj.lifetimes(
     ...     dtrj,
     ...     discard_all_neg=True,
@@ -1851,6 +2008,19 @@ def lifetimes(
     [array([1, 1, 1]), array([3, 3, 3])]
     >>> mdt.nph.group_by(cmp_ix_all, lt_all, assume_sorted=True)
     [array([3]), array([3, 1]), array([3]), array([1]), array([1])]
+    >>> lt_all_unc, states_all_unc, cmp_ix_all_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     discard_all_neg=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt_all_unc
+    array([3])
+    >>> states_all_unc
+    array([3])
+    >>> cmp_ix_all_unc
+    array([1])
     >>> ax = 0
     >>> lt, states, cmp_ix = mdt.dtrj.lifetimes(
     ...     dtrj, axis=ax, return_states=True, return_cmp_ix=True
@@ -1875,6 +2045,20 @@ def lifetimes(
     array([1, 3, 1, 3, 4, 3, 4, 3, 1, 3, 4, 3, 4, 3, 1])
     >>> cmp_ix_start
     array([0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5])
+    >>> lt_start_unc, states_start_unc, cmp_ix_start_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     uncensored=True,
+    ...     discard_neg_start=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt_start_unc
+    array([1, 2, 3, 1, 1, 1])
+    >>> states_start_unc
+    array([3, 3, 3, 1, 3, 1])
+    >>> cmp_ix_start_unc
+    array([0, 1, 2, 3, 3, 5])
     >>> lt_all, states_all, cmp_ix_all = mdt.dtrj.lifetimes(
     ...     dtrj,
     ...     axis=ax,
@@ -1888,14 +2072,56 @@ def lifetimes(
     array([3, 1, 3, 4, 3, 4, 3, 1, 3, 4, 4, 3])
     >>> cmp_ix_all
     array([0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 5])
+    >>> lt_all_unc, states_all_unc, cmp_ix_all_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     axis=ax,
+    ...     uncensored=True,
+    ...     discard_all_neg=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ... )
+    >>> lt_all_unc
+    array([1, 2, 3, 1, 1])
+    >>> states_all_unc
+    array([3, 3, 3, 1, 3])
+    >>> cmp_ix_all_unc
+    array([0, 1, 2, 3, 3])
+
+    >>> dtrj = np.array([[1, 2, 2],
+    ...                  [3, 3, 3]])
+    >>> lt_unc, states_unc, cmp_ix_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True
+    ... )
+    >>> lt_unc
+    array([], dtype=int64)
+    >>> states_unc
+    array([], dtype=int64)
+    >>> cmp_ix_unc
+    array([], dtype=int64)
+    >>> lt_unc, states_unc, cmp_ix_unc = mdt.dtrj.lifetimes(
+    ...     dtrj,
+    ...     axis=0,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True
+    ... )
+    >>> lt_unc
+    array([], dtype=int64)
+    >>> states_unc
+    array([], dtype=int64)
+    >>> cmp_ix_unc
+    array([], dtype=int64)
     """  # noqa: W505, E501
     dtrj = mdt.check.dtrj(dtrj)
     ax_cmp, ax_fr = mdt.dtrj.get_ax(ax_fr=axis)
     n_frames = dtrj.shape[ax_fr]
 
     # Ensure that the end of the trajectory (i.e. the virtual frame
-    # after the last frame) is treated as the end of a state transition
-    # by adding a new state to the end of `dtrj`.
+    # after the last frame) is treated as the end of a state
+    # transition by adding a new state to the end of `dtrj`.
     dtrj = np.insert(dtrj, n_frames, np.max(dtrj) + 1, axis=ax_fr)
     # Ensures that the first frame is treated as the end of a state
     # transition by setting `tfft` to ``True``.
@@ -1921,26 +2147,44 @@ def lifetimes(
     # Get state and compound indices corresponding to each lifetime.
     states = dtrj[trans_ix_start]
     cmp_ix = trans_ix_start[ax_cmp]
+    valid = np.ones(cmp_ix.shape, dtype=bool)
+    del dtrj
+
     if discard_neg_start or discard_all_neg:
         # Discard the lifetimes of all negative states.
-        valid = states >= 0
-        if discard_all_neg:
-            # Discard the lifetimes of positive states that are followed
-            # by a negative state (i.e. discard all states that do not
-            # have a valid follower state).
-            valid_follower = np.roll(valid, shift=-1)
-            # States at the end of a compound trajectory do not have any
-            # follower state and are therefore always regarded as valid
-            # (except if they are negative).
-            trj_ends = (trans_ix_start[ax_fr] + 1) == n_frames
-            valid_follower[trj_ends] = True
-            valid &= valid_follower
-            del valid_follower, trj_ends
-        lt = lt[valid]
-        states = states[valid]
-        cmp_ix = cmp_ix[valid]
-        del valid
-    del dtrj
+        valid_states = states >= 0
+        valid &= valid_states
+
+    if discard_all_neg:
+        # Discard the lifetimes of positive states that are followed by
+        # a negative state (i.e. discard all states that do not have a
+        # valid follower state).
+        valid_follower = np.roll(valid_states, shift=-1)
+        # States at the end of a compound trajectory do not have any
+        # follower state and are therefore always regarded as valid
+        # (except if they are negative).
+        trj_ends = (trans_ix_start[ax_fr] + 1) == n_frames
+        valid_follower[trj_ends] = True
+        valid &= valid_follower
+        del valid_states, valid_follower, trj_ends
+
+    if uncensored:
+        # Remove censored states at the trajectory edges.
+        # Get end of each compound trajectory.
+        censored_end = np.diff(cmp_ix) != 0
+        censored_end = np.append(censored_end, True)
+        # Get beginning of each compound trajectory.
+        censored_start = np.roll(censored_end, shift=1)
+        censored = np.logical_or(
+            censored_start, censored_end, out=censored_start
+        )
+        valid &= np.invert(censored, out=censored)
+        del censored_start, censored_end, censored
+        if np.any(lt[valid] > n_frames - 2):
+            raise ValueError(
+                "At least one lifetime is greater than the number of frames in"
+                " the trajectory minus two.  This should not have happened"
+            )
 
     if np.any(lt > n_frames):
         raise ValueError(
@@ -1952,11 +2196,11 @@ def lifetimes(
             "At least one lifetime is negative.  This should not have happened"
         )
 
-    ret = (lt,)
+    ret = (lt[valid],)
     if return_states:
-        ret += (states,)
+        ret += (states[valid],)
     if return_cmp_ix:
-        ret += (cmp_ix,)
+        ret += (cmp_ix[valid],)
     if len(ret) == 1:
         ret = ret[0]
     return ret
@@ -1965,6 +2209,7 @@ def lifetimes(
 def lifetimes_per_state(
     dtrj,
     axis=-1,
+    uncensored=False,
     discard_neg_start=False,
     discard_all_neg=False,
     return_states=False,
@@ -1988,6 +2233,12 @@ def lifetimes_per_state(
         the number of frames, set `axis` to ``-1``.  If you parse a
         transposed discrete trajectory of shape ``(f, n)``, set `axis`
         to ``0``.
+    uncensored : bool, optional
+        If ``True`` only take into account uncensored states, i.e.
+        states whose start and end lie within the trajectory.  In other
+        words, discard the truncated (censored) states at the beginning
+        and end of the trajectory.  For these states the start/end time
+        is unknown.
     discard_neg_start : bool, optional
         If ``True``, discard the lifetimes of all negative states (see
         notes of :func:`mdtools.dtrj.lifetimes`).  This is equivalent to
@@ -2060,61 +2311,12 @@ def lifetimes_per_state(
 
     Notes
     -----
-    State lifetimes are calculated by simply counting the number of
-    frames a given compound stays in a given state.  Note that lifetimes
-    calculated in this way can at maximum be as long as the trajectory
-    and are usually biased to lower values because of edge effects:  At
-    the beginning and end of the trajectory it is impossible to say how
-    long a compound has already been it's initial state or how long it
-    will stay in it's final state.  For unbiased estimates of the
-    average state lifetime use :func:`mdtools.dtrj.trans_rate_per_state`
-    or :func:`mdtools.dtrj.remain_prob_discrete`.
-
-    See :func:`mdtools.dtrj.lifetimes` for details about valid and
-    invalid states (`discard_neg_start` and `discard_all_neg`).
+    See :func:`mdtools.dtrj.lifetimes` for details about how state
+    lifetimes are calculated and about valid and invalid states
+    (`discard_neg_start` and `discard_all_neg`).
 
     Examples
     --------
-    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
-    ...                  [2, 2, 3, 3, 3, 1],
-    ...                  [3, 3, 3, 1, 2, 2],
-    ...                  [1, 3, 3, 3, 2, 2]])
-    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
-    ...     dtrj,
-    ...     return_states=True,
-    ...     return_cmp_ix=True,
-    ...     return_avg=True,
-    ...     return_std=True,
-    ... )
-    >>> lt
-    [array([1, 1, 1, 1]), array([2, 2, 2, 2]), array([3, 3, 3, 3])]
-    >>> states
-    array([1, 2, 3])
-    >>> cmp_ix
-    [array([0, 1, 2, 3]), array([0, 1, 2, 3]), array([0, 1, 2, 3])]
-    >>> lt_avg
-    array([1., 2., 3.])
-    >>> lt_std
-    array([0., 0., 0.])
-    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
-    ...     dtrj,
-    ...     axis=0,
-    ...     return_states=True,
-    ...     return_cmp_ix=True,
-    ...     return_avg=True,
-    ...     return_std=True,
-    ... )
-    >>> lt
-    [array([1, 1, 1, 1]), array([1, 2, 1, 2, 2]), array([1, 2, 3, 2, 1, 2, 1])]
-    >>> states
-    array([1, 2, 3])
-    >>> cmp_ix
-    [array([0, 0, 3, 5]), array([0, 1, 2, 4, 5]), array([0, 1, 2, 3, 3, 4, 5])]
-    >>> lt_avg
-    array([1.        , 1.6       , 1.71428571])
-    >>> lt_std
-    array([0.        , 0.48989795, 0.69985421])
-
     >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
     ...                  [2, 2, 3, 3, 3, 1],
     ...                  [6, 6, 6, 1, 4, 4],
@@ -2154,6 +2356,83 @@ def lifetimes_per_state(
     array([1.        , 1.33333333, 1.5       , 2.        , 1.5       ])
     >>> lt_std
     array([0.        , 0.47140452, 0.5       , 0.        , 0.5       ])
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([2, 2, 2, 2]), array([3, 3, 3, 3])]
+    >>> states
+    array([1, 2, 3])
+    >>> cmp_ix
+    [array([0, 1, 2, 3]), array([0, 1, 2, 3]), array([0, 1, 2, 3])]
+    >>> lt_avg
+    array([1., 2., 3.])
+    >>> lt_std
+    array([0., 0., 0.])
+    >>> lt_unc, states_unc, cmp_ix_unc, lt_avg_unc, lt_std_unc = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt_unc
+    [array([1]), array([2]), array([3, 3])]
+    >>> states_unc
+    array([1, 2, 3])
+    >>> cmp_ix_unc
+    [array([2]), array([0]), array([1, 3])]
+    >>> lt_avg_unc
+    array([1., 2., 3.])
+    >>> lt_std_unc
+    array([0., 0., 0.])
+    >>> lt, states, cmp_ix, lt_avg, lt_std = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=0,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt
+    [array([1, 1, 1, 1]), array([1, 2, 1, 2, 2]), array([1, 2, 3, 2, 1, 2, 1])]
+    >>> states
+    array([1, 2, 3])
+    >>> cmp_ix
+    [array([0, 0, 3, 5]), array([0, 1, 2, 4, 5]), array([0, 1, 2, 3, 3, 4, 5])]
+    >>> lt_avg
+    array([1.        , 1.6       , 1.71428571])
+    >>> lt_std
+    array([0.        , 0.48989795, 0.69985421])
+    >>> lt_unc, states_unc, cmp_ix_unc, lt_avg_unc, lt_std_unc = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=0,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt_unc
+    [array([1, 1]), array([1]), array([1])]
+    >>> states_unc
+    array([1, 2, 3])
+    >>> cmp_ix_unc
+    [array([3, 5]), array([0]), array([0])]
+    >>> lt_avg_unc
+    array([1., 1., 1.])
+    >>> lt_std_unc
+    array([0., 0., 0.])
 
     >>> dtrj = np.array([[ 1,  2,  2,  1,  1,  1],
     ...                  [ 2,  2,  3,  3,  3,  2],
@@ -2388,10 +2667,51 @@ def lifetimes_per_state(
     array([1.5       , 1.66666667, 1.        ])
     >>> lt_std
     array([0.5       , 0.74535599, 0.        ])
+
+    >>> dtrj = np.array([[1, 2, 2],
+    ...                  [3, 3, 3]])
+    >>> lt_unc, states_unc, cmp_ix_unc, lt_avg_unc, lt_std_unc = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt_unc
+    [array([], dtype=int64)]
+    >>> states_unc
+    array([], dtype=int64)
+    >>> cmp_ix_unc
+    [array([], dtype=int64)]
+    >>> lt_avg_unc
+    array([nan])
+    >>> lt_std_unc
+    array([nan])
+    >>> lt_unc, states_unc, cmp_ix_unc, lt_avg_unc, lt_std_unc = mdt.dtrj.lifetimes_per_state(
+    ...     dtrj,
+    ...     axis=0,
+    ...     uncensored=True,
+    ...     return_states=True,
+    ...     return_cmp_ix=True,
+    ...     return_avg=True,
+    ...     return_std=True,
+    ... )
+    >>> lt_unc
+    [array([], dtype=int64)]
+    >>> states_unc
+    array([], dtype=int64)
+    >>> cmp_ix_unc
+    [array([], dtype=int64)]
+    >>> lt_avg_unc
+    array([nan])
+    >>> lt_std_unc
+    array([nan])
     """  # noqa: E501, W505
     lt, states, cmp_ix = mdt.dtrj.lifetimes(
         dtrj,
         axis=axis,
+        uncensored=uncensored,
         discard_neg_start=discard_neg_start,
         discard_all_neg=discard_all_neg,
         return_states=True,
@@ -2415,12 +2735,24 @@ def lifetimes_per_state(
     if return_avg:
         if kwargs_avg is None:
             kwargs_avg = {}
-        lt_avg = np.array([np.mean(lt_state, **kwargs_avg) for lt_state in lt])
+        lt_avg = np.array(
+            [
+                np.mean(lt_state, **kwargs_avg)
+                if len(lt_state) > 0
+                else np.nan
+                for lt_state in lt
+            ]
+        )
         ret += (lt_avg,)
     if return_std:
         if kwargs_std is None:
             kwargs_std = {}
-        lt_std = np.array([np.std(lt_state, **kwargs_std) for lt_state in lt])
+        lt_std = np.array(
+            [
+                np.std(lt_state, **kwargs_std) if len(lt_state) > 0 else np.nan
+                for lt_state in lt
+            ]
+        )
         ret += (lt_std,)
     if len(ret) == 1:
         ret = ret[0]
