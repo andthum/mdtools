@@ -73,17 +73,17 @@ if __name__ == "__main__":  # noqa: C901
 
     # Column indices for the input file(s).
     col_states = 0
-    col_dist_params = 55  # to 57 (tau0, beta, delta)
-    col_fit_end = 49
+    col_dist_params = 57  # to 59 (tau0, beta, delta)
+    col_fit_end = 51
     # Lifetimes from the different methods.
-    col_cnt_cen = 1  # to 8 (mean, std, skew, kurt, median, min, max, nobs)
-    col_cnt_unc = 9  # to 16 (as col_cnt_cen)
-    col_rate = 17
-    # col_e = 18
-    col_int = 19  # to 23 (mean, std, skew, kurt, median)
-    col_kww = 24  # to 34 (mean, std, skew, kurt, median, fit params)
-    col_bur = 35  # to 47 (as col_kww)
-    col_dst = 50  # to 54 (as col_int)
+    col_cnt_cen = 1  # to 9 (mean, se, std, skew, kurt, median, min, max, nobs)
+    col_cnt_unc = 10  # to 18 (as col_cnt_cen)
+    col_rate = 19
+    # col_e = 20
+    col_int = 21  # to 25 (mean, std, skew, kurt, median)
+    col_kww = 26  # to 36 (mean, std, skew, kurt, median, fit params)
+    col_bur = 37  # to 49 (as col_kww)
+    col_dst = 52  # to 56 (as col_int)
 
     # Read data.
     infiles = glob.glob(infile_pattern)
@@ -277,35 +277,52 @@ if __name__ == "__main__":  # noqa: C901
             "Median / Frames",
         )
         for i, ylabel in enumerate(ylabels):
+            if i == 0:
+                offset_i_cnt = 0
+            else:
+                offset_i_cnt = 1
             fig, ax = plt.subplots(clear=True)
+            if i == 2:
+                # Skewness of exponential distribution is 2.
+                ax.axhline(
+                    y=2, color="black", linestyle="dashed", label="Exp. Dist."
+                )
+            elif i == 3:
+                # Excess kurtosis of exponential distribution is 6
+                ax.axhline(
+                    y=6, color="black", linestyle="dashed", label="Exp. Dist."
+                )
             # True lifetimes (from distribution).
             valid = data[col_dst + i] > 0
             if np.any(valid):
-                ax.plot(
+                ax.errorbar(
                     xdata[valid],
                     data[col_dst + i][valid],
+                    yerr=None,
                     label=label_true,
                     color=color_true,
                     marker=marker_true,
                     alpha=alpha,
                 )
             # Method 1 (censored counting).
-            valid = data[col_cnt_cen + i] > 0
+            valid = data[col_cnt_cen + i + offset_i_cnt] > 0
             if np.any(valid):
-                ax.plot(
+                ax.errorbar(
                     xdata[valid],
-                    data[col_cnt_cen + i][valid],
+                    data[col_cnt_cen + i + offset_i_cnt][valid],
+                    yerr=data[col_cnt_cen + i + 1][valid] if i == 0 else None,
                     label=label_cnt_cen,
                     color=color_cnt_cen,
                     marker=marker_cnt_cen,
                     alpha=alpha,
                 )
             # Method 2 (uncensored counting).
-            valid = data[col_cnt_unc + i] > 0
+            valid = data[col_cnt_unc + i + offset_i_cnt] > 0
             if np.any(valid):
-                ax.plot(
+                ax.errorbar(
                     xdata[valid],
-                    data[col_cnt_unc + i][valid],
+                    data[col_cnt_unc + i + offset_i_cnt][valid],
+                    yerr=data[col_cnt_unc + i + 1][valid] if i == 0 else None,
                     label=label_cnt_unc,
                     color=color_cnt_unc,
                     marker=marker_cnt_unc,
@@ -315,9 +332,10 @@ if __name__ == "__main__":  # noqa: C901
             if i == 0:
                 valid = data[col_rate] > 0
                 if np.any(valid):
-                    ax.plot(
+                    ax.errorbar(
                         xdata[valid],
                         data[col_rate][valid],
+                        yerr=None,
                         label=label_rate,
                         color=color_rate,
                         marker=marker_rate,
@@ -326,9 +344,10 @@ if __name__ == "__main__":  # noqa: C901
                 # # Method 4 (1/e criterion).
                 # valid = data[col_e] > 0
                 # if np.any(valid):
-                #     ax.plot(
+                #     ax.errorbar(
                 #         xdata[valid],
                 #         data[col_e][valid],
+                #         yerr=None,
                 #         label=label_e,
                 #         color=color_e,
                 #         marker=marker_e,
@@ -337,9 +356,10 @@ if __name__ == "__main__":  # noqa: C901
             # Method 5 (direct integral).
             valid = data[col_int + i] > 0
             if np.any(valid):
-                ax.plot(
+                ax.errorbar(
                     xdata[valid],
                     data[col_int + i][valid],
+                    yerr=None,
                     label=label_int,
                     color=color_int,
                     marker=marker_int,
@@ -348,9 +368,10 @@ if __name__ == "__main__":  # noqa: C901
             # Method 6 (integral of Kohlrausch fit).
             valid = data[col_kww + i] > 0
             if np.any(valid):
-                ax.plot(
+                ax.errorbar(
                     xdata[valid],
                     data[col_kww + i][valid],
+                    yerr=None,
                     label=label_kww,
                     color=color_kww,
                     marker=marker_kww,
@@ -359,9 +380,10 @@ if __name__ == "__main__":  # noqa: C901
             # Method 7 (integral of Burr fit).
             valid = data[col_bur + i] > 0
             if np.any(valid):
-                ax.plot(
+                ax.errorbar(
                     xdata[valid],
                     data[col_bur + i][valid],
+                    yerr=None,
                     label=label_bur,
                     color=color_bur,
                     marker=marker_bur,
@@ -370,10 +392,7 @@ if __name__ == "__main__":  # noqa: C901
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
             ax.set(
-                xlabel=xlabel,
-                ylabel=ylabel,
-                xlim=xlim,
-                ylim=ylims_characs[i],
+                xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylims_characs[i]
             )
             legend = ax.legend(
                 title=legend_title, ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL
@@ -391,23 +410,24 @@ if __name__ == "__main__":  # noqa: C901
         )
         for i, ylabel in enumerate(ylabels):
             fig, ax = plt.subplots(clear=True)
+            col_cnt_i = len(ylims_characs) + 1 + i
             # Method 1 (censored counting).
-            valid = data[col_cnt_cen + len(ylims_characs) + i] > 0
+            valid = data[col_cnt_cen + col_cnt_i] > 0
             if np.any(valid):
                 ax.plot(
                     xdata[valid],
-                    data[col_cnt_cen + len(ylims_characs) + i][valid],
+                    data[col_cnt_cen + col_cnt_i][valid],
                     label=label_cnt_cen,
                     color=color_cnt_cen,
                     marker=marker_cnt_cen,
                     alpha=alpha,
                 )
             # Method 2 (uncensored counting).
-            valid = data[col_cnt_unc + len(ylims_characs) + i] > 0
+            valid = data[col_cnt_unc + col_cnt_i] > 0
             if np.any(valid):
                 ax.plot(
                     xdata[valid],
-                    data[col_cnt_unc + len(ylims_characs) + i][valid],
+                    data[col_cnt_unc + col_cnt_i][valid],
                     label=label_cnt_unc,
                     color=color_cnt_unc,
                     marker=marker_cnt_unc,
@@ -415,12 +435,7 @@ if __name__ == "__main__":  # noqa: C901
                 )
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            ax.set(
-                xlabel=xlabel,
-                ylabel=ylabel,
-                xlim=xlim,
-                ylim=ylims_cnt[i],
-            )
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylims_cnt[i])
             handles, labels = ax.get_legend_handles_labels()
             legend = ax.legend(
                 title=legend_title,
