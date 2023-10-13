@@ -99,13 +99,14 @@ if __name__ == "__main__":  # noqa: C901
         # Only keep the row that contains the data for state 1.
         valid = data_file[:, col_states] == 1
         if not np.any(valid):
-            continue
+            data.append(np.full(62, np.nan))
         elif np.count_nonzero(valid) != 1:
             raise ValueError(
                 "The input file contains multiple rows with state 1:"
                 " '{}'".format(infile)
             )
-        data.append(np.squeeze(data_file[valid]))
+        else:
+            data.append(np.squeeze(data_file[valid]))
         shape = infile.split("_shape_")[1].split("_")[:2]
         shapes.append([int(s) for s in shape])
     if len(data) < 1:
@@ -293,111 +294,98 @@ if __name__ == "__main__":  # noqa: C901
                     y=6, color="black", linestyle="dashed", label="Exp. Dist."
                 )
             # True lifetimes (from distribution).
-            valid = data[col_dst + i] > 0
-            if np.any(valid):
-                ax.errorbar(
-                    xdata[valid],
-                    data[col_dst + i][valid],
-                    yerr=None,
-                    label=label_true,
-                    color=color_true,
-                    marker=marker_true,
-                    alpha=alpha,
-                )
+            ax.errorbar(
+                xdata,
+                data[col_dst + i],
+                yerr=None,
+                label=label_true,
+                color=color_true,
+                marker=marker_true,
+                alpha=alpha,
+            )
             # Method 1 (censored counting).
-            valid = data[col_cnt_cen + i + offset_i_cnt] > 0
-            if np.any(valid):
-                ax.errorbar(
-                    xdata[valid],
-                    data[col_cnt_cen + i + offset_i_cnt][valid],
-                    yerr=data[col_cnt_cen + i + 1][valid] if i == 0 else None,
-                    label=label_cnt_cen,
-                    color=color_cnt_cen,
-                    marker=marker_cnt_cen,
-                    alpha=alpha,
-                )
+            ax.errorbar(
+                xdata,
+                data[col_cnt_cen + i + offset_i_cnt],
+                yerr=data[col_cnt_cen + i + 1] if i == 0 else None,
+                label=label_cnt_cen,
+                color=color_cnt_cen,
+                marker=marker_cnt_cen,
+                alpha=alpha,
+            )
             # Method 2 (uncensored counting).
-            valid = data[col_cnt_unc + i + offset_i_cnt] > 0
-            if np.any(valid):
-                ax.errorbar(
-                    xdata[valid],
-                    data[col_cnt_unc + i + offset_i_cnt][valid],
-                    yerr=data[col_cnt_unc + i + 1][valid] if i == 0 else None,
-                    label=label_cnt_unc,
-                    color=color_cnt_unc,
-                    marker=marker_cnt_unc,
-                    alpha=alpha,
-                )
+            ax.errorbar(
+                xdata,
+                data[col_cnt_unc + i + offset_i_cnt],
+                yerr=data[col_cnt_unc + i + 1] if i == 0 else None,
+                label=label_cnt_unc,
+                color=color_cnt_unc,
+                marker=marker_cnt_unc,
+                alpha=alpha,
+            )
             # Method 3 (inverse transition rate).
             if i == 0:
-                valid = data[col_rate] > 0
-                if np.any(valid):
-                    ax.errorbar(
-                        xdata[valid],
-                        data[col_rate][valid],
-                        yerr=None,
-                        label=label_rate,
-                        color=color_rate,
-                        marker=marker_rate,
-                        alpha=alpha,
-                    )
+                ax.errorbar(
+                    xdata,
+                    data[col_rate],
+                    yerr=None,
+                    label=label_rate,
+                    color=color_rate,
+                    marker=marker_rate,
+                    alpha=alpha,
+                )
                 # # Method 4 (1/e criterion).
-                # valid = data[col_e] > 0
-                # if np.any(valid):
-                #     ax.errorbar(
-                #         xdata[valid],
-                #         data[col_e][valid],
-                #         yerr=None,
-                #         label=label_e,
-                #         color=color_e,
-                #         marker=marker_e,
-                #         alpha=alpha,
-                #     )
+                # ax.errorbar(
+                #     xdata,
+                #     data[col_e],
+                #     yerr=None,
+                #     label=label_e,
+                #     color=color_e,
+                #     marker=marker_e,
+                #     alpha=alpha,
+                # )
             # Method 5 (direct integral).
-            valid = data[col_int + i] > 0
-            if np.any(valid):
-                ax.errorbar(
-                    xdata[valid],
-                    data[col_int + i][valid],
-                    yerr=None,
-                    label=label_int,
-                    color=color_int,
-                    marker=marker_int,
-                    alpha=alpha,
-                )
-            # Method 6 (integral of Kohlrausch fit).
-            valid = data[col_kww + i] > 0
-            if np.any(valid):
-                ax.errorbar(
-                    xdata[valid],
-                    data[col_kww + i][valid],
-                    yerr=None,
-                    label=label_kww,
-                    color=color_kww,
-                    marker=marker_kww,
-                    alpha=alpha,
-                )
-            # Method 7 (integral of Burr fit).
-            valid = data[col_bur + i] > 0
-            if np.any(valid):
-                ax.errorbar(
-                    xdata[valid],
-                    data[col_bur + i][valid],
-                    yerr=None,
-                    label=label_bur,
-                    color=color_bur,
-                    marker=marker_bur,
-                    alpha=alpha,
-                )
-            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            ax.set(
-                xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylims_characs[i]
+            ax.errorbar(
+                xdata,
+                data[col_int + i],
+                yerr=None,
+                label=label_int,
+                color=color_int,
+                marker=marker_int,
+                alpha=alpha,
             )
+            # Method 6 (integral of Kohlrausch fit).
+            ax.errorbar(
+                xdata,
+                data[col_kww + i],
+                yerr=None,
+                label=label_kww,
+                color=color_kww,
+                marker=marker_kww,
+                alpha=alpha,
+            )
+            # Method 7 (integral of Burr fit).
+            ax.errorbar(
+                xdata,
+                data[col_bur + i],
+                yerr=None,
+                label=label_bur,
+                color=color_bur,
+                marker=marker_bur,
+                alpha=alpha,
+            )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             legend = ax.legend(
                 title=legend_title, ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL
             )
             legend.get_title().set_multialignment("center")
+            if i in (2, 3):
+                ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+                pdf.savefig()
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(
+                xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylims_characs[i]
+            )
             pdf.savefig()
             plt.close()
 
