@@ -465,51 +465,29 @@ Burr Type XII Distribution
 Generate artificial discrete trajectories that resemble true discrete
 trajectories.
 
-    Layer residence times (exponential distribution).
+    Layer residence times (Gamma distribution).
 
     .. code-block:: bash
 
         beta=1
-        delta=1
         n_cmps=128
         n_frames=500001
         discard=100000
-        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_6_50_5_15_13_13_13_13_13_13_13_13_13_13_13_14_15_7_150_3250_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --dist generalized_gamma \
-            --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
-            --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
-            --tau0 6 50 5 15 13 13 13 13 13 13 13 13 13 13 13 14 15 7 150 3250 \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436 \
-            --adjacent
-
-    Layer residence times (Erlang distribution).
-
-    .. code-block:: bash
-
-        beta=1
-        delta=2
-        n_cmps=128
-        n_frames=500001
-        discard=100000
-        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_6_50_5_15_13_13_13_13_13_13_13_13_13_13_13_14_15_7_150_3250_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --dist generalized_gamma \
-            --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
-            --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
-            --tau0 6 50 5 15 13 13 13 13 13 13 13 13 13 13 13 14 15 7 150 3250 \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436 \
-            --adjacent
+        for delta in 0.25 0.50 1.00 2.00 4.00; do
+            fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_layer_residence_times_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist generalized_gamma \
+                --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
+                --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
+                --tau0 6 50 5 15 13 13 13 13 13 13 13 13 13 13 13 14 15 7 150 3250 \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436 \
+                --adjacent
+        done
 
     Renewal times (exponential distribution).
 
@@ -520,7 +498,7 @@ trajectories.
         n_cmps=128
         n_frames=500001
         discard=100000
-        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_150000_125000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_100000_150000_200000_375000_400000_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_renewal_times_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
@@ -543,7 +521,7 @@ trajectories.
         n_cmps=128
         n_frames=500001
         discard=100000
-        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_15000_12500_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_10000_15000_20000_37500_40000_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_renewal_times_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
         python3 generate_dtrj.py \
             --dtrj-out "${fname}.npz" \
             --param-out "${fname}_param.txt.gz" \
