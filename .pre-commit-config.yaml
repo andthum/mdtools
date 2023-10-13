@@ -38,7 +38,7 @@ ci:
 
 repos:
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
-    rev: "v4.4.0"
+    rev: "v4.5.0"
     hooks:
       ### Git ###
       # Protect specific branches from direct check-ins.
@@ -168,15 +168,7 @@ repos:
           # Required for isort's `--color` option.
           - "colorama"
 
-  - repo: "https://github.com/psf/black"
-    # Don't remove `refs/tags/<tag>:refs/tags/<tag>` in front of the
-    # hook's version number.  Without the prefix the black pre-commit
-    # hook will fail with exit code 1: "The required version XX does not
-    # match the running version YY!"  This happens, because in
-    # `pyproject.toml` we explicitly set the required version of black
-    # to XX but somehow the pre-commit hook has version YY when
-    # specifying the hook version without the prefix.  See
-    # https://github.com/psf/black/issues/2493#issuecomment-1081987650
+  - repo: "https://github.com/psf/black-pre-commit-mirror"
     rev: "23.9.1"
     hooks:
       # Format Python code with black.
@@ -281,7 +273,7 @@ repos:
     # v0.12.0 requires ruby2.7
     # v0.11.0 and v0.10.0 require ruby2.6
     # => stay at v0.9.0
-    rev: "v0.12.0"
+    rev: "v0.9.0"
     hooks:
       # Lint Markdown files with markdownlint.
       - id: "markdownlint"
