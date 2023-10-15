@@ -1320,8 +1320,8 @@ def mb_dist(v, temp=None, mass=None, var=None, drift=0, d=3):
     .. [#] Wikipedia `Maxwell-Boltzmann distribution § In n-dimensional
         space
         <https://en.wikipedia.org/wiki/Maxwell%E2%80%93Boltzmann_distribution#In_n-dimensional_space>`_
-    .. [#] Wikipedia `n-sphere § Closed forms
-        <https://en.wikipedia.org/wiki/N-sphere#Closed_forms>`_
+    .. [#] Wikipedia `n-sphere § Volume and surface area
+        <https://en.wikipedia.org/wiki/N-sphere#Volume_and_surface_area>`_
 
     Examples
     --------
@@ -1489,8 +1489,8 @@ def ekin_dist(ekin, temp, d=3):
     .. [#] Wikipedia `Maxwell-Boltzmann distribution § In n-dimensional
         space
         <https://en.wikipedia.org/wiki/Maxwell%E2%80%93Boltzmann_distribution#Distribution_for_the_energy>`_
-    .. [#] Wikipedia `n-sphere § Closed forms
-        <https://en.wikipedia.org/wiki/N-sphere#Closed_forms>`_
+    .. [#] Wikipedia `n-sphere § Volume and surface area
+        <https://en.wikipedia.org/wiki/N-sphere#Volume_and_surface_area>`_
 
     Examples
     --------
