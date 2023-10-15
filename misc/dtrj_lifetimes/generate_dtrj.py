@@ -473,67 +473,71 @@ trajectories.
         n_cmps=128
         n_frames=500001
         discard=100000
+        # `mean` divided by `delta` must give an integer.
+        # Means resemble lifetimes of lintf2_g1_20-1_gra_q1_sc80.
+        mean="8 48 4 16 12 12 12 12 12 12 12 12 12 12 12 12 16 8 152 3252"
         for delta in 0.25 0.50 1.00 2.00 4.00; do
             fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_layer_residence_times_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            # Ensure that all gamma distributions have the same mean.
+            # mean = tau0 * delta  =>  tau0 = mean / delta
+            tau0=$(
+                echo "${mean}" |
+                awk -v delta="${delta}" '
+                {
+                    for (i=1; i<=NF; i++)
+                        printf "%d ", $i/delta
+                }'
+            )
             python3 generate_dtrj.py \
                 --dtrj-out "${fname}.npz" \
                 --param-out "${fname}_param.txt.gz" \
                 --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
                 --dist generalized_gamma \
-                --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
-                --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
-                --tau0 6 50 5 15 13 13 13 13 13 13 13 13 13 13 13 14 15 7 150 3250 \
+                --beta $(for in in {1..20}; do echo "${beta}"; done) \
+                --delta $(for in in {1..20}; do echo "${delta}"; done) \
+                --tau0 ${tau0} \
                 --shape "${n_cmps}" "${n_frames}" \
                 --discard "${discard}" \
                 --seed 5462489434968436 \
                 --adjacent
         done
 
-    Renewal times (exponential distribution).
+    Renewal times (Gamma distribution).
 
     .. code-block:: bash
 
         beta=1
-        delta=1
         n_cmps=128
         n_frames=500001
         discard=100000
-        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_renewal_times_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --dist generalized_gamma \
-            --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
-            --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
-            --tau0 150000 125000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 150000 200000 375000 400000 \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436 \
-            --adjacent
-
-    Renewal times (Erlang distribution).
-
-    .. code-block:: bash
-
-        beta=1
-        delta=6
-        n_cmps=128
-        n_frames=500001
-        discard=100000
-        fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_renewal_times_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
-        python3 generate_dtrj.py \
-            --dtrj-out "${fname}.npz" \
-            --param-out "${fname}_param.txt.gz" \
-            --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
-            --dist generalized_gamma \
-            --beta "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" "${beta}" \
-            --delta "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" "${delta}" \
-            --tau0 15000 12500 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 10000 15000 20000 37500 40000 \
-            --shape "${n_cmps}" "${n_frames}" \
-            --discard "${discard}" \
-            --seed 5462489434968436 \
-            --adjacent
+        # `mean` divided by `delta` must give an integer.
+        # Means resemble renewal times of lintf2_peo63_20-1_gra_q1_sc80.
+        mean="150000 125000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 100000 150000 200000 375000 400000"
+        for delta in 0.25 0.50 1.00 2.00 4.00; do
+            fname="dtrj_gengamma_beta_${beta}_delta_${delta}_tau0_renewal_times_shape_${n_cmps}_${n_frames}_discard_${discard}_seed_5462_4894_3496_8436"
+            # Ensure that all gamma distributions have the same mean.
+            # mean = tau0 * delta  =>  tau0 = mean / delta
+            tau0=$(
+                echo "${mean}" |
+                awk -v delta="${delta}" '
+                {
+                    for (i=1; i<=NF; i++)
+                        printf "%d ", $i/delta
+                }'
+            )
+            python3 generate_dtrj.py \
+                --dtrj-out "${fname}.npz" \
+                --param-out "${fname}_param.txt.gz" \
+                --hist-plot "${fname}_drawn_lifetimes_hist.pdf" \
+                --dist generalized_gamma \
+                --beta $(for in in {1..20}; do echo "${beta}"; done) \
+                --delta $(for in in {1..20}; do echo "${delta}"; done) \
+                --tau0 ${tau0} \
+                --shape "${n_cmps}" "${n_frames}" \
+                --discard "${discard}" \
+                --seed 5462489434968436 \
+                --adjacent
+        done
 
 """  # noqa: E501, W505
 
