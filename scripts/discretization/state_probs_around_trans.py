@@ -19,31 +19,25 @@
 
 
 r"""
-Calculate the probability to be in the same state as directly before or
-after a state transition as function of the time that passed since the
-transition.
+Calculate the survival function and the back-jump probability.
+
+Calculate the probability to be (continuously) in the same state as
+directly after a state transition and the probability to return to the
+state directly before the state transition as function of the time that
+passed since the transition.
 
 Given that at time :math:`t_0` a state transition occurred, compute the
 probability that a compound
 
-    * is at time :math:`t_0 - \Delta t` in the same state as directly
-      before the state transition ('prob_b_as_b').
-    * is at time :math:`t_0 - \Delta t` in the same state as directly
-      after the state transition ('prob_b_as_a').
-    * is from time :math:`t_0 - \Delta t` until :math:`t_0`
-      *continuously* in the same state ('prob_b_as_b_con').
-    * is at time :math:`t_0 - \Delta t` in the same state as directly
-      after the state transition under the condition that it has
-      *continuously* been in the same state as directly before the state
-      transition from time :math:`t_0 - \Delta t` until :math:`t_0`
-      ('prob_b_as_a_con').
-
     * is at time :math:`t_0 + \Delta t` in the same state as directly
-      after the state transition ('prob_a_as_a').
+      after the state transition ('prob_a_as_a').  This probability
+      might be regarded as a a "discontinuous" survival function.
     * is at time :math:`t_0 + \Delta t` in the same state as directly
       before the state transition ('prob_a_as_b').
     * is from time :math:`t_0` until :math:`t_0 + \Delta t`
-      *continuously* in the same state ('prob_a_as_a_con').
+      *continuously* in the same state ('prob_a_as_a_con').  This
+      probability is the survival function of the underlying
+      distribution of state lifetimes.
     * is at time :math:`t_0 + \Delta t` in the same state as directly
       before the state transition under the condition that it has
       *continuously* been in the same state as directly after the state
@@ -51,12 +45,15 @@ probability that a compound
       ('prob_a_as_b_con').
 
     * returns at time :math:`t_0 + \Delta t` back to the same state as
-      directly before the state transition ('prob_back').
+      directly before the state transition ('prob_back').  This
+      probability might be regarded as a a "discontinuous" back-jump
+      probability.
     * returns at time :math:`t_0 + \Delta t` back to the same state as
       directly before the state transition under the condition that it
       has *continuously* been in the same state as directly after the
       state transition from time :math:`t_0` until
-      :math:`t_0 + \Delta t` ('prob_back_con').
+      :math:`t_0 + \Delta t` ('prob_back_con').  This is the probability
+      for back jumps.
 
 Options
 -------
