@@ -2808,7 +2808,7 @@ def remain_prob(  # noqa: C901
 
     Returns
     -------
-    prop : numpy.ndarray
+    prob : numpy.ndarray
         Array of shape ``(f,)`` containing for all possible lag times
         the probability that a compound is in the same state as at time
         :math:`t_0` after a lag time :math:`\Delta t`.
@@ -2818,7 +2818,7 @@ def remain_prob(  # noqa: C901
     :func:`mdtools.dtrj.remain_prob_discrete` :
         Calculate the probability that a compound is in the same state
         as at time :math:`t_0` after a lag time :math:`\Delta t`
-        resolved with respect to the states in second discrete
+        resolved with respect to the states in a second discrete
         trajectory.
     :func:`mdtools.dtrj.back_jump_prob` :
         Calculate the back-jump probability averaged over all states
@@ -3289,7 +3289,7 @@ def remain_prob_discrete(  # noqa: C901
     r"""
     Calculate the probability that a compound is in the same state as at
     time :math:`t_0` after a lag time :math:`\Delta t` resolved with
-    respect to the states in second discrete trajectory.
+    respect to the states in a second discrete trajectory.
 
     Take a discrete trajectory and calculate the probability to find a
     compound in the same state as at time :math:`t_0` after a lag time
@@ -3333,7 +3333,7 @@ def remain_prob_discrete(  # noqa: C901
 
     Returns
     -------
-    prop : numpy.ndarray
+    prob : numpy.ndarray
         Array of shape ``(f, m)``, where ``m`` is the number of states
         in the second discrete trajectory.  The `ij`-th element of
         `prob` is the probability that a compound is in the same state
@@ -3346,6 +3346,9 @@ def remain_prob_discrete(  # noqa: C901
     :func:`mdtools.dtrj.remain_prob` :
         Calculate the probability that a compound is in the same state
         as at time :math:`t_0` after a lag time :math:`\Delta t`
+    :func:`mdtools.dtrj.back_jump_prob_discrete` :
+        Calculate the back-jump probability resolved with respect to the
+        states a in second discrete trajectory.
     :func:`mdtools.dtrj.trans_rate_per_state` :
         Calculate the transition rate for each state averaged over all
         compounds
@@ -3526,7 +3529,8 @@ def remain_prob_discrete(  # noqa: C901
         )
 
     # Reorder the states in the second trajectory such that they start
-    # at zero and no intermediate states are missing.
+    # at zero and no intermediate states are missing to reduce the
+    # memory required for `prob`.
     dtrj2 = mdt.nph.sequenize(dtrj2, step=np.uint8(1), start=np.uint8(0))
     n_states = np.max(dtrj2) + 1
     if np.min(dtrj2) != 0:
@@ -3721,6 +3725,9 @@ def back_jump_prob(dtrj, continuous=False, verbose=False):
 
     See Also
     --------
+    :func:`mdtools.dtrj.back_jump_prob_discrete` :
+        Calculate the back-jump probability resolved with respect to the
+        states a in second discrete trajectory
     :func:`mdtools.dtrj.remain_prob` :
         Calculate the probability that a compound is still (or again) in
         the same state as at time :math:`t_0` after a lag time
@@ -3815,6 +3822,226 @@ def back_jump_prob(dtrj, continuous=False, verbose=False):
             "`bj_prob[0]` = {} != 0.  This should not have"
             " happened".format(bj_prob[0])
         )
+    if np.any(bj_prob < 0):
+        raise ValueError(
+            "At least one element of `bj_prob` is less than zero.  This should"
+            " not have happened"
+        )
+    if np.any(bj_prob > 1):
+        raise ValueError(
+            "At least one element of `bj_prob` is greater than one.  This"
+            " should not have happened"
+        )
+    return bj_prob
+
+
+def back_jump_prob_discrete(dtrj1, dtrj2, continuous=False, verbose=False):
+    r"""
+    Calculate the back-jump probability resolved with respect to the
+    states in a second discrete trajectory.
+
+    Take a discrete trajectory and calculate the probability to return
+    back to the initial state at time :math:`t_0 + \Delta t`, given that
+    a state transition has occurred at time :math:`t_0` and given that
+    the compound was in a specific state of another discrete trajectory
+    at time :math:`t_0`.
+
+    Parameters
+    ----------
+    dtrj1, dtrj2 : array_like
+        The discrete trajectories.  Arrays of shape ``(n, f)``, where
+        ``n`` is the number of compounds and ``f`` is the number of
+        frames.   The shape can also be ``(f,)``, in which case the
+        array is expanded to shape ``(1, f)``.  Both arrays must have
+        the same shape.   The elements of the arrays are interpreted as
+        the indices of the states in which a given compound is at a
+        given frame.
+    continuous : bool
+        If ``False``, calculate the probability that a compound returns
+        back to its initial state at time :math:`t_0 + \Delta t`.  This
+        probability might be regarded as the "discontinuous" or
+        "intermittent" back-jump probability.
+
+        If ``True``, calculate the probability that a compound returns
+        back to its initial state at time :math:`t_0 + \Delta t` under
+        the condition that it has *continuously* been in the new state
+        from time :math:`t_0` until :math:`t_0 + \Delta t`, i.e. that
+        the compound does not visit other states in between.  This
+        probability might be regarded as the "continuous" or "true"
+        back-jump probability.
+    verbose : bool, optional
+        If ``True`` print a progress bar.
+
+    Returns
+    -------
+    bj_prob : numpy.ndarray
+        Array of shape ``(m, f-1)``, where ``m`` is the number of states
+        in the second discrete trajectory.  The `ij`-th element of
+        `bj_prob` is the probability that a compound returns back to its
+        initial state j frames after a state transition has occurred,
+        given that the compound was in state i of the second discrete
+        trajectory at time :math:`t_0`.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.back_jump_prob` :
+        Calculate the back-jump probability averaged over all states
+    :func:`mdtools.dtrj.remain_prob_discrete` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in a second
+        discrete trajectory
+
+    Notes
+    -----
+    If you parse the same discrete trajectory to `dtrj1` and `dtrj2` you
+    will get the back-jump probability for each individual state of the
+    input trajectory.
+
+    Examples
+    --------
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0.,  0.,  1.,  0.,  0.],
+           [nan, nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[ 0.,  0.,  0.,  1.,  0.,  0.],
+           [nan, nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan]])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0.,  0.,  0.,  0.,  1.],
+           [ 0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan]])
+
+    >>> dtrj = np.array([[1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[0. , 0. , 0. , 0.5, 0. , 0.5],
+           [0. , nan, nan, nan, nan, nan],
+           [0. , 0. , 0. , nan, nan, nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[0. , 0. , 0. , 0.5, 0. , 0. ],
+           [0. , nan, nan, nan, nan, nan],
+           [0. , 0. , 0. , nan, nan, nan]])
+    >>> dtrj = np.array([[1, 2, 2, 1, 3, 3, 3],
+    ...                  [1, 2, 2, 3, 3, 3, 1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> dtrj = np.array([[1, 2, 2, 1, 3, 3, 3],
+    ...                  [1, 5, 5, 5, 5, 5, 1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> dtrj = np.array([[1, 2, 2, 1, 2, 2],
+    ...                  [2, 2, 1, 2, 2, 1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0.,  1.,  0.,  0.],
+           [ 0.,  1.,  0.,  0., nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[ 0.,  0.,  1.,  0.,  0.],
+           [ 0.,  1.,  0.,  0., nan]])
+    """
+    dtrj1 = mdt.check.dtrj(dtrj1)
+    dtrj2 = mdt.check.dtrj(dtrj2)
+    n_cmps, n_frames = dtrj1.shape
+    if dtrj1.shape != dtrj2.shape:
+        raise ValueError("Both trajectories must have the same shape")
+
+    # Reorder the states in the second trajectory such that they start
+    # at zero and no intermediate states are missing to reduce the
+    # memory required for `bj_prob`.
+    dtrj2 = mdt.nph.sequenize(dtrj2, step=np.uint8(1), start=np.uint8(0))
+    n_states = np.max(dtrj2) + 1
+    if np.min(dtrj2) != 0:
+        raise ValueError(
+            "The minimum of the reordered second trajectory is not zero.  This"
+            " should not have happened"
+        )
+
+    bj_prob = np.zeros((n_states, n_frames - 1), dtype=np.uint32)
+    norm = np.zeros_like(bj_prob)
+
+    if verbose:
+        trj = mdt.rti.ProgressBar(dtrj1, total=n_cmps, unit="compounds")
+    else:
+        trj = dtrj1
+    # Loop over single compound trajectories.
+    for cmp_ix, cmp_trj in enumerate(trj):
+        # Frames directly *before* state transitions.
+        ix_trans = np.flatnonzero(np.diff(cmp_trj))
+        # Loop over all state transitions.
+        for t0 in ix_trans:
+            # Trajectory after the state transition.
+            cmp_trj_a = cmp_trj[t0 + 1 :]
+            # State that the compound occupies in the second discrete
+            # trajectory at time t0.
+            state2 = dtrj2[cmp_ix, t0]
+            # Maximum possible lag time for a back jump.
+            max_lag = len(cmp_trj_a)
+            norm[state2, :max_lag] += 1
+            # Frame at which the compound returns to the initial state
+            # for the first time.
+            # Here, `numpy.argmax` returns the first occurrence of
+            # ``True``.  If the compound never returns back to the
+            # initial state, all elements are ``False`` and
+            # `numpy.argmax` returns ``0``.
+            ix_back = np.argmax(cmp_trj_a == cmp_trj[t0])
+            if continuous:
+                # Frame at which the compound leaves the new state for
+                # the first time.
+                # Here, `numpy.argmin` returns the first occurrence of
+                # ``False``.  If the compound never leaves the new
+                # state, all elements are ``True`` and `numpy.argmin`
+                # returns ``0``.
+                ix_trans2 = np.argmin(cmp_trj_a == cmp_trj_a[0])
+                # For a "continuous" back jump the compound must return
+                # directly from the new state to the initial state
+                # without visiting any other states in between,  i.e.
+                # `ix_back` must be equal to `ix_trans2`.
+                ix_back = ix_back if ix_back == ix_trans2 else 0
+            if ix_back > 0:
+                bj_prob[state2, ix_back] += 1
+
+    if np.any(bj_prob[:, 0] != 0):
+        raise ValueError(
+            "`bj_prob[:, 0]` = {} != 0.  This should not have"
+            " happened".format(bj_prob[:, 0])
+        )
+    bj_prob = bj_prob / norm
+    del norm
     if np.any(bj_prob < 0):
         raise ValueError(
             "At least one element of `bj_prob` is less than zero.  This should"
