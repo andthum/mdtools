@@ -2820,6 +2820,8 @@ def remain_prob(  # noqa: C901
         as at time :math:`t_0` after a lag time :math:`\Delta t`
         resolved with respect to the states in second discrete
         trajectory.
+    :func:`mdtools.dtrj.back_jump_prob` :
+        Calculate the back-jump probability averaged over all states
     :func:`mdtools.dtrj.trans_rate` :
         Calculate the transition rate for each compound averaged over
         all states
@@ -3670,3 +3672,157 @@ def remain_prob_discrete(  # noqa: C901
         )
 
     return prob
+
+
+def back_jump_prob(dtrj, continuous=False, verbose=False):
+    r"""
+    Calculate the back-jump probability averaged over all states.
+
+    Take a discrete trajectory and calculate the probability to return
+    back to the initial state at time :math:`t_0 + \Delta t`, given that
+    a state transition has occurred at time :math:`t_0`.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
+        is the number of compounds and ``f`` is the number of frames.
+        The shape can also be ``(f,)``, in which case the array is
+        expanded to shape ``(1, f)``.   The elements of `dtrj` are
+        interpreted as the indices of the states in which a given
+        compound is at a given frame.
+    continuous : bool
+        If ``False``, calculate the probability that a compound returns
+        back to its initial state at time :math:`t_0 + \Delta t`.  This
+        probability might be regarded as the "discontinuous" or
+        "intermittent" back-jump probability.
+
+        If ``True``, calculate the probability that a compound returns
+        back to its initial state at time :math:`t_0 + \Delta t` under
+        the condition that it has *continuously* been in the new state
+        from time :math:`t_0` until :math:`t_0 + \Delta t`, i.e. that
+        the compound does not visit other states in between.  This
+        probability might be regarded as the "continuous" or "true"
+        back-jump probability.
+    verbose : bool, optional
+        If ``True`` print a progress bar.
+
+    Returns
+    -------
+    bj_prob : numpy.ndarray
+        Array of shape ``(f-1,)`` containing the back-jump probability
+        for each possible lag time :math:`\Delta t`.  The k-th element
+        of the array is the probability that a compound returns back to
+        its initial state k frames after a state transition has
+        occurred.  Another interpretation could be that the k-th element
+        of the array is the percentage of compounds that return back to
+        there initial state k frames after a state transition has
+        occurred.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t`
+
+    Examples
+    --------
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0., 0., 0., 1., 0., 0.])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0., 0., 0., 1., 0., 0.])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0., 0., 0., 0., 0., 1.])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0., 0., 0., 0., 0., 0.])
+
+    >>> dtrj = np.array([[1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1]])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0. , 0. , 0. , 0.5, 0. , 0.5])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0. , 0. , 0. , 0.5, 0. , 0. ])
+    >>> dtrj = np.array([[1, 2, 2, 1, 3, 3, 3],
+    ...                  [1, 2, 2, 3, 3, 3, 1]])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0. , 0. , 0.2, 0. , 0. , 0.5])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0. , 0. , 0.2, 0. , 0. , 0. ])
+    >>> dtrj = np.array([[1, 2, 2, 1, 3, 3, 3],
+    ...                  [1, 5, 5, 5, 5, 5, 1]])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0.  , 0.  , 0.25, 0.  , 0.  , 0.5 ])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0.  , 0.  , 0.25, 0.  , 0.  , 0.5 ])
+    >>> dtrj = np.array([[1, 2, 2, 1, 2, 2],
+    ...                  [2, 2, 1, 2, 2, 1]])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0. , 0.4, 0.5, 0. , 0. ])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0. , 0.4, 0.5, 0. , 0. ])
+    """
+    dtrj = mdt.check.dtrj(dtrj)
+    n_cmps, n_frames = dtrj.shape
+
+    bj_prob = np.zeros(n_frames - 1, dtype=np.uint32)
+    norm = np.zeros_like(bj_prob)
+
+    if verbose:
+        trj = mdt.rti.ProgressBar(dtrj, total=n_cmps, unit="compounds")
+    else:
+        trj = dtrj
+    # Loop over single compound trajectories.
+    for cmp_trj in trj:
+        # Frames directly *before* state transitions.
+        ix_trans = np.flatnonzero(np.diff(cmp_trj))
+        # Loop over all state transitions.
+        for t0 in ix_trans:
+            # Trajectory after the state transition.
+            cmp_trj_a = cmp_trj[t0 + 1 :]
+            # Maximum possible lag time for a back jump.
+            max_lag = len(cmp_trj_a)
+            norm[:max_lag] += 1
+            # Frame at which the compound returns to the initial state
+            # for the first time.
+            # Here, `numpy.argmax` returns the first occurrence of
+            # ``True``.  If the compound never returns back to the
+            # initial state, all elements are ``False`` and
+            # `numpy.argmax` returns ``0``.
+            ix_back = np.argmax(cmp_trj_a == cmp_trj[t0])
+            if continuous:
+                # Frame at which the compound leaves the new state for
+                # the first time.
+                # Here, `numpy.argmin` returns the first occurrence of
+                # ``False``.  If the compound never leaves the new
+                # state, all elements are ``True`` and `numpy.argmin`
+                # returns ``0``.
+                ix_trans2 = np.argmin(cmp_trj_a == cmp_trj_a[0])
+                # For a "continuous" back jump the compound must return
+                # directly from the new state to the initial state
+                # without visiting any other states in between,  i.e.
+                # `ix_back` must be equal to `ix_trans2`.
+                ix_back = ix_back if ix_back == ix_trans2 else 0
+            if ix_back > 0:
+                bj_prob[ix_back] += 1
+
+    bj_prob = bj_prob / norm
+    del norm
+    if bj_prob[0] != 0:
+        raise ValueError(
+            "`bj_prob[0]` = {} != 0.  This should not have"
+            " happened".format(bj_prob[0])
+        )
+    if np.any(bj_prob < 0):
+        raise ValueError(
+            "At least one element of `bj_prob` is less than zero.  This should"
+            " not have happened"
+        )
+    if np.any(bj_prob > 1):
+        raise ValueError(
+            "At least one element of `bj_prob` is greater than one.  This"
+            " should not have happened"
+        )
+    return bj_prob
