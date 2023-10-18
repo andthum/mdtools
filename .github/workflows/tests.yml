@@ -97,6 +97,7 @@ jobs:
           scripts/discretization/plot_*.py \
           scripts/discretization/state_lifetime* \
           scripts/dynamics/lifetime_autocorr* \
+          scripts/dynamics/msd_layer* \
           scripts/dynamics/plot_msd_layer*.py \
           scripts/gmx/*.py \
           scripts/other/*.py \
