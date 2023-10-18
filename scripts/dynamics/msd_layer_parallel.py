@@ -85,8 +85,8 @@ if __name__ == '__main__':
     print("Checking bins", flush=True)
     timer = datetime.now()
 
-    lbox_max = [ts.dimensions[d] for ts in u.trajectory[BEGIN:END:EVERY]]
-    lbox_max = np.max(lbox_max)
+    boxes = [ts.dimensions for ts in u.trajectory[BEGIN:END:EVERY]]
+    lbox_max = np.max(boxes[:, d])
     if args.BINFILE is None:
         bins = np.linspace(0, lbox_max, args.NUM + 1)
     else:
@@ -202,12 +202,16 @@ if __name__ == '__main__':
 
     pool = mdt.parallel.ProcessPool(nprocs=num_CPUs)
     for block in range(NBLOCKS):
-        pool.submit_task(func=msd_layer,
-                         args=(pos[block * blocksize:(block + 1) * blocksize],
-                               bins,
-                               args.DIRECTION,
-                               effective_restart,
-                               args.DEBUG))
+        pool.submit_task(
+            func=msd_layer,
+            args=(
+                pos[block * blocksize:(block + 1) * blocksize],
+                boxes,
+                bins,
+                args.DIRECTION,
+                effective_restart,
+            )
+        )
     del pos
 
     md = []
