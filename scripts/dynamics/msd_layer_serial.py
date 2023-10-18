@@ -477,7 +477,13 @@ if __name__ == "__main__":
     ixd = dim[args.DIRECTION]
 
     print("\n")
-    u = mdt.select.universe(top=args.TOPFILE, trj=args.TRJFILE)
+    u = mdt.select.universe(
+        top=args.TOPFILE,
+        trj=args.TRJFILE,
+        topology_format="DATA",
+        format="LAMMPSDUMP",
+        dt=20,
+    )
     print("\n")
     sel = mdt.select.atoms(ag=u, sel=" ".join(args.SEL))
     if args.COM is not None:
