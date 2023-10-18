@@ -33,6 +33,8 @@ Plot scripts
     :recursive:
     :nosignatures:
 
+    msd_layer_parallel
+    msd_layer_serial
     plot_msd_layer
     plot_msd_layer_heatmap
     plot_msd_layer_cross_section_at_constant_time
