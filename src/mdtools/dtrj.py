@@ -1267,10 +1267,10 @@ def trans_rate_per_state(
         Calculate the transition rate for each compound averaged over
         all states
     :func:`mdtools.dtrj.remain_prob_discrete` :
-        Calculate the probability that a compound is in the same state
-        as at time :math:`t_0` after a lag time :math:`\Delta t`
-        resolved with respect to the states in second discrete
-        trajectory
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in second
+        discrete trajectory
     :func:`mdtools.dtrj.lifetimes_per_state` :
         Calculate the state lifetimes for each state
 
@@ -2311,10 +2311,10 @@ def lifetimes_per_state(
         Calculate the transition rate for each state averaged over all
         compounds
     :func:`mdtools.dtrj.remain_prob_discrete` :
-        Calculate the probability that a compound is in the same state
-        as at time :math:`t_0` after a lag time :math:`\Delta t`
-        resolved with respect to the states in second discrete
-        trajectory
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in second
+        discrete trajectory
 
     Notes
     -----
@@ -2828,10 +2828,10 @@ def remain_prob(  # noqa: C901
     See Also
     --------
     :func:`mdtools.dtrj.remain_prob_discrete` :
-        Calculate the probability that a compound is in the same state
-        as at time :math:`t_0` after a lag time :math:`\Delta t`
-        resolved with respect to the states in a second discrete
-        trajectory.
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in second
+        discrete trajectory
     :func:`mdtools.dtrj.back_jump_prob` :
         Calculate the back-jump probability averaged over all states
     :func:`mdtools.dtrj.surv_func` :
@@ -3331,9 +3331,9 @@ def remain_prob_discrete(  # noqa: C901
     verbose=False,
 ):
     r"""
-    Calculate the probability that a compound is in the same state as at
-    time :math:`t_0` after a lag time :math:`\Delta t` resolved with
-    respect to the states in a second discrete trajectory.
+    Calculate the probability that a compound is still (or again) in the
+    same state as at time :math:`t_0` after a lag time :math:`\Delta t`
+    resolved with respect to the states in a second discrete trajectory.
 
     Take a discrete trajectory and calculate the probability to find a
     compound in the same state as at time :math:`t_0` after a lag time
