@@ -96,7 +96,7 @@ Options
 --discard
     Number of frames to discard at the beginning of the generated
     trajectory.  Set to something greater than zero to emulate a
-    left-censoring of the state lifetimes or a discarded equilibration
+    left-truncation of the state lifetimes or a discarded equilibration
     period.  Note that the generated trajectory will always have the
     shape given with \--shape.  Default: ``1000``.
 --seed
@@ -821,7 +821,7 @@ if __name__ == "__main__":  # noqa: C901
             six_prev = six
         dtrj[cmp_ix] = np.concatenate(dtrj[cmp_ix])
         # Discard the first `args.DISCARD` frames to emulate a
-        # left-censoring of the state lifetimes.
+        # left-truncation of the state lifetimes.
         dtrj[cmp_ix] = dtrj[cmp_ix][args.DISCARD :]
         if len(dtrj[cmp_ix]) != n_frames:
             raise ValueError(
