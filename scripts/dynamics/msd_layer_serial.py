@@ -480,12 +480,13 @@ if __name__ == "__main__":
     u = mdt.select.universe(
         top=args.TOPFILE,
         trj=args.TRJFILE,
+        verbose=False,
         topology_format="DATA",
         format="LAMMPSDUMP",
         dt=20,
     )
     print("\n")
-    sel = mdt.select.atoms(ag=u, sel=" ".join(args.SEL))
+    sel = mdt.select.atoms(ag=u, sel=" ".join(args.SEL), verbose=False)
     if args.COM is not None:
         print("\n")
         mdt.check.masses_new(ag=sel, verbose=args.DEBUG)
@@ -624,8 +625,9 @@ if __name__ == "__main__":
         + "\n\n"
         + "Selection string:   '{:s}'\n".format(" ".join(args.SEL))
         + "Selection compound: '{}'\n".format(args.COM)
-        + mdt.rti.ag_info_str(sel)
-        + "\n\n\n"
+        # + mdt.rti.ag_info_str(sel)
+        # + "\n\n\n"
+        + "\n\n"
         + "The first column contains the diffusion times (ps).\n"
         + "The first row contains the (average) bin edges used for\n"
         + "discretizing the initial compound positions (in Angstrom).\n"
