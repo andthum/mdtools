@@ -189,7 +189,13 @@ def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
     """
 
     proc = psutil.Process()
-    u = mda.Universe(topfile, trjfile)
+    u = mda.Universe(
+        topfile,
+        trjfile,
+        topology_format="DATA",
+        format="LAMMPSDUMP",
+        dt=20,
+    )
     sel = u.select_atoms(' '.join(sel))
 
     begin, end, every, n_frames = mdt.check.frame_slicing(
@@ -228,9 +234,9 @@ def get_COMs(topfile, trjfile, sel, com, begin, end, every, debug):
             ts.frame == begin or
                 ts.frame == end - 1):
             print("  Frame   {:12d}".format(ts.frame), flush=True)
-            print("    Step: {:>12}    Time: {:>12} (ps)"
-                  .format(ts.data['step'], ts.data['time']),
-                  flush=True)
+            # print("    Step: {:>12}    Time: {:>12} (ps)"
+            #       .format(ts.data['step'], ts.data['time']),
+            #       flush=True)
             print("    Elapsed time:             {}"
                   .format(datetime.now() - timer_frame),
                   flush=True)
