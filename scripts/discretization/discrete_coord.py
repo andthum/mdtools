@@ -52,7 +52,7 @@ def discrete_coord(cms, verbose=False, debug=False):
     Returns
     -------
     traj : numpy.ndarray
-        Array of shape ``(len(cms), n)``, where ``n`` is the number of
+        Array of shape ``(n, len(cms))``, where ``n`` is the number of
         reference compounds. The elements of the array are the indices
         of the selection compounds that are continuously bound the
         longest to the given reference compound. Indexing starts at zero.
