@@ -33,6 +33,7 @@ Plot scripts
     :recursive:
     :nosignatures:
 
+    extract_renewal_events
     msd_layer_parallel
     msd_layer_serial
     plot_msd_layer
