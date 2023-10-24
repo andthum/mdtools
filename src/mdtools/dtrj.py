@@ -3728,6 +3728,182 @@ def remain_prob_discrete(  # noqa: C901
     return prob
 
 
+def n_leaves_vs_time(dtrj, verbose=False):
+    r"""
+    Calculate the number of compounds that leave their state after a lag
+    time :math:`\Delta t` given that they have entered the state at time
+    :math:`t_0`.
+
+    Take a discrete trajectory and calculate the total number of
+    compounds that leave their state at time :math:`t_0 + \Delta t`
+    given that they have entered the state at time :math:`t_0`.
+
+    Additionally, calculate the number of compounds that are at risk to
+    leave the state at time :math:`t_0 + \Delta t`, i.e. the number of
+    compounds that have continuously been in the state from time
+    :math:`t_0` to :math:`t_0 + \Delta t`.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
+        is the number of compounds and ``f`` is the number of frames.
+        The shape can also be ``(f,)``, in which case the array is
+        expanded to shape ``(1, f)``.   The elements of `dtrj` are
+        interpreted as the indices of the states in which a given
+        compound is at a given frame.
+    verbose : bool, optional
+        If ``True`` print a progress bar.
+
+    Returns
+    -------
+    n_leaves : numpy.ndarray
+        Array of shape ``(f,)`` and dtype :attr:`numpy.uint32`
+        containing for all possible lag times the number of compounds
+        that leave their state at time :math:`t_0 + \Delta t` given that
+        they have entered the state at time :math:`t_0`.
+    n_risk : numpy.ndarray
+        Array of shape ``(f,)`` and dtype :attr:`numpy.uint32`
+        containing for all possible lag times the number of compounds
+        that are at risk of leaving the state.
+
+    Notes
+    -----
+    ``n_leaves / n_risk`` is the probability that a compound leaves its
+    state at time :math:`t_0 + \Delta t` given that it has entered the
+    state at time :math:`t_0`.
+
+    ``np.cumprod(1 - n_leaves / n_risk)`` is the Kaplan-Meier estimate
+    of the survival function of the underlying distribution of state
+    lifetimes. [#]_
+
+    References
+    ----------
+    .. [#] E. L. Kaplan, P. Meier,
+        `Nonparametric Estimation from Incomplete Observations
+        <https://doi.org/10.1080/01621459.1958.10501452>`_,
+        Journal of the American Statistical Association,
+        1958, 53, 282, 457-481.
+
+    Examples
+    --------
+    >>> # No detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 0, 0, 0, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([2, 2, 2, 1, 1, 1, 0], dtype=uint32)
+    >>> # One detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 0, 0, 1, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([3, 3, 3, 1, 0, 0, 0], dtype=uint32)
+    >>> # Two detectable leaves, two censored lifetimes.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 0, 1, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([4, 4, 2, 1, 0, 0, 0], dtype=uint32)
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 0, 1, 1, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([4, 4, 2, 1, 0, 0, 0], dtype=uint32)
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 0, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([4, 4, 2, 1, 0, 0, 0], dtype=uint32)
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 2, 2, 3, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([17, 17, 11,  5,  1,  1,  0], dtype=uint32)
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 2, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([12, 12,  8,  4,  0,  0], dtype=uint32)
+    """
+    dtrj = mdt.check.dtrj(dtrj)
+    n_cmps, n_frames = dtrj.shape
+
+    # Number of compounds that leave their state at frame i given that
+    # they have entered the state at frame 0.
+    n_leaves = np.zeros(n_frames, dtype=np.uint32)
+    # Number of compounds that are at risk to leave their state at frame
+    # i, i.e. number of compounds that have not left their state and
+    # have not been censored at frame i-1.
+    n_risk = np.zeros_like(n_leaves)
+
+    if verbose:
+        trj = mdt.rti.ProgressBar(dtrj, total=n_cmps, unit="compounds")
+    else:
+        trj = dtrj
+    # Loop over single compound trajectories.
+    for cmp_trj in trj:
+        # Frames directly *before* state transitions.
+        ix_trans = np.flatnonzero(np.diff(cmp_trj))
+        # Frames directly *after* state transitions.
+        ix_trans += 1
+
+        if len(ix_trans) == 0:
+            # There are no state transitions => the lifetime is greater
+            # than the entire trajectory length.
+            n_risk[:n_frames] += 1
+            continue
+
+        # Treatment of left-truncated lifetimes, i.e. treatment of the
+        # frames before the first state transition.  The lifetime is
+        # greater than the number of frames up to the first state
+        # transition.
+        n_risk[: ix_trans[0] + 1] += 1
+
+        # Loop over all state transitions.
+        for i, t0 in enumerate(ix_trans, start=1):
+            if i < len(ix_trans):
+                # Frame at which the compound leaves the new state for
+                # the first time.
+                t0_next = ix_trans[i]
+                event_time = t0_next - t0  # Event = leave.
+                n_leaves[event_time] += 1
+            else:
+                # The compound never leaves the new state => the
+                # lifetime is right-censored.  The lifetime is greater
+                # than the number of frames between the last state
+                # transition and the end of the trajectory.
+                event_time = n_frames - t0  # Event = censoring.
+            n_risk[: event_time + 1] += 1
+
+    if n_leaves[0] != 0:
+        raise ValueError(
+            "`n_leaves[0]` = {} != 0.  This should not have"
+            " happened".format(n_leaves[0])
+        )
+    if n_risk[0] < n_cmps:
+        raise ValueError(
+            "`n_risk[0]` ({}) < `n_cmps` ({}).  This should not have"
+            " happened".format(n_risk[0], n_cmps)
+        )
+    return n_leaves, n_risk
+
+
 def surv_func(dtrj, continuous=False, verbose=False):
     r"""
     Calculate the survival function averaged over all states.
