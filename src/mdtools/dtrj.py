@@ -953,6 +953,9 @@ def trans_rate(
         Calculate the state lifetimes for each compound
     :func:`mdtools.dtrj.surv_func` :
         Calculate the survival function averaged over all states
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
     :func:`mdtools.dtrj.remain_prob` :
         Calculate the probability that a compound is still (or again) in
         the same state as at time :math:`t_0` after a lag time
@@ -1615,6 +1618,9 @@ def lifetimes(
         all states
     :func:`mdtools.dtrj.surv_func` :
         Calculate the survival function averaged over all states
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
     :func:`mdtools.dtrj.remain_prob` :
         Calculate the probability that a compound is still (or again) in
         the same state as at time :math:`t_0` after a lag time
@@ -1630,8 +1636,8 @@ def lifetimes(
     end of the trajectory it is impossible to say how long a compound
     has already been it's initial state or how long it will stay in it's
     final state.  For better estimates of the average state lifetime use
-    :func:`mdtools.dtrj.trans_rate`, :func:`mdtools.dtrj.surv_func` or
-    :func:`mdtools.dtrj.remain_prob`.
+    :func:`mdtools.dtrj.kaplan_meier`, :func:`mdtools.dtrj.trans_rate`,
+    or :func:`mdtools.dtrj.remain_prob`.
 
     If `uncensored` is ``True``, the truncated states at the trajectory
     edges are ignored.  Thus, lifetimes calculated in this way can at
@@ -2840,6 +2846,9 @@ def remain_prob(  # noqa: C901
         at time :math:`t_0`
     :func:`mdtools.dtrj.surv_func` :
         Calculate the survival function averaged over all states
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
     :func:`mdtools.dtrj.trans_rate` :
         Calculate the transition rate for each compound averaged over
         all states
@@ -3033,9 +3042,8 @@ def remain_prob(  # noqa: C901
         [6]_:sup:`,` [7]_  Thus, the following paragraphs have to be
         read with caution!
 
-        To calculate the
-        survival function of the true lifetime distribution, use
-        :func:`mdtools.dtrj.surv_func`.
+        To calculate the survival function of the true lifetime
+        distribution, use :func:`mdtools.dtrj.surv_func`.
 
     The calculated probabilities can be used to calculate the average
     lifetime of the valid states, i.e. how long a compounds resides on
@@ -3795,6 +3803,9 @@ def n_leaves_vs_time(
         Calculate the probability that a compound leaves its state after
         a lag time :math:`\Delta t` given that it has entered the state
         at time :math:`t_0`
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
 
     Notes
     -----
@@ -4188,6 +4199,317 @@ def leave_prob(*args, **kwargs):
             " not have happened"
         )
     return prob
+
+
+def kaplan_meier(*args, **kwargs):
+    r"""
+    Estimate the state survival function using the Kaplan-Meier
+    estimator.
+
+    Take a discrete trajectory and calculate the probability that a
+    compound is still in the new state at time :math:`t_0 + \Delta t`
+    given that a state transition has occurred at time :math:`t_0`.
+
+    Parameters
+    ----------
+    args, kwargs :
+        This function takes the same parameters as
+        :func:`mdtools.dtrj.n_leaves_vs_time`.  See there for more
+        information.
+
+    Returns
+    -------
+    sf : numpy.ndarray
+        Array of shape ``(f,)`` containing the values of the survival
+        function for each possible lag time :math:`\Delta t`.  The i-th
+        element of the array is the probability that a compound is still
+        in the new state i frames after it has entered the state.
+    sf_var : numpy.ndarray
+        Array of the same shape as `sf` containing the corresponding
+        variance values of the survival function calculated using
+        Greenwood's formula.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.n_leaves_vs_time` :
+        Calculate the number of compounds that leave their state after a
+        lag time :math:`\Delta t` given that they have entered the state
+        at time :math:`t_0`
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t`
+    :func:`mdtools.dtrj.trans_rate` :
+        Calculate the transition rate for each compound averaged over
+        all states
+    :func:`mdtools.dtrj.lifetimes` :
+        Calculate the state lifetimes for each compound
+
+    Notes
+    -----
+    The survival function :math:`S(t)` is the probability that a given
+    compound has a state lifetime greater than or equal to :math:`t`.
+    Alternatively, one might say :math:`S(t)` percent of the compounds
+    have a state lifetime greater than or equal to :math:`t`.
+
+    The survival function is related to the underlying distribution of
+    state lifetimes :math:`f(t)` by
+
+    .. math::
+
+        S(t) = \int_t^\infty f(u) \text{ d}u = 1 - F(t)
+
+    where :math:`F(t) = \int_0^t f(u) \text{ d}u` is the cumulative
+    distribution function. [#]_
+
+    The survival function can be used to calculate the raw-moments of
+    the distribution of state lifetimes via the alternative expectation
+    formula: [#]_
+
+    .. math::
+
+        \langle t^n \rangle
+        = \int_0^\infty t^n f(t) \text{ d}t
+        = n \int_0^\infty t^{n-1} S(t) \text{ d}t
+
+    The Kaplan-Meier estimator :math:`\hat{S}(t)` of the survival
+    function :math:`S(t)` is given by [#]_
+
+    .. math::
+
+        \hat{S}(t) =
+        \Pi_{i: t_i \leq t} \left( 1 - \frac{d_i}{n_i} \right)
+
+    where :math:`d_i` is the number of compounds that leave their state
+    at time :math:`t_i` and :math:`n_i` is the number of compounds that
+    are at risk of leaving their state at time :math:`t_i`, i.e. the
+    number of compounds that have not left their state and have not been
+    censored up to time :math:`t_i`.
+
+    The estimated variance :math:`\hat{\text{Var}}(\hat{S}(t))` of the
+    Kaplan-Meier estimator :math:`\hat{S}(t)` is calculated by
+    Greenwood's formula: [#]_
+
+    .. math::
+
+        \hat{\text{Var}}(\hat{S}(t)) =
+        \hat{S}^2(t) \sum_{i: t_i \leq t} \frac{d_i}{n_i (n_i - d_i)}
+
+    References
+    ----------
+    .. [#] J. F. Lawless,
+        `Statistical Models and Methods for Lifetime Data
+        <https://doi.org/10.1002/9781118033005>`_,
+        John Wiley & Sons, 2002, Hoboken,
+        Chapter 1.2 "Lifetime Distributions, pp. 8-16.
+    .. [#] S. Chakraborti, F. Jardim, E. Epprecht,
+        `Higher-Order Moments Using the Survival Function: The
+        Alternative Expectation Formula
+        <https://doi.org/10.1080/00031305.2017.1356374>`_,
+        The American Statistician, 2019, 73, 2, 191-194.
+    .. [#] E. L. Kaplan, P. Meier,
+        `Nonparametric Estimation from Incomplete Observations
+        <https://doi.org/10.1080/01621459.1958.10501452>`_,
+        Journal of the American Statistical Association,
+        1958, 53, 282, 457-481.
+    .. [#] M. Greenwood,
+        `The natural duration of cancer
+        <https://www.cabdirect.org/cabdirect/abstract/19272700028>`_,
+        Reports on public health and medical subjects, 1926, 33
+
+    Examples
+    --------
+    >>> # No detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([ 1.,  1.,  1.,  1.,  1.,  1., nan])
+    >>> sf_var
+    array([ 0.,  0.,  0.,  0.,  0.,  0., nan])
+    >>> # One detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([ 1.,  1.,  1.,  0., nan, nan, nan])
+    >>> sf_var
+    array([ 0.,  0.,  0.,  0., nan, nan, nan])
+    >>> # Two detectable leaves, two censored lifetimes.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.  , 0.75, 0.75, 0.  ,  nan,  nan,  nan])
+    >>> sf_var
+    array([0.      , 0.046875, 0.046875, 0.      ,      nan,      nan,
+                nan])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1. , 1. , 0.5, 0. , nan, nan, nan])
+    >>> sf_var
+    array([0.   , 0.   , 0.125, 0.   ,   nan,   nan,   nan])
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.   , 0.75 , 0.375, 0.375,   nan,   nan,   nan])
+    >>> sf_var
+    array([0.        , 0.046875  , 0.08203125, 0.08203125,        nan,
+                  nan,        nan])
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.88235294, 0.72192513, 0.28877005, 0.28877005,
+           0.28877005,        nan])
+    >>> sf_var
+    array([0.        , 0.00610625, 0.01461646, 0.02735508, 0.02735508,
+           0.02735508,        nan])
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.91666667, 0.80208333, 0.40104167,        nan,
+                  nan])
+    >>> sf_var
+    array([0.        , 0.00636574, 0.01636194, 0.04429909,        nan,
+                  nan])
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.93333333, 0.82962963, 0.49777778, 0.        ,
+                  nan])
+    >>> sf_var
+    array([0.        , 0.00414815, 0.01283707, 0.03765904, 0.        ,
+                  nan])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([1.        , 0.93333333, 0.82962963, 0.49777778, 0.        ,
+                  nan])
+    >>> sf_var_ns
+    array([0.        , 0.00414815, 0.01283707, 0.03765904, 0.        ,
+                  nan])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([1.        , 0.93333333, 0.82962963, 0.49777778, 0.        ,
+                  nan])
+    >>> sf_var_an
+    array([0.        , 0.00414815, 0.01283707, 0.03765904, 0.        ,
+                  nan])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.93333333, 0.82962963, 0.49777778, 0.        ,
+                  nan])
+    >>> sf_var
+    array([0.        , 0.00414815, 0.01283707, 0.03765904, 0.        ,
+                  nan])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([1.  , 0.9 , 0.9 , 0.54, 0.  ,  nan])
+    >>> sf_var_ns
+    array([0.     , 0.009  , 0.009  , 0.04212, 0.     ,     nan])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([1. , 1. , 1. , 0.8, 0.8, nan])
+    >>> sf_var_an
+    array([0.   , 0.   , 0.   , 0.032, 0.032,   nan])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.94117647, 0.85561497, 0.61115355, 0.4074357 ,
+           0.4074357 ])
+    >>> sf_var
+    array([0.        , 0.00325667, 0.0093467 , 0.02611208, 0.03927268,
+           0.03927268])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([1.        , 0.90909091, 0.90909091, 0.60606061, 0.3030303 ,
+           0.3030303 ])
+    >>> sf_var_ns
+    array([0.        , 0.00751315, 0.00751315, 0.0339483 , 0.05440076,
+           0.05440076])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([1.        , 1.        , 1.        , 0.83333333, 0.83333333,
+           0.83333333])
+    >>> sf_var_an
+    array([0.        , 0.        , 0.        , 0.02314815, 0.02314815,
+           0.02314815])
+    """
+    n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(*args, **kwargs)
+
+    # sf = np.cumprod(1 - n_leaves / n_risk)
+    sf = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    sf = np.divide(n_leaves, n_risk, where=(n_risk != 0), out=sf)
+    sf = np.subtract(1, sf, out=sf)
+    sf = np.cumprod(sf, out=sf)
+
+    # sf_var =
+    # sf**2 * np.cumsum(n_leaves / (n_risk * (n_risk - n_leaves)))
+    sf_var = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    sf_var = np.subtract(n_risk, n_leaves, out=sf_var)
+    sf_var *= n_risk
+    sf_var = np.divide(n_leaves, sf_var, where=(sf_var != 0), out=sf_var)
+    sf_var = np.cumsum(sf_var, out=sf_var)
+    sf_var *= sf**2
+
+    del n_leaves, n_risk
+    if sf[0] != 1:
+        raise ValueError(
+            "`sf[0]` = {} != 1.  This should not have happened".format(sf[0])
+        )
+    if np.any(sf < 0):
+        raise ValueError(
+            "At least one element of `sf` is less than zero.  This should not"
+            " have happened"
+        )
+    if np.any(sf > 1):
+        raise ValueError(
+            "At least one element of `sf` is greater than one.  This should"
+            " not have happened"
+        )
+    grad = np.diff(sf)
+    grad = grad[~np.isnan(grad)]
+    if np.any(grad > 0):
+        raise ValueError(
+            "`sf` is not monotonically decreasing.  This should not have"
+            " happened"
+        )
+    return sf, sf_var
 
 
 def surv_func(dtrj, continuous=False, verbose=False):
