@@ -3728,7 +3728,9 @@ def remain_prob_discrete(  # noqa: C901
     return prob
 
 
-def n_leaves_vs_time(dtrj, verbose=False):
+def n_leaves_vs_time(
+    dtrj, discard_neg_start=False, discard_all_neg=False, verbose=False
+):
     r"""
     Calculate the number of compounds that leave their state after a lag
     time :math:`\Delta t` given that they have entered the state at time
@@ -3752,6 +3754,22 @@ def n_leaves_vs_time(dtrj, verbose=False):
         expanded to shape ``(1, f)``.   The elements of `dtrj` are
         interpreted as the indices of the states in which a given
         compound is at a given frame.
+    discard_neg_start : bool, optional
+        If ``True``, discard all state leavings starting from a negative
+        state.  This means compounds in negative states are ignored.
+        They neither increase `n_leaves` nor `n_risk`.  This is
+        equivalent to discarding the lifetimes of all negative states
+        when calculating state lifetimes with
+        :func:`mdtools.dtrj.lifetimes`.
+    discard_all_neg : bool, optional
+        If ``True``, discard all state leavings starting from or ending
+        in a negative state.  Additionally to ignoring compounds in
+        negative states, transitions from positive to negative states
+        are treated as right-censored.  These transitions increase
+        `n_risk` but not `n_leaves`.  This is equivalent to discarding
+        the lifetimes of all negative states and of all states that are
+        followed by a negative state when calculating state lifetimes
+        with :func:`mdtools.dtrj.lifetimes`.
     verbose : bool, optional
         If ``True`` print a progress bar.
 
@@ -3840,6 +3858,83 @@ def n_leaves_vs_time(dtrj, verbose=False):
     array([0, 1, 1, 2, 0, 0], dtype=uint32)
     >>> n_risk
     array([12, 12,  8,  4,  0,  0], dtype=uint32)
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk
+    array([15, 15,  9,  5,  1,  0], dtype=uint32)
+    >>> n_leaves_ns, n_risk_ns = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> n_leaves_ns
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([15, 15,  9,  5,  1,  0], dtype=uint32)
+    >>> n_leaves_an, n_risk_an = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> n_leaves_an
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk_an
+    array([15, 15,  9,  5,  1,  0], dtype=uint32)
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk
+    array([15, 15,  9,  5,  1,  0], dtype=uint32)
+    >>> n_leaves_ns, n_risk_ns = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> n_leaves_ns
+    array([0, 1, 0, 2, 1, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([10, 10,  5,  5,  1,  0], dtype=uint32)
+    >>> n_leaves_an, n_risk_an = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> n_leaves_an
+    array([0, 0, 0, 1, 0, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([10, 10,  5,  5,  1,  0], dtype=uint32)
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk
+    array([17, 17, 11,  7,  3,  2], dtype=uint32)
+    >>> n_leaves_ns, n_risk_ns = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> n_leaves_ns
+    array([0, 1, 0, 2, 1, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([11, 11,  6,  6,  2,  1], dtype=uint32)
+    >>> n_leaves_an, n_risk_an = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> n_leaves_an
+    array([0, 0, 0, 1, 0, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([11, 11,  6,  6,  2,  1], dtype=uint32)
     """
     dtrj = mdt.check.dtrj(dtrj)
     n_cmps, n_frames = dtrj.shape
@@ -3866,29 +3961,53 @@ def n_leaves_vs_time(dtrj, verbose=False):
         if len(ix_trans) == 0:
             # There are no state transitions => the lifetime is greater
             # than the entire trajectory length.
-            n_risk[:n_frames] += 1
+            if (discard_neg_start or discard_all_neg) and cmp_trj[0] < 0:
+                # Discard state leavings starting from a negative state.
+                pass
+            else:
+                n_risk[:n_frames] += 1
             continue
 
         # Treatment of left-truncated lifetimes, i.e. treatment of the
         # frames before the first state transition.  The lifetime is
         # greater than the number of frames up to the first state
         # transition.
-        n_risk[: ix_trans[0] + 1] += 1
+        if (discard_neg_start or discard_all_neg) and cmp_trj[0] < 0:
+            # Discard state leavings starting from a negative state.
+            pass
+        # elif discard_all_neg and cmp_trj[ix_trans[0]] < 0:
+        #     # Treat state transitions into negative states as
+        #     # right-censored.
+        #     # Left-truncated lifetimes are treated as right-censored
+        #     # anyway => we can comment out this ``elif`` statement.
+        #     n_risk[: ix_trans[0] + 1] += 1
+        else:
+            n_risk[: ix_trans[0] + 1] += 1
 
         # Loop over all state transitions.
         for i, t0 in enumerate(ix_trans, start=1):
+            if (discard_neg_start or discard_all_neg) and cmp_trj[t0] < 0:
+                # Discard state leavings starting from a negative state.
+                continue
             if i < len(ix_trans):
                 # Frame at which the compound leaves the new state for
                 # the first time.
                 t0_next = ix_trans[i]
-                event_time = t0_next - t0  # Event = leave.
-                n_leaves[event_time] += 1
+                event_time = t0_next - t0
+                if discard_all_neg and cmp_trj[t0_next] < 0:
+                    # Treat state transitions into negative states as
+                    # censored => event time = censoring time.
+                    pass
+                else:
+                    # Event = leave => event time = lifetime.
+                    n_leaves[event_time] += 1
             else:
                 # The compound never leaves the new state => the
                 # lifetime is right-censored.  The lifetime is greater
                 # than the number of frames between the last state
                 # transition and the end of the trajectory.
-                event_time = n_frames - t0  # Event = censoring.
+                # Event = censoring => event time = censoring time.
+                event_time = n_frames - t0
             n_risk[: event_time + 1] += 1
 
     if n_leaves[0] != 0:
@@ -3896,7 +4015,7 @@ def n_leaves_vs_time(dtrj, verbose=False):
             "`n_leaves[0]` = {} != 0.  This should not have"
             " happened".format(n_leaves[0])
         )
-    if n_risk[0] < n_cmps:
+    if not discard_neg_start and not discard_all_neg and n_risk[0] < n_cmps:
         raise ValueError(
             "`n_risk[0]` ({}) < `n_cmps` ({}).  This should not have"
             " happened".format(n_risk[0], n_cmps)
