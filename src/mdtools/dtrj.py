@@ -2834,6 +2834,10 @@ def remain_prob(  # noqa: C901
         discrete trajectory
     :func:`mdtools.dtrj.back_jump_prob` :
         Calculate the back-jump probability averaged over all states
+    :func:`mdtools.dtrj.leave_prob` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0`
     :func:`mdtools.dtrj.surv_func` :
         Calculate the survival function averaged over all states
     :func:`mdtools.dtrj.trans_rate` :
@@ -3785,6 +3789,13 @@ def n_leaves_vs_time(
         containing for all possible lag times the number of compounds
         that are at risk of leaving the state.
 
+    See Also
+    --------
+    :func:`mdtools.dtrj.leave_prob` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0`
+
     Notes
     -----
     ``n_leaves / n_risk`` is the probability that a compound leaves its
@@ -4021,6 +4032,162 @@ def n_leaves_vs_time(
             " happened".format(n_risk[0], n_cmps)
         )
     return n_leaves, n_risk
+
+
+def leave_prob(*args, **kwargs):
+    r"""
+    Calculate the probability that a compound leaves its state after a
+    lag time :math:`\Delta t` given that it has entered the state at
+    time :math:`t_0`.
+
+    Take a discrete trajectory and calculate the probability that a
+    compound leaves its state at time :math:`t_0 + \Delta t` given that
+    it has entered the state at time :math:`t_0`.
+
+    Parameters
+    ----------
+    args, kwargs :
+        This function takes the same parameters as
+        :func:`mdtools.dtrj.n_leaves_vs_time`.  See there for more
+        information.
+
+    Returns
+    -------
+    prob : numpy.ndarray
+        Array of shape ``(f,)`` containing for all possible lag times
+        :math:`\Delta t` the probability that a compound leaves its
+        state at time :math:`t_0 + \Delta t` given that they have
+        entered the state at time :math:`t_0`.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.n_leaves_vs_time` :
+        Calculate the number of compounds that leave their state after a
+        lag time :math:`\Delta t` given that they have entered the state
+        at time :math:`t_0`
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t`
+    :func:`mdtools.dtrj.back_jump_prob` :
+        Calculate the back-jump probability averaged over all states
+
+    Notes
+    -----
+    This function simply calls :func:`mdtools.dtrj.n_leaves_vs_time`,
+    calculates ``n_leaves / n_risk`` and checks that the result lies
+    within the interval :math:`[0, 1]`.
+
+    .. important::
+
+        A leaving probability of zero means that no state leaving could
+        be observed at the given lag time.  However, this does not
+        necessarily mean that there definitely are no state leavings at
+        this lag time, because if the lag time coincides with a
+        censoring time, we simply do not know what happens.
+
+    Examples
+    --------
+    >>> # No detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([ 0.,  0.,  0.,  0.,  0.,  0., nan])
+    >>> # One detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([ 0.,  0.,  0.,  1., nan, nan, nan])
+    >>> # Two detectable leaves, two censored lifetimes.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.  , 0.25, 0.  , 1.  ,  nan,  nan,  nan])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0. , 0. , 0.5, 1. , nan, nan, nan])
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.  , 0.25, 0.5 , 0.  ,  nan,  nan,  nan])
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.11764706, 0.18181818, 0.6       , 0.        ,
+           0.        ,        nan])
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.08333333, 0.125     , 0.5       ,        nan,
+                  nan])
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.06666667, 0.11111111, 0.4       , 1.        ,
+                  nan])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_neg_start=True)
+    array([0.        , 0.06666667, 0.11111111, 0.4       , 1.        ,
+                  nan])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_all_neg=True)
+    array([0.        , 0.06666667, 0.11111111, 0.4       , 1.        ,
+                  nan])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.06666667, 0.11111111, 0.4       , 1.        ,
+                  nan])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_neg_start=True)
+    array([0. , 0.1, 0. , 0.4, 1. , nan])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_all_neg=True)
+    array([0. , 0. , 0. , 0.2, 0. , nan])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.05882353, 0.09090909, 0.28571429, 0.33333333,
+           0.        ])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_neg_start=True)
+    array([0.        , 0.09090909, 0.        , 0.33333333, 0.5       ,
+           0.        ])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_all_neg=True)
+    array([0.        , 0.        , 0.        , 0.16666667, 0.        ,
+           0.        ])
+    """
+    n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(*args, **kwargs)
+    prob = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    prob = np.divide(n_leaves, n_risk, where=(n_risk != 0), out=prob)
+    del n_leaves, n_risk
+    if prob[0] != 0:
+        raise ValueError(
+            "`prob[0]` = {} != 0.  This should not have"
+            " happened".format(prob[0])
+        )
+    if np.any(prob < 0):
+        raise ValueError(
+            "At least one element of `prob` is less than zero.  This should"
+            " not have happened"
+        )
+    if np.any(prob > 1):
+        raise ValueError(
+            "At least one element of `prob` is greater than one.  This should"
+            " not have happened"
+        )
+    return prob
 
 
 def surv_func(dtrj, continuous=False, verbose=False):
@@ -4276,6 +4443,10 @@ def back_jump_prob(dtrj, continuous=False, verbose=False):
         Calculate the probability that a compound is still (or again) in
         the same state as at time :math:`t_0` after a lag time
         :math:`\Delta t`
+    :func:`mdtools.dtrj.leave_prob` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0`
 
     Examples
     --------
