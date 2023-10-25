@@ -951,8 +951,6 @@ def trans_rate(
         compounds
     :func:`mdtools.dtrj.lifetimes` :
         Calculate the state lifetimes for each compound
-    :func:`mdtools.dtrj.surv_func` :
-        Calculate the survival function averaged over all states
     :func:`mdtools.dtrj.kaplan_meier` :
         Estimate the state survival function using the Kaplan-Meier
         estimator
@@ -1616,8 +1614,6 @@ def lifetimes(
     :func:`mdtools.dtrj.trans_rate` :
         Calculate the transition rate for each compound averaged over
         all states
-    :func:`mdtools.dtrj.surv_func` :
-        Calculate the survival function averaged over all states
     :func:`mdtools.dtrj.kaplan_meier` :
         Estimate the state survival function using the Kaplan-Meier
         estimator
@@ -2844,8 +2840,6 @@ def remain_prob(  # noqa: C901
         Calculate the probability that a compound leaves its state after
         a lag time :math:`\Delta t` given that it has entered the state
         at time :math:`t_0`
-    :func:`mdtools.dtrj.surv_func` :
-        Calculate the survival function averaged over all states
     :func:`mdtools.dtrj.kaplan_meier` :
         Estimate the state survival function using the Kaplan-Meier
         estimator
@@ -4510,205 +4504,6 @@ def kaplan_meier(*args, **kwargs):
             " happened"
         )
     return sf, sf_var
-
-
-def surv_func(dtrj, continuous=False, verbose=False):
-    r"""
-    Calculate the survival function averaged over all states.
-
-    Take a discrete trajectory and calculate the probability that a
-    compound is still (or again) in the new state at time
-    :math:`t_0 + \Delta t` given that a state transition has occurred at
-    time :math:`t_0`.
-
-    Parameters
-    ----------
-    dtrj : array_like
-        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
-        is the number of compounds and ``f`` is the number of frames.
-        The shape can also be ``(f,)``, in which case the array is
-        expanded to shape ``(1, f)``.   The elements of `dtrj` are
-        interpreted as the indices of the states in which a given
-        compound is at a given frame.
-    continuous : bool
-        If ``False``, calculate the probability that a compound is
-        *still or again* in the new state at time
-        :math:`t_0 + \Delta t`, given that a state transition has
-        occurred at time :math:`t_0`.    This probability might be
-        regarded as the "discontinuous" or "intermittent" survival
-        function.
-
-        If ``True``, calculate the probability that a compound is
-        *still* in the new state at time :math:`t_0 + \Delta t`, given
-        that a state transition has occurred at time :math:`t_0`.  This
-        probability might be regarded as the "continuous" or "true"
-        survival function.
-    verbose : bool, optional
-        If ``True`` print a progress bar.
-
-    Returns
-    -------
-    sf : numpy.ndarray
-        Array of shape ``(f-1,)`` containing the survival function for
-        each possible lag time :math:`\Delta t`.  The k-th element of
-        the array is the probability that a compound is still (or again)
-        in the new state at time :math:`t_0 + \Delta t`, given that a
-        state transition has occurred at time :math:`t_0`.
-
-    See Also
-    --------
-    :mod:`mdtools.dtrj.remain_prob` :
-        Calculate the probability that a compound is still (or again) in
-        the same state as at time :math:`t_0` after a lag time
-        :math:`\Delta t`.
-    :func:`mdtools.dtrj.trans_rate` :
-        Calculate the transition rate for each compound averaged over
-        all states
-    :func:`mdtools.dtrj.lifetimes` :
-        Calculate the state lifetimes for each compound
-
-    Notes
-    -----
-    The survival function :math:`S(t)` is the probability that a given
-    compound has a state lifetime greater than or equal to :math:`t`.
-    Alternatively, one might say :math:`S(t)` percent of the compounds
-    have a state lifetime greater than or equal to :math:`t`.
-
-    The survival function is related to the underlying distribution of
-    state lifetimes :math:`f(t)` by
-
-    .. math::
-
-        S(t) = \int_t^\infty f(u) \text{ d}u = 1 - F(t)
-
-    where :math:`F(t) = \int_0^t f(u) \text{ d}u` is the cumulative
-    distribution function. [#]_
-
-    The survival function can be used to calculate the raw-moments of
-    the distribution of state lifetimes via the alternative expectation
-    formula: [#]_
-
-    .. math::
-
-        \langle t^n \rangle
-        = \int_0^\infty t^n f(t) \text{ d}t
-        = n \int_0^\infty t^{n-1} S(t) \text{ d}t
-
-    References
-    ----------
-    .. [#] J. F. Lawless,
-           `Statistical Models and Methods for Lifetime Data
-           <https://doi.org/10.1002/9781118033005>`_,
-           John Wiley & Sons, 2002, Hoboken,
-           Chapter 1.2 "Lifetime Distributions, pp. 8-16.
-    .. [#] S. Chakraborti, F. Jardim, E. Epprecht,
-           `Higher-Order Moments Using the Survival Function: The
-           Alternative Expectation Formula
-           <https://doi.org/10.1080/00031305.2017.1356374>`_,
-           The American Statistician, 2019, 73, 2, 191-194.
-
-    Examples
-    --------
-    >>> dtrj = np.array([[2, 2, 3, 3, 3]])
-    >>> mdt.dtrj.surv_func(dtrj)
-    array([ 1.,  1.,  1., nan])
-    >>> mdt.dtrj.surv_func(dtrj, continuous=True)
-    array([ 1.,  1.,  1., nan])
-    >>> dtrj = np.array([[1, 3, 3, 3, 1]])
-    >>> mdt.dtrj.surv_func(dtrj)
-    array([1., 1., 1., 0.])
-    >>> mdt.dtrj.surv_func(dtrj, continuous=True)
-    array([1., 1., 1., 0.])
-    """
-    dtrj = mdt.check.dtrj(dtrj)
-    n_cmps, n_frames = dtrj.shape
-
-    sf = np.zeros(n_frames - 1, dtype=np.uint32)
-    norm = np.zeros_like(sf)
-
-    if verbose:
-        trj = mdt.rti.ProgressBar(dtrj, total=n_cmps, unit="compounds")
-    else:
-        trj = dtrj
-    # Loop over single compound trajectories.
-    for cmp_trj in trj:
-        # Frames directly *before* state transitions.
-        ix_trans = np.flatnonzero(np.diff(cmp_trj))
-        # Treat the virtual frame before the first true frame as virtual
-        # state transition to make use of left-truncated lifetimes.
-        ix_trans = np.insert(ix_trans, 0, -1)
-        # Loop over all state transitions.
-        for i, t0 in enumerate(ix_trans):
-            # Trajectory after the state transition.
-            cmp_trj_a = cmp_trj[t0 + 1 :]
-            # Maximum possible lag time.
-            if i == 0:
-                # Treatment of left-truncated lifetimes:  By setting the
-                # maximum possible lag time to the number of frames
-                # until the first true state transition, we effectively
-                # time-reverse the trajectory before the first true
-                # state transition and treat the left-truncation as
-                # right-censoring.  If no true state transition occurs,
-                # the maximum possible lag time is principally the
-                # entire trajectory length `n_frames`.  However, we
-                # don't know the true starting time of the transition
-                # and thus we actually cannot use this lifetime.  But we
-                # can say that the lifetime is greater than
-                # ``n_frames - 1``.  Therefore, we pretend that the
-                # transition occurred at time t0=0 and set the maximum
-                # possible lag time to ``n_frames - 1``.
-                max_lag = (
-                    ix_trans[1] + 1 if len(ix_trans) > 1 else n_frames - 1
-                )
-                # Only use the frames until the first true state
-                # transition.  Or in time-reversed order: Use the frames
-                # from the first true state transition until the
-                # beginning of the trajectory.
-                cmp_trj_a = cmp_trj_a[:max_lag]
-            else:
-                max_lag = len(cmp_trj_a)
-            norm[:max_lag] += 1
-            # Frames at which the compound is in the new state.
-            in_new_state = cmp_trj_a == cmp_trj_a[0]
-            if continuous:
-                # Frame at which the compound leaves the new state for
-                # the first time.
-                # Here, `numpy.argmin` returns the first occurrence of
-                # ``False``.  If the compound never leaves the new
-                # state, all elements are ``True`` and `numpy.argmin`
-                # returns ``0``.
-                ix_trans2 = np.argmin(in_new_state)
-                ix_trans2 = ix_trans2 if ix_trans2 > 0 else len(in_new_state)
-                # Frames at which the compound is *continuously* in the
-                # new state.
-                in_new_state[ix_trans2:] = False
-            sf[:max_lag] += in_new_state
-
-    sf = sf / norm
-    del norm
-    if sf[0] != 1:
-        raise ValueError(
-            "`sf[0]` = {} != 1.  This should not have happened".format(sf[0])
-        )
-    if np.any(sf < 0):
-        raise ValueError(
-            "At least one element of `sf` is less than zero.  This should not"
-            " have happened"
-        )
-    if np.any(sf > 1):
-        raise ValueError(
-            "At least one element of `sf` is greater than one.  This should"
-            " not have happened"
-        )
-    if continuous:
-        grad = np.diff(sf)
-        grad = grad[np.isfinite(grad)]
-        if np.any(np.diff(grad) > 0):
-            raise ValueError(
-                "`sf` is not monotonically decreasing.  This should not have"
-                " happened"
-            )
-    return sf
 
 
 def back_jump_prob(dtrj, continuous=False, verbose=False):
