@@ -5920,7 +5920,14 @@ def back_jump_prob(
     return bj_prob
 
 
-def back_jump_prob_discrete(dtrj1, dtrj2, continuous=False, verbose=False):
+def back_jump_prob_discrete(
+    dtrj1,
+    dtrj2,
+    continuous=False,
+    discard_neg=False,
+    discard_neg_btw=False,
+    verbose=False,
+):
     r"""
     Calculate the back-jump probability resolved with respect to the
     states in a second discrete trajectory.
@@ -5954,6 +5961,12 @@ def back_jump_prob_discrete(dtrj1, dtrj2, continuous=False, verbose=False):
         the compound does not visit other states in between.  This
         probability might be regarded as the "continuous" or "true"
         back-jump probability.
+    discard_neg : bool, optional
+        If ``True``, discard negative states, i.e. discard back jumps
+        starting from (and consequently ending in) a negative state.
+    discard_neg_btw : bool, optional
+        If ``True``, discard back jumps when the compound has visited a
+        negative state between :math:`t_0` and :math:`t_0 + \Delta t`.
     verbose : bool, optional
         If ``True`` print a progress bar.
 
@@ -6063,6 +6076,121 @@ def back_jump_prob_discrete(dtrj1, dtrj2, continuous=False, verbose=False):
     >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
     array([[ 0.,  0.,  1.,  0.,  0.],
            [ 0.,  1.,  0.,  0., nan]])
+
+    Discard negative states:
+
+    >>> dtrj = np.array([[ 1,  2,  2,  1,  3,  3,  3],
+    ...                  [-1,  2,  2, -1,  3,  3,  3],
+    ...                  [ 1, -2, -2,  1,  3,  3,  3],
+    ...                  [ 1,  2,  2,  3,  3,  3,  1],
+    ...                  [-1,  2,  2,  3,  3,  3, -1],
+    ...                  [ 1,  2,  2, -3, -3, -3,  1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[0.        ,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, discard_neg=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj, dtrj, discard_neg_btw=True
+    ... )
+    array([[0.        ,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.25      , 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj, dtrj, discard_neg=True, discard_neg_btw=True
+    ... )
+    array([[ nan,  nan,  nan,  nan,  nan,  nan],
+           [ nan,  nan,  nan,  nan,  nan,  nan],
+           [ nan,  nan,  nan,  nan,  nan,  nan],
+           [0.  , 0.  , 0.25, 0.  , 0.  , 0.5 ],
+           [0.  , 0.  , 0.  , 0.  ,  nan,  nan],
+           [0.  ,  nan,  nan,  nan,  nan,  nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[0.        ,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj, dtrj, continuous=True, discard_neg=True
+    ... )
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj, dtrj, continuous=True, discard_neg_btw=True
+    ... )
+    array([[0.        ,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.2       , 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj,
+    ...     dtrj,
+    ...     continuous=True,
+    ...     discard_neg=True,
+    ...     discard_neg_btw=True,
+    ... )
+    array([[nan, nan, nan, nan, nan, nan],
+           [nan, nan, nan, nan, nan, nan],
+           [nan, nan, nan, nan, nan, nan],
+           [0. , 0. , 0.2, 0. , 0. , 0. ],
+           [0. , 0. , 0. , 0. , nan, nan],
+           [0. , nan, nan, nan, nan, nan]])
     """
     dtrj1 = mdt.check.dtrj(dtrj1)
     dtrj2 = mdt.check.dtrj(dtrj2)
@@ -6094,14 +6222,15 @@ def back_jump_prob_discrete(dtrj1, dtrj2, continuous=False, verbose=False):
         ix_trans = np.flatnonzero(np.diff(cmp_trj))
         # Loop over all state transitions.
         for t0 in ix_trans:
+            if discard_neg and cmp_trj[t0] < 0:
+                # Discard back jumps starting from (and consequently
+                # ending in) a negative state.
+                continue
             # Trajectory after the state transition.
             cmp_trj_a = cmp_trj[t0 + 1 :]
             # State that the compound occupies in the second discrete
             # trajectory at time t0.
             state2 = dtrj2[cmp_ix, t0]
-            # Maximum possible lag time for a back jump.
-            max_lag = len(cmp_trj_a)
-            norm[state2, :max_lag] += 1
             # Frame at which the compound returns to the initial state
             # for the first time.
             # Here, `numpy.argmax` returns the first occurrence of
@@ -6110,6 +6239,10 @@ def back_jump_prob_discrete(dtrj1, dtrj2, continuous=False, verbose=False):
             # `numpy.argmax` returns ``0``.
             ix_back = np.argmax(cmp_trj_a == cmp_trj[t0])
             if continuous:
+                if discard_neg_btw and cmp_trj_a[0] < 0:
+                    # Discard back jumps when the compound has visited a
+                    # negative state in between.
+                    continue
                 # Frame at which the compound leaves the new state for
                 # the first time.
                 # Here, `numpy.argmin` returns the first occurrence of
@@ -6122,8 +6255,16 @@ def back_jump_prob_discrete(dtrj1, dtrj2, continuous=False, verbose=False):
                 # without visiting any other states in between,  i.e.
                 # `ix_back` must be equal to `ix_trans2`.
                 ix_back = ix_back if ix_back == ix_trans2 else 0
+            elif discard_neg_btw:  # and not continuous
+                if ix_back > 0 and np.any(cmp_trj_a[:ix_back] < 0):
+                    continue
+                elif ix_back == 0 and np.any(cmp_trj_a < 0):
+                    continue
             if ix_back > 0:
                 bj_prob[state2, ix_back] += 1
+            # Maximum possible lag time for a back jump.
+            max_lag = len(cmp_trj_a)
+            norm[state2, :max_lag] += 1
 
     if np.any(bj_prob[:, 0] != 0):
         raise ValueError(
