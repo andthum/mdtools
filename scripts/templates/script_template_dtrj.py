@@ -78,6 +78,12 @@ be called and their meaning.
     means to read the very last frame.  Default: ``-1``.
 --every
     Read every n-th frame from the discrete trajectory.  Default: ``1``.
+--intermittency
+    Maximum number of frames a compound is allowed to leave its state
+    whilst still being considered to be in this state provided that it
+    returns to this state after the given number of frames.  In other
+    words, a compound is only considered to have left its state if it
+    has left it for at least the given number of frames.
 --debug
     Run in :ref:`debug mode <debug-mode-label>`.
 
@@ -213,6 +219,18 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--intermittency",
+        dest="INTERMITTENCY",
+        type=int,
+        required=False,
+        default=0,
+        help=(
+            "Maximum number of frames a compound is allowed to leave its state"
+            " whilst still being considered to be in this state provided that"
+            " it returns to this state after the given number of frames."
+        ),
+    )
+    parser.add_argument(
         "--debug",
         dest="DEBUG",
         required=False,
@@ -236,9 +254,17 @@ if __name__ == "__main__":
         n_frames_tot=N_FRAMES_TOT,
     )
     dtrj = dtrj[:, BEGIN:END:EVERY]
-    trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj)
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
+
+    if args.INTERMITTENCY > 0:
+        print("\n")
+        print("Correcting for intermittency...")
+        dtrj = mdt.dyn.correct_intermittency(
+            dtrj.T, args.INTERMITTENCY, inplace=True, verbose=True
+        )
+        dtrj = dtrj.T
+    trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj)
 
     print("\n")
     print("Reading trajectory...")
