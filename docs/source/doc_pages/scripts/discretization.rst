@@ -36,6 +36,8 @@ Scripts that process discretized trajectories
     :recursive:
     :nosignatures:
 
+    back_jump_prob
+    back_jump_prob_discrete
     state_lifetime
     state_lifetime_discrete
 
