@@ -73,11 +73,19 @@ Options
     does not visit other states before returning back to its initial
     state.  This probability might be regarded as the "continuous" or
     "true" back-jump probability.
+--discard-neg
+    If provided, discard negative states, i.e. discard back jumps
+    starting from (and consequently ending in) a negative state.
+--discard-neg-btw
+    If provided, discard back jumps when the compound has visited a
+    negative state between :math:`t_0` and :math:`t_0 + \Delta t`.
 
 See Also
 --------
 :func:`mdtools.dtrj.back_jump_prob_discrete` :
     The underlying function that calculates the back-jump probabilities
+:mod:`scripts.discretization.back_jump_prob` :
+    Calculate the back-jump probability averaged over all states
 
 Notes
 -----
@@ -206,6 +214,28 @@ if __name__ == "__main__":
             " without interruption in order to be counted as back-jumped."
         ),
     )
+    parser.add_argument(
+        "--discard-neg",
+        dest="DISCARD_NEG",
+        required=False,
+        default=False,
+        action="store_true",
+        help=(
+            "If provided, discard negative states, i.e. discard back jumps"
+            " starting from (and consequently ending in) a negative state."
+        ),
+    )
+    parser.add_argument(
+        "--discard-neg-btw",
+        dest="DISCARD_NEG_BTW",
+        required=False,
+        default=False,
+        action="store_true",
+        help=(
+            "If provided, discard back jumps when the compound has visited a"
+            " negative state in between."
+        ),
+    )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
     if args.INTERMITTENCY1 < 0:
@@ -265,7 +295,12 @@ if __name__ == "__main__":
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     timer = datetime.now()
     prob = mdt.dtrj.back_jump_prob_discrete(
-        dtrj1, dtrj2, continuous=args.CONTINUOUS, verbose=True
+        dtrj1,
+        dtrj2,
+        continuous=args.CONTINUOUS,
+        discard_neg=args.DISCARD_NEG,
+        discard_neg_btw=args.DISCARD_NEG_BTW,
+        verbose=True,
     )
     del dtrj1, dtrj2
     print("Elapsed time:         {}".format(datetime.now() - timer))
@@ -280,7 +315,11 @@ if __name__ == "__main__":
         + "since the state transition resolved with respect to the states in\n"
         + "a second discrete trajectory.\n"
         + "\n\n"
-        + "continuous: {}\n".format(args.CONTINUOUS)
+        + "intermittency_1: {}\n".format(args.INTERMITTENCY1)
+        + "intermittency_2: {}\n".format(args.INTERMITTENCY2)
+        + "continuous:      {}\n".format(args.CONTINUOUS)
+        + "discard_neg:     {}\n".format(args.DISCARD_NEG)
+        + "discard_neg_btw: {}\n".format(args.DISCARD_NEG_BTW)
         + "\n\n"
     )
     header += dtrj1_trans_info_str
