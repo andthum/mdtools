@@ -65,6 +65,10 @@ See Also
 :func:`mdtools.dtrj.kaplan_meier` :
     The underlying function that calculates the Kaplan-Meier estimate of
     the survival function
+:mod:`scripts.discretization.kaplan_meier_discrete` :
+    Calculate the state survival function using the Kaplan-Meier
+    estimator resolved with respect to the states in the second discrete
+    trajectory
 
 Notes
 -----
