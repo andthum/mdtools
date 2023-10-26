@@ -1267,6 +1267,10 @@ def trans_rate_per_state(
     :func:`mdtools.dtrj.trans_rate` :
         Calculate the transition rate for each compound averaged over
         all states
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
     :func:`mdtools.dtrj.remain_prob_discrete` :
         Calculate the probability that a compound is still (or again) in
         the same state as at time :math:`t_0` after a lag time
@@ -2312,6 +2316,10 @@ def lifetimes_per_state(
     :func:`mdtools.dtrj.trans_rate_per_state` :
         Calculate the transition rate for each state averaged over all
         compounds
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
     :func:`mdtools.dtrj.remain_prob_discrete` :
         Calculate the probability that a compound is still (or again) in
         the same state as at time :math:`t_0` after a lag time
@@ -3410,6 +3418,10 @@ def remain_prob_discrete(  # noqa: C901
     :func:`mdtools.dtrj.back_jump_prob_discrete` :
         Calculate the back-jump probability resolved with respect to the
         states a in second discrete trajectory.
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
     :func:`mdtools.dtrj.trans_rate_per_state` :
         Calculate the transition rate for each state averaged over all
         compounds
@@ -4122,6 +4134,10 @@ def n_leaves_vs_time_discrete(
         a lag time :math:`\Delta t` given that it has entered the state
         at time :math:`t_0` resolved with respect to the states in a
         second discrete trajectory
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
 
     Notes
     -----
@@ -4944,6 +4960,10 @@ def kaplan_meier(*args, **kwargs):
 
     See Also
     --------
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
     :func:`mdtools.dtrj.n_leaves_vs_time` :
         Calculate the number of compounds that leave their state after a
         lag time :math:`\Delta t` given that they have entered the state
@@ -5216,6 +5236,457 @@ def kaplan_meier(*args, **kwargs):
             " not have happened"
         )
     grad = np.diff(sf)
+    grad = grad[~np.isnan(grad)]
+    if np.any(grad > 0):
+        raise ValueError(
+            "`sf` is not monotonically decreasing.  This should not have"
+            " happened"
+        )
+    return sf, sf_var
+
+
+def kaplan_meier_discrete(*args, **kwargs):
+    r"""
+    Estimate the state survival function using the Kaplan-Meier
+    estimator resolved with respect to the states in a second discrete
+    trajectory.
+
+    Take a discrete trajectory and calculate the probability that a
+    compound is still in the new state at time :math:`t_0 + \Delta t`
+    given that a state transition has occurred at time :math:`t_0` and
+    given that the compound was in a specific state of another discrete
+    trajectory at time :math:`t_0`.
+
+    States whose starting point :math:`t_0` is not known (because the
+    compound has already been in its state at the beginning of the
+    trajectory) are discarded, because it is not known in which state of
+    the second trajectory the compound was at time :math:`t_0`.
+
+    Parameters
+    ----------
+    args, kwargs :
+        This function takes the same parameters as
+        :func:`mdtools.dtrj.n_leaves_vs_time_discrete`.  See there for
+        more information.
+
+    Returns
+    -------
+    sf : numpy.ndarray
+        Array of shape ``(m, f)`` where `m`` is the number of different
+        states in the second discrete trajectory.  The `ij`-element of
+        `sf` is the probability that a compound is still in the new
+        state j frames after it has entered the state, given that the
+        compound was in state i of the second discrete trajectory at
+        time :math:`t_0`.
+    sf_var : numpy.ndarray
+        Array of the same shape as `sf` containing the corresponding
+        variance values of the survival function calculated using
+        Greenwood's formula.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
+    :func:`mdtools.dtrj.n_leaves_vs_time_discrete` :
+        Calculate the number of compounds that leave their state after a
+        lag time :math:`\Delta t` resolved with respect to the states in
+        a second discrete trajectory
+    :func:`mdtools.dtrj.remain_prob_discrete` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in a second
+        discrete trajectory
+    :func:`mdtools.dtrj.trans_rate_per_state` :
+        Calculate the transition rate for each state averaged over all
+        compounds
+    :func:`mdtools.dtrj.lifetimes_per_state` :
+        Calculate the state lifetimes for each state
+
+    Notes
+    -----
+    See :func:`mdtools.dtrj.kaplan_meier` for more information about the
+    survival function and the Kaplan-Meier estimator.
+
+    Examples
+    --------
+    >>> # 0 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[nan, nan, nan, nan, nan, nan, nan],
+           [ 1.,  1.,  1.,  1.,  1.,  1., nan]])
+    >>> sf_var
+    array([[nan, nan, nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0.,  0.,  0., nan]])
+    >>> # 1 detectable leave, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[ 1.,  1.,  1., nan, nan, nan, nan],
+           [ 1.,  1.,  1.,  0., nan, nan, nan]])
+    >>> sf_var
+    array([[ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0., nan, nan, nan]])
+    >>> # 2 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[ 1.,  0., nan, nan, nan, nan, nan],
+           [ 1.,  1.,  1., nan, nan, nan, nan],
+           [ 1.,  1.,  1.,  0., nan, nan, nan]])
+    >>> sf_var
+    array([[ 0.,  0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0., nan, nan, nan]])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[ 1.,  1., nan, nan, nan, nan, nan],
+           [ 1.,  1.,  0., nan, nan, nan, nan],
+           [ 1.,  1.,  1.,  0., nan, nan, nan]])
+    >>> sf_var
+    array([[ 0.,  0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0., nan, nan, nan]])
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[1. , 0.5, nan, nan, nan, nan, nan],
+           [1. , 1. , 0. , nan, nan, nan, nan],
+           [nan, nan, nan, nan, nan, nan, nan]])
+    >>> sf_var
+    array([[0.   , 0.125,   nan,   nan,   nan,   nan,   nan],
+           [0.   , 0.   , 0.   ,   nan,   nan,   nan,   nan],
+           [  nan,   nan,   nan,   nan,   nan,   nan,   nan]])
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[1. , 0.5, nan, nan, nan, nan, nan],
+           [1. , 1. , 0.5, nan, nan, nan, nan],
+           [1. , 1. , 1. , 0. , nan, nan, nan],
+           [1. , 1. , 1. , 1. , 1. , 1. , nan]])
+    >>> sf_var
+    array([[0.    , 0.0625,    nan,    nan,    nan,    nan,    nan],
+           [0.    , 0.    , 0.0625,    nan,    nan,    nan,    nan],
+           [0.    , 0.    , 0.    , 0.    ,    nan,    nan,    nan],
+           [0.    , 0.    , 0.    , 0.    , 0.    , 0.    ,    nan]])
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan]])
+    >>> sf_var
+    array([[0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan]])
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> sf
+    array([[1.        , 0.66666667,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var
+    array([[0.        , 0.07407407,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([[1.        , 0.66666667,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var_ns
+    array([[0.        , 0.07407407,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([[1.        , 0.66666667,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var_an
+    array([[0.        , 0.07407407,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> sf
+    array([[1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var
+    array([[0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var_ns
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.66666667,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 1.        ,
+                   nan]])
+    >>> sf_var_an
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> sf
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_var
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_var_ns
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.66666667,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 1.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_var_an
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    """
+    n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(*args, **kwargs)
+
+    # sf = np.cumprod(1 - n_leaves / n_risk, axis=-1)
+    sf = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    sf = np.divide(n_leaves, n_risk, where=(n_risk != 0), out=sf)
+    sf = np.subtract(1, sf, out=sf)
+    sf = np.cumprod(sf, out=sf, axis=-1)
+
+    # sf_var = sf**2 *
+    # np.cumsum(n_leaves / (n_risk * (n_risk - n_leaves)), axis=-1)
+    sf_var = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    sf_var = np.subtract(n_risk, n_leaves, out=sf_var)
+    sf_var *= n_risk
+    sf_var = np.divide(n_leaves, sf_var, where=(sf_var != 0), out=sf_var)
+    sf_var = np.cumsum(sf_var, out=sf_var, axis=-1)
+    sf_var *= sf**2
+
+    del n_leaves, n_risk
+    if np.any(sf[:, 0][~np.isnan(sf[:, 0])] != 1):
+        raise ValueError(
+            "`sf[:, 0]` = {} != 1.  This should not have"
+            " happened".format(sf[:, 0])
+        )
+    if np.any(sf < 0):
+        raise ValueError(
+            "At least one element of `sf` is less than zero.  This should not"
+            " have happened"
+        )
+    if np.any(sf > 1):
+        raise ValueError(
+            "At least one element of `sf` is greater than one.  This should"
+            " not have happened"
+        )
+    grad = np.diff(sf, axis=-1)
     grad = grad[~np.isnan(grad)]
     if np.any(grad > 0):
         raise ValueError(
