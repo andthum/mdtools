@@ -3402,6 +3402,11 @@ def remain_prob_discrete(  # noqa: C901
         Calculate the probability that a compound is still (or again) in
         the same state as at time :math:`t_0` after a lag time
         :math:`\Delta t`
+    :func:`mdtools.dtrj.leave_prob_discrete` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0` resolved with respect to the states in a
+        second discrete trajectory
     :func:`mdtools.dtrj.back_jump_prob_discrete` :
         Calculate the back-jump probability resolved with respect to the
         states a in second discrete trajectory.
@@ -4112,6 +4117,11 @@ def n_leaves_vs_time_discrete(
         Calculate the number of compounds that leave their state after a
         lag time :math:`\Delta t` given that they have entered the state
         at time :math:`t_0`
+    :func:`mdtools.dtrj.leave_prob_discrete` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0` resolved with respect to the states in a
+        second discrete trajectory
 
     Notes
     -----
@@ -4499,6 +4509,11 @@ def leave_prob(*args, **kwargs):
 
     See Also
     --------
+    :func:`mdtools.dtrj.leave_prob_discrete` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0` resolved with respect to the states in a
+        second discrete trajectory
     :func:`mdtools.dtrj.n_leaves_vs_time` :
         Calculate the number of compounds that leave their state after a
         lag time :math:`\Delta t` given that they have entered the state
@@ -4614,6 +4629,277 @@ def leave_prob(*args, **kwargs):
         raise ValueError(
             "`prob[0]` = {} != 0.  This should not have"
             " happened".format(prob[0])
+        )
+    if np.any(prob < 0):
+        raise ValueError(
+            "At least one element of `prob` is less than zero.  This should"
+            " not have happened"
+        )
+    if np.any(prob > 1):
+        raise ValueError(
+            "At least one element of `prob` is greater than one.  This should"
+            " not have happened"
+        )
+    return prob
+
+
+def leave_prob_discrete(*args, **kwargs):
+    r"""
+    Calculate the probability that a compound leaves its state after a
+    lag time :math:`\Delta t` given that it has entered the state at
+    time :math:`t_0` resolved with respect to the states in a second
+    discrete trajectory.
+
+    Take a discrete trajectory and calculate the probability that a
+    compound leaves its state at time :math:`t_0 + \Delta t` given that
+    it has entered the state at time :math:`t_0` and given that it was
+    in a specific state of another discrete trajectory at time
+    :math:`t_0`.
+
+    States whose starting point :math:`t_0` is not known (because the
+    compound has already been in its state at the beginning of the
+    trajectory) are discarded, because it is not known in which state of
+    the second trajectory the compound was at time :math:`t_0`.
+
+    Parameters
+    ----------
+    args, kwargs :
+        This function takes the same parameters as
+        :func:`mdtools.dtrj.n_leaves_vs_time_discrete`.  See there for
+        more information.
+
+    Returns
+    -------
+    prob : numpy.ndarray
+        Array of shape ``(m, f)`` where ``m`` is the number of different
+        states in the second discrete trajectory.  The `ij`-element of
+        `prob` is the probability that a compound leaves its state j
+        frames after it has entered it, given that the compound was in
+        state i of the second discrete trajectory at time :math:`t_0`.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.leave_prob` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0`
+    :func:`mdtools.dtrj.n_leaves_vs_time_discrete` :
+        Calculate the number of compounds that leave their state after a
+        lag time :math:`\Delta t` resolved with respect to the states in
+        a second discrete trajectory
+    :func:`mdtools.dtrj.remain_prob_discrete` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in a second
+        discrete trajectory
+    :func:`mdtools.dtrj.back_jump_prob_discrete` :
+        Calculate the back-jump probability resolved with respect to the
+        states in a second discrete trajectory
+
+    Notes
+    -----
+    If you parse the same discrete trajectory to `dtrj1` and `dtrj2` you
+    will get the probability that a compound leaves its state after a
+    lag time :math:`\Delta t` for each individual state of the input
+    trajectory.
+
+    This function simply calls
+    :func:`mdtools.dtrj.n_leaves_vs_time_discrete`, calculates
+    ``n_leaves / n_risk`` and checks that the result lies within the
+    interval :math:`[0, 1]`.
+
+    .. important::
+
+        A leaving probability of zero means that no state leaving could
+        be observed at the given lag time.  However, this does not
+        necessarily mean that there definitely are no state leavings at
+        this lag time, because if the lag time coincides with a
+        censoring time, we simply do not know what happens.
+
+    Examples
+    --------
+    >>> # 0 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[nan, nan, nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0.,  0.,  0., nan]])
+    >>> # 1 detectable leave, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  1., nan, nan, nan]])
+    >>> # 2 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  1., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  1., nan, nan, nan]])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  1., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  1., nan, nan, nan]])
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0. , 0.5, nan, nan, nan, nan, nan],
+           [0. , 0. , 1. , nan, nan, nan, nan],
+           [nan, nan, nan, nan, nan, nan, nan]])
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0. , 0.5, nan, nan, nan, nan, nan],
+           [0. , 0. , 0.5, nan, nan, nan, nan],
+           [0. , 0. , 0. , 1. , nan, nan, nan],
+           [0. , 0. , 0. , 0. , 0. , 0. , nan]])
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan]])
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.33333333,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_neg_start=True)
+    array([[0.        , 0.33333333,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_all_neg=True)
+    array([[0.        , 0.33333333,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_neg_start=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_all_neg=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.33333333,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_neg_start=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_all_neg=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.33333333,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    """
+    n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(*args, **kwargs)
+    prob = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    prob = np.divide(n_leaves, n_risk, where=(n_risk != 0), out=prob)
+    del n_leaves, n_risk
+    if np.any(prob[:, 0][~np.isnan(prob[:, 0])] != 0):
+        raise ValueError(
+            "`prob[:, 0]` = {} != 0.  This should not have"
+            " happened".format(prob[:, 0])
         )
     if np.any(prob < 0):
         raise ValueError(
@@ -5156,6 +5442,11 @@ def back_jump_prob_discrete(dtrj1, dtrj2, continuous=False, verbose=False):
         the same state as at time :math:`t_0` after a lag time
         :math:`\Delta t` resolved with respect to the states in a second
         discrete trajectory
+    :func:`mdtools.dtrj.leave_prob_discrete` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0` resolved with respect to the states in a
+        second discrete trajectory
 
     Notes
     -----
