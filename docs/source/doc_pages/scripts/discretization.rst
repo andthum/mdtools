@@ -38,6 +38,8 @@ Scripts that process discretized trajectories
 
     back_jump_prob
     back_jump_prob_discrete
+    kaplan_meier
+    kaplan_meier_discrete
     state_lifetime
     state_lifetime_discrete
 
