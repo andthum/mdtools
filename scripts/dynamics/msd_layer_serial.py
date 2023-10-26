@@ -102,6 +102,27 @@ Options
 --debug
     Run in :ref:`debug mode <debug-mode-label>`.
 
+See Also
+--------
+:mod:`scripts.dynamics.msd_layer_parallel` :
+    A parallelized version of this script
+:mod:`scripts.dynamics.plot_msd_layer` :
+    Plot the MSD as function of diffusion time for different initial
+    particle positions
+:mod:`scripts.dynamics.plot_msd_layer_heatmap` :
+    Plot the MSD as function of the initial particle position and the
+    diffusion time in a heatmap
+:mod:`scripts.dynamics.plot_msd_layer_cross_section_at_constant_time` :
+    Plot (one component of) the MSD as function of the initial particle
+    position at a constant diffusion time(s)
+:mod:`scripts.dynamics.plot_msd_layer_cross_section_xyz_at_constant_time` :
+    Plot the x-, y- and z-component of the MSD as function of the
+    initial particle position at a constant diffusion time
+:mod:`scripts.dynamics.plot_msd_layer_cross_section_xyz_at_constant_msd` :
+    Plot the diffusion time at which the x-, y- and z-component of the
+    MSD reach a certain value as function of the initial particle
+    position
+
 Notes
 -----
 The MD is computed, because it might happen that the net-displacement of
@@ -113,7 +134,7 @@ MSD to calculate the displacement variance:
 
     \sigma_r^2 = \langle r^2 \rangle - \langle r \rangle^2
 
-"""
+"""  # noqa: W505
 
 
 __author__ = "Andreas Thum"

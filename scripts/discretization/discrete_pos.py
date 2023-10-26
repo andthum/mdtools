@@ -123,6 +123,9 @@ See Also
 --------
 :func:`mdtools.structure.discrete_pos_trj` :
     Function that creates a discrete position trajectory
+:mod:`scripts.discretization.plot_discrete_pos_trj` :
+    Plot in which discrete position bin a compounds resides as function
+    of time
 
 Notes
 -----

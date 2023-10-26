@@ -949,11 +949,15 @@ def trans_rate(
     :func:`mdtools.dtrj.trans_rate_per_state` :
         Calculate the transition rate for each state averaged over all
         compounds
-    :func:`mdtools.dtrj.remain_prob` :
-        Calculate the probability that a compound is in the same state
-        as at time :math:`t_0` after a lag time :math:`\Delta t`
     :func:`mdtools.dtrj.lifetimes` :
         Calculate the state lifetimes for each compound
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t`
 
     Notes
     -----
@@ -1263,11 +1267,15 @@ def trans_rate_per_state(
     :func:`mdtools.dtrj.trans_rate` :
         Calculate the transition rate for each compound averaged over
         all states
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
     :func:`mdtools.dtrj.remain_prob_discrete` :
-        Calculate the probability that a compound is in the same state
-        as at time :math:`t_0` after a lag time :math:`\Delta t`
-        resolved with respect to the states in second discrete
-        trajectory
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in second
+        discrete trajectory
     :func:`mdtools.dtrj.lifetimes_per_state` :
         Calculate the state lifetimes for each state
 
@@ -1610,9 +1618,13 @@ def lifetimes(
     :func:`mdtools.dtrj.trans_rate` :
         Calculate the transition rate for each compound averaged over
         all states
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
     :func:`mdtools.dtrj.remain_prob` :
-        Calculate the probability that a compound is in the same state
-        as at time :math:`t_0` after a lag time :math:`\Delta t`
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t`
 
     Notes
     -----
@@ -1624,7 +1636,8 @@ def lifetimes(
     end of the trajectory it is impossible to say how long a compound
     has already been it's initial state or how long it will stay in it's
     final state.  For better estimates of the average state lifetime use
-    :func:`mdtools.dtrj.trans_rate` or :func:`mdtools.dtrj.remain_prob`.
+    :func:`mdtools.dtrj.kaplan_meier`, :func:`mdtools.dtrj.trans_rate`,
+    or :func:`mdtools.dtrj.remain_prob`.
 
     If `uncensored` is ``True``, the truncated states at the trajectory
     edges are ignored.  Thus, lifetimes calculated in this way can at
@@ -2303,11 +2316,15 @@ def lifetimes_per_state(
     :func:`mdtools.dtrj.trans_rate_per_state` :
         Calculate the transition rate for each state averaged over all
         compounds
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
     :func:`mdtools.dtrj.remain_prob_discrete` :
-        Calculate the probability that a compound is in the same state
-        as at time :math:`t_0` after a lag time :math:`\Delta t`
-        resolved with respect to the states in second discrete
-        trajectory
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in second
+        discrete trajectory
 
     Notes
     -----
@@ -2768,12 +2785,17 @@ def remain_prob(  # noqa: C901
     verbose=False,
 ):
     r"""
-    Calculate the probability that a compound is in the same state as at
-    time :math:`t_0` after a lag time :math:`\Delta t`.
+    Calculate the probability that a compound is still (or again) in the
+    same state as at time :math:`t_0` after a lag time :math:`\Delta t`.
 
     Take a discrete trajectory and calculate the probability to find a
     compound in the same state as at time :math:`t_0` after a lag time
     :math:`\Delta t`.
+
+    .. important::
+
+        :math:`t_0` is an arbitrary time point in the trajectory.  It is
+        particularly not the time of a state transition!
 
     Parameters
     ----------
@@ -2808,7 +2830,7 @@ def remain_prob(  # noqa: C901
 
     Returns
     -------
-    prop : numpy.ndarray
+    prob : numpy.ndarray
         Array of shape ``(f,)`` containing for all possible lag times
         the probability that a compound is in the same state as at time
         :math:`t_0` after a lag time :math:`\Delta t`.
@@ -2816,10 +2838,19 @@ def remain_prob(  # noqa: C901
     See Also
     --------
     :func:`mdtools.dtrj.remain_prob_discrete` :
-        Calculate the probability that a compound is in the same state
-        as at time :math:`t_0` after a lag time :math:`\Delta t`
-        resolved with respect to the states in second discrete
-        trajectory.
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in second
+        discrete trajectory
+    :func:`mdtools.dtrj.back_jump_prob` :
+        Calculate the back-jump probability averaged over all states
+    :func:`mdtools.dtrj.leave_prob` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0`
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
     :func:`mdtools.dtrj.trans_rate` :
         Calculate the transition rate for each compound averaged over
         all states
@@ -2995,6 +3026,27 @@ def remain_prob(  # noqa: C901
 
     **Lifetimes**
 
+    .. important::
+
+        Because the compound might have already been in the same state
+        before the start of the observation at time :math:`t_0`, the
+        continuous probability is **not** the survival function of the
+        underlying distribution of lifetimes, but rather the survival
+        function of the underlying distribution of remaining/residual
+        lifetimes.  That is the time after which a compound that is
+        randomly picked from the state will leave the state, regardless
+        how long it has already been in this state.  However, because
+        long-lived states are sampled more often, the continuous (and
+        discontinuous) probability to be still (or again) in the same
+        state is biased to longer lifetimes.  Also note that the
+        discontinuous probability is just a measure for the state
+        relaxation but is not directly related to the state lifetime.
+        [6]_:sup:`,` [7]_  Thus, the following paragraphs have to be
+        read with caution!
+
+        To calculate the survival function of the true lifetime
+        distribution, use :func:`mdtools.dtrj.surv_func`.
+
     The calculated probabilities can be used to calculate the average
     lifetime of the valid states, i.e. how long a compounds resides on
     average in a valid state.  A common approach is to fit the
@@ -3076,6 +3128,14 @@ def remain_prob(  # noqa: C901
            <https://archive.org/details/GradshteinI.S.RyzhikI.M.TablesOfIntegralsSeriesAndProducts>`_,
            Academic Press, 2007, 7th edition, p. 370, Integral 3.478
            (1.).
+    .. [6] A. Luzar,
+           `Resolving the hydrogen bond dynamics conundrum
+           <https://doi.org/10.1063/1.1320826>`_,
+           The Journal of Chemical Physics, 2000, 113, 10663-10675.
+    .. [7] V. P. Voloshin1 and Yu. I. Naberukhin,
+           `Hydrogen bond lifetime distributions in computer-simulated
+           water <https://doi.org/10.1007/s10947-009-0010-6>`_,
+           Journal of Structural Chemistry, 2009, 50, 78-89.
 
     Examples
     --------
@@ -3285,14 +3345,19 @@ def remain_prob_discrete(  # noqa: C901
     verbose=False,
 ):
     r"""
-    Calculate the probability that a compound is in the same state as at
-    time :math:`t_0` after a lag time :math:`\Delta t` resolved with
-    respect to the states in second discrete trajectory.
+    Calculate the probability that a compound is still (or again) in the
+    same state as at time :math:`t_0` after a lag time :math:`\Delta t`
+    resolved with respect to the states in a second discrete trajectory.
 
     Take a discrete trajectory and calculate the probability to find a
     compound in the same state as at time :math:`t_0` after a lag time
     :math:`\Delta t` given that the compound was in a specific state of
     another discrete trajectory at time :math:`t_0`.
+
+    .. important::
+
+        :math:`t_0` is an arbitrary time point in the trajectory.  It is
+        particularly not the time of a state transition!
 
     Parameters
     ----------
@@ -3331,7 +3396,7 @@ def remain_prob_discrete(  # noqa: C901
 
     Returns
     -------
-    prop : numpy.ndarray
+    prob : numpy.ndarray
         Array of shape ``(f, m)``, where ``m`` is the number of states
         in the second discrete trajectory.  The `ij`-th element of
         `prob` is the probability that a compound is in the same state
@@ -3342,8 +3407,21 @@ def remain_prob_discrete(  # noqa: C901
     See Also
     --------
     :func:`mdtools.dtrj.remain_prob` :
-        Calculate the probability that a compound is in the same state
-        as at time :math:`t_0` after a lag time :math:`\Delta t`
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t`
+    :func:`mdtools.dtrj.leave_prob_discrete` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0` resolved with respect to the states in a
+        second discrete trajectory
+    :func:`mdtools.dtrj.back_jump_prob_discrete` :
+        Calculate the back-jump probability resolved with respect to the
+        states a in second discrete trajectory.
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
     :func:`mdtools.dtrj.trans_rate_per_state` :
         Calculate the transition rate for each state averaged over all
         compounds
@@ -3524,7 +3602,8 @@ def remain_prob_discrete(  # noqa: C901
         )
 
     # Reorder the states in the second trajectory such that they start
-    # at zero and no intermediate states are missing.
+    # at zero and no intermediate states are missing to reduce the
+    # memory required for `prob`.
     dtrj2 = mdt.nph.sequenize(dtrj2, step=np.uint8(1), start=np.uint8(0))
     n_states = np.max(dtrj2) + 1
     if np.min(dtrj2) != 0:
@@ -3670,3 +3749,2538 @@ def remain_prob_discrete(  # noqa: C901
         )
 
     return prob
+
+
+def n_leaves_vs_time(
+    dtrj, discard_neg_start=False, discard_all_neg=False, verbose=False
+):
+    r"""
+    Calculate the number of compounds that leave their state after a lag
+    time :math:`\Delta t` given that they have entered the state at time
+    :math:`t_0`.
+
+    Take a discrete trajectory and calculate the total number of
+    compounds that leave their state at time :math:`t_0 + \Delta t`
+    given that they have entered the state at time :math:`t_0`.
+
+    Additionally, calculate the number of compounds that are at risk to
+    leave the state at time :math:`t_0 + \Delta t`, i.e. the number of
+    compounds that have continuously been in the state from time
+    :math:`t_0` to :math:`t_0 + \Delta t`.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
+        is the number of compounds and ``f`` is the number of frames.
+        The shape can also be ``(f,)``, in which case the array is
+        expanded to shape ``(1, f)``.   The elements of `dtrj` are
+        interpreted as the indices of the states in which a given
+        compound is at a given frame.
+    discard_neg_start : bool, optional
+        If ``True``, discard all state leavings starting from a negative
+        state.  This means compounds in negative states are ignored.
+        They neither increase `n_leaves` nor `n_risk`.  This is
+        equivalent to discarding the lifetimes of all negative states
+        when calculating state lifetimes with
+        :func:`mdtools.dtrj.lifetimes`.
+    discard_all_neg : bool, optional
+        If ``True``, discard all state leavings starting from or ending
+        in a negative state.  Additionally to ignoring compounds in
+        negative states, transitions from positive to negative states
+        are treated as right-censored.  These transitions increase
+        `n_risk` but not `n_leaves`.  This is equivalent to discarding
+        the lifetimes of all negative states and of all states that are
+        followed by a negative state when calculating state lifetimes
+        with :func:`mdtools.dtrj.lifetimes`.
+    verbose : bool, optional
+        If ``True`` print a progress bar.
+
+    Returns
+    -------
+    n_leaves : numpy.ndarray
+        Array of shape ``(f,)`` and dtype :attr:`numpy.uint32`
+        containing for all possible lag times the number of compounds
+        that leave their state at time :math:`t_0 + \Delta t` given that
+        they have entered the state at time :math:`t_0`.
+    n_risk : numpy.ndarray
+        Array of shape ``(f,)`` and dtype :attr:`numpy.uint32`
+        containing for all possible lag times the number of compounds
+        that are at risk of leaving the state.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.leave_prob` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0`
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
+
+    Notes
+    -----
+    ``n_leaves / n_risk`` is the probability that a compound leaves its
+    state at time :math:`t_0 + \Delta t` given that it has entered the
+    state at time :math:`t_0`.
+
+    ``np.cumprod(1 - n_leaves / n_risk)`` is the Kaplan-Meier estimate
+    of the survival function of the underlying distribution of state
+    lifetimes. [#]_
+
+    References
+    ----------
+    .. [#] E. L. Kaplan, P. Meier,
+        `Nonparametric Estimation from Incomplete Observations
+        <https://doi.org/10.1080/01621459.1958.10501452>`_,
+        Journal of the American Statistical Association,
+        1958, 53, 282, 457-481.
+
+    Examples
+    --------
+    >>> # No detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 0, 0, 0, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([2, 2, 2, 1, 1, 1, 0], dtype=uint32)
+    >>> # One detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 0, 0, 1, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([3, 3, 3, 1, 0, 0, 0], dtype=uint32)
+    >>> # Two detectable leaves, two censored lifetimes.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 0, 1, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([4, 4, 2, 1, 0, 0, 0], dtype=uint32)
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 0, 1, 1, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([4, 4, 2, 1, 0, 0, 0], dtype=uint32)
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 0, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([4, 4, 2, 1, 0, 0, 0], dtype=uint32)
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 2, 2, 3, 0, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([17, 17, 11,  5,  1,  1,  0], dtype=uint32)
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 2, 0, 0], dtype=uint32)
+    >>> n_risk
+    array([12, 12,  8,  4,  0,  0], dtype=uint32)
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk
+    array([15, 15,  9,  5,  1,  0], dtype=uint32)
+    >>> n_leaves_ns, n_risk_ns = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> n_leaves_ns
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([15, 15,  9,  5,  1,  0], dtype=uint32)
+    >>> n_leaves_an, n_risk_an = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> n_leaves_an
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk_an
+    array([15, 15,  9,  5,  1,  0], dtype=uint32)
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk
+    array([15, 15,  9,  5,  1,  0], dtype=uint32)
+    >>> n_leaves_ns, n_risk_ns = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> n_leaves_ns
+    array([0, 1, 0, 2, 1, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([10, 10,  5,  5,  1,  0], dtype=uint32)
+    >>> n_leaves_an, n_risk_an = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> n_leaves_an
+    array([0, 0, 0, 1, 0, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([10, 10,  5,  5,  1,  0], dtype=uint32)
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(dtrj)
+    >>> n_leaves
+    array([0, 1, 1, 2, 1, 0], dtype=uint32)
+    >>> n_risk
+    array([17, 17, 11,  7,  3,  2], dtype=uint32)
+    >>> n_leaves_ns, n_risk_ns = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> n_leaves_ns
+    array([0, 1, 0, 2, 1, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([11, 11,  6,  6,  2,  1], dtype=uint32)
+    >>> n_leaves_an, n_risk_an = mdt.dtrj.n_leaves_vs_time(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> n_leaves_an
+    array([0, 0, 0, 1, 0, 0], dtype=uint32)
+    >>> n_risk_ns
+    array([11, 11,  6,  6,  2,  1], dtype=uint32)
+    """
+    dtrj = mdt.check.dtrj(dtrj)
+    n_cmps, n_frames = dtrj.shape
+
+    # Number of compounds that leave their state at frame i given that
+    # they have entered the state at frame 0.
+    n_leaves = np.zeros(n_frames, dtype=np.uint32)
+    # Number of compounds that are at risk to leave their state at frame
+    # i, i.e. number of compounds that have not left their state and
+    # have not been censored at frame i-1.
+    n_risk = np.zeros_like(n_leaves)
+
+    if verbose:
+        trj = mdt.rti.ProgressBar(dtrj, total=n_cmps, unit="compounds")
+    else:
+        trj = dtrj
+    # Loop over single compound trajectories.
+    for cmp_trj in trj:
+        # Frames directly *before* state transitions.
+        ix_trans = np.flatnonzero(np.diff(cmp_trj))
+        # Frames directly *after* state transitions.
+        ix_trans += 1
+
+        if len(ix_trans) == 0:
+            # There are no state transitions => the lifetime is greater
+            # than the entire trajectory length.
+            if (discard_neg_start or discard_all_neg) and cmp_trj[0] < 0:
+                # Discard state leavings starting from a negative state.
+                pass
+            else:
+                n_risk[:n_frames] += 1
+            continue
+
+        # Treatment of left-truncated lifetimes, i.e. treatment of the
+        # frames before the first state transition.  The lifetime is
+        # greater than the number of frames up to the first state
+        # transition.
+        if (discard_neg_start or discard_all_neg) and cmp_trj[0] < 0:
+            # Discard state leavings starting from a negative state.
+            pass
+        # elif discard_all_neg and cmp_trj[ix_trans[0]] < 0:
+        #     # Treat state transitions into negative states as
+        #     # right-censored.
+        #     # Left-truncated lifetimes are treated as right-censored
+        #     # anyway => we can comment out this ``elif`` statement.
+        #     n_risk[: ix_trans[0] + 1] += 1
+        else:
+            n_risk[: ix_trans[0] + 1] += 1
+
+        # Loop over all state transitions.
+        for i, t0 in enumerate(ix_trans, start=1):
+            if (discard_neg_start or discard_all_neg) and cmp_trj[t0] < 0:
+                # Discard state leavings starting from a negative state.
+                continue
+            if i < len(ix_trans):
+                # Frame at which the compound leaves the new state for
+                # the first time.
+                t0_next = ix_trans[i]
+                event_time = t0_next - t0
+                if discard_all_neg and cmp_trj[t0_next] < 0:
+                    # Treat state transitions into negative states as
+                    # censored => event time = censoring time.
+                    pass
+                else:
+                    # Event = leave => event time = lifetime.
+                    n_leaves[event_time] += 1
+            else:
+                # The compound never leaves the new state => the
+                # lifetime is right-censored.  The lifetime is greater
+                # than the number of frames between the last state
+                # transition and the end of the trajectory.
+                # Event = censoring => event time = censoring time.
+                event_time = n_frames - t0
+            n_risk[: event_time + 1] += 1
+
+    if n_leaves[0] != 0:
+        raise ValueError(
+            "`n_leaves[0]` = {} != 0.  This should not have"
+            " happened".format(n_leaves[0])
+        )
+    if not discard_neg_start and not discard_all_neg and n_risk[0] < n_cmps:
+        raise ValueError(
+            "`n_risk[0]` ({}) < `n_cmps` ({}).  This should not have"
+            " happened".format(n_risk[0], n_cmps)
+        )
+    return n_leaves, n_risk
+
+
+def n_leaves_vs_time_discrete(
+    dtrj1, dtrj2, discard_neg_start=False, discard_all_neg=False, verbose=False
+):
+    r"""
+    Calculate the number of compounds that leave their state after a lag
+    time :math:`\Delta t` resolved with respect to the states in a
+    second discrete trajectory.
+
+    Take a discrete trajectory and calculate the total number of
+    compounds that leave their state at time :math:`t_0 + \Delta t`
+    given that they have entered the state at time :math:`t_0` and given
+    that they were in a specific state of another discrete trajectory at
+    time :math:`t_0`.
+
+    Additionally, calculate the number of compounds that are at risk to
+    leave the state at time :math:`t_0 + \Delta t`, i.e. the number of
+    compounds that have continuously been in the state from time
+    :math:`t_0` to :math:`t_0 + \Delta t`.
+
+    States whose starting point :math:`t_0` is not known (because the
+    compound has already been in its state at the beginning of the
+    trajectory) are discarded, because it is not known in which state of
+    the second trajectory the compound was at time :math:`t_0`.
+
+    Parameters
+    ----------
+    dtrj1, dtrj2 : array_like
+        The discrete trajectories.  Arrays of shape ``(n, f)``, where
+        ``n`` is the number of compounds and ``f`` is the number of
+        frames.   The shape can also be ``(f,)``, in which case the
+        array is expanded to shape ``(1, f)``.  Both arrays must have
+        the same shape.   The elements of the arrays are interpreted as
+        the indices of the states in which a given compound is at a
+        given frame.
+    discard_neg_start : bool, optional
+        If ``True``, discard all state leavings starting from a negative
+        state.  This means compounds in negative states are ignored.
+        They neither increase `n_leaves` nor `n_risk`.  This is
+        equivalent to discarding the lifetimes of all negative states
+        when calculating state lifetimes with
+        :func:`mdtools.dtrj.lifetimes`.
+    discard_all_neg : bool, optional
+        If ``True``, discard all state leavings starting from or ending
+        in a negative state.  Additionally to ignoring compounds in
+        negative states, transitions from positive to negative states
+        are treated as right-censored.  These transitions increase
+        `n_risk` but not `n_leaves`.  This is equivalent to discarding
+        the lifetimes of all negative states and of all states that are
+        followed by a negative state when calculating state lifetimes
+        with :func:`mdtools.dtrj.lifetimes`.
+    verbose : bool, optional
+        If ``True`` print a progress bar.
+
+    Returns
+    -------
+    n_leaves : numpy.ndarray
+        Array of shape ``(m, f)`` and dtype :attr:`numpy.uint32`.  ``m``
+        is the number of different states in the second discrete
+        trajectory.  The `ij`-element of `n_leaves` is the number of
+        compounds that leave their state j frames after they have
+        entered it, given that the compounds were in state i of the
+        second discrete trajectory at time :math:`t_0`.
+    n_risk : numpy.ndarray
+        Array of the same shape and dtype as `n_leaves` containing the
+        corresponding number of compounds that are at risk of leaving
+        their state.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.n_leaves_vs_time` :
+        Calculate the number of compounds that leave their state after a
+        lag time :math:`\Delta t` given that they have entered the state
+        at time :math:`t_0`
+    :func:`mdtools.dtrj.leave_prob_discrete` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0` resolved with respect to the states in a
+        second discrete trajectory
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
+
+    Notes
+    -----
+    If you parse the same discrete trajectory to `dtrj1` and `dtrj2` you
+    will get `n_leaves` and `n_risk` for each individual state of the
+    input trajectory.
+
+    ``n_leaves / n_risk`` is the probability that a compound leaves its
+    state at time :math:`t_0 + \Delta t` given that it has entered the
+    state at time :math:`t_0`.
+
+    ``np.cumprod(1 - n_leaves / n_risk, axis=-1)`` is the Kaplan-Meier
+    estimate of the survival function of the underlying distribution of
+    state lifetimes. [#]_
+
+    References
+    ----------
+    .. [#] E. L. Kaplan, P. Meier,
+        `Nonparametric Estimation from Incomplete Observations
+        <https://doi.org/10.1080/01621459.1958.10501452>`_,
+        Journal of the American Statistical Association,
+        1958, 53, 282, 457-481.
+
+    Examples
+    --------
+    >>> # 0 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0]], dtype=uint32)
+    >>> n_risk
+    array([[0, 0, 0, 0, 0, 0, 0],
+           [1, 1, 1, 1, 1, 1, 0]], dtype=uint32)
+    >>> # 1 detectable leave, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 1, 0, 0, 0]], dtype=uint32)
+    >>> n_risk
+    array([[1, 1, 1, 0, 0, 0, 0],
+           [1, 1, 1, 1, 0, 0, 0]], dtype=uint32)
+    >>> # 2 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 1, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 1, 0, 0, 0]], dtype=uint32)
+    >>> n_risk
+    array([[1, 1, 0, 0, 0, 0, 0],
+           [1, 1, 1, 0, 0, 0, 0],
+           [1, 1, 1, 1, 0, 0, 0]], dtype=uint32)
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 1, 0, 0, 0, 0],
+           [0, 0, 0, 1, 0, 0, 0]], dtype=uint32)
+    >>> n_risk
+    array([[1, 1, 0, 0, 0, 0, 0],
+           [1, 1, 1, 0, 0, 0, 0],
+           [1, 1, 1, 1, 0, 0, 0]], dtype=uint32)
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 1, 0, 0, 0, 0, 0],
+           [0, 0, 1, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0]], dtype=uint32)
+    >>> n_risk
+    array([[2, 2, 0, 0, 0, 0, 0],
+           [1, 1, 1, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0]], dtype=uint32)
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 2, 0, 0, 0, 0, 0],
+           [0, 0, 2, 0, 0, 0, 0],
+           [0, 0, 0, 3, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0]], dtype=uint32)
+    >>> n_risk
+    array([[4, 4, 0, 0, 0, 0, 0],
+           [4, 4, 4, 0, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0, 0],
+           [1, 1, 1, 1, 1, 1, 0]], dtype=uint32)
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 1, 0, 0, 0, 0],
+           [0, 0, 1, 0, 0, 0],
+           [0, 0, 0, 2, 0, 0]], dtype=uint32)
+    >>> n_risk
+    array([[2, 2, 0, 0, 0, 0],
+           [3, 3, 3, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0]], dtype=uint32)
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 1, 0, 0, 0, 0],
+           [0, 0, 1, 0, 0, 0],
+           [0, 0, 0, 2, 0, 0],
+           [0, 0, 0, 0, 1, 0]], dtype=uint32)
+    >>> n_risk
+    array([[3, 3, 0, 0, 0, 0],
+           [3, 3, 3, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0],
+           [1, 1, 1, 1, 1, 0]], dtype=uint32)
+    >>> n_leaves_ns, n_risk_ns = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_neg_start=True
+    ... )
+    >>> n_leaves_ns
+    array([[0, 1, 0, 0, 0, 0],
+           [0, 0, 1, 0, 0, 0],
+           [0, 0, 0, 2, 0, 0],
+           [0, 0, 0, 0, 1, 0]], dtype=uint32)
+    >>> n_risk_ns
+    array([[3, 3, 0, 0, 0, 0],
+           [3, 3, 3, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0],
+           [1, 1, 1, 1, 1, 0]], dtype=uint32)
+    >>> n_leaves_an, n_risk_an = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_all_neg=True
+    ... )
+    >>> n_leaves_an
+    array([[0, 1, 0, 0, 0, 0],
+           [0, 0, 1, 0, 0, 0],
+           [0, 0, 0, 2, 0, 0],
+           [0, 0, 0, 0, 1, 0]], dtype=uint32)
+    >>> n_risk_an
+    array([[3, 3, 0, 0, 0, 0],
+           [3, 3, 3, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0],
+           [1, 1, 1, 1, 1, 0]], dtype=uint32)
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 0, 1, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 1, 0, 0, 0, 0],
+           [0, 0, 0, 2, 0, 0],
+           [0, 0, 0, 0, 1, 0]], dtype=uint32)
+    >>> n_risk
+    array([[3, 3, 3, 0, 0, 0],
+           [1, 1, 0, 0, 0, 0],
+           [2, 2, 0, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0],
+           [1, 1, 1, 1, 1, 0]], dtype=uint32)
+    >>> n_leaves_ns, n_risk_ns = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_neg_start=True
+    ... )
+    >>> n_leaves_ns
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 1, 0, 0, 0, 0],
+           [0, 0, 0, 2, 0, 0],
+           [0, 0, 0, 0, 1, 0]], dtype=uint32)
+    >>> n_risk_ns
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [2, 2, 0, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0],
+           [1, 1, 1, 1, 1, 0]], dtype=uint32)
+    >>> n_leaves_an, n_risk_an = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_all_neg=True
+    ... )
+    >>> n_leaves_an
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 1, 0, 0],
+           [0, 0, 0, 0, 0, 0]], dtype=uint32)
+    >>> n_risk_an
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [2, 2, 0, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0],
+           [1, 1, 1, 1, 1, 0]], dtype=uint32)
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> n_leaves
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 1, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 1, 0, 0, 0, 0],
+           [0, 0, 0, 2, 0, 0],
+           [0, 0, 0, 0, 1, 0],
+           [0, 0, 0, 0, 0, 0]], dtype=uint32)
+    >>> n_risk
+    array([[0, 0, 0, 0, 0, 0],
+           [3, 3, 3, 0, 0, 0],
+           [1, 1, 0, 0, 0, 0],
+           [2, 2, 0, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0],
+           [1, 1, 1, 1, 1, 0],
+           [0, 0, 0, 0, 0, 0]], dtype=uint32)
+    >>> n_leaves_ns, n_risk_ns = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_neg_start=True
+    ... )
+    >>> n_leaves_ns
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 1, 0, 0, 0, 0],
+           [0, 0, 0, 2, 0, 0],
+           [0, 0, 0, 0, 1, 0],
+           [0, 0, 0, 0, 0, 0]], dtype=uint32)
+    >>> n_risk_ns
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [2, 2, 0, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0],
+           [1, 1, 1, 1, 1, 0],
+           [0, 0, 0, 0, 0, 0]], dtype=uint32)
+    >>> n_leaves_an, n_risk_an = mdt.dtrj.n_leaves_vs_time_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_all_neg=True
+    ... )
+    >>> n_leaves_an
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 1, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0]], dtype=uint32)
+    >>> n_risk_an
+    array([[0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0],
+           [2, 2, 0, 0, 0, 0],
+           [3, 3, 3, 3, 0, 0],
+           [1, 1, 1, 1, 1, 0],
+           [0, 0, 0, 0, 0, 0]], dtype=uint32)
+    """
+    dtrj1 = mdt.check.dtrj(dtrj1)
+    dtrj2 = mdt.check.dtrj(dtrj2)
+    n_cmps, n_frames = dtrj1.shape
+    if dtrj1.shape != dtrj2.shape:
+        raise ValueError("Both trajectories must have the same shape")
+
+    # Reorder the states in the second trajectory such that they start
+    # at zero and no intermediate states are missing to reduce the
+    # memory required for the output arrays.
+    dtrj2 = mdt.nph.sequenize(dtrj2, step=np.uint8(1), start=np.uint8(0))
+    n_states = np.max(dtrj2) + 1
+    if np.min(dtrj2) != 0:
+        raise ValueError(
+            "The minimum of the reordered second trajectory is not zero.  This"
+            " should not have happened"
+        )
+
+    # Number of compounds that leave their state at frame i given that
+    # they have entered the state at frame 0.
+    n_leaves = np.zeros((n_states, n_frames), dtype=np.uint32)
+    # Number of compounds that are at risk to leave their state at frame
+    # i, i.e. number of compounds that have not left their state and
+    # have not been censored at frame i-1.
+    n_risk = np.zeros_like(n_leaves)
+
+    if verbose:
+        trj = mdt.rti.ProgressBar(dtrj1, total=n_cmps, unit="compounds")
+    else:
+        trj = dtrj1
+    # Loop over single compound trajectories.
+    for cmp_ix, cmp_trj in enumerate(trj):
+        # Frames directly *before* state transitions.
+        ix_trans = np.flatnonzero(np.diff(cmp_trj))
+        # Frames directly *after* state transitions.
+        ix_trans += 1
+
+        # Left-truncated lifetimes, i.e. the frames before the first
+        # state transition, are ignored, because the starting point t0
+        # of these lifetimes and therefore the state of the second
+        # discrete trajectory `dtrj2` in which the compound was at time
+        # t0 is not known.
+        if len(ix_trans) == 0:
+            # There are no state transitions at all.
+            continue
+
+        # Loop over all state transitions.
+        for i, t0 in enumerate(ix_trans, start=1):
+            if (discard_neg_start or discard_all_neg) and cmp_trj[t0] < 0:
+                # Discard state leavings starting from a negative state.
+                continue
+            state2 = dtrj2[cmp_ix, t0]
+            if i < len(ix_trans):
+                # Frame at which the compound leaves the new state for
+                # the first time.
+                t0_next = ix_trans[i]
+                event_time = t0_next - t0
+                if discard_all_neg and cmp_trj[t0_next] < 0:
+                    # Treat state transitions into negative states as
+                    # censored => event time = censoring time.
+                    pass
+                else:
+                    # Event = leave => event time = lifetime.
+                    n_leaves[state2, event_time] += 1
+            else:
+                # The compound never leaves the new state => the
+                # lifetime is right-censored.  The lifetime is greater
+                # than the number of frames between the last state
+                # transition and the end of the trajectory.
+                # Event = censoring => event time = censoring time.
+                event_time = n_frames - t0
+            n_risk[state2, : event_time + 1] += 1
+
+    if np.any(n_leaves[:, 0] != 0):
+        raise ValueError(
+            "`n_leaves[:, 0]` = {} != 0.  This should not have"
+            " happened".format(n_leaves[:, 0])
+        )
+    return n_leaves, n_risk
+
+
+def leave_prob(*args, **kwargs):
+    r"""
+    Calculate the probability that a compound leaves its state after a
+    lag time :math:`\Delta t` given that it has entered the state at
+    time :math:`t_0`.
+
+    Take a discrete trajectory and calculate the probability that a
+    compound leaves its state at time :math:`t_0 + \Delta t` given that
+    it has entered the state at time :math:`t_0`.
+
+    Parameters
+    ----------
+    args, kwargs :
+        This function takes the same parameters as
+        :func:`mdtools.dtrj.n_leaves_vs_time`.  See there for more
+        information.
+
+    Returns
+    -------
+    prob : numpy.ndarray
+        Array of shape ``(f,)`` containing for all possible lag times
+        :math:`\Delta t` the probability that a compound leaves its
+        state at time :math:`t_0 + \Delta t` given that they have
+        entered the state at time :math:`t_0`.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.leave_prob_discrete` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0` resolved with respect to the states in a
+        second discrete trajectory
+    :func:`mdtools.dtrj.n_leaves_vs_time` :
+        Calculate the number of compounds that leave their state after a
+        lag time :math:`\Delta t` given that they have entered the state
+        at time :math:`t_0`
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t`
+    :func:`mdtools.dtrj.back_jump_prob` :
+        Calculate the back-jump probability averaged over all states
+
+    Notes
+    -----
+    This function simply calls :func:`mdtools.dtrj.n_leaves_vs_time`,
+    calculates ``n_leaves / n_risk`` and checks that the result lies
+    within the interval :math:`[0, 1]`.
+
+    .. important::
+
+        A leaving probability of zero means that no state leaving could
+        be observed at the given lag time.  However, this does not
+        necessarily mean that there definitely are no state leavings at
+        this lag time, because if the lag time coincides with a
+        censoring time, we simply do not know what happens.
+
+    Examples
+    --------
+    >>> # No detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([ 0.,  0.,  0.,  0.,  0.,  0., nan])
+    >>> # One detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([ 0.,  0.,  0.,  1., nan, nan, nan])
+    >>> # Two detectable leaves, two censored lifetimes.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.  , 0.25, 0.  , 1.  ,  nan,  nan,  nan])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0. , 0. , 0.5, 1. , nan, nan, nan])
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.  , 0.25, 0.5 , 0.  ,  nan,  nan,  nan])
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.11764706, 0.18181818, 0.6       , 0.        ,
+           0.        ,        nan])
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.08333333, 0.125     , 0.5       ,        nan,
+                  nan])
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.06666667, 0.11111111, 0.4       , 1.        ,
+                  nan])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_neg_start=True)
+    array([0.        , 0.06666667, 0.11111111, 0.4       , 1.        ,
+                  nan])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_all_neg=True)
+    array([0.        , 0.06666667, 0.11111111, 0.4       , 1.        ,
+                  nan])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.06666667, 0.11111111, 0.4       , 1.        ,
+                  nan])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_neg_start=True)
+    array([0. , 0.1, 0. , 0.4, 1. , nan])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_all_neg=True)
+    array([0. , 0. , 0. , 0.2, 0. , nan])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> mdt.dtrj.leave_prob(dtrj)
+    array([0.        , 0.05882353, 0.09090909, 0.28571429, 0.33333333,
+           0.        ])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_neg_start=True)
+    array([0.        , 0.09090909, 0.        , 0.33333333, 0.5       ,
+           0.        ])
+    >>> mdt.dtrj.leave_prob(dtrj, discard_all_neg=True)
+    array([0.        , 0.        , 0.        , 0.16666667, 0.        ,
+           0.        ])
+    """
+    n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(*args, **kwargs)
+    prob = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    prob = np.divide(n_leaves, n_risk, where=(n_risk != 0), out=prob)
+    del n_leaves, n_risk
+    if prob[0] != 0:
+        raise ValueError(
+            "`prob[0]` = {} != 0.  This should not have"
+            " happened".format(prob[0])
+        )
+    if np.any(prob < 0):
+        raise ValueError(
+            "At least one element of `prob` is less than zero.  This should"
+            " not have happened"
+        )
+    if np.any(prob > 1):
+        raise ValueError(
+            "At least one element of `prob` is greater than one.  This should"
+            " not have happened"
+        )
+    return prob
+
+
+def leave_prob_discrete(*args, **kwargs):
+    r"""
+    Calculate the probability that a compound leaves its state after a
+    lag time :math:`\Delta t` given that it has entered the state at
+    time :math:`t_0` resolved with respect to the states in a second
+    discrete trajectory.
+
+    Take a discrete trajectory and calculate the probability that a
+    compound leaves its state at time :math:`t_0 + \Delta t` given that
+    it has entered the state at time :math:`t_0` and given that it was
+    in a specific state of another discrete trajectory at time
+    :math:`t_0`.
+
+    States whose starting point :math:`t_0` is not known (because the
+    compound has already been in its state at the beginning of the
+    trajectory) are discarded, because it is not known in which state of
+    the second trajectory the compound was at time :math:`t_0`.
+
+    Parameters
+    ----------
+    args, kwargs :
+        This function takes the same parameters as
+        :func:`mdtools.dtrj.n_leaves_vs_time_discrete`.  See there for
+        more information.
+
+    Returns
+    -------
+    prob : numpy.ndarray
+        Array of shape ``(m, f)`` where ``m`` is the number of different
+        states in the second discrete trajectory.  The `ij`-element of
+        `prob` is the probability that a compound leaves its state j
+        frames after it has entered it, given that the compound was in
+        state i of the second discrete trajectory at time :math:`t_0`.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.leave_prob` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0`
+    :func:`mdtools.dtrj.n_leaves_vs_time_discrete` :
+        Calculate the number of compounds that leave their state after a
+        lag time :math:`\Delta t` resolved with respect to the states in
+        a second discrete trajectory
+    :func:`mdtools.dtrj.remain_prob_discrete` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in a second
+        discrete trajectory
+    :func:`mdtools.dtrj.back_jump_prob_discrete` :
+        Calculate the back-jump probability resolved with respect to the
+        states in a second discrete trajectory
+
+    Notes
+    -----
+    If you parse the same discrete trajectory to `dtrj1` and `dtrj2` you
+    will get the probability that a compound leaves its state after a
+    lag time :math:`\Delta t` for each individual state of the input
+    trajectory.
+
+    This function simply calls
+    :func:`mdtools.dtrj.n_leaves_vs_time_discrete`, calculates
+    ``n_leaves / n_risk`` and checks that the result lies within the
+    interval :math:`[0, 1]`.
+
+    .. important::
+
+        A leaving probability of zero means that no state leaving could
+        be observed at the given lag time.  However, this does not
+        necessarily mean that there definitely are no state leavings at
+        this lag time, because if the lag time coincides with a
+        censoring time, we simply do not know what happens.
+
+    Examples
+    --------
+    >>> # 0 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[nan, nan, nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0.,  0.,  0., nan]])
+    >>> # 1 detectable leave, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  1., nan, nan, nan]])
+    >>> # 2 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  1., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  1., nan, nan, nan]])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  1., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  1., nan, nan, nan]])
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0. , 0.5, nan, nan, nan, nan, nan],
+           [0. , 0. , 1. , nan, nan, nan, nan],
+           [nan, nan, nan, nan, nan, nan, nan]])
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0. , 0.5, nan, nan, nan, nan, nan],
+           [0. , 0. , 0.5, nan, nan, nan, nan],
+           [0. , 0. , 0. , 1. , nan, nan, nan],
+           [0. , 0. , 0. , 0. , 0. , 0. , nan]])
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan]])
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.33333333,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_neg_start=True)
+    array([[0.        , 0.33333333,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_all_neg=True)
+    array([[0.        , 0.33333333,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_neg_start=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_all_neg=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.33333333,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_neg_start=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.66666667,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 1.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.leave_prob_discrete(dtrj, dtrj, discard_all_neg=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.33333333,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    """
+    n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(*args, **kwargs)
+    prob = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    prob = np.divide(n_leaves, n_risk, where=(n_risk != 0), out=prob)
+    del n_leaves, n_risk
+    if np.any(prob[:, 0][~np.isnan(prob[:, 0])] != 0):
+        raise ValueError(
+            "`prob[:, 0]` = {} != 0.  This should not have"
+            " happened".format(prob[:, 0])
+        )
+    if np.any(prob < 0):
+        raise ValueError(
+            "At least one element of `prob` is less than zero.  This should"
+            " not have happened"
+        )
+    if np.any(prob > 1):
+        raise ValueError(
+            "At least one element of `prob` is greater than one.  This should"
+            " not have happened"
+        )
+    return prob
+
+
+def kaplan_meier(*args, **kwargs):
+    r"""
+    Estimate the state survival function using the Kaplan-Meier
+    estimator.
+
+    Take a discrete trajectory and calculate the probability that a
+    compound is still in the new state at time :math:`t_0 + \Delta t`
+    given that a state transition has occurred at time :math:`t_0`.
+
+    Parameters
+    ----------
+    args, kwargs :
+        This function takes the same parameters as
+        :func:`mdtools.dtrj.n_leaves_vs_time`.  See there for more
+        information.
+
+    Returns
+    -------
+    sf : numpy.ndarray
+        Array of shape ``(f,)`` containing the values of the survival
+        function for each possible lag time :math:`\Delta t`.  The i-th
+        element of the array is the probability that a compound is still
+        in the new state i frames after it has entered the state.
+    sf_var : numpy.ndarray
+        Array of the same shape as `sf` containing the corresponding
+        variance values of the survival function calculated using
+        Greenwood's formula.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.kaplan_meier_discrete` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator resolved with respect to the states in a second
+        discrete trajectory
+    :func:`mdtools.dtrj.n_leaves_vs_time` :
+        Calculate the number of compounds that leave their state after a
+        lag time :math:`\Delta t` given that they have entered the state
+        at time :math:`t_0`
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t`
+    :func:`mdtools.dtrj.trans_rate` :
+        Calculate the transition rate for each compound averaged over
+        all states
+    :func:`mdtools.dtrj.lifetimes` :
+        Calculate the state lifetimes for each compound
+
+    Notes
+    -----
+    The survival function :math:`S(t)` is the probability that a given
+    compound has a state lifetime greater than or equal to :math:`t`.
+    Alternatively, one might say :math:`S(t)` percent of the compounds
+    have a state lifetime greater than or equal to :math:`t`.
+
+    The survival function is related to the underlying distribution of
+    state lifetimes :math:`f(t)` by
+
+    .. math::
+
+        S(t) = \int_t^\infty f(u) \text{ d}u = 1 - F(t)
+
+    where :math:`F(t) = \int_0^t f(u) \text{ d}u` is the cumulative
+    distribution function. [#]_
+
+    The survival function can be used to calculate the raw-moments of
+    the distribution of state lifetimes via the alternative expectation
+    formula: [#]_
+
+    .. math::
+
+        \langle t^n \rangle
+        = \int_0^\infty t^n f(t) \text{ d}t
+        = n \int_0^\infty t^{n-1} S(t) \text{ d}t
+
+    The Kaplan-Meier estimator :math:`\hat{S}(t)` of the survival
+    function :math:`S(t)` is given by [#]_
+
+    .. math::
+
+        \hat{S}(t) =
+        \Pi_{i: t_i \leq t} \left( 1 - \frac{d_i}{n_i} \right)
+
+    where :math:`d_i` is the number of compounds that leave their state
+    at time :math:`t_i` and :math:`n_i` is the number of compounds that
+    are at risk of leaving their state at time :math:`t_i`, i.e. the
+    number of compounds that have not left their state and have not been
+    censored up to time :math:`t_i`.
+
+    The estimated variance :math:`\hat{\text{Var}}(\hat{S}(t))` of the
+    Kaplan-Meier estimator :math:`\hat{S}(t)` is calculated by
+    Greenwood's formula: [#]_
+
+    .. math::
+
+        \hat{\text{Var}}(\hat{S}(t)) =
+        \hat{S}^2(t) \sum_{i: t_i \leq t} \frac{d_i}{n_i (n_i - d_i)}
+
+    References
+    ----------
+    .. [#] J. F. Lawless,
+        `Statistical Models and Methods for Lifetime Data
+        <https://doi.org/10.1002/9781118033005>`_,
+        John Wiley & Sons, 2002, Hoboken,
+        Chapter 1.2 "Lifetime Distributions, pp. 8-16.
+    .. [#] S. Chakraborti, F. Jardim, E. Epprecht,
+        `Higher-Order Moments Using the Survival Function: The
+        Alternative Expectation Formula
+        <https://doi.org/10.1080/00031305.2017.1356374>`_,
+        The American Statistician, 2019, 73, 2, 191-194.
+    .. [#] E. L. Kaplan, P. Meier,
+        `Nonparametric Estimation from Incomplete Observations
+        <https://doi.org/10.1080/01621459.1958.10501452>`_,
+        Journal of the American Statistical Association,
+        1958, 53, 282, 457-481.
+    .. [#] M. Greenwood,
+        `The natural duration of cancer
+        <https://www.cabdirect.org/cabdirect/abstract/19272700028>`_,
+        Reports on public health and medical subjects, 1926, 33
+
+    Examples
+    --------
+    >>> # No detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([ 1.,  1.,  1.,  1.,  1.,  1., nan])
+    >>> sf_var
+    array([ 0.,  0.,  0.,  0.,  0.,  0., nan])
+    >>> # One detectable leave, two censored lifetimes.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([ 1.,  1.,  1.,  0., nan, nan, nan])
+    >>> sf_var
+    array([ 0.,  0.,  0.,  0., nan, nan, nan])
+    >>> # Two detectable leaves, two censored lifetimes.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.  , 0.75, 0.75, 0.  ,  nan,  nan,  nan])
+    >>> sf_var
+    array([0.      , 0.046875, 0.046875, 0.      ,      nan,      nan,
+                nan])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1. , 1. , 0.5, 0. , nan, nan, nan])
+    >>> sf_var
+    array([0.   , 0.   , 0.125, 0.   ,   nan,   nan,   nan])
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.   , 0.75 , 0.375, 0.375,   nan,   nan,   nan])
+    >>> sf_var
+    array([0.        , 0.046875  , 0.08203125, 0.08203125,        nan,
+                  nan,        nan])
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.88235294, 0.72192513, 0.28877005, 0.28877005,
+           0.28877005,        nan])
+    >>> sf_var
+    array([0.        , 0.00610625, 0.01461646, 0.02735508, 0.02735508,
+           0.02735508,        nan])
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.91666667, 0.80208333, 0.40104167,        nan,
+                  nan])
+    >>> sf_var
+    array([0.        , 0.00636574, 0.01636194, 0.04429909,        nan,
+                  nan])
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.93333333, 0.82962963, 0.49777778, 0.        ,
+                  nan])
+    >>> sf_var
+    array([0.        , 0.00414815, 0.01283707, 0.03765904, 0.        ,
+                  nan])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([1.        , 0.93333333, 0.82962963, 0.49777778, 0.        ,
+                  nan])
+    >>> sf_var_ns
+    array([0.        , 0.00414815, 0.01283707, 0.03765904, 0.        ,
+                  nan])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([1.        , 0.93333333, 0.82962963, 0.49777778, 0.        ,
+                  nan])
+    >>> sf_var_an
+    array([0.        , 0.00414815, 0.01283707, 0.03765904, 0.        ,
+                  nan])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.93333333, 0.82962963, 0.49777778, 0.        ,
+                  nan])
+    >>> sf_var
+    array([0.        , 0.00414815, 0.01283707, 0.03765904, 0.        ,
+                  nan])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([1.  , 0.9 , 0.9 , 0.54, 0.  ,  nan])
+    >>> sf_var_ns
+    array([0.     , 0.009  , 0.009  , 0.04212, 0.     ,     nan])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([1. , 1. , 1. , 0.8, 0.8, nan])
+    >>> sf_var_an
+    array([0.   , 0.   , 0.   , 0.032, 0.032,   nan])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier(dtrj)
+    >>> sf
+    array([1.        , 0.94117647, 0.85561497, 0.61115355, 0.4074357 ,
+           0.4074357 ])
+    >>> sf_var
+    array([0.        , 0.00325667, 0.0093467 , 0.02611208, 0.03927268,
+           0.03927268])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([1.        , 0.90909091, 0.90909091, 0.60606061, 0.3030303 ,
+           0.3030303 ])
+    >>> sf_var_ns
+    array([0.        , 0.00751315, 0.00751315, 0.0339483 , 0.05440076,
+           0.05440076])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier(
+    ...     dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([1.        , 1.        , 1.        , 0.83333333, 0.83333333,
+           0.83333333])
+    >>> sf_var_an
+    array([0.        , 0.        , 0.        , 0.02314815, 0.02314815,
+           0.02314815])
+    """
+    n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time(*args, **kwargs)
+
+    # sf = np.cumprod(1 - n_leaves / n_risk)
+    sf = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    sf = np.divide(n_leaves, n_risk, where=(n_risk != 0), out=sf)
+    sf = np.subtract(1, sf, out=sf)
+    sf = np.cumprod(sf, out=sf)
+
+    # sf_var =
+    # sf**2 * np.cumsum(n_leaves / (n_risk * (n_risk - n_leaves)))
+    sf_var = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    sf_var = np.subtract(n_risk, n_leaves, out=sf_var)
+    sf_var *= n_risk
+    sf_var = np.divide(n_leaves, sf_var, where=(sf_var != 0), out=sf_var)
+    sf_var = np.cumsum(sf_var, out=sf_var)
+    sf_var *= sf**2
+
+    del n_leaves, n_risk
+    if sf[0] != 1:
+        raise ValueError(
+            "`sf[0]` = {} != 1.  This should not have happened".format(sf[0])
+        )
+    if np.any(sf < 0):
+        raise ValueError(
+            "At least one element of `sf` is less than zero.  This should not"
+            " have happened"
+        )
+    if np.any(sf > 1):
+        raise ValueError(
+            "At least one element of `sf` is greater than one.  This should"
+            " not have happened"
+        )
+    grad = np.diff(sf)
+    grad = grad[~np.isnan(grad)]
+    if np.any(grad > 0):
+        raise ValueError(
+            "`sf` is not monotonically decreasing.  This should not have"
+            " happened"
+        )
+    return sf, sf_var
+
+
+def kaplan_meier_discrete(*args, **kwargs):
+    r"""
+    Estimate the state survival function using the Kaplan-Meier
+    estimator resolved with respect to the states in a second discrete
+    trajectory.
+
+    Take a discrete trajectory and calculate the probability that a
+    compound is still in the new state at time :math:`t_0 + \Delta t`
+    given that a state transition has occurred at time :math:`t_0` and
+    given that the compound was in a specific state of another discrete
+    trajectory at time :math:`t_0`.
+
+    States whose starting point :math:`t_0` is not known (because the
+    compound has already been in its state at the beginning of the
+    trajectory) are discarded, because it is not known in which state of
+    the second trajectory the compound was at time :math:`t_0`.
+
+    Parameters
+    ----------
+    args, kwargs :
+        This function takes the same parameters as
+        :func:`mdtools.dtrj.n_leaves_vs_time_discrete`.  See there for
+        more information.
+
+    Returns
+    -------
+    sf : numpy.ndarray
+        Array of shape ``(m, f)`` where `m`` is the number of different
+        states in the second discrete trajectory.  The `ij`-element of
+        `sf` is the probability that a compound is still in the new
+        state j frames after it has entered the state, given that the
+        compound was in state i of the second discrete trajectory at
+        time :math:`t_0`.
+    sf_var : numpy.ndarray
+        Array of the same shape as `sf` containing the corresponding
+        variance values of the survival function calculated using
+        Greenwood's formula.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.kaplan_meier` :
+        Estimate the state survival function using the Kaplan-Meier
+        estimator
+    :func:`mdtools.dtrj.n_leaves_vs_time_discrete` :
+        Calculate the number of compounds that leave their state after a
+        lag time :math:`\Delta t` resolved with respect to the states in
+        a second discrete trajectory
+    :func:`mdtools.dtrj.remain_prob_discrete` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in a second
+        discrete trajectory
+    :func:`mdtools.dtrj.trans_rate_per_state` :
+        Calculate the transition rate for each state averaged over all
+        compounds
+    :func:`mdtools.dtrj.lifetimes_per_state` :
+        Calculate the state lifetimes for each state
+
+    Notes
+    -----
+    See :func:`mdtools.dtrj.kaplan_meier` for more information about the
+    survival function and the Kaplan-Meier estimator.
+
+    Examples
+    --------
+    >>> # 0 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 5, 5, 5, 5, 5])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[nan, nan, nan, nan, nan, nan, nan],
+           [ 1.,  1.,  1.,  1.,  1.,  1., nan]])
+    >>> sf_var
+    array([[nan, nan, nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0.,  0.,  0., nan]])
+    >>> # 1 detectable leave, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([2, 2, 3, 3, 3, 2, 2])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[ 1.,  1.,  1., nan, nan, nan, nan],
+           [ 1.,  1.,  1.,  0., nan, nan, nan]])
+    >>> sf_var
+    array([[ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0., nan, nan, nan]])
+    >>> # 2 detectable leaves, 1 left-truncation, 1 right-censoring.
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[ 1.,  0., nan, nan, nan, nan, nan],
+           [ 1.,  1.,  1., nan, nan, nan, nan],
+           [ 1.,  1.,  1.,  0., nan, nan, nan]])
+    >>> sf_var
+    array([[ 0.,  0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0., nan, nan, nan]])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[ 1.,  1., nan, nan, nan, nan, nan],
+           [ 1.,  1.,  0., nan, nan, nan, nan],
+           [ 1.,  1.,  1.,  0., nan, nan, nan]])
+    >>> sf_var
+    array([[ 0.,  0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan, nan],
+           [ 0.,  0.,  0.,  0., nan, nan, nan]])
+    >>> dtrj = np.array([3, 3, 3, 1, 2, 2, 1])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[1. , 0.5, nan, nan, nan, nan, nan],
+           [1. , 1. , 0. , nan, nan, nan, nan],
+           [nan, nan, nan, nan, nan, nan, nan]])
+    >>> sf_var
+    array([[0.   , 0.125,   nan,   nan,   nan,   nan,   nan],
+           [0.   , 0.   , 0.   ,   nan,   nan,   nan,   nan],
+           [  nan,   nan,   nan,   nan,   nan,   nan,   nan]])
+
+    >>> dtrj = np.array([[2, 2, 5, 5, 5, 5, 5],
+    ...                  [2, 2, 3, 3, 3, 2, 2],
+    ...                  [1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1],
+    ...                  [3, 3, 3, 1, 2, 2, 1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[1. , 0.5, nan, nan, nan, nan, nan],
+           [1. , 1. , 0.5, nan, nan, nan, nan],
+           [1. , 1. , 1. , 0. , nan, nan, nan],
+           [1. , 1. , 1. , 1. , 1. , 1. , nan]])
+    >>> sf_var
+    array([[0.    , 0.0625,    nan,    nan,    nan,    nan,    nan],
+           [0.    , 0.    , 0.0625,    nan,    nan,    nan,    nan],
+           [0.    , 0.    , 0.    , 0.    ,    nan,    nan,    nan],
+           [0.    , 0.    , 0.    , 0.    , 0.    , 0.    ,    nan]])
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(dtrj, dtrj)
+    >>> sf
+    array([[1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan]])
+    >>> sf_var
+    array([[0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan]])
+
+    Discarding negative states:
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [1, 4, 4, 4, 4, 1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> sf
+    array([[1.        , 0.66666667,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var
+    array([[0.        , 0.07407407,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([[1.        , 0.66666667,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var_ns
+    array([[0.        , 0.07407407,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([[1.        , 0.66666667,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var_an
+    array([[0.        , 0.07407407,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> sf
+    array([[1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var
+    array([[0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan]])
+    >>> sf_var_ns
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.66666667,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 1.        ,
+                   nan]])
+    >>> sf_var_an
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan]])
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1, -2, -2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [ 6,  6,  6,  6,  6,  6],
+    ...                  [-6, -6, -6, -6, -6, -6]])
+    >>> sf, sf_var = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj
+    ... )
+    >>> sf
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 0.66666667,        nan,        nan,
+                   nan],
+           [1.        , 1.        ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_var
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.07407407,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_ns, sf_var_ns = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_neg_start=True
+    ... )
+    >>> sf_ns
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 0.5       ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.33333333,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_var_ns
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.125     ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_an, sf_var_an = mdt.dtrj.kaplan_meier_discrete(
+    ...     dtrj1=dtrj, dtrj2=dtrj, discard_all_neg=True
+    ... )
+    >>> sf_an
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        ,        nan,        nan,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 0.66666667,        nan,
+                   nan],
+           [1.        , 1.        , 1.        , 1.        , 1.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> sf_var_an
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        ,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.07407407,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        , 0.        ,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan]])
+    """
+    n_leaves, n_risk = mdt.dtrj.n_leaves_vs_time_discrete(*args, **kwargs)
+
+    # sf = np.cumprod(1 - n_leaves / n_risk, axis=-1)
+    sf = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    sf = np.divide(n_leaves, n_risk, where=(n_risk != 0), out=sf)
+    sf = np.subtract(1, sf, out=sf)
+    sf = np.cumprod(sf, out=sf, axis=-1)
+
+    # sf_var = sf**2 *
+    # np.cumsum(n_leaves / (n_risk * (n_risk - n_leaves)), axis=-1)
+    sf_var = np.full_like(n_leaves, np.nan, dtype=np.float64)
+    sf_var = np.subtract(n_risk, n_leaves, out=sf_var)
+    sf_var *= n_risk
+    sf_var = np.divide(n_leaves, sf_var, where=(sf_var != 0), out=sf_var)
+    sf_var = np.cumsum(sf_var, out=sf_var, axis=-1)
+    sf_var *= sf**2
+
+    del n_leaves, n_risk
+    if np.any(sf[:, 0][~np.isnan(sf[:, 0])] != 1):
+        raise ValueError(
+            "`sf[:, 0]` = {} != 1.  This should not have"
+            " happened".format(sf[:, 0])
+        )
+    if np.any(sf < 0):
+        raise ValueError(
+            "At least one element of `sf` is less than zero.  This should not"
+            " have happened"
+        )
+    if np.any(sf > 1):
+        raise ValueError(
+            "At least one element of `sf` is greater than one.  This should"
+            " not have happened"
+        )
+    grad = np.diff(sf, axis=-1)
+    grad = grad[~np.isnan(grad)]
+    if np.any(grad > 0):
+        raise ValueError(
+            "`sf` is not monotonically decreasing.  This should not have"
+            " happened"
+        )
+    return sf, sf_var
+
+
+def back_jump_prob(
+    dtrj,
+    continuous=False,
+    discard_neg=False,
+    discard_neg_btw=False,
+    verbose=False,
+):
+    r"""
+    Calculate the back-jump probability averaged over all states.
+
+    Take a discrete trajectory and calculate the probability to return
+    back to the initial state at time :math:`t_0 + \Delta t`, given that
+    a state transition has occurred at time :math:`t_0`.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
+        is the number of compounds and ``f`` is the number of frames.
+        The shape can also be ``(f,)``, in which case the array is
+        expanded to shape ``(1, f)``.   The elements of `dtrj` are
+        interpreted as the indices of the states in which a given
+        compound is at a given frame.
+    continuous : bool
+        If ``False``, calculate the probability that a compound returns
+        back to its initial state at time :math:`t_0 + \Delta t`.  This
+        probability might be regarded as the "discontinuous" or
+        "intermittent" back-jump probability.
+
+        If ``True``, calculate the probability that a compound returns
+        back to its initial state at time :math:`t_0 + \Delta t` under
+        the condition that it has *continuously* been in the new state
+        from time :math:`t_0` until :math:`t_0 + \Delta t`, i.e. that
+        the compound does not visit other states in between.  This
+        probability might be regarded as the "continuous" or "true"
+        back-jump probability.
+    discard_neg : bool, optional
+        If ``True``, discard negative states, i.e. discard back jumps
+        starting from (and consequently ending in) a negative state.
+    discard_neg_btw : bool, optional
+        If ``True``, discard back jumps when the compound has visited a
+        negative state between :math:`t_0` and :math:`t_0 + \Delta t`.
+    verbose : bool, optional
+        If ``True`` print a progress bar.
+
+    Returns
+    -------
+    bj_prob : numpy.ndarray
+        Array of shape ``(f-1,)`` containing the back-jump probability
+        for each possible lag time :math:`\Delta t`.  The k-th element
+        of the array is the probability that a compound returns back to
+        its initial state k frames after a state transition has
+        occurred.  Another interpretation could be that the k-th element
+        of the array is the percentage of compounds that return back to
+        there initial state k frames after a state transition has
+        occurred.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.back_jump_prob_discrete` :
+        Calculate the back-jump probability resolved with respect to the
+        states a in second discrete trajectory
+    :func:`mdtools.dtrj.remain_prob` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t`
+    :func:`mdtools.dtrj.leave_prob` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0`
+
+    Examples
+    --------
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0., 0., 0., 1., 0., 0.])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0., 0., 0., 1., 0., 0.])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0., 0., 0., 0., 0., 1.])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0., 0., 0., 0., 0., 0.])
+
+    >>> dtrj = np.array([[1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1]])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0. , 0. , 0. , 0.5, 0. , 0.5])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0. , 0. , 0. , 0.5, 0. , 0. ])
+    >>> dtrj = np.array([[1, 2, 2, 1, 3, 3, 3],
+    ...                  [1, 2, 2, 3, 3, 3, 1]])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0. , 0. , 0.2, 0. , 0. , 0.5])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0. , 0. , 0.2, 0. , 0. , 0. ])
+    >>> dtrj = np.array([[1, 2, 2, 1, 3, 3, 3],
+    ...                  [1, 5, 5, 5, 5, 5, 1]])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0.  , 0.  , 0.25, 0.  , 0.  , 0.5 ])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0.  , 0.  , 0.25, 0.  , 0.  , 0.5 ])
+    >>> dtrj = np.array([[1, 2, 2, 1, 2, 2],
+    ...                  [2, 2, 1, 2, 2, 1]])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0. , 0.4, 0.5, 0. , 0. ])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0. , 0.4, 0.5, 0. , 0. ])
+
+    Discard negative states:
+
+    >>> dtrj = np.array([[ 1,  2,  2,  1,  3,  3,  3],
+    ...                  [-1,  2,  2, -1,  3,  3,  3],
+    ...                  [ 1, -2, -2,  1,  3,  3,  3],
+    ...                  [ 1,  2,  2,  3,  3,  3,  1],
+    ...                  [-1,  2,  2,  3,  3,  3, -1],
+    ...                  [ 1,  2,  2, -3, -3, -3,  1]])
+    >>> mdt.dtrj.back_jump_prob(dtrj)
+    array([0. , 0. , 0.2, 0. , 0. , 0.5])
+    >>> mdt.dtrj.back_jump_prob(dtrj, discard_neg=True)
+    array([0.        , 0.        , 0.18181818, 0.        , 0.        ,
+           0.5       ])
+    >>> mdt.dtrj.back_jump_prob(dtrj, discard_neg_btw=True)
+    array([0. , 0. , 0.2, 0. , 0. , 0.5])
+    >>> mdt.dtrj.back_jump_prob(
+    ...     dtrj, discard_neg=True, discard_neg_btw=True
+    ... )
+    array([0.        , 0.        , 0.16666667, 0.        , 0.        ,
+           0.5       ])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True)
+    array([0. , 0. , 0.2, 0. , 0. , 0. ])
+    >>> mdt.dtrj.back_jump_prob(dtrj, continuous=True, discard_neg=True)
+    array([0.        , 0.        , 0.18181818, 0.        , 0.        ,
+           0.        ])
+    >>> mdt.dtrj.back_jump_prob(
+    ...     dtrj, continuous=True, discard_neg_btw=True
+    ... )
+    array([0.        , 0.        , 0.16666667, 0.        , 0.        ,
+           0.        ])
+    >>> mdt.dtrj.back_jump_prob(
+    ...     dtrj,
+    ...     continuous=True,
+    ...     discard_neg=True,
+    ...     discard_neg_btw=True,
+    ... )
+    array([0.   , 0.   , 0.125, 0.   , 0.   , 0.   ])
+    """
+    dtrj = mdt.check.dtrj(dtrj)
+    n_cmps, n_frames = dtrj.shape
+
+    bj_prob = np.zeros(n_frames - 1, dtype=np.uint32)
+    norm = np.zeros_like(bj_prob)
+
+    if verbose:
+        trj = mdt.rti.ProgressBar(dtrj, total=n_cmps, unit="compounds")
+    else:
+        trj = dtrj
+    # Loop over single compound trajectories.
+    for cmp_trj in trj:
+        # Frames directly *before* state transitions.
+        ix_trans = np.flatnonzero(np.diff(cmp_trj))
+        # Loop over all state transitions.
+        for t0 in ix_trans:
+            if discard_neg and cmp_trj[t0] < 0:
+                # Discard back jumps starting from (and consequently
+                # ending in) a negative state.
+                continue
+            # Trajectory after the state transition.
+            cmp_trj_a = cmp_trj[t0 + 1 :]
+            # Frame at which the compound returns to the initial state
+            # for the first time.
+            # Here, `numpy.argmax` returns the first occurrence of
+            # ``True``.  If the compound never returns back to the
+            # initial state, all elements are ``False`` and
+            # `numpy.argmax` returns ``0``.
+            ix_back = np.argmax(cmp_trj_a == cmp_trj[t0])
+            if continuous:
+                if discard_neg_btw and cmp_trj_a[0] < 0:
+                    # Discard back jumps when the compound has visited a
+                    # negative state in between.
+                    continue
+                # Frame at which the compound leaves the new state for
+                # the first time.
+                # Here, `numpy.argmin` returns the first occurrence of
+                # ``False``.  If the compound never leaves the new
+                # state, all elements are ``True`` and `numpy.argmin`
+                # returns ``0``.
+                ix_trans2 = np.argmin(cmp_trj_a == cmp_trj_a[0])
+                # For a "continuous" back jump the compound must return
+                # directly from the new state to the initial state
+                # without visiting any other states in between,  i.e.
+                # `ix_back` must be equal to `ix_trans2`.
+                ix_back = ix_back if ix_back == ix_trans2 else 0
+            elif discard_neg_btw:  # and not continuous
+                if ix_back > 0 and np.any(cmp_trj_a[:ix_back] < 0):
+                    continue
+                elif ix_back == 0 and np.any(cmp_trj_a < 0):
+                    continue
+            if ix_back > 0:
+                bj_prob[ix_back] += 1
+            # Maximum possible lag time for a back jump.
+            max_lag = len(cmp_trj_a)
+            norm[:max_lag] += 1
+
+    bj_prob = bj_prob / norm
+    del norm
+    if bj_prob[0] != 0:
+        raise ValueError(
+            "`bj_prob[0]` = {} != 0.  This should not have"
+            " happened".format(bj_prob[0])
+        )
+    if np.any(bj_prob < 0):
+        raise ValueError(
+            "At least one element of `bj_prob` is less than zero.  This should"
+            " not have happened"
+        )
+    if np.any(bj_prob > 1):
+        raise ValueError(
+            "At least one element of `bj_prob` is greater than one.  This"
+            " should not have happened"
+        )
+    return bj_prob
+
+
+def back_jump_prob_discrete(
+    dtrj1,
+    dtrj2,
+    continuous=False,
+    discard_neg=False,
+    discard_neg_btw=False,
+    verbose=False,
+):
+    r"""
+    Calculate the back-jump probability resolved with respect to the
+    states in a second discrete trajectory.
+
+    Take a discrete trajectory and calculate the probability to return
+    back to the initial state at time :math:`t_0 + \Delta t`, given that
+    a state transition has occurred at time :math:`t_0` and given that
+    the compound was in a specific state of another discrete trajectory
+    at time :math:`t_0`.
+
+    Parameters
+    ----------
+    dtrj1, dtrj2 : array_like
+        The discrete trajectories.  Arrays of shape ``(n, f)``, where
+        ``n`` is the number of compounds and ``f`` is the number of
+        frames.   The shape can also be ``(f,)``, in which case the
+        array is expanded to shape ``(1, f)``.  Both arrays must have
+        the same shape.   The elements of the arrays are interpreted as
+        the indices of the states in which a given compound is at a
+        given frame.
+    continuous : bool
+        If ``False``, calculate the probability that a compound returns
+        back to its initial state at time :math:`t_0 + \Delta t`.  This
+        probability might be regarded as the "discontinuous" or
+        "intermittent" back-jump probability.
+
+        If ``True``, calculate the probability that a compound returns
+        back to its initial state at time :math:`t_0 + \Delta t` under
+        the condition that it has *continuously* been in the new state
+        from time :math:`t_0` until :math:`t_0 + \Delta t`, i.e. that
+        the compound does not visit other states in between.  This
+        probability might be regarded as the "continuous" or "true"
+        back-jump probability.
+    discard_neg : bool, optional
+        If ``True``, discard negative states, i.e. discard back jumps
+        starting from (and consequently ending in) a negative state.
+    discard_neg_btw : bool, optional
+        If ``True``, discard back jumps when the compound has visited a
+        negative state between :math:`t_0` and :math:`t_0 + \Delta t`.
+    verbose : bool, optional
+        If ``True`` print a progress bar.
+
+    Returns
+    -------
+    bj_prob : numpy.ndarray
+        Array of shape ``(m, f-1)``, where ``m`` is the number of states
+        in the second discrete trajectory.  The `ij`-th element of
+        `bj_prob` is the probability that a compound returns back to its
+        initial state j frames after a state transition has occurred,
+        given that the compound was in state i of the second discrete
+        trajectory at time :math:`t_0`.
+
+    See Also
+    --------
+    :func:`mdtools.dtrj.back_jump_prob` :
+        Calculate the back-jump probability averaged over all states
+    :func:`mdtools.dtrj.remain_prob_discrete` :
+        Calculate the probability that a compound is still (or again) in
+        the same state as at time :math:`t_0` after a lag time
+        :math:`\Delta t` resolved with respect to the states in a second
+        discrete trajectory
+    :func:`mdtools.dtrj.leave_prob_discrete` :
+        Calculate the probability that a compound leaves its state after
+        a lag time :math:`\Delta t` given that it has entered the state
+        at time :math:`t_0` resolved with respect to the states in a
+        second discrete trajectory
+
+    Notes
+    -----
+    If you parse the same discrete trajectory to `dtrj1` and `dtrj2` you
+    will get the back-jump probability for each individual state of the
+    input trajectory.
+
+    Examples
+    --------
+    >>> dtrj = np.array([1, 3, 3, 3, 1, 2, 2])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0.,  0.,  1.,  0.,  0.],
+           [nan, nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[ 0.,  0.,  0.,  1.,  0.,  0.],
+           [nan, nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan]])
+    >>> dtrj = np.array([1, 3, 3, 3, 2, 2, 1])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0.,  0.,  0.,  0.,  1.],
+           [ 0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0., nan, nan, nan, nan, nan],
+           [ 0.,  0.,  0., nan, nan, nan]])
+
+    >>> dtrj = np.array([[1, 3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2, 1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[0. , 0. , 0. , 0.5, 0. , 0.5],
+           [0. , nan, nan, nan, nan, nan],
+           [0. , 0. , 0. , nan, nan, nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[0. , 0. , 0. , 0.5, 0. , 0. ],
+           [0. , nan, nan, nan, nan, nan],
+           [0. , 0. , 0. , nan, nan, nan]])
+    >>> dtrj = np.array([[1, 2, 2, 1, 3, 3, 3],
+    ...                  [1, 2, 2, 3, 3, 3, 1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> dtrj = np.array([[1, 2, 2, 1, 3, 3, 3],
+    ...                  [1, 5, 5, 5, 5, 5, 1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> dtrj = np.array([[1, 2, 2, 1, 2, 2],
+    ...                  [2, 2, 1, 2, 2, 1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[ 0.,  0.,  1.,  0.,  0.],
+           [ 0.,  1.,  0.,  0., nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[ 0.,  0.,  1.,  0.,  0.],
+           [ 0.,  1.,  0.,  0., nan]])
+
+    Discard negative states:
+
+    >>> dtrj = np.array([[ 1,  2,  2,  1,  3,  3,  3],
+    ...                  [-1,  2,  2, -1,  3,  3,  3],
+    ...                  [ 1, -2, -2,  1,  3,  3,  3],
+    ...                  [ 1,  2,  2,  3,  3,  3,  1],
+    ...                  [-1,  2,  2,  3,  3,  3, -1],
+    ...                  [ 1,  2,  2, -3, -3, -3,  1]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj)
+    array([[0.        ,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, discard_neg=True)
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj, dtrj, discard_neg_btw=True
+    ... )
+    array([[0.        ,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.25      , 0.        , 0.        ,
+            0.5       ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj, dtrj, discard_neg=True, discard_neg_btw=True
+    ... )
+    array([[ nan,  nan,  nan,  nan,  nan,  nan],
+           [ nan,  nan,  nan,  nan,  nan,  nan],
+           [ nan,  nan,  nan,  nan,  nan,  nan],
+           [0.  , 0.  , 0.25, 0.  , 0.  , 0.5 ],
+           [0.  , 0.  , 0.  , 0.  ,  nan,  nan],
+           [0.  ,  nan,  nan,  nan,  nan,  nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(dtrj, dtrj, continuous=True)
+    array([[0.        ,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj, dtrj, continuous=True, discard_neg=True
+    ... )
+    array([[       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [       nan,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj, dtrj, continuous=True, discard_neg_btw=True
+    ... )
+    array([[0.        ,        nan,        nan,        nan,        nan,
+                   nan],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        , 0.        , 0.33333333, 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.2       , 0.        , 0.        ,
+            0.        ],
+           [0.        , 0.        , 0.        , 0.        ,        nan,
+                   nan],
+           [0.        ,        nan,        nan,        nan,        nan,
+                   nan]])
+    >>> mdt.dtrj.back_jump_prob_discrete(
+    ...     dtrj,
+    ...     dtrj,
+    ...     continuous=True,
+    ...     discard_neg=True,
+    ...     discard_neg_btw=True,
+    ... )
+    array([[nan, nan, nan, nan, nan, nan],
+           [nan, nan, nan, nan, nan, nan],
+           [nan, nan, nan, nan, nan, nan],
+           [0. , 0. , 0.2, 0. , 0. , 0. ],
+           [0. , 0. , 0. , 0. , nan, nan],
+           [0. , nan, nan, nan, nan, nan]])
+    """
+    dtrj1 = mdt.check.dtrj(dtrj1)
+    dtrj2 = mdt.check.dtrj(dtrj2)
+    n_cmps, n_frames = dtrj1.shape
+    if dtrj1.shape != dtrj2.shape:
+        raise ValueError("Both trajectories must have the same shape")
+
+    # Reorder the states in the second trajectory such that they start
+    # at zero and no intermediate states are missing to reduce the
+    # memory required for `bj_prob`.
+    dtrj2 = mdt.nph.sequenize(dtrj2, step=np.uint8(1), start=np.uint8(0))
+    n_states = np.max(dtrj2) + 1
+    if np.min(dtrj2) != 0:
+        raise ValueError(
+            "The minimum of the reordered second trajectory is not zero.  This"
+            " should not have happened"
+        )
+
+    bj_prob = np.zeros((n_states, n_frames - 1), dtype=np.uint32)
+    norm = np.zeros_like(bj_prob)
+
+    if verbose:
+        trj = mdt.rti.ProgressBar(dtrj1, total=n_cmps, unit="compounds")
+    else:
+        trj = dtrj1
+    # Loop over single compound trajectories.
+    for cmp_ix, cmp_trj in enumerate(trj):
+        # Frames directly *before* state transitions.
+        ix_trans = np.flatnonzero(np.diff(cmp_trj))
+        # Loop over all state transitions.
+        for t0 in ix_trans:
+            if discard_neg and cmp_trj[t0] < 0:
+                # Discard back jumps starting from (and consequently
+                # ending in) a negative state.
+                continue
+            # Trajectory after the state transition.
+            cmp_trj_a = cmp_trj[t0 + 1 :]
+            # State that the compound occupies in the second discrete
+            # trajectory at time t0.
+            state2 = dtrj2[cmp_ix, t0]
+            # Frame at which the compound returns to the initial state
+            # for the first time.
+            # Here, `numpy.argmax` returns the first occurrence of
+            # ``True``.  If the compound never returns back to the
+            # initial state, all elements are ``False`` and
+            # `numpy.argmax` returns ``0``.
+            ix_back = np.argmax(cmp_trj_a == cmp_trj[t0])
+            if continuous:
+                if discard_neg_btw and cmp_trj_a[0] < 0:
+                    # Discard back jumps when the compound has visited a
+                    # negative state in between.
+                    continue
+                # Frame at which the compound leaves the new state for
+                # the first time.
+                # Here, `numpy.argmin` returns the first occurrence of
+                # ``False``.  If the compound never leaves the new
+                # state, all elements are ``True`` and `numpy.argmin`
+                # returns ``0``.
+                ix_trans2 = np.argmin(cmp_trj_a == cmp_trj_a[0])
+                # For a "continuous" back jump the compound must return
+                # directly from the new state to the initial state
+                # without visiting any other states in between,  i.e.
+                # `ix_back` must be equal to `ix_trans2`.
+                ix_back = ix_back if ix_back == ix_trans2 else 0
+            elif discard_neg_btw:  # and not continuous
+                if ix_back > 0 and np.any(cmp_trj_a[:ix_back] < 0):
+                    continue
+                elif ix_back == 0 and np.any(cmp_trj_a < 0):
+                    continue
+            if ix_back > 0:
+                bj_prob[state2, ix_back] += 1
+            # Maximum possible lag time for a back jump.
+            max_lag = len(cmp_trj_a)
+            norm[state2, :max_lag] += 1
+
+    if np.any(bj_prob[:, 0] != 0):
+        raise ValueError(
+            "`bj_prob[:, 0]` = {} != 0.  This should not have"
+            " happened".format(bj_prob[:, 0])
+        )
+    bj_prob = bj_prob / norm
+    del norm
+    if np.any(bj_prob < 0):
+        raise ValueError(
+            "At least one element of `bj_prob` is less than zero.  This should"
+            " not have happened"
+        )
+    if np.any(bj_prob > 1):
+        raise ValueError(
+            "At least one element of `bj_prob` is greater than one.  This"
+            " should not have happened"
+        )
+    return bj_prob

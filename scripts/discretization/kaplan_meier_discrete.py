@@ -19,19 +19,13 @@
 
 
 r"""
-Calculate the average lifetime of the states in a discrete trajectory
-resolved with respect to the states in a second discrete trajectory.
+Calculate the state survival function using the Kaplan-Meier estimator
+resolved with respect to the states in the second discrete trajectory.
 
-Calculate the average residence time for how long a compound resides in
-a specific state before it changes states given that it was in a
-specific state of a second discrete trajectory at time :math:`t_0`.
-This is done by computing the probability to be in the same state as at
-time :math:`t_0` after a lag time :math:`\Delta t` as function of the
-states in the second discrete trajectory.  Afterwards, these
-probabilities are fitted by stretched exponential functions, whose
-integrals from zero to infinity are the average lifetimes of the states
-in the first discrete trajectory.  See also
-:func:`mdtools.dtrj.remain_prob_discrete`.
+Given that a state transition occurred at time :math:`t_0`, calculate
+the probability that a compound is still in the new state at time
+:math:`t_0 + \Delta t` given that the compound was in a specific state
+of another discrete trajectory at time :math:`t_0`.
 
 Options
 -------
@@ -45,8 +39,12 @@ Options
     Name of the file containing the second discrete trajectory.  The
     second discrete trajectory must have the same shape as the first
     discrete trajectory.
--o
-    Output filename.
+--o-sf
+    Output filename for the file containing the values of the survival
+    function.
+--o-var
+    Output filename for the file containing the corresponding variance
+    values.
 -b
     First frame to read from the discrete trajectory.  Frame numbering
     starts at zero.  Default: ``0``.
@@ -56,10 +54,6 @@ Options
     means to read the very last frame.  Default: ``-1``.
 --every
     Read every n-th frame from the discrete trajectory.  Default: ``1``.
---restart
-    Number of frames between restarting points for calculating the
-    remain probability.  Must be an integer multiple of \--every.
-    Default: ``100``.
 --intermittency1
     Allowed intermittency for the first discrete trajectory:  Maximum
     number of frames a compound is allowed to leave its state whilst
@@ -69,48 +63,37 @@ Options
     for at least the given number of frames.
 --intermittency2
     Allowed intermittency for the second discrete trajectory.
---continuous
-    If given, compounds must continuously be in the same state without
-    interruption in order to be counted (see notes section of
-    :func:`mdtools.dtrj.remain_prob`).
 --discard-neg-start
-    Discard all transitions starting from a negative state (see notes
-    section of :func:`mdtools.dtrj.remain_prob`).  Must not be used
-    together with \--discard-all-neg.
+    If provided, discard state leavings starting from negative states.
+    Transitions from positive to negative states are regarded as proper
+    state leaving.
 --discard-all-neg
-    Discard all negative states (see notes section of
-    :func:`mdtools.dtrj.remain_prob`).  Must not be used together with
-    \--discard-neg-start.
---end-fit
-    End time for fitting the remain probability (in trajectory steps).
-    This is inclusive, i.e. the time given here is still included in the
-    fit.  If ``None``, the fit ends at 90% of the lag times.  Default:
-    ``None``.
---stop-fit
-    Stop fitting the remain probability as soon as it falls below the
-    given value.  The fitting is stopped by whatever happens earlier:
-    \--end-fit or \--stop-fit.  Default: ``0.01``.
+    If provided, discard all state leavings starting from or ending in a
+    negative state.  This is different to \--discard-neg-start in the
+    sense that transitions from positive to negative states are treated
+    as censored.
 
 See Also
 --------
-:func:`mdtools.dtrj.remain_prob_discrete` :
-    The underlying function to calculate the remain probabilities
-:mod:`scripts.discretization.state_lifetime` :
-    Calculate the average lifetime of the states in a discrete
-    trajectory
-:mod:`scripts.discretization.plot_state_lifetime_discrete` :
-    Plot the lifetime autocorrelation function of discrete states as
-    function of another set of discrete states
+:func:`mdtools.dtrj.kaplan_meier_discrete` :
+    The underlying function that calculates the Kaplan-Meier estimate of
+    the survival function
+:mod:`scripts.discretization.kaplan_meier` :
+    Calculate the state survival function using the Kaplan-Meier
+    estimator
 
 Notes
 -----
-If you parse the same discrete trajectory to \--f1 and \--f2 you will
-get the lifetime of each individual state in the input trajectory.  If
-you want the average lifetime of all states, use
-:mod:`scripts.discretization.state_lifetime`.
+For more information about the survival function and the Kaplan-Meier
+estimator refer to :func:`mdtools.dtrj.kaplan_meier`.
 
-See :func:`mdtools.dtrj.remain_prob_discrete` for further details.
+If you parse the same discrete trajectory to \--f1 and \--f2 you will
+get the survival function for each individual state of the input
+trajectory.
 """
+
+
+__author__ = "Andreas Thum"
 
 
 # Standard libraries
@@ -122,7 +105,6 @@ from datetime import datetime, timedelta
 # Third-party libraries
 import numpy as np
 import psutil
-from scipy.special import gamma
 
 # First-party libraries
 import mdtools as mdt
@@ -134,9 +116,10 @@ if __name__ == "__main__":
     proc.cpu_percent()  # Initiate monitoring of CPU usage.
     parser = argparse.ArgumentParser(
         description=(
-            "Calculate the average lifetime of the states in a discrete"
-            " trajectory resolved with respect to the states in a second"
-            " discrete trajectory."
+            "Calculate the state survival function using the Kaplan-Meier"
+            " estimator resolved with respect to the states in the second"
+            " discrete trajectory.  For more information, refer to the"
+            " documentation of this script."
         )
     )
     parser.add_argument(
@@ -160,11 +143,24 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "-o",
-        dest="OUTFILE",
+        "--o-sf",
+        dest="OUTFILE_SF",
         type=str,
         required=True,
-        help="Output filename.",
+        help=(
+            "Output filename for the file containing the values of the"
+            " survival function."
+        ),
+    )
+    parser.add_argument(
+        "--o-var",
+        dest="OUTFILE_VAR",
+        type=str,
+        required=True,
+        help=(
+            "Output filename for the file containing the corresponding"
+            " variance values."
+        ),
     )
     parser.add_argument(
         "-b",
@@ -199,16 +195,6 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "--restart",
-        dest="RESTART",
-        type=int,
-        default=100,
-        help=(
-            "Number of frames between restarting points for calculating the"
-            " remain probability.  Default: %(default)s."
-        ),
-    )
-    parser.add_argument(
         "--intermittency1",
         dest="INTERMITTENCY1",
         type=int,
@@ -230,55 +216,25 @@ if __name__ == "__main__":
         help="Allowed intermittency for the second discrete trajectory",
     )
     parser.add_argument(
-        "--continuous",
-        dest="CONTINUOUS",
-        required=False,
-        default=False,
-        action="store_true",
-        help=(
-            "If given, compounds must continuously be in the same state"
-            " without interruption in order to be counted."
-        ),
-    )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
         "--discard-neg-start",
         dest="DISCARD_NEG_START",
         required=False,
         default=False,
         action="store_true",
-        help="Discard all transitions starting from a negative state.",
+        help=(
+            "If provided, discard state leavings starting from negative"
+            " states."
+        ),
     )
-    group.add_argument(
+    parser.add_argument(
         "--discard-all-neg",
         dest="DISCARD_ALL_NEG",
         required=False,
         default=False,
         action="store_true",
-        help="Discard all negative states.",
-    )
-    parser.add_argument(
-        "--end-fit",
-        dest="ENDFIT",
-        type=float,
-        required=False,
-        default=None,
         help=(
-            "End time for fitting the remain probability in trajectory"
-            " steps (inclusive).  If None, the fit ends at 90%% of the"
-            " lag times   Default: %(default)s."
-        ),
-    )
-    parser.add_argument(
-        "--stop-fit",
-        dest="STOPFIT",
-        type=float,
-        required=False,
-        default=0.01,
-        help=(
-            "Stop fitting the remain probability as soon as it falls below the"
-            " given value.  The fitting is stopped by whatever happens"
-            " earlier: --end-fit or --stop-fit.  Default: %(default)s"
+            "If provided, discard all state leavings starting from or ending"
+            " in a negative state."
         ),
     )
     args = parser.parse_args()
@@ -308,11 +264,6 @@ if __name__ == "__main__":
         step=args.EVERY,
         n_frames_tot=N_FRAMES_TOT,
     )
-    RESTART, effective_restart = mdt.check.restarts(
-        restart_every_nth_frame=args.RESTART,
-        read_every_nth_frame=EVERY,
-        n_frames=N_FRAMES_TOT,
-    )
     dtrj1 = dtrj1[:, BEGIN:END:EVERY]
     dtrj2 = dtrj2[:, BEGIN:END:EVERY]
     print("Elapsed time:         {}".format(datetime.now() - timer))
@@ -325,7 +276,7 @@ if __name__ == "__main__":
             dtrj1.T, args.INTERMITTENCY1, inplace=True, verbose=True
         )
         dtrj1 = dtrj1.T
-    dtrj1_trans_info = mdt.rti.dtrj_trans_info_str(dtrj1)
+    dtrj1_trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj1)
     if args.INTERMITTENCY2 > 0:
         print("\n")
         print("Correcting the second discrete trajectory for intermittency...")
@@ -334,10 +285,9 @@ if __name__ == "__main__":
         )
         dtrj2 = dtrj2.T
     dtrj2_states = np.unique(dtrj2)
-    dtrj2_n_states = len(dtrj2_states)
 
     print("\n")
-    print("Calculating remain probability...")
+    print("Calculating survival function...")
     print("Number of compounds:    {:>8d}".format(N_CMPS))
     print("Total number of frames: {:>8d}".format(N_FRAMES_TOT))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
@@ -345,11 +295,9 @@ if __name__ == "__main__":
     print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     timer = datetime.now()
-    prob = mdt.dtrj.remain_prob_discrete(
-        dtrj1=dtrj1,
-        dtrj2=dtrj2,
-        restart=effective_restart,
-        continuous=args.CONTINUOUS,
+    sf, sf_var = mdt.dtrj.kaplan_meier_discrete(
+        dtrj1,
+        dtrj2,
         discard_neg_start=args.DISCARD_NEG_START,
         discard_all_neg=args.DISCARD_ALL_NEG,
         verbose=True,
@@ -359,92 +307,64 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
-    print("Fitting remain probabilities...")
-    timer = datetime.now()
-    lag_times = np.arange(N_FRAMES_TOT, dtype=np.uint32)
-
-    if args.ENDFIT is None:
-        endfit = int(0.9 * len(lag_times))
-    else:
-        _, endfit = mdt.nph.find_nearest(
-            lag_times, args.ENDFIT, return_index=True
-        )
-    endfit += 1  # To make args.ENDFIT inclusive
-
-    fit_start = np.zeros(dtrj2_n_states, dtype=np.uint32)  # inclusive
-    fit_stop = np.zeros(dtrj2_n_states, dtype=np.uint32)  # exclusive
-    popt = np.full((dtrj2_n_states, 2), np.nan, dtype=np.float32)
-    perr = np.full((dtrj2_n_states, 2), np.nan, dtype=np.float32)
-    for i in range(dtrj2_n_states):
-        stopfit = np.argmax(prob[:, i] < args.STOPFIT)
-        if stopfit == 0 and prob[:, i][stopfit] >= args.STOPFIT:
-            stopfit = len(prob[:, i])
-        elif stopfit < 2:
-            stopfit = 2
-        fit_stop[i] = min(endfit, stopfit)
-        popt[i], perr[i] = mdt.func.fit_kww(
-            xdata=lag_times[fit_start[i] : fit_stop[i]],
-            ydata=prob[:, i][fit_start[i] : fit_stop[i]],
-        )
-    tau_mean = popt[:, 0] / popt[:, 1] * gamma(1 / popt[:, 1])
-    print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
-
-    print("\n")
     print("Creating output...")
     timer = datetime.now()
+    # Kaplan-Meier estimate of the survival function.
     header = (
-        "Average lifetime of all valid discrete states in the given discrete\n"
-        + "trajectory as function of another set of discrete states\n"
+        "Kaplan-Meier estimate of the survival function:  Probability that a\n"
+        + "compound is still in the new state at time t0+dt given that a\n"
+        + "state transition has occurred at time t0 resolved with respect to\n"
+        + "the states in a second discrete trajectory.\n"
         + "\n\n"
-        + "intermittency1:    {}\n".format(args.INTERMITTENCY1)
-        + "intermittency2:    {}\n".format(args.INTERMITTENCY2)
-        + "continuous:        {}\n".format(args.CONTINUOUS)
+        + "intermittency_1:   {}\n".format(args.INTERMITTENCY1)
+        + "intermittency_2:   {}\n".format(args.INTERMITTENCY2)
         + "discard_neg_start: {}\n".format(args.DISCARD_NEG_START)
         + "discard_all_neg:   {}\n".format(args.DISCARD_ALL_NEG)
         + "\n\n"
     )
-    header += dtrj1_trans_info
+    header += dtrj1_trans_info_str
     header += "\n\n"
     header += (
         "The first column contains the lag times (in trajectory steps).\n"
         "The first row contains the states of the second discrete trajectory\n"
-        "that were used to discretize the remain probability.\n"
-        "\n"
-        "Fit:\n"
+        "that were used to discretize the survival function.\n"
+        "The remaining matrix elements are the values of the survival\n"
+        "function.\n"
     )
-    header += "Start (steps):"
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(fit_start[i])
-    header += "\n"
-    header += "Stop (steps): "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(fit_stop[i])
-    header += "\n"
-    header += "<tau> (steps):"
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(tau_mean[i])
-    header += "\n"
-    header += "tau (steps):  "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(popt[i][0])
-    header += "\n"
-    header += "Std. dev.:    "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(perr[i][0])
-    header += "\n"
-    header += "beta:         "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(popt[i][1])
-    header += "\n"
-    header += "Std. dev.:    "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(perr[i][1])
-    header += "\n"
+    lag_times = np.arange(0, sf.shape[1] * EVERY, EVERY, dtype=np.uint32)
     mdt.fh.savetxt_matrix(
-        args.OUTFILE, prob, var1=lag_times, var2=dtrj2_states, header=header
+        args.OUTFILE_SF, sf.T, var1=lag_times, var2=dtrj2_states, header=header
     )
-    print("Created {}".format(args.OUTFILE))
+    print("Created {}".format(args.OUTFILE_SF))
+
+    # Variance of the Kaplan-Meier estimate.
+    header = (
+        "Variance of the Kaplan-Meier estimate of the survival function\n"
+        + "according to Greenwood's formula\n"
+        + "\n\n"
+        + "intermittency_1:   {}\n".format(args.INTERMITTENCY1)
+        + "intermittency_2:   {}\n".format(args.INTERMITTENCY2)
+        + "discard_neg_start: {}\n".format(args.DISCARD_NEG_START)
+        + "discard_all_neg:   {}\n".format(args.DISCARD_ALL_NEG)
+        + "\n\n"
+    )
+    header += dtrj1_trans_info_str
+    header += "\n\n"
+    header += (
+        "The first column contains the lag times (in trajectory steps).\n"
+        "The first row contains the states of the second discrete trajectory\n"
+        "that were used to discretize the survival function.\n"
+        "The remaining matrix elements are the variance values of the\n"
+        "survival function.\n"
+    )
+    mdt.fh.savetxt_matrix(
+        args.OUTFILE_VAR,
+        sf_var.T,
+        var1=lag_times,
+        var2=dtrj2_states,
+        header=header,
+    )
+    print("Created {}".format(args.OUTFILE_VAR))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 

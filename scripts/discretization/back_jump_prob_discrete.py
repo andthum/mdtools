@@ -19,19 +19,14 @@
 
 
 r"""
-Calculate the average lifetime of the states in a discrete trajectory
-resolved with respect to the states in a second discrete trajectory.
+Calculate the back-jump probability resolved with respect to the states
+in the second discrete trajectory.
 
-Calculate the average residence time for how long a compound resides in
-a specific state before it changes states given that it was in a
-specific state of a second discrete trajectory at time :math:`t_0`.
-This is done by computing the probability to be in the same state as at
-time :math:`t_0` after a lag time :math:`\Delta t` as function of the
-states in the second discrete trajectory.  Afterwards, these
-probabilities are fitted by stretched exponential functions, whose
-integrals from zero to infinity are the average lifetimes of the states
-in the first discrete trajectory.  See also
-:func:`mdtools.dtrj.remain_prob_discrete`.
+Given that a state transition occurred at time :math:`t_0`, calculate
+the probability to return back to the initial state as function of the
+time :math:`\Delta t` that has passed since the state transition given
+that the compound was in a specific state of another discrete trajectory
+at time :math:`t_0`.
 
 Options
 -------
@@ -56,10 +51,6 @@ Options
     means to read the very last frame.  Default: ``-1``.
 --every
     Read every n-th frame from the discrete trajectory.  Default: ``1``.
---restart
-    Number of frames between restarting points for calculating the
-    remain probability.  Must be an integer multiple of \--every.
-    Default: ``100``.
 --intermittency1
     Allowed intermittency for the first discrete trajectory:  Maximum
     number of frames a compound is allowed to leave its state whilst
@@ -70,47 +61,41 @@ Options
 --intermittency2
     Allowed intermittency for the second discrete trajectory.
 --continuous
-    If given, compounds must continuously be in the same state without
-    interruption in order to be counted (see notes section of
-    :func:`mdtools.dtrj.remain_prob`).
---discard-neg-start
-    Discard all transitions starting from a negative state (see notes
-    section of :func:`mdtools.dtrj.remain_prob`).  Must not be used
-    together with \--discard-all-neg.
---discard-all-neg
-    Discard all negative states (see notes section of
-    :func:`mdtools.dtrj.remain_prob`).  Must not be used together with
-    \--discard-neg-start.
---end-fit
-    End time for fitting the remain probability (in trajectory steps).
-    This is inclusive, i.e. the time given here is still included in the
-    fit.  If ``None``, the fit ends at 90% of the lag times.  Default:
-    ``None``.
---stop-fit
-    Stop fitting the remain probability as soon as it falls below the
-    given value.  The fitting is stopped by whatever happens earlier:
-    \--end-fit or \--stop-fit.  Default: ``0.01``.
+    If *not* provided, calculate the probability that a compound returns
+    back to its initial state at time :math:`t_0 + \Delta t`.  This
+    probability might be regarded as the "discontinuous" or
+    "intermittent" back-jump probability.
+
+    If provided, calculate the probability that a compound returns back
+    to its initial state at time :math:`t_0 + \Delta t` under the
+    condition that it has *continuously* been in the new state from time
+    :math:`t_0` until :math:`t_0 + \Delta t`, i.e. that the compound
+    does not visit other states before returning back to its initial
+    state.  This probability might be regarded as the "continuous" or
+    "true" back-jump probability.
+--discard-neg
+    If provided, discard negative states, i.e. discard back jumps
+    starting from (and consequently ending in) a negative state.
+--discard-neg-btw
+    If provided, discard back jumps when the compound has visited a
+    negative state between :math:`t_0` and :math:`t_0 + \Delta t`.
 
 See Also
 --------
-:func:`mdtools.dtrj.remain_prob_discrete` :
-    The underlying function to calculate the remain probabilities
-:mod:`scripts.discretization.state_lifetime` :
-    Calculate the average lifetime of the states in a discrete
-    trajectory
-:mod:`scripts.discretization.plot_state_lifetime_discrete` :
-    Plot the lifetime autocorrelation function of discrete states as
-    function of another set of discrete states
+:func:`mdtools.dtrj.back_jump_prob_discrete` :
+    The underlying function that calculates the back-jump probabilities
+:mod:`scripts.discretization.back_jump_prob` :
+    Calculate the back-jump probability averaged over all states
 
 Notes
 -----
 If you parse the same discrete trajectory to \--f1 and \--f2 you will
-get the lifetime of each individual state in the input trajectory.  If
-you want the average lifetime of all states, use
-:mod:`scripts.discretization.state_lifetime`.
-
-See :func:`mdtools.dtrj.remain_prob_discrete` for further details.
+get the back-jump probability for each individual state of the input
+trajectory.
 """
+
+
+__author__ = "Andreas Thum"
 
 
 # Standard libraries
@@ -122,7 +107,6 @@ from datetime import datetime, timedelta
 # Third-party libraries
 import numpy as np
 import psutil
-from scipy.special import gamma
 
 # First-party libraries
 import mdtools as mdt
@@ -134,9 +118,9 @@ if __name__ == "__main__":
     proc.cpu_percent()  # Initiate monitoring of CPU usage.
     parser = argparse.ArgumentParser(
         description=(
-            "Calculate the average lifetime of the states in a discrete"
-            " trajectory resolved with respect to the states in a second"
-            " discrete trajectory."
+            "Calculate the back-jump probability resolved with respect to the"
+            " states in the second discrete trajectory.  For more information,"
+            " refer to the documentation of this script."
         )
     )
     parser.add_argument(
@@ -199,16 +183,6 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "--restart",
-        dest="RESTART",
-        type=int,
-        default=100,
-        help=(
-            "Number of frames between restarting points for calculating the"
-            " remain probability.  Default: %(default)s."
-        ),
-    )
-    parser.add_argument(
         "--intermittency1",
         dest="INTERMITTENCY1",
         type=int,
@@ -237,48 +211,29 @@ if __name__ == "__main__":
         action="store_true",
         help=(
             "If given, compounds must continuously be in the same state"
-            " without interruption in order to be counted."
-        ),
-    )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--discard-neg-start",
-        dest="DISCARD_NEG_START",
-        required=False,
-        default=False,
-        action="store_true",
-        help="Discard all transitions starting from a negative state.",
-    )
-    group.add_argument(
-        "--discard-all-neg",
-        dest="DISCARD_ALL_NEG",
-        required=False,
-        default=False,
-        action="store_true",
-        help="Discard all negative states.",
-    )
-    parser.add_argument(
-        "--end-fit",
-        dest="ENDFIT",
-        type=float,
-        required=False,
-        default=None,
-        help=(
-            "End time for fitting the remain probability in trajectory"
-            " steps (inclusive).  If None, the fit ends at 90%% of the"
-            " lag times   Default: %(default)s."
+            " without interruption in order to be counted as back-jumped."
         ),
     )
     parser.add_argument(
-        "--stop-fit",
-        dest="STOPFIT",
-        type=float,
+        "--discard-neg",
+        dest="DISCARD_NEG",
         required=False,
-        default=0.01,
+        default=False,
+        action="store_true",
         help=(
-            "Stop fitting the remain probability as soon as it falls below the"
-            " given value.  The fitting is stopped by whatever happens"
-            " earlier: --end-fit or --stop-fit.  Default: %(default)s"
+            "If provided, discard negative states, i.e. discard back jumps"
+            " starting from (and consequently ending in) a negative state."
+        ),
+    )
+    parser.add_argument(
+        "--discard-neg-btw",
+        dest="DISCARD_NEG_BTW",
+        required=False,
+        default=False,
+        action="store_true",
+        help=(
+            "If provided, discard back jumps when the compound has visited a"
+            " negative state in between."
         ),
     )
     args = parser.parse_args()
@@ -308,11 +263,6 @@ if __name__ == "__main__":
         step=args.EVERY,
         n_frames_tot=N_FRAMES_TOT,
     )
-    RESTART, effective_restart = mdt.check.restarts(
-        restart_every_nth_frame=args.RESTART,
-        read_every_nth_frame=EVERY,
-        n_frames=N_FRAMES_TOT,
-    )
     dtrj1 = dtrj1[:, BEGIN:END:EVERY]
     dtrj2 = dtrj2[:, BEGIN:END:EVERY]
     print("Elapsed time:         {}".format(datetime.now() - timer))
@@ -325,7 +275,7 @@ if __name__ == "__main__":
             dtrj1.T, args.INTERMITTENCY1, inplace=True, verbose=True
         )
         dtrj1 = dtrj1.T
-    dtrj1_trans_info = mdt.rti.dtrj_trans_info_str(dtrj1)
+    dtrj1_trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj1)
     if args.INTERMITTENCY2 > 0:
         print("\n")
         print("Correcting the second discrete trajectory for intermittency...")
@@ -334,10 +284,9 @@ if __name__ == "__main__":
         )
         dtrj2 = dtrj2.T
     dtrj2_states = np.unique(dtrj2)
-    dtrj2_n_states = len(dtrj2_states)
 
     print("\n")
-    print("Calculating remain probability...")
+    print("Calculating back-jump probability...")
     print("Number of compounds:    {:>8d}".format(N_CMPS))
     print("Total number of frames: {:>8d}".format(N_FRAMES_TOT))
     print("Frames to read:         {:>8d}".format(N_FRAMES))
@@ -345,13 +294,12 @@ if __name__ == "__main__":
     print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     timer = datetime.now()
-    prob = mdt.dtrj.remain_prob_discrete(
-        dtrj1=dtrj1,
-        dtrj2=dtrj2,
-        restart=effective_restart,
+    prob = mdt.dtrj.back_jump_prob_discrete(
+        dtrj1,
+        dtrj2,
         continuous=args.CONTINUOUS,
-        discard_neg_start=args.DISCARD_NEG_START,
-        discard_all_neg=args.DISCARD_ALL_NEG,
+        discard_neg=args.DISCARD_NEG,
+        discard_neg_btw=args.DISCARD_NEG_BTW,
         verbose=True,
     )
     del dtrj1, dtrj2
@@ -359,90 +307,33 @@ if __name__ == "__main__":
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
     print("\n")
-    print("Fitting remain probabilities...")
-    timer = datetime.now()
-    lag_times = np.arange(N_FRAMES_TOT, dtype=np.uint32)
-
-    if args.ENDFIT is None:
-        endfit = int(0.9 * len(lag_times))
-    else:
-        _, endfit = mdt.nph.find_nearest(
-            lag_times, args.ENDFIT, return_index=True
-        )
-    endfit += 1  # To make args.ENDFIT inclusive
-
-    fit_start = np.zeros(dtrj2_n_states, dtype=np.uint32)  # inclusive
-    fit_stop = np.zeros(dtrj2_n_states, dtype=np.uint32)  # exclusive
-    popt = np.full((dtrj2_n_states, 2), np.nan, dtype=np.float32)
-    perr = np.full((dtrj2_n_states, 2), np.nan, dtype=np.float32)
-    for i in range(dtrj2_n_states):
-        stopfit = np.argmax(prob[:, i] < args.STOPFIT)
-        if stopfit == 0 and prob[:, i][stopfit] >= args.STOPFIT:
-            stopfit = len(prob[:, i])
-        elif stopfit < 2:
-            stopfit = 2
-        fit_stop[i] = min(endfit, stopfit)
-        popt[i], perr[i] = mdt.func.fit_kww(
-            xdata=lag_times[fit_start[i] : fit_stop[i]],
-            ydata=prob[:, i][fit_start[i] : fit_stop[i]],
-        )
-    tau_mean = popt[:, 0] / popt[:, 1] * gamma(1 / popt[:, 1])
-    print("Elapsed time:         {}".format(datetime.now() - timer))
-    print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
-
-    print("\n")
     print("Creating output...")
     timer = datetime.now()
     header = (
-        "Average lifetime of all valid discrete states in the given discrete\n"
-        + "trajectory as function of another set of discrete states\n"
+        "Back-jump probability: Probability to return to the initial state\n"
+        + "after a state transition as function of the time that has passed\n"
+        + "since the state transition resolved with respect to the states in\n"
+        + "a second discrete trajectory.\n"
         + "\n\n"
-        + "intermittency1:    {}\n".format(args.INTERMITTENCY1)
-        + "intermittency2:    {}\n".format(args.INTERMITTENCY2)
-        + "continuous:        {}\n".format(args.CONTINUOUS)
-        + "discard_neg_start: {}\n".format(args.DISCARD_NEG_START)
-        + "discard_all_neg:   {}\n".format(args.DISCARD_ALL_NEG)
+        + "intermittency_1: {}\n".format(args.INTERMITTENCY1)
+        + "intermittency_2: {}\n".format(args.INTERMITTENCY2)
+        + "continuous:      {}\n".format(args.CONTINUOUS)
+        + "discard_neg:     {}\n".format(args.DISCARD_NEG)
+        + "discard_neg_btw: {}\n".format(args.DISCARD_NEG_BTW)
         + "\n\n"
     )
-    header += dtrj1_trans_info
+    header += dtrj1_trans_info_str
     header += "\n\n"
     header += (
         "The first column contains the lag times (in trajectory steps).\n"
         "The first row contains the states of the second discrete trajectory\n"
-        "that were used to discretize the remain probability.\n"
-        "\n"
-        "Fit:\n"
+        "that were used to discretize the back-jump probability.\n"
+        "The remaining matrix elements are the values of the back-jump\n"
+        "probability.\n"
     )
-    header += "Start (steps):"
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(fit_start[i])
-    header += "\n"
-    header += "Stop (steps): "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(fit_stop[i])
-    header += "\n"
-    header += "<tau> (steps):"
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(tau_mean[i])
-    header += "\n"
-    header += "tau (steps):  "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(popt[i][0])
-    header += "\n"
-    header += "Std. dev.:    "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(perr[i][0])
-    header += "\n"
-    header += "beta:         "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(popt[i][1])
-    header += "\n"
-    header += "Std. dev.:    "
-    for i in range(dtrj2_n_states):
-        header += " {:>16.9e}".format(perr[i][1])
-    header += "\n"
+    lag_times = np.arange(0, prob.shape[1] * EVERY, EVERY, dtype=np.uint32)
     mdt.fh.savetxt_matrix(
-        args.OUTFILE, prob, var1=lag_times, var2=dtrj2_states, header=header
+        args.OUTFILE, prob.T, var1=lag_times, var2=dtrj2_states, header=header
     )
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
