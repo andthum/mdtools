@@ -227,7 +227,8 @@ if the first block ends at time (frame) :math:`t_0^{(1)}` and the second
 block starts at :math:`t_0^{(2)}`, the coordination environment is
 compared at times :math:`t_0^{(1)} - \tau` and :math:`t_0^{(2)} + \tau`.
 To chose an appropriate lag time :math:`\tau`, you can for instance
-first apply :mod:`state_probs_around_trans` on the output of
+first apply :mod:`scripts.discretization.back_jump_prob` and
+:mod:`scripts.discretization.kaplan_meier` on the output of
 :mod:`discrete_pos`.
 
 Further notes:

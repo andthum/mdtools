@@ -39,7 +39,8 @@ See Also
 :mod:`contact_hist`
 :mod:`contact_hist_at_pos_change`
 :mod:`discrete_pos`
-:mod:`state_probs_around_trans`
+:mod:`scripts.discretization.back_jump_prob`
+:mod:`scripts.discretization.kaplan_meier`
 
 Notes
 -----
@@ -65,7 +66,9 @@ in relative box coordinates) plus a small tolerance to account for the
 right-open bin interval.
 
 To chose an appropriate lag time :math:`\Delta t`, you can first apply
-:mod:`state_probs_around_trans` on the output of :mod:`discrete_pos`.
+:mod:`scripts.discretization.back_jump_prob` and
+:mod:`scripts.discretization.kaplan_meier` on the output of
+:mod:`discrete_pos`.
 
 .. todo::
 
