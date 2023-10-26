@@ -94,6 +94,9 @@ See Also
     Calculate the average lifetime of the states in a discrete
     trajectory resolved with respect to the states in a second discrete
     trajectory
+:mod:`scripts.discretization.plot_state_lifetime` :
+    Plot the lifetime autocorrelation function of discrete states as
+    function of lag time
 
 Notes
 -----

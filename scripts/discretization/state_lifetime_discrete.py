@@ -98,6 +98,9 @@ See Also
 :mod:`scripts.discretization.state_lifetime` :
     Calculate the average lifetime of the states in a discrete
     trajectory
+:mod:`scripts.discretization.plot_state_lifetime_discrete` :
+    Plot the lifetime autocorrelation function of discrete states as
+    function of another set of discrete states
 
 Notes
 -----
