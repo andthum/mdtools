@@ -95,6 +95,7 @@ jobs:
           src/mdtools/version.py \
           scripts/discretization/back_jump*.py \
           scripts/discretization/discrete_pos.py \
+          scripts/discretization/kaplan_meier*.py \
           scripts/discretization/plot_*.py \
           scripts/discretization/state_lifetime* \
           scripts/dynamics/extract_renewal_events.py \
