@@ -315,7 +315,6 @@ if __name__ == "__main__":
     )
     dtrj1 = dtrj1[:, BEGIN:END:EVERY]
     dtrj2 = dtrj2[:, BEGIN:END:EVERY]
-    dtrj1_trans_info = mdt.rti.dtrj_trans_info_str(dtrj1)
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
@@ -326,6 +325,7 @@ if __name__ == "__main__":
             dtrj1.T, args.INTERMITTENCY1, inplace=True, verbose=True
         )
         dtrj1 = dtrj1.T
+    dtrj1_trans_info = mdt.rti.dtrj_trans_info_str(dtrj1)
     if args.INTERMITTENCY2 > 0:
         print("\n")
         print("Correcting the second discrete trajectory for intermittency...")

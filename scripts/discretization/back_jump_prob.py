@@ -221,7 +221,6 @@ if __name__ == "__main__":
         n_frames_tot=N_FRAMES_TOT,
     )
     dtrj = dtrj[:, BEGIN:END:EVERY]
-    trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj)
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
@@ -232,6 +231,7 @@ if __name__ == "__main__":
             dtrj.T, args.INTERMITTENCY, inplace=True, verbose=True
         )
         dtrj = dtrj.T
+    trans_info_str = mdt.rti.dtrj_trans_info_str(dtrj)
 
     print("\n")
     print("Calculating back-jump probability...")

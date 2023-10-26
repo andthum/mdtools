@@ -293,9 +293,6 @@ if __name__ == "__main__":
         n_frames=blocksize,
     )
     dtrj = dtrj[:, BEGIN:END:EVERY]
-    dtrj_trans_info = mdt.rti.dtrj_trans_info_str(
-        dtrj[:, : NBLOCKS * blocksize]
-    )
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
@@ -306,6 +303,9 @@ if __name__ == "__main__":
             dtrj.T, args.INTERMITTENCY, inplace=True, verbose=True
         )
         dtrj = dtrj.T
+    dtrj_trans_info = mdt.rti.dtrj_trans_info_str(
+        dtrj[:, : NBLOCKS * blocksize]
+    )
 
     print("\n")
     print("Calculating remain probability...")
