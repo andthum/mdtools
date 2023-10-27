@@ -3981,6 +3981,7 @@ def n_leaves_vs_time(
     n_risk = np.zeros_like(n_leaves)
 
     if verbose:
+        proc = psutil.Process()
         trj = mdt.rti.ProgressBar(dtrj, total=n_cmps, unit="compounds")
     else:
         trj = dtrj
@@ -4042,6 +4043,10 @@ def n_leaves_vs_time(
                 # Event = censoring => event time = censoring time.
                 event_time = n_frames - t0
             n_risk[: event_time + 1] += 1
+        if verbose:
+            trj.set_postfix_str(
+                "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
+            )
 
     if n_leaves[0] != 0:
         raise ValueError(
@@ -4444,6 +4449,7 @@ def n_leaves_vs_time_discrete(
     n_risk = np.zeros_like(n_leaves)
 
     if verbose:
+        proc = psutil.Process()
         trj = mdt.rti.ProgressBar(dtrj1, total=n_cmps, unit="compounds")
     else:
         trj = dtrj1
@@ -4489,6 +4495,10 @@ def n_leaves_vs_time_discrete(
                 # Event = censoring => event time = censoring time.
                 event_time = n_frames - t0
             n_risk[state2, : event_time + 1] += 1
+        if verbose:
+            trj.set_postfix_str(
+                "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
+            )
 
     if np.any(n_leaves[:, 0] != 0):
         raise ValueError(
@@ -5850,6 +5860,7 @@ def back_jump_prob(
     norm = np.zeros_like(bj_prob)
 
     if verbose:
+        proc = psutil.Process()
         trj = mdt.rti.ProgressBar(dtrj, total=n_cmps, unit="compounds")
     else:
         trj = dtrj
@@ -5899,6 +5910,10 @@ def back_jump_prob(
             # Maximum possible lag time for a back jump.
             max_lag = len(cmp_trj_a)
             norm[:max_lag] += 1
+        if verbose:
+            trj.set_postfix_str(
+                "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
+            )
 
     bj_prob = bj_prob / norm
     del norm
@@ -6213,6 +6228,7 @@ def back_jump_prob_discrete(
     norm = np.zeros_like(bj_prob)
 
     if verbose:
+        proc = psutil.Process()
         trj = mdt.rti.ProgressBar(dtrj1, total=n_cmps, unit="compounds")
     else:
         trj = dtrj1
@@ -6265,6 +6281,10 @@ def back_jump_prob_discrete(
             # Maximum possible lag time for a back jump.
             max_lag = len(cmp_trj_a)
             norm[state2, :max_lag] += 1
+        if verbose:
+            trj.set_postfix_str(
+                "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
+            )
 
     if np.any(bj_prob[:, 0] != 0):
         raise ValueError(
