@@ -966,7 +966,7 @@ if __name__ == "__main__":
         + "Allowed intermittency = {}\n".format(args.INTERMITTENCY)
         + "\n\n"
         + "Reference: '{}'\n".format(" ".join(args.REF))
-        + mdt.rti.ag_info_str(sel)
+        + mdt.rti.ag_info_str(ref)
         + "\n\n"
         + "Selection: '{}'\n".format(" ".join(args.SEL))
         + mdt.rti.ag_info_str(sel)
