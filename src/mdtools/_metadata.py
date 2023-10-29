@@ -93,7 +93,7 @@ for a in author_list:
 del author_list, credits_list
 
 now = datetime.now().year
-years = "2021-{}, ".format(now)
+years = "2021-{}".format(now)
 #: Copyright notice.
 __copyright__ = "Copyright (C) " + years + " " + __author__
 
