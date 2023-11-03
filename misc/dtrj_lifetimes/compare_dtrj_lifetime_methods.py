@@ -359,7 +359,11 @@ def count_method(
             "`states` ({}) is not fully contained in `states_check`"
             " ({})".format(states, states_check)
         )
-    characs = np.full((len(states), 9 + n_moms), np.nan, dtype=np.float64)
+    if states_check is not None:
+        n_states = len(states_check)
+    else:
+        n_states = len(states)
+    characs = np.full((n_states, 9 + n_moms), np.nan, dtype=np.float64)
     characs[:, -1] = 0  # Default number of observations.
     for i, lts in enumerate(lts_per_state):
         if len(lts) == 0:
@@ -719,11 +723,11 @@ def fit_goodness(data, fit):
     # Residual sum of squares.
     ss_res = np.sum((data - fit) ** 2)
     # Root-mean-square error / root-mean-square residuals.
-    rmse = np.sqrt(ss_res / len(fit))
+    rmse = np.sqrt(np.divide(ss_res, len(fit)))
     # Total sum of squares.
     ss_tot = np.sum((data - np.mean(data)) ** 2)
     # (Pseudo) coefficient of determination (R^2).
-    r2 = 1 - (ss_res / ss_tot)
+    r2 = 1 - np.divide(ss_res, ss_tot)
     return r2, rmse
 
 
