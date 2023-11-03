@@ -1881,8 +1881,8 @@ if __name__ == "__main__":  # noqa: C901
     label_km_brr = "KM Burr"
 
     color_true = "tab:green"
-    color_true_cen = "tab:olive"
-    color_true_unc = "darkolivegreen"
+    # color_true_cen = "tab:olive"
+    # color_true_unc = "darkolivegreen"
     color_cnt_cen = "tab:orange"
     color_cnt_unc = "tab:red"
     color_k = "tab:brown"
@@ -1894,8 +1894,8 @@ if __name__ == "__main__":  # noqa: C901
     color_km_brr = "yellow"
 
     marker_true = "*"
-    marker_true_cen = "P"
-    marker_true_unc = "X"
+    # marker_true_cen = "P"
+    # marker_true_unc = "X"
     marker_cnt_cen = "H"
     marker_cnt_unc = "h"
     marker_k = "p"
@@ -1979,7 +1979,7 @@ if __name__ == "__main__":  # noqa: C901
                     marker=marker_k,
                     alpha=alpha,
                 )
-            # Method 4: Numerical integration of the remain probability
+            # Method 4: Numerical integration of the remain probability.
             ax.errorbar(
                 states,
                 lts_rp_int_characs[:, i],
@@ -2041,7 +2041,7 @@ if __name__ == "__main__":  # noqa: C901
             )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
-            if i not in (2, 3) and ylim[0] < 0:
+            if i not in (2, 3, 5) and ylim[0] < 0:
                 ax.set_ylim(0, ylim[1])
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
             ax.set_xticks([], minor=True)
@@ -2075,22 +2075,22 @@ if __name__ == "__main__":  # noqa: C901
                     r"$\langle t_{true}^2 \rangle /"
                     + r" 2 \langle t_{true} \rangle$"
                 ),
-                color=color_true_cen,
-                marker=marker_true_cen,
+                color=color_true,  # color_true_cen,
+                marker=marker_true,  # marker_true_cen,
                 alpha=alpha,
             )
-            ax.plot(
-                states,
-                lts_true_characs[:, 7] / (2 * lts_true_characs[:, 6]),
-                label=(
-                    r"$\langle t_{true}^3 \rangle /"
-                    + r" 2 \langle t_{true}^2 \rangle$"
-                ),
-                color=color_true_unc,
-                marker=marker_true_unc,
-                alpha=alpha,
-            )
-            # Method 4: Numerical integration of the remain probability
+            # ax.plot(
+            #     states,
+            #     lts_true_characs[:, 7] / (2 * lts_true_characs[:, 6]),
+            #     label=(
+            #         r"$\langle t_{true}^3 \rangle /"
+            #         + r" 2 \langle t_{true}^2 \rangle$"
+            #     ),
+            #     color=color_true_unc,
+            #     marker=marker_true_unc,
+            #     alpha=alpha,
+            # )
+            # Method 4: Numerical integration of the remain probability.
             ax.plot(
                 states,
                 lts_rp_int_characs[:, 0],
@@ -2118,9 +2118,6 @@ if __name__ == "__main__":  # noqa: C901
                 alpha=alpha,
             )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
-            ylim = ax.get_ylim()
-            if i not in (2, 3) and ylim[0] < 0:
-                ax.set_ylim(0, ylim[1])
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
             ax.set_xticks([], minor=True)
             ax.legend(ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL)
@@ -2142,8 +2139,7 @@ if __name__ == "__main__":  # noqa: C901
         ################################################################
 
         ################################################################
-        # Plot number of min, max and number of samples for count
-        # methods.
+        # Plot min, max and number of samples for count methods.
         ylabels = (
             "Min. Lifetime / Frames",
             "Max. Lifetime / Frames",
