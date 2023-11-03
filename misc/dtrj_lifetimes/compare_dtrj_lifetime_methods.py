@@ -89,6 +89,8 @@ Notes
         python3 compare_dtrj_lifetime_methods.py \
             --dtrj "${dtrj}" \
             --rp "${fname}_state_lifetime_discrete_continuous.txt.gz" \
+            --km "${fname}_kaplan_meier_discrete_sf.txt.gz" \
+            --km-var "${fname}_kaplan_meier_discrete_var.txt.gz" \
             --param "${fname}_param.txt.gz" \
             -o "${fname}_compare_dtrj_lifetime_methods"
     done
@@ -227,7 +229,7 @@ def read_sf_from_file(
             raise ValueError(
                 "`times_var` != `times`.  Input file: {}".format(fname_var)
             )
-        if not np.array_equal(states_var, states, rtol=0):
+        if not np.array_equal(states_var, states):
             raise ValueError(
                 "`states_var` != `states`.  Input file: {}".format(fname_var)
             )
@@ -253,21 +255,22 @@ def dist_characs(a, axis=-1, n_moms=4):
     Returns
     -------
     characs : numpy.ndarray
-        Array of shape ``(9 + n_moms-1, )`` containing the following
+        Array of shape ``(10 + n_moms-1, )`` containing the following
         distribution characteristics:
 
             1. Sample mean (unbiased 1st raw moment)
             2. Uncertainty of the sample mean (standard error)
-            3. 2nd raw moment (biased estimate)
-            4. 3rd raw moment (biased estimate)
-            5. 4th raw moment (biased estimate)
-            6. Corrected sample standard deviation
-            7. Unbiased sample skewness
-            8. Unbiased sample excess kurtosis (according to Fisher)
-            9. Sample median
-            10. Sample minimum
-            11. Sample maximum
-            12. Number of samples
+            3. Corrected sample standard deviation
+            4. Unbiased sample skewness (Fisher)
+            5. Unbiased sample excess kurtosis (according to Fisher)
+            6. Sample median
+            7. Non-parametric skewness
+            8. 2nd raw moment (biased estimate)
+            9. 3rd raw moment (biased estimate)
+            10. 4th raw moment (biased estimate)
+            11. Sample minimum
+            12. Sample maximum
+            13. Number of samples
 
         The number of calculated raw moments depends on `n_moms`.  The
         first raw moment (mean) is always calculated.
@@ -277,25 +280,29 @@ def dist_characs(a, axis=-1, n_moms=4):
         a, axis=axis, ddof=1, bias=False
     )
     median = np.median(a, axis=axis)
+    std = np.sqrt(var)
+    skew_non_param = np.divide((mean - median), std)
     raw_moments = [np.mean(a**n) for n in range(2, n_moms + 1)]
     characs = np.array(
         [
             mean,  # Sample mean.
-            np.sqrt(np.divide(var, nobs)),  # Uncertainty of sample mean
-            *raw_moments,  # 2nd to 4th raw moment.
-            np.sqrt(var),  # Corrected sample standard deviation.
-            skew,  # Unbiased sample skewness.
+            np.divide(std, np.sqrt(nobs)),  # Uncertainty of sample mean
+            std,  # Corrected sample standard deviation.
+            skew,  # Unbiased sample skewness (Fisher).
             kurt,  # Unbiased sample excess kurtosis (Fisher).
             median,  # Median of the sample.
-            min_max[0],  # Minimum value of the sample.
-            min_max[1],  # Maximum value of the sample.
+            skew_non_param,  # Non-parametric skewness.
+            *raw_moments,  # 2nd to 4th raw moment (biased).
+            *min_max,  # Minimum and maximum value of the sample.
             nobs,  # Number of observations (sample points).
         ]
     )
     return characs
 
 
-def count_method(dtrj, uncensored=False, time_conv=1, states=None):
+def count_method(
+    dtrj, uncensored=False, n_moms=4, time_conv=1, states_check=None
+):
     """
     Estimate characteristics of the underlying lifetime distribution
     from a sample of lifetimes.
@@ -319,10 +326,12 @@ def count_method(dtrj, uncensored=False, time_conv=1, states=None):
         words, discard the truncated (censored) states at the beginning
         and end of the trajectory.  For these states the start/end time
         is unknown.
+    n_moms : int, optional
+        Number of raw moments to calculate.
     time_conv : scalar, optional
         Time conversion factor.  All lifetimes are multiplied by this
         factor.
-    states : array_like or None, optional
+    states_check : array_like or None, optional
         Expected state indices.  If provided, the state indices in the
         discrete trajectory are checked against the provided state
         indices.
@@ -341,16 +350,16 @@ def count_method(dtrj, uncensored=False, time_conv=1, states=None):
         If the state indices in the given discrete trajectory are not
         contained in the given array of state indices.
     """
-    lts_per_state, states_dtrj = mdt.dtrj.lifetimes_per_state(
+    lts_per_state, states = mdt.dtrj.lifetimes_per_state(
         dtrj, uncensored=uncensored, return_states=True
     )
     lts_per_state = [lts * time_conv for lts in lts_per_state]
-    if states is not None and not np.all(np.isin(states_dtrj, states)):
+    if states_check is not None and not np.all(np.isin(states, states_check)):
         raise ValueError(
-            "`states_dtrj` ({}) is not fully contained in `states`"
-            " ({})".format(states_dtrj, states)
+            "`states` ({}) is not fully contained in `states_check`"
+            " ({})".format(states, states_check)
         )
-    characs = np.full((len(states), 12), np.nan, dtype=np.float64)
+    characs = np.full((len(states), 9 + n_moms), np.nan, dtype=np.float64)
     characs[:, -1] = 0  # Default number of observations.
     for i, lts in enumerate(lts_per_state):
         if len(lts) == 0:
@@ -360,7 +369,7 @@ def count_method(dtrj, uncensored=False, time_conv=1, states=None):
                 )
             continue
         else:
-            characs[i] = dist_characs(lts)
+            characs[i] = dist_characs(lts, n_moms=n_moms)
     return characs, states
 
 
@@ -464,8 +473,8 @@ def raw_moment_integrate(sf, x, n=1):
 
 def skewness(mu2, mu3):
     r"""
-    Calculate the skewness of a distribution from the second and third
-    central moment.
+    Calculate the Fisher's skewness of a distribution from the second
+    and third central moment.
 
     .. math::
 
@@ -553,17 +562,18 @@ def integral_method(surv_funcs, times, n_moms=4, int_thresh=0.01):
     Returns
     -------
     characs : numpy.ndarray
-        Array of shape ``(5 + n_moms-1, )`` containing the following
+        Array of shape ``(6 + n_moms-1, )`` containing the following
         distribution characteristics:
 
             1. Mean (1st raw moment)
-            2. 2nd raw moment
-            3. 3rd raw moment
-            4. 4th raw moment
-            5. Standard deviation
-            6. Skewness
-            7. Excess kurtosis (according to Fisher)
-            8. Median
+            2. Standard deviation
+            3. Skewness (Fisher)
+            4. Excess kurtosis (according to Fisher)
+            5. Median
+            6. Non-parametric skewness
+            7. 2nd raw moment
+            8. 3rd raw moment
+            9. 4th raw moment
 
         The number of calculated raw moments depends on `n_moms`.  The
         first raw moment (mean) is always calculated.
@@ -586,10 +596,10 @@ def integral_method(surv_funcs, times, n_moms=4, int_thresh=0.01):
         )
 
     n_frames, n_states = surv_funcs.shape
-    characs = np.full((n_states, 4 + n_moms), np.nan, dtype=np.float64)
+    characs = np.full((n_states, 5 + n_moms), np.nan, dtype=np.float64)
     for i, sf in enumerate(surv_funcs.T):
         raw_moms = np.full(n_moms, np.nan, dtype=np.float64)
-        cen_moms = np.full_like(raw_moms)
+        cen_moms = np.full_like(raw_moms, np.nan)
         if np.any(sf <= int_thresh):
             # Only calculate the moments by numerical integration if the
             # survival function decays below the given threshold.
@@ -599,8 +609,18 @@ def integral_method(surv_funcs, times, n_moms=4, int_thresh=0.01):
         skew = skewness(mu2=cen_moms[1], mu3=cen_moms[2])
         kurt = kurtosis(mu2=cen_moms[1], mu4=cen_moms[3])
         median = cross(y=0.5, x=times, f=sf)
+        std = np.sqrt(cen_moms[1])
+        skew_non_param = np.divide((raw_moms[0] - median), std)
         characs[i] = np.array(
-            [*raw_moms, np.sqrt(cen_moms[1]), skew, kurt, median]
+            [
+                raw_moms[0],  # Mean.
+                std,  # Standard deviation.
+                skew,  # Skewness (Fisher).
+                kurt,  # Excess kurtosis (Fisher).
+                median,  # Median
+                skew_non_param,  # Non-parametric skewness.
+                *raw_moms[1:],  # 2nd to `n_moms`-th raw moment.
+            ]
         )
     return characs
 
@@ -653,13 +673,13 @@ def get_fit_region(surv_funcs, times, end_fit=None, stop_fit=0.01):
         _, end_fit_ix = mdt.nph.find_nearest(times, end_fit, return_index=True)
     end_fit_ix += 1  # Make `end_fit_ix` inclusive.
 
-    fit_start_ix = np.zeros(data.shape[1], dtype=np.uint32)  # Inclusive.
-    fit_stop_ix = np.zeros(data.shape[1], dtype=np.uint32)  # Exclusive.
-    for i, dat in enumerate(data.T):
-        stop_fit_ix = np.nanargmax(dat < stop_fit)
-        if dat[stop_fit_ix] >= stop_fit:
+    fit_start_ix = np.zeros(surv_funcs.shape[1], dtype=np.uint32)  # Inclusive.
+    fit_stop_ix = np.zeros(surv_funcs.shape[1], dtype=np.uint32)  # Exclusive.
+    for i, sf in enumerate(surv_funcs.T):
+        stop_fit_ix = np.nanargmax(sf < stop_fit)
+        if sf[stop_fit_ix] >= stop_fit:
             # The remain probability never falls below `stop_fit`.
-            stop_fit_ix = len(dat)
+            stop_fit_ix = len(sf)
         elif stop_fit_ix < 2:
             # The remain probability immediately falls below `stop_fit`.
             stop_fit_ix = 2
@@ -750,17 +770,18 @@ def weibull_fit_method(
     Returns
     -------
     characs : numpy.ndarray
-        Array of shape ``(5 + n_moms-1, )`` containing the following
+        Array of shape ``(6 + n_moms-1, )`` containing the following
         distribution characteristics:
 
             1. Mean (1st raw moment)
-            2. 2nd raw moment
-            3. 3rd raw moment
-            4. 4th raw moment
-            5. Standard deviation
-            6. Skewness
-            7. Excess kurtosis (according to Fisher)
-            8. Median
+            2. Standard deviation
+            3. Skewness (Fisher)
+            4. Excess kurtosis (according to Fisher)
+            5. Median
+            6. Non-parametric skewness
+            7. 2nd raw moment
+            8. 3rd raw moment
+            9. 4th raw moment
 
         The number of calculated raw moments depends on `n_moms`.  The
         first raw moment (mean) is always calculated.
@@ -896,29 +917,31 @@ def weibull_fit_method(
         )
 
     if surv_funcs_var is not None:
-        surv_funcs_sd = np.sqrt(surv_funcs_var)
-        if surv_funcs_sd.shape != surv_funcs.shape:
+        surv_funcs_var = np.asarray(surv_funcs_var)
+        if surv_funcs_var.shape != surv_funcs.shape:
             raise ValueError(
                 "surv_funcs_var.shape ({}) != surv_funcs.shape"
-                " ({})".format(surv_funcs_sd.shape, surv_funcs.shape)
+                " ({})".format(surv_funcs_var.shape, surv_funcs.shape)
             )
-    else:
-        surv_funcs_sd = None
 
     n_frames, n_states = surv_funcs.shape
     bounds = ([0, 0], [np.inf, np.inf])
     popt = np.full((n_states, 2), np.nan, dtype=np.float64)
     perr = np.full_like(popt, np.nan)
     fit_quality = np.full((n_states, 2), np.nan, dtype=np.float64)
-    characs = np.full((n_states, 8), np.nan, dtype=np.float64)
+    characs = np.full((n_states, 5 + n_moms), np.nan, dtype=np.float64)
     for i, sf in enumerate(surv_funcs.T):
         # Do the fit.
         times_fit = times[fit_start[i] : fit_stop[i]]
         sf_fit = sf[fit_start[i] : fit_stop[i]]
+        if surv_funcs_var is not None:
+            sf_sd = np.sqrt(surv_funcs_var[:, i][fit_start[i] : fit_stop[i]])
+        else:
+            sf_sd = None
         popt[i], perr[i], valid = mdt.func.fit_kww(
             xdata=times_fit,
             ydata=sf_fit,
-            ysd=surv_funcs_sd,
+            ysd=sf_sd,
             return_valid=True,
             bounds=bounds,
             method=fit_method,
@@ -934,8 +957,19 @@ def weibull_fit_method(
         )
         raw_moms = [dist.moment(n) for n in range(1, n_moms + 1)]
         var, skew, kurt = dist.stats(moments="vsk")
+        median = dist.median()
+        std = np.sqrt(var)
+        skew_non_param = np.divide((raw_moms[0] - median), std)
         characs[i] = np.array(
-            [*raw_moms, np.sqrt(var), skew, kurt, dist.median()]
+            [
+                raw_moms[0],  # Mean.
+                std,  # Standard deviation.
+                skew,  # Skewness (Fisher).
+                kurt,  # Excess kurtosis (Fisher).
+                median,  # Median
+                skew_non_param,  # Non-parametric skewness.
+                *raw_moms[1:],  # 2nd to `n_moms`-th raw moment.
+            ]
         )
     return characs, fit_quality, popt, perr
 
@@ -983,17 +1017,18 @@ def burr12_fit_method(
     Returns
     -------
     characs : numpy.ndarray
-        Array of shape ``(5 + n_moms-1, )`` containing the following
+        Array of shape ``(6 + n_moms-1, )`` containing the following
         distribution characteristics:
 
             1. Mean (1st raw moment)
-            2. 2nd raw moment
-            3. 3rd raw moment
-            4. 4th raw moment
-            5. Standard deviation
-            6. Skewness
-            7. Excess kurtosis (according to Fisher)
-            8. Median
+            2. Standard deviation
+            3. Skewness (Fisher)
+            4. Excess kurtosis (according to Fisher)
+            5. Median
+            6. Non-parametric skewness
+            7. 2nd raw moment
+            8. 3rd raw moment
+            9. 4th raw moment
 
         The number of calculated raw moments depends on `n_moms`.  The
         first raw moment (mean) is always calculated.
@@ -1111,29 +1146,31 @@ def burr12_fit_method(
         )
 
     if surv_funcs_var is not None:
-        surv_funcs_sd = np.sqrt(surv_funcs_var)
-        if surv_funcs_sd.shape != surv_funcs.shape:
+        surv_funcs_var = np.asarray(surv_funcs_var)
+        if surv_funcs_var.shape != surv_funcs.shape:
             raise ValueError(
                 "surv_funcs_var.shape ({}) != surv_funcs.shape"
-                " ({})".format(surv_funcs_sd.shape, surv_funcs.shape)
+                " ({})".format(surv_funcs_var.shape, surv_funcs.shape)
             )
-    else:
-        surv_funcs_sd = None
 
     n_frames, n_states = surv_funcs.shape
     bounds = ([0, 0, 1 + 1e-6], [np.inf, np.inf, np.inf])
     popt = np.full((n_states, 3), np.nan, dtype=np.float64)
     perr = np.full_like(popt, np.nan)
     fit_quality = np.full((n_states, 2), np.nan, dtype=np.float64)
-    characs = np.full((n_states, 8), np.nan, dtype=np.float64)
+    characs = np.full((n_states, 5 + n_moms), np.nan, dtype=np.float64)
     for i, sf in enumerate(surv_funcs.T):
         # Do the fit.
         times_fit = times[fit_start[i] : fit_stop[i]]
         sf_fit = sf[fit_start[i] : fit_stop[i]]
+        if surv_funcs_var is not None:
+            sf_sd = np.sqrt(surv_funcs_var[:, i][fit_start[i] : fit_stop[i]])
+        else:
+            sf_sd = None
         popt[i], perr[i], valid = mdt.func.fit_burr12_sf_alt(
             xdata=times_fit,
             ydata=sf_fit,
-            ysd=surv_funcs_sd,
+            ysd=sf_sd,
             return_valid=True,
             bounds=bounds,
             method=fit_method,
@@ -1149,8 +1186,19 @@ def burr12_fit_method(
         )
         raw_moms = [dist.moment(n) for n in range(1, n_moms + 1)]
         var, skew, kurt = dist.stats(moments="vsk")
+        median = dist.median()
+        std = np.sqrt(var)
+        skew_non_param = np.divide((raw_moms[0] - median), std)
         characs[i] = np.array(
-            [*raw_moms, np.sqrt(var), skew, kurt, dist.median()]
+            [
+                raw_moms[0],  # Mean.
+                std,  # Standard deviation.
+                skew,  # Skewness (Fisher).
+                kurt,  # Excess kurtosis (Fisher).
+                median,  # Median
+                skew_non_param,  # Non-parametric skewness.
+                *raw_moms[1:],  # 2nd to `n_moms`-th raw moment.
+            ]
         )
 
     tau0, beta, d = popt.T
@@ -1329,12 +1377,12 @@ if __name__ == "__main__":  # noqa: C901
     n_frames = dtrj.shape[1]
     # Method 1: Censored counting.
     lts_cnt_cen_characs, states = count_method(
-        dtrj, uncensored=False, time_conv=args.TIME_CONV, states=None
+        dtrj, uncensored=False, time_conv=args.TIME_CONV, states_check=None
     )
     n_states = len(states)
     # Method 2: Uncensored counting.
     lts_cnt_unc_characs, _states = count_method(
-        dtrj, uncensored=True, time_conv=args.TIME_CONV, states=states
+        dtrj, uncensored=True, time_conv=args.TIME_CONV, states_check=states
     )
     del _states
     # Method 3: Calculate the transition rate as the number of
@@ -1523,25 +1571,38 @@ if __name__ == "__main__":  # noqa: C901
 
         lts_true_rp_goodness = np.full((n_states, 2), np.nan, dtype=np.float64)
         lts_true_km_goodness = np.full_like(lts_true_rp_goodness, np.nan)
-        lts_true_characs = np.full((n_states, 8), np.nan, dtype=np.float64)
-        for i in enumerate(n_states):
+        lts_true_characs = np.full((n_states, 9), np.nan, dtype=np.float64)
+        for i in range(n_states):
             # Quantities to assess the fit goodness if the estimated
             # survival function is seen as fit of the true survival
             # function.
             sf_true = lt_dists[i].sf(times)
-            valid = np.isfinite(remain_probs[i])
+            rp = remain_probs.T[i]
+            valid = np.isfinite(rp)
             lts_true_rp_goodness[i] = np.array(
-                fit_goodness(data=sf_true[valid], fit=remain_probs[i][valid])
+                fit_goodness(data=sf_true[valid], fit=rp[valid])
             )
-            valid = np.isfinite(km_surv_funcs[i])
+            sf = km_surv_funcs.T[i]
+            valid = np.isfinite(sf)
             lts_true_km_goodness[i] = np.array(
-                fit_goodness(data=sf_true[valid], fit=km_surv_funcs[i][valid])
+                fit_goodness(data=sf_true[valid], fit=sf[valid])
             )
             # Calculate distribution characteristics.
-            raw_moms = [lt_dists.moment(n) for n in range(1, n_moms + 1)]
-            var, skew, kurt = lt_dists.stats(moments="vsk")
+            raw_moms = [lt_dists[i].moment(n) for n in range(1, n_moms + 1)]
+            var, skew, kurt = lt_dists[i].stats(moments="vsk")
+            median = lt_dists[i].median()
+            std = np.sqrt(var)
+            skew_non_param = np.divide((raw_moms[0] - median), std)
             lts_true_characs[i] = np.array(
-                [*raw_moms, np.sqrt(var), skew, kurt, lt_dists.median()]
+                [
+                    raw_moms[0],  # Mean.
+                    std,  # Standard deviation.
+                    skew,  # Skewness (Fisher).
+                    kurt,  # Excess kurtosis (Fisher).
+                    median,  # Median
+                    skew_non_param,  # Non-parametric skewness.
+                    *raw_moms[1:],  # 2nd to `n_moms`-th raw moment.
+                ]
             )
     ####################################################################
 
@@ -1552,60 +1613,60 @@ if __name__ == "__main__":  # noqa: C901
     data = [
         states,  # 1
         # Method 1: Censored counting.
-        lts_cnt_cen_characs,  # 2-13
+        lts_cnt_cen_characs,  # 2-14
         # Method 2: Uncensored counting.
-        lts_cnt_unc_characs,  # 14-25
+        lts_cnt_unc_characs,  # 15-27
         # Method 3: Inverse transition rate.
-        lts_k,  # 26
+        lts_k,  # 28
         # Method 4: Numerical integration of the remain probability.
-        lts_rp_int_characs,  # 27-34
+        lts_rp_int_characs,  # 29-37
         # Method 5: Weibull fit of the remain probability.
-        lts_rp_wbl_characs,  # 35-42
-        tau0_rp_wbl,  # 43
-        tau0_rp_wbl_sd,  # 44
-        beta_rp_wbl,  # 45
-        beta_rp_wbl_sd,  # 46
-        lts_rp_wbl_fit_goodness,  # 47-48
+        lts_rp_wbl_characs,  # 38-46
+        tau0_rp_wbl,  # 47
+        tau0_rp_wbl_sd,  # 48
+        beta_rp_wbl,  # 49
+        beta_rp_wbl_sd,  # 50
+        lts_rp_wbl_fit_goodness,  # 51-52
         # Method 6: Burr Type XII fit of the remain probability.
-        lts_rp_brr_characs,  # 49-56
-        tau0_rp_brr,  # 57
-        tau0_rp_brr_sd,  # 58
-        beta_rp_brr,  # 59
-        beta_rp_brr_sd,  # 60
-        delta_rp_brr,  # 61
-        delta_rp_brr_sd,  # 62
-        lts_rp_brr_fit_goodness,  # 63-64
+        lts_rp_brr_characs,  # 53-61
+        tau0_rp_brr,  # 62
+        tau0_rp_brr_sd,  # 63
+        beta_rp_brr,  # 64
+        beta_rp_brr_sd,  # 65
+        delta_rp_brr,  # 66
+        delta_rp_brr_sd,  # 67
+        lts_rp_brr_fit_goodness,  # 68-69
         # Fit region for the remain probability.
-        fit_start_rp * args.TIME_CONV,  # 65
-        (fit_stop_rp - 1) * args.TIME_CONV,  # 66
+        fit_start_rp * args.TIME_CONV,  # 70
+        (fit_stop_rp - 1) * args.TIME_CONV,  # 71
         # Method 7: Numerical integration of the Kaplan-Meier estimator.
-        lts_km_int_characs,  # 67-74
+        lts_km_int_characs,  # 72-80
         # Method 8: Weibull fit of the Kaplan-Meier estimator.
-        lts_km_wbl_characs,  # 75-82
-        tau0_km_wbl,  # 83
-        tau0_km_wbl_sd,  # 84
-        beta_km_wbl,  # 85
-        beta_km_wbl_sd,  # 86
-        lts_km_wbl_fit_goodness,  # 87-88
+        lts_km_wbl_characs,  # 81-89
+        tau0_km_wbl,  # 90
+        tau0_km_wbl_sd,  # 91
+        beta_km_wbl,  # 92
+        beta_km_wbl_sd,  # 93
+        lts_km_wbl_fit_goodness,  # 94-95
         # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
-        lts_km_brr_characs,  # 89-96
-        tau0_km_brr,  # 97
-        tau0_km_brr_sd,  # 98
-        beta_km_brr,  # 99
-        beta_km_brr_sd,  # 100
-        delta_km_brr,  # 101
-        delta_km_brr_sd,  # 102
-        lts_km_brr_fit_goodness,  # 103-104
+        lts_km_brr_characs,  # 96-104
+        tau0_km_brr,  # 105
+        tau0_km_brr_sd,  # 106
+        beta_km_brr,  # 107
+        beta_km_brr_sd,  # 108
+        delta_km_brr,  # 109
+        delta_km_brr_sd,  # 110
+        lts_km_brr_fit_goodness,  # 111-112
         # Fit region for the Kaplan-Meier estimator.
-        fit_start_km,  # 105
-        fit_stop_km,  # 106
+        fit_start_km,  # 113
+        fit_stop_km,  # 114
     ]
     if args.INFILE_PARAM is not None:
         data += [
-            lts_true_characs,  # 107-114
-            dist_params,  # 115-117
-            lts_true_rp_goodness,  # 118-119
-            lts_true_km_goodness,  # 120-121
+            lts_true_characs,  # 115-123
+            dist_params,  # 124-126
+            lts_true_rp_goodness,  # 127-128
+            lts_true_km_goodness,  # 129-130
         ]
     data = np.column_stack(data)
     header = (
@@ -1709,80 +1770,82 @@ if __name__ == "__main__":  # noqa: C901
         + "  Method 1: Censored counting\n"
         + "  2 Sample mean (1st raw moment) / frames\n"
         + "  3 Uncertainty of the sample mean (standard error) / frames\n"
-        + "  4 2nd raw moment (biased estimate) / frames^2\n"
-        + "  5 3rd raw moment (biased estimate) / frames^3\n"
-        + "  6 4th raw moment (biased estimate) / frames^4\n"
-        + "  7 Corrected sample standard deviation / frames\n"
-        + "  8 Unbiased sample skewness\n"
-        + "  9 Unbiased sample excess kurtosis (Fisher)\n"
-        + " 10 Sample median / frames\n"
-        + " 11 Sample minimum / frames\n"
-        + " 12 Sample maximum / frames\n"
-        + " 13 Number of observations/samples\n"
+        + "  4 Corrected sample standard deviation / frames\n"
+        + "  5 Unbiased sample skewness (Fisher)\n"
+        + "  6 Unbiased sample excess kurtosis (Fisher)\n"
+        + "  7 Sample median / frames\n"
+        + "  8 Non-parametric skewness\n"
+        + "  9 2nd raw moment (biased estimate) / frames^2\n"
+        + " 10 3rd raw moment (biased estimate) / frames^3\n"
+        + " 11 4th raw moment (biased estimate) / frames^4\n"
+        + " 12 Sample minimum / frames\n"
+        + " 13 Sample maximum / frames\n"
+        + " 14 Number of observations/samples\n"
         + "\n"
         + "  Method 2: Uncensored counting.\n"
-        + " 14-25 As Method 1\n"
+        + " 15-27 As Method 1\n"
         + "\n"
         + "  Method 3: Inverse transition rate\n"
-        + " 26 Mean lifetime / frames\n"
+        + " 28 Mean lifetime / frames\n"
         + "\n"
         + "Method based on the ACF:\n"
         + "  Method 4: Numerical integration of the ACF\n"
-        + " 27 Mean lifetime (1st raw moment) / frames\n"
-        + " 28 2nd raw moment / frames^2\n"
-        + " 29 3rd raw moment / frames^3\n"
-        + " 30 4th raw moment / frames^4\n"
-        + " 31 Standard deviation / frames\n"
-        + " 32 Skewness\n"
-        + " 33 Excess kurtosis (Fisher)\n"
-        + " 34 Median / frames\n"
+        + " 29 Mean lifetime (1st raw moment) / frames\n"
+        + " 30 Standard deviation / frames\n"
+        + " 31 Skewness (Fisher)\n"
+        + " 32 Excess kurtosis (Fisher)\n"
+        + " 33 Median / frames\n"
+        + " 34 Non-parametric skewness\n"
+        + " 35 2nd raw moment / frames^2\n"
+        + " 36 3rd raw moment / frames^3\n"
+        + " 37 4th raw moment / frames^4\n"
         + "\n"
         + "  Method 5: Weibull fit of the ACF\n"
-        + " 35-42 As Method 4\n"
-        + " 43 Fit parameter tau0_wbl / frames\n"
-        + " 44 Standard deviation of tau0_wbl / frames\n"
-        + " 45 Fit parameter beta_wbl\n"
-        + " 46 Standard deviation of beta_wbl\n"
-        + " 47 Coefficient of determination of the fit (R^2 value)\n"
-        + " 48 Root-mean-square error (RMSE) of the fit\n"
+        + " 38-46 As Method 4\n"
+        + " 47 Fit parameter tau0_wbl / frames\n"
+        + " 48 Standard deviation of tau0_wbl / frames\n"
+        + " 49 Fit parameter beta_wbl\n"
+        + " 50 Standard deviation of beta_wbl\n"
+        + " 51 Coefficient of determination of the fit (R^2 value)\n"
+        + " 52 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Method 6: Burr Type XII fit of the ACF\n"
-        + " 49-60 As Method 5\n"
-        + " 61 Fit parameter delta_brr\n"
-        + " 62 Standard deviation of delta_brr\n"
-        + " 63 Coefficient of determination of the fit (R^2 value)\n"
-        + " 64 Root-mean-square error (RMSE) of the fit\n"
+        + " 53-65 As Method 5\n"
+        + " 66 Fit parameter delta_brr\n"
+        + " 67 Standard deviation of delta_brr\n"
+        + " 68 Coefficient of determination of the fit (R^2 value)\n"
+        + " 69 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Fit region for all ACF fitting methods\n"
-        + " 51 Start of fit region (inclusive) / frames\n"
-        + " 52 End of fit region (inclusive) / frames\n"
+        + " 70 Start of fit region (inclusive) / frames\n"
+        + " 71 End of fit region (inclusive) / frames\n"
         + "\n"
         + "Method based on the Kaplan-Meier estimator:\n"
         + "  Method 7: Numerical integration of the Kaplan-Meier estimator\n"
-        + " 67-74 As Method 4\n"
+        + " 72-80 As Method 4\n"
         + "\n"
         + "  Method 8: Weibull fit of the Kaplan-Meier estimator\n"
-        + " 75-88 As Method 5\n"
+        + " 81-95 As Method 5\n"
         + "\n"
         + "  Method 9: Burr Type XII fit of the Kaplan-Meier estimator\n"
-        + " 89-104 As Method 6\n"
+        + " 96-112 As Method 6\n"
         + "\n"
         + "  Fit region for all Kaplan-Meier estimator fitting methods\n"
-        + " 105 Start of fit region (inclusive) / frames\n"
-        + " 106 End of fit region (inclusive) / frames\n"
+        + " 113 Start of fit region (inclusive) / frames\n"
+        + " 114 End of fit region (inclusive) / frames\n"
     )
     if args.INFILE_PARAM is not None:
         header += (
             "\n"
             + "  True state lifetimes\n"
-            + " 107-114 As Method 4\n"
-            + " 115 Scale parameter tau0 of the true distribution\n"
-            + " 116 Shape parameter beta of the true distribution\n"
-            + " 117 Shape parameter delta of the true distribution\n"
-            + " 118 R^2 if the ACF is seen as fit of the true SF\n"
-            + " 119 RMSE of the ACF to the true SF\n"
-            + " 120 R^2 if the KM estimator is seen as fit of the true SF\n"
-            + " 121 RMSE of the Kaplan-Meier estimator to the true SF\n"
+            + " 115-123 As Method 4\n"
+            + " 124 Scale parameter tau0 of the true distribution\n"
+            + " 125 Shape parameter beta of the true distribution\n"
+            + " 126 Shape parameter delta of the true distribution\n"
+            + " 127 R^2 if the ACF is seen as fit of the true SF\n"
+            + " 128 RMSE of the ACF to the true SF\n"
+            + " 129 R^2 if the KM estimator is seen as fit of the true SF\n"
+            + " 130 RMSE of the Kaplan-Meier estimator to the true SF\n"
         )
     header += "\n" + "Column number:\n"
     header += "{:>14d}".format(1)
@@ -1801,37 +1864,46 @@ if __name__ == "__main__":  # noqa: C901
     timer = datetime.now()
 
     label_true = "True"
-    # label_cen = "True Cens."
-    # label_unc = "True Uncen."
+    # label_true_cen = "True Cens."
+    # label_true_unc = "True Uncen."
     label_cnt_cen = "Cens."  # Count
     label_cnt_unc = "Uncens."  # Count
     label_k = "Rate"
-    # label_e = r"$1/e$"
-    label_int = "Area"
-    label_kww = "Kohl."
-    label_bur = "Burr"
+    label_rp_int = "ACF Num"
+    label_rp_wbl = "ACF Wbl"
+    label_rp_brr = "ACF Burr"
+    label_km_int = "KM Num"
+    label_km_wbl = "KM Wbl"
+    label_km_brr = "KM Burr"
 
     color_true = "tab:green"
-    # color_cen = "tab:olive"
-    # color_unc = "darkolivegreen"
+    color_true_cen = "tab:olive"
+    color_true_unc = "darkolivegreen"
     color_cnt_cen = "tab:orange"
     color_cnt_unc = "tab:red"
     color_k = "tab:brown"
-    # color_e = "tab:pink"
-    color_int = "tab:purple"
-    color_kww = "tab:blue"
-    color_bur = "tab:cyan"
+    color_rp_int = "tab:purple"
+    color_rp_wbl = "tab:blue"
+    color_rp_brr = "tab:cyan"
+    color_km_int = "goldenrod"
+    color_km_wbl = "gold"
+    color_km_brr = "yellow"
 
-    marker_true = "s"
-    # marker_cen = "D"
-    # marker_unc = "d"
+    marker_true = "*"
+    marker_true_cen = "P"
+    marker_true_unc = "X"
     marker_cnt_cen = "H"
     marker_cnt_unc = "h"
     marker_k = "p"
-    # marker_e = "<"
-    marker_int = ">"
-    marker_kww = "^"
-    marker_bur = "v"
+    marker_rp_int = "^"
+    marker_rp_wbl = ">"
+    marker_rp_brr = "<"
+    marker_km_int = "s"
+    marker_km_wbl = "D"
+    marker_km_brr = "d"
+
+    ylabel_acf = "Autocorrelation Function"
+    ylabel_km = "Kaplan-Meier Estimate"
 
     xlabel = r"State Index"
     xlim = (np.min(states) - 0.5, np.max(states) + 0.5)
@@ -1845,6 +1917,7 @@ if __name__ == "__main__":  # noqa: C901
     outfile = args.OUTFILE + ".pdf"
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
+        ################################################################
         # Plot distribution characteristics vs. state indices.
         ylabels = (
             "Average Lifetime / Frames",
@@ -1852,6 +1925,7 @@ if __name__ == "__main__":  # noqa: C901
             "Skewness",
             "Excess Kurtosis",
             "Median / Frames",
+            "Non-Parametric Skewness",
         )
         for i, ylabel in enumerate(ylabels):
             if i == 0:
@@ -1870,7 +1944,7 @@ if __name__ == "__main__":  # noqa: C901
                     marker=marker_true,
                     alpha=alpha,
                 )
-            # Method 1 (censored counting).
+            # Method 1: Censored counting.
             ax.errorbar(
                 states,
                 lts_cnt_cen_characs[:, i + offset_i_cnt],
@@ -1880,7 +1954,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_cnt_cen,
                 alpha=alpha,
             )
-            # Method 2 (uncensored counting).
+            # Method 2: Uncensored counting.
             ax.errorbar(
                 states,
                 lts_cnt_unc_characs[:, i + offset_i_cnt],
@@ -1891,7 +1965,7 @@ if __name__ == "__main__":  # noqa: C901
                 alpha=alpha,
             )
             if i == 0:
-                # Method 3 (inverse transition rate).
+                # Method 3: Inverse transition rate.
                 ax.errorbar(
                     states,
                     lts_k,
@@ -1901,44 +1975,64 @@ if __name__ == "__main__":  # noqa: C901
                     marker=marker_k,
                     alpha=alpha,
                 )
-                # # Method 4 (1/e criterion).
-                # ax.errorbar(
-                #     states,
-                #     lts_e,
-                #     yerr=None,
-                #     label=label_e,
-                #     color=color_e,
-                #     marker=marker_e,
-                #     alpha=alpha,
-                # )
-            # Method 5 (direct integral)
+            # Method 4: Numerical integration of the remain probability
             ax.errorbar(
                 states,
-                lts_int_characs[:, i],
+                lts_rp_int_characs[:, i],
                 yerr=None,
-                label=label_int,
-                color=color_int,
-                marker=marker_int,
+                label=label_rp_int,
+                color=color_rp_int,
+                marker=marker_rp_int,
                 alpha=alpha,
             )
-            # Method 6 (integral of Kohlrausch fit).
+            # Method 5: Weibull fit of the remain probability.
             ax.errorbar(
                 states,
-                lts_kww_characs[:, i],
+                lts_rp_wbl_characs[:, i],
                 yerr=None,
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
+                label=label_rp_wbl,
+                color=color_rp_wbl,
+                marker=marker_rp_wbl,
                 alpha=alpha,
             )
-            # Method 7 (integral of Burr fit).
+            # Method 6: Burr Type XII fit of the remain probability.
             ax.errorbar(
                 states,
-                lts_bur_characs[:, i],
+                lts_rp_brr_characs[:, i],
                 yerr=None,
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
+                label=label_rp_brr,
+                color=color_rp_brr,
+                marker=marker_rp_brr,
+                alpha=alpha,
+            )
+            # Method 7: Numerical integration of the KM estimator.
+            ax.errorbar(
+                states,
+                lts_km_int_characs[:, i],
+                yerr=None,
+                label=label_km_int,
+                color=color_km_int,
+                marker=marker_km_int,
+                alpha=alpha,
+            )
+            # Method 8: Weibull fit of the Kaplan-Meier estimator.
+            ax.errorbar(
+                states,
+                lts_km_wbl_characs[:, i],
+                yerr=None,
+                label=label_km_wbl,
+                color=color_km_wbl,
+                marker=marker_km_wbl,
+                alpha=alpha,
+            )
+            # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
+            ax.errorbar(
+                states,
+                lts_km_brr_characs[:, i],
+                yerr=None,
+                label=label_km_brr,
+                color=color_km_brr,
+                marker=marker_km_brr,
                 alpha=alpha,
             )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
@@ -1963,45 +2057,73 @@ if __name__ == "__main__":  # noqa: C901
                 ax.set_yscale("log", base=10, subs=np.arange(2, 10))
                 pdf.savefig()
             plt.close()
+        ################################################################
 
-        # Plot number of min, max and number of samples for count
-        # methods.
-        ylabels = (
-            "Min. Lifetime / Frames",
-            "Max. Lifetime / Frames",
-            "No. of Samples",
-        )
-        for i, ylabel in enumerate(ylabels):
+        ################################################################
+        # Plot average residual lifetime.
+        if args.INFILE_PARAM is not None:
+            ylabel = "Avg. Res. Lifetime / Frames"
             fig, ax = plt.subplots(clear=True)
-            # Method 1 (censored counting).
             ax.plot(
                 states,
-                lts_cnt_cen_characs[:, 6 + i],
-                label=label_cnt_cen,
-                color=color_cnt_cen,
-                marker=marker_cnt_cen,
+                lts_true_characs[:, 6] / (2 * lts_true_characs[:, 0]),
+                label=(
+                    r"$\langle t_{true}^2 \rangle /"
+                    + r" 2 \langle t_{true} \rangle$"
+                ),
+                color=color_true_cen,
+                marker=marker_true_cen,
                 alpha=alpha,
             )
-            # Method 2 (uncensored counting).
             ax.plot(
                 states,
-                lts_cnt_unc_characs[:, 6 + i],
-                label=label_cnt_unc,
-                color=color_cnt_unc,
-                marker=marker_cnt_unc,
+                lts_true_characs[:, 7] / (2 * lts_true_characs[:, 6]),
+                label=(
+                    r"$\langle t_{true}^3 \rangle /"
+                    + r" 2 \langle t_{true}^2 \rangle$"
+                ),
+                color=color_true_unc,
+                marker=marker_true_unc,
+                alpha=alpha,
+            )
+            # Method 4: Numerical integration of the remain probability
+            ax.plot(
+                states,
+                lts_rp_int_characs[:, 0],
+                label=label_rp_int + r" $\langle t \rangle$",
+                color=color_rp_int,
+                marker=marker_rp_int,
+                alpha=alpha,
+            )
+            # Method 5: Weibull fit of the remain probability.
+            ax.plot(
+                states,
+                lts_rp_wbl_characs[:, 0],
+                label=label_rp_wbl + r" $\langle t \rangle$",
+                color=color_rp_wbl,
+                marker=marker_rp_wbl,
+                alpha=alpha,
+            )
+            # Method 6: Burr Type XII fit of the remain probability.
+            ax.plot(
+                states,
+                lts_rp_brr_characs[:, 0],
+                label=label_rp_brr + r" $\langle t \rangle$",
+                color=color_rp_brr,
+                marker=marker_rp_brr,
                 alpha=alpha,
             )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
-            if ylim[0] < 0:
+            if i not in (2, 3) and ylim[0] < 0:
                 ax.set_ylim(0, ylim[1])
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
             ax.set_xticks([], minor=True)
-            ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
+            ax.legend(ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
             yd_min, yd_max = get_ydata_min_max(ax)
             if len(yd_min) > 0:
-                # Set y axis to log scale (fit parameter delta).
+                # Set y axis to log scale.
                 # Round y limits to next lower and higher power of ten.
                 ylim = ax.get_ylim()
                 ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
@@ -2013,43 +2135,34 @@ if __name__ == "__main__":  # noqa: C901
                 ax.set_yscale("log", base=10, subs=np.arange(2, 10))
                 pdf.savefig()
             plt.close()
+        ################################################################
 
-        # Plot fit parameters tau0 and beta.
+        ################################################################
+        # Plot number of min, max and number of samples for count
+        # methods.
         ylabels = (
-            r"Fit Parameter $\tau_0$ / Frames",
-            r"Fit Parameter $\beta$",
+            "Min. Lifetime / Frames",
+            "Max. Lifetime / Frames",
+            "No. of Samples",
         )
         for i, ylabel in enumerate(ylabels):
             fig, ax = plt.subplots(clear=True)
-            if args.INFILE_PARAM is not None:
-                # True distribution.
-                ax.errorbar(
-                    states,
-                    dist_params[:, i],
-                    yerr=None,
-                    label=label_true,
-                    color=color_true,
-                    marker=marker_true,
-                    alpha=alpha,
-                )
-            # Method 6 (Kohlrausch fit).
-            ax.errorbar(
+            # Method 1: Censored counting.
+            ax.plot(
                 states,
-                popt_kww[:, i],
-                yerr=perr_kww[:, i],
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
+                lts_cnt_cen_characs[:, 10 + i],
+                label=label_cnt_cen,
+                color=color_cnt_cen,
+                marker=marker_cnt_cen,
                 alpha=alpha,
             )
-            # Method 7 (Burr fit).
-            ax.errorbar(
+            # Method 2: Uncensored counting.
+            ax.plot(
                 states,
-                popt_bur[:, i],
-                yerr=perr_bur[:, i],
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
+                lts_cnt_unc_characs[:, 10 + i],
+                label=label_cnt_unc,
+                color=color_cnt_unc,
+                marker=marker_cnt_unc,
                 alpha=alpha,
             )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
@@ -2074,53 +2187,95 @@ if __name__ == "__main__":  # noqa: C901
                 ax.set_yscale("log", base=10, subs=np.arange(2, 10))
                 pdf.savefig()
             plt.close()
+        ################################################################
 
-        # Plot fit parameter delta.
-        fig, ax = plt.subplots(clear=True)
-        if args.INFILE_PARAM is not None:
-            # True distribution.
+        ################################################################
+        # Plot fit parameters tau0, beta and delta.
+        ylabels = (
+            r"Fit Parameter $\tau_0$ / Frames",
+            r"Fit Parameter $\beta$",
+            r"Fit Parameter $\delta$",
+        )
+        for i, ylabel in enumerate(ylabels):
+            fig, ax = plt.subplots(clear=True)
+            if args.INFILE_PARAM is not None:
+                # True distribution.
+                ax.errorbar(
+                    states,
+                    dist_params[:, i],
+                    yerr=None,
+                    label=label_true,
+                    color=color_true,
+                    marker=marker_true,
+                    alpha=alpha,
+                )
+            if i < 2:
+                # Method 5: Weibull fit of the remain probability.
+                ax.errorbar(
+                    states,
+                    popt_rp_wbl[:, i],
+                    yerr=perr_rp_wbl[:, i],
+                    label=label_rp_wbl,
+                    color=color_rp_wbl,
+                    marker=marker_rp_wbl,
+                    alpha=alpha,
+                )
+            # Method 6: Burr Type XII fit of the remain probability.
             ax.errorbar(
                 states,
-                delta_true,
-                yerr=None,
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
+                popt_conv_rp_brr[:, i],
+                yerr=perr_conv_rp_brr[:, i],
+                label=label_rp_brr,
+                color=color_rp_brr,
+                marker=marker_rp_brr,
                 alpha=alpha,
             )
-        # Method 7 (Burr fit).
-        ax.errorbar(
-            states,
-            delta_bur,
-            yerr=delta_bur_sd,
-            label=label_bur,
-            color=color_bur,
-            marker=marker_bur,
-            alpha=alpha,
-        )
-        ax.set(xlabel=xlabel, ylabel=r"Fit Parameter $\delta$", xlim=xlim)
-        ylim = ax.get_ylim()
-        if ylim[0] < 0:
-            ax.set_ylim(0, ylim[1])
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.set_xticks([], minor=True)
-        ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
-        pdf.savefig()
-        yd_min, yd_max = get_ydata_min_max(ax)
-        if len(yd_min) > 0:
-            # Set y axis to log scale (fit parameter delta).
-            # Round y limits to next lower and higher power of ten.
-            ylim = ax.get_ylim()
-            ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
-            ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
-            ax.set_ylim(
-                ymin if np.isfinite(ymin) else None,
-                ymax if np.isfinite(ymax) else None,
+            if i < 2:
+                # Method 8: Weibull fit of the Kaplan-Meier estimator.
+                ax.errorbar(
+                    states,
+                    popt_km_wbl[:, i],
+                    yerr=perr_km_wbl[:, i],
+                    label=label_km_wbl,
+                    color=color_km_wbl,
+                    marker=marker_km_wbl,
+                    alpha=alpha,
+                )
+            # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
+            ax.errorbar(
+                states,
+                popt_conv_km_brr[:, i],
+                yerr=perr_conv_km_brr[:, i],
+                label=label_km_brr,
+                color=color_km_brr,
+                marker=marker_km_brr,
+                alpha=alpha,
             )
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+            ylim = ax.get_ylim()
+            if ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            ax.set_xticks([], minor=True)
+            ax.legend(ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
-        plt.close()
+            yd_min, yd_max = get_ydata_min_max(ax)
+            if len(yd_min) > 0:
+                # Set y axis to log scale.
+                # Round y limits to next lower and higher power of ten.
+                ylim = ax.get_ylim()
+                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
+                ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
+                ax.set_ylim(
+                    ymin if np.isfinite(ymin) else None,
+                    ymax if np.isfinite(ymax) else None,
+                )
+                ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                pdf.savefig()
+            plt.close()
+        ################################################################
 
+        ################################################################
         # Plot goodness of fit quantities.
         ylabels = (r"Coeff. of Determ. $R^2$", "RMSE")
         for i, ylabel in enumerate(ylabels):
@@ -2130,27 +2285,55 @@ if __name__ == "__main__":  # noqa: C901
                 ax.plot(
                     states,
                     lts_true_rp_goodness[:, i],
-                    label=r"$C(t)$",
-                    color=color_true,
-                    marker=marker_true,
+                    label="ACF to True",
+                    color=color_rp_int,
+                    marker=marker_rp_int,
                     alpha=alpha,
                 )
-            # Method 6 (Kohlrausch fit).
+            # Method 5: Weibull fit of the remain probability.
             ax.plot(
                 states,
-                lts_kww_fit_goodness[:, i],
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
+                lts_rp_wbl_fit_goodness[:, i],
+                label=label_rp_wbl,
+                color=color_rp_wbl,
+                marker=marker_rp_wbl,
                 alpha=alpha,
             )
-            # Method 7 (Burr fit).
+            # Method 6: Burr Type XII fit of the remain probability.
             ax.plot(
                 states,
-                lts_bur_fit_goodness[:, i],
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
+                lts_rp_brr_fit_goodness[:, i],
+                label=label_rp_brr,
+                color=color_rp_brr,
+                marker=marker_rp_brr,
+                alpha=alpha,
+            )
+            if args.INFILE_PARAM is not None:
+                # Kaplan-Meier estimator to the true survival function.
+                ax.plot(
+                    states,
+                    lts_true_km_goodness[:, i],
+                    label="KM to True",
+                    color=color_km_int,
+                    marker=marker_km_int,
+                    alpha=alpha,
+                )
+            # Method 8: Weibull fit of the Kaplan-Meier estimator.
+            ax.plot(
+                states,
+                lts_km_wbl_fit_goodness[:, i],
+                label=label_km_wbl,
+                color=color_km_wbl,
+                marker=marker_km_wbl,
+                alpha=alpha,
+            )
+            # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
+            ax.plot(
+                states,
+                lts_km_brr_fit_goodness[:, i],
+                label=label_km_brr,
+                color=color_km_brr,
+                marker=marker_km_brr,
                 alpha=alpha,
             )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
@@ -2159,11 +2342,11 @@ if __name__ == "__main__":  # noqa: C901
                 ax.set_ylim(0, ylim[1])
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
             ax.set_xticks([], minor=True)
-            ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
+            ax.legend(ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
             yd_min, yd_max = get_ydata_min_max(ax)
             if len(yd_min) > 0:
-                # Set y axis to log scale (R^2 value of the fits).
+                # Set y axis to log scale.
                 # Round `ymin` to next lower power of ten.
                 ylim = ax.get_ylim()
                 ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
@@ -2178,18 +2361,40 @@ if __name__ == "__main__":  # noqa: C901
                 ax.set_yscale("log", base=10, subs=np.arange(2, 10))
                 pdf.savefig()
             plt.close()
+        ################################################################
 
+        ################################################################
         # Plot end of fit region.
         fig, ax = plt.subplots(clear=True)
-        ax.plot(states, fit_stop - 1, marker="v")
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+        # Fit of remain probability.
+        ax.plot(
+            states,
+            (fit_stop_rp - 1) * args.TIME_CONV,
+            label="ACF",
+            color=color_rp_wbl,
+            marker=marker_rp_wbl,
+        )
+        # Fit of Kaplan-Meier estimator.
+        ax.plot(
+            states,
+            (fit_stop_km - 1) * args.TIME_CONV,
+            label="KM",
+            color=color_km_wbl,
+            marker=marker_km_wbl,
+        )
         ax.set(xlabel=xlabel, ylabel="End of Fit Region / Frames", xlim=xlim)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.set_xticks([], minor=True)
+        ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
+        pdf.savefig()
+        # Set y axis to log scale.
+        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
         pdf.savefig()
         plt.close()
+        ################################################################
 
         if args.INFILE_PARAM is not None:
+            ############################################################
             # Plot remain probabilities and true survival functions for
             # each state.
             fig, ax = plt.subplots(clear=True)
@@ -2205,14 +2410,14 @@ if __name__ == "__main__":  # noqa: C901
                 ax.plot(
                     times,
                     lt_dists[i].sf(times),
-                    label=r"True $S(t)$" if i == n_states - 1 else None,
+                    label=r"$S_{true}(t)$" if i == n_states - 1 else None,
                     linestyle="dashed",
                     color=lines[0].get_color(),
                     alpha=alpha,
                 )
             ax.set(
                 xlabel="Time / Frames",
-                ylabel=r"Autocorrelation $C(t)$",
+                ylabel=ylabel_acf,
                 xlim=(times[1], times[-1]),
                 ylim=(0, 1),
             )
@@ -2236,7 +2441,7 @@ if __name__ == "__main__":  # noqa: C901
                 ax.plot(times, res, label=r"$%d$" % states[i], alpha=alpha)
             ax.set(
                 xlabel="Time / Frames",
-                ylabel=r"$S(t) - C(t)$",
+                ylabel=r"$S_{true}(t) - C(t)$",
                 xlim=(times[1], times[-1]),
             )
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
@@ -2249,27 +2454,91 @@ if __name__ == "__main__":  # noqa: C901
             legend.get_title().set_multialignment("center")
             pdf.savefig()
             plt.close()
+            ############################################################
 
-        # Plot remain probabilities and Kohlrausch fits for each state.
+            ############################################################
+            # Plot Kaplan-Meier estimates and true survival functions
+            # for each state.
+            fig, ax = plt.subplots(clear=True)
+            ax.set_prop_cycle(color=colors)
+            for i, km in enumerate(km_surv_funcs.T):
+                lines = ax.plot(
+                    times,
+                    km,
+                    label=r"$%d$" % states[i],
+                    linewidth=1,
+                    alpha=alpha,
+                )
+                ax.plot(
+                    times,
+                    lt_dists[i].sf(times),
+                    label=r"$S_{true}(t)$" if i == n_states - 1 else None,
+                    linestyle="dashed",
+                    color=lines[0].get_color(),
+                    alpha=alpha,
+                )
+            ax.set(
+                xlabel="Time / Frames",
+                ylabel=ylabel_km,
+                xlim=(times[1], times[-1]),
+                ylim=(0, 1),
+            )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            legend = ax.legend(
+                title="State Index",
+                loc="upper right",
+                ncol=2,
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
+
+            # Plot difference of the Kaplan-Meier estimates to the true
+            # survival functions for each state.
+            fig, ax = plt.subplots(clear=True)
+            ax.set_prop_cycle(color=colors)
+            for i, km in enumerate(km_surv_funcs.T):
+                res = lt_dists[i].sf(times) - km
+                ax.plot(times, res, label=r"$%d$" % states[i], alpha=alpha)
+            ax.set(
+                xlabel="Time / Frames",
+                ylabel=r"$S_{true}(t) - S_{KM}(t)$",
+                xlim=(times[1], times[-1]),
+            )
+            ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            legend = ax.legend(
+                title="State Index",
+                loc="lower right",
+                ncol=2,
+                **mdtplt.LEGEND_KWARGS_XSMALL,
+            )
+            legend.get_title().set_multialignment("center")
+            pdf.savefig()
+            plt.close()
+            ############################################################
+
+        ################################################################
+        # Plot remain probabilities and Weibull fits for each state.
         fig, ax = plt.subplots(clear=True)
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_probs.T):
-            times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.kww(times_fit, *popt_kww[i])
+            times_fit = times[fit_start_rp[i] : fit_stop_rp[i]]
+            fit = mdt.func.kww(times_fit, *popt_rp_wbl[i])
             lines = ax.plot(
                 times, rp, label=r"$%d$" % states[i], linewidth=1, alpha=alpha
             )
             ax.plot(
                 times_fit,
                 fit,
-                label=label_kww if i == n_states - 1 else None,
+                label="Wbl Fit" if i == n_states - 1 else None,
                 linestyle="dashed",
                 color=lines[0].get_color(),
                 alpha=alpha,
             )
         ax.set(
             xlabel="Time / Frames",
-            ylabel=r"Autocorrelation $C(t)$",
+            ylabel=ylabel_acf,
             xlim=(times[1], times[-1]),
             ylim=(0, 1),
         )
@@ -2284,17 +2553,17 @@ if __name__ == "__main__":  # noqa: C901
         pdf.savefig()
         plt.close()
 
-        # Plot Kohlrausch fit residuals for each state.
+        # Plot Weibull fit residuals (remain probability) for each state
         fig, ax = plt.subplots(clear=True)
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_probs.T):
-            times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.kww(times_fit, *popt_kww[i])
-            res = rp[fit_start[i] : fit_stop[i]] - fit
+            times_fit = times[fit_start_rp[i] : fit_stop_rp[i]]
+            fit = mdt.func.kww(times_fit, *popt_rp_wbl[i])
+            res = rp[fit_start_rp[i] : fit_stop_rp[i]] - fit
             ax.plot(times_fit, res, label=r"$%d$" % states[i], alpha=alpha)
         ax.set(
             xlabel="Time / Frames",
-            ylabel="Kohlrausch Fit Residuals",
+            ylabel="ACF Weibull Fit Res.",
             xlim=(times[1], times[-1]),
         )
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
@@ -2307,27 +2576,89 @@ if __name__ == "__main__":  # noqa: C901
         legend.get_title().set_multialignment("center")
         pdf.savefig()
         plt.close()
+        ################################################################
 
+        ################################################################
+        # Plot Kaplan-Meier estimates and Weibull fits for each state.
+        fig, ax = plt.subplots(clear=True)
+        ax.set_prop_cycle(color=colors)
+        for i, km in enumerate(km_surv_funcs.T):
+            times_fit = times[fit_start_km[i] : fit_stop_km[i]]
+            fit = mdt.func.kww(times_fit, *popt_km_wbl[i])
+            lines = ax.plot(
+                times, km, label=r"$%d$" % states[i], linewidth=1, alpha=alpha
+            )
+            ax.plot(
+                times_fit,
+                fit,
+                label="Wbl Fit" if i == n_states - 1 else None,
+                linestyle="dashed",
+                color=lines[0].get_color(),
+                alpha=alpha,
+            )
+        ax.set(
+            xlabel="Time / Frames",
+            ylabel=ylabel_km,
+            xlim=(times[1], times[-1]),
+            ylim=(0, 1),
+        )
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        legend = ax.legend(
+            title="State Index",
+            loc="upper right",
+            ncol=2,
+            **mdtplt.LEGEND_KWARGS_XSMALL,
+        )
+        legend.get_title().set_multialignment("center")
+        pdf.savefig()
+        plt.close()
+
+        # Plot Weibull fit residuals (Kaplan-Meier) for each state.
+        fig, ax = plt.subplots(clear=True)
+        ax.set_prop_cycle(color=colors)
+        for i, km in enumerate(km_surv_funcs.T):
+            times_fit = times[fit_start_km[i] : fit_stop_km[i]]
+            fit = mdt.func.kww(times_fit, *popt_km_wbl[i])
+            res = km[fit_start_km[i] : fit_stop_km[i]] - fit
+            ax.plot(times_fit, res, label=r"$%d$" % states[i], alpha=alpha)
+        ax.set(
+            xlabel="Time / Frames",
+            ylabel="KM Weibull Fit Res.",
+            xlim=(times[1], times[-1]),
+        )
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        legend = ax.legend(
+            title="State Index",
+            loc="lower right",
+            ncol=2,
+            **mdtplt.LEGEND_KWARGS_XSMALL,
+        )
+        legend.get_title().set_multialignment("center")
+        pdf.savefig()
+        plt.close()
+        ################################################################
+
+        ################################################################
         # Plot remain probabilities and Burr fits for each state.
         fig, ax = plt.subplots(clear=True)
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_probs.T):
-            times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
+            times_fit = times[fit_start_rp[i] : fit_stop_rp[i]]
+            fit = mdt.func.burr12_sf_alt(times_fit, *popt_rp_brr[i])
             lines = ax.plot(
                 times, rp, label=r"$%d$" % states[i], linewidth=1, alpha=alpha
             )
             ax.plot(
                 times_fit,
                 fit,
-                label=label_bur if i == n_states - 1 else None,
+                label="Burr Fit" if i == n_states - 1 else None,
                 linestyle="dashed",
                 color=lines[0].get_color(),
                 alpha=alpha,
             )
         ax.set(
             xlabel="Time / Frames",
-            ylabel=r"Autocorrelation $C(t)$",
+            ylabel=ylabel_acf,
             xlim=(times[1], times[-1]),
             ylim=(0, 1),
         )
@@ -2342,17 +2673,17 @@ if __name__ == "__main__":  # noqa: C901
         pdf.savefig()
         plt.close()
 
-        # Plot Burr fit residuals for each state.
+        # Plot Burr fit residuals (remain probability) for each state.
         fig, ax = plt.subplots(clear=True)
         ax.set_prop_cycle(color=colors)
         for i, rp in enumerate(remain_probs.T):
-            times_fit = times[fit_start[i] : fit_stop[i]]
-            fit = mdt.func.burr12_sf_alt(times_fit, *popt_bur[i])
-            res = rp[fit_start[i] : fit_stop[i]] - fit
+            times_fit = times[fit_start_rp[i] : fit_stop_rp[i]]
+            fit = mdt.func.burr12_sf_alt(times_fit, *popt_rp_brr[i])
+            res = rp[fit_start_rp[i] : fit_stop_rp[i]] - fit
             ax.plot(times_fit, res, label=r"$%d$" % states[i], alpha=alpha)
         ax.set(
             xlabel="Time / Frames",
-            ylabel="Burr Fit Residuals",
+            ylabel="ACF Burr Fit Res.",
             xlim=(times[1], times[-1]),
         )
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
@@ -2365,6 +2696,67 @@ if __name__ == "__main__":  # noqa: C901
         legend.get_title().set_multialignment("center")
         pdf.savefig()
         plt.close()
+        ################################################################
+
+        ################################################################
+        # Plot Kaplan-Meier estimates and Burr fits for each state.
+        fig, ax = plt.subplots(clear=True)
+        ax.set_prop_cycle(color=colors)
+        for i, km in enumerate(km_surv_funcs.T):
+            times_fit = times[fit_start_km[i] : fit_stop_km[i]]
+            fit = mdt.func.burr12_sf_alt(times_fit, *popt_km_brr[i])
+            lines = ax.plot(
+                times, km, label=r"$%d$" % states[i], linewidth=1, alpha=alpha
+            )
+            ax.plot(
+                times_fit,
+                fit,
+                label="Burr Fit" if i == n_states - 1 else None,
+                linestyle="dashed",
+                color=lines[0].get_color(),
+                alpha=alpha,
+            )
+        ax.set(
+            xlabel="Time / Frames",
+            ylabel=ylabel_km,
+            xlim=(times[1], times[-1]),
+            ylim=(0, 1),
+        )
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        legend = ax.legend(
+            title="State Index",
+            loc="upper right",
+            ncol=2,
+            **mdtplt.LEGEND_KWARGS_XSMALL,
+        )
+        legend.get_title().set_multialignment("center")
+        pdf.savefig()
+        plt.close()
+
+        # Plot Burr fit residuals (Kaplan-Meier) for each state.
+        fig, ax = plt.subplots(clear=True)
+        ax.set_prop_cycle(color=colors)
+        for i, km in enumerate(km_surv_funcs.T):
+            times_fit = times[fit_start_km[i] : fit_stop_km[i]]
+            fit = mdt.func.burr12_sf_alt(times_fit, *popt_km_brr[i])
+            res = km[fit_start_km[i] : fit_stop_km[i]] - fit
+            ax.plot(times_fit, res, label=r"$%d$" % states[i], alpha=alpha)
+        ax.set(
+            xlabel="Time / Frames",
+            ylabel="KM Burr Fit Res.",
+            xlim=(times[1], times[-1]),
+        )
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        legend = ax.legend(
+            title="State Index",
+            loc="lower right",
+            ncol=2,
+            **mdtplt.LEGEND_KWARGS_XSMALL,
+        )
+        legend.get_title().set_multialignment("center")
+        pdf.savefig()
+        plt.close()
+        ################################################################
     print("Created {}".format(outfile))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
