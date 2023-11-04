@@ -2118,6 +2118,9 @@ if __name__ == "__main__":  # noqa: C901
                 alpha=alpha,
             )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+            ylim = ax.get_ylim()
+            if ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
             ax.set_xticks([], minor=True)
             ax.legend(ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL)
@@ -2365,6 +2368,7 @@ if __name__ == "__main__":  # noqa: C901
 
         ################################################################
         # Plot end of fit region.
+        ylabel = "End of Fit Region / Frames"
         fig, ax = plt.subplots(clear=True)
         # Fit of remain probability.
         ax.plot(
@@ -2382,7 +2386,10 @@ if __name__ == "__main__":  # noqa: C901
             color=color_km_wbl,
             marker=marker_km_wbl,
         )
-        ax.set(xlabel=xlabel, ylabel="End of Fit Region / Frames", xlim=xlim)
+        ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+        ylim = ax.get_ylim()
+        if ylim[0] < 0:
+            ax.set_ylim(0, ylim[1])
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.set_xticks([], minor=True)
         ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
