@@ -1662,8 +1662,8 @@ if __name__ == "__main__":  # noqa: C901
         delta_km_brr_sd,  # 110
         lts_km_brr_fit_goodness,  # 111-112
         # Fit region for the Kaplan-Meier estimator.
-        fit_start_km,  # 113
-        fit_stop_km,  # 114
+        fit_start_km * args.TIME_CONV,  # 113
+        (fit_stop_km - 1) * args.TIME_CONV,  # 114
     ]
     if args.INFILE_PARAM is not None:
         data += [
