@@ -44,6 +44,7 @@ import mdtools.plot as mdtplt  # Load MDTools plot style  # noqa: F401
 
 
 if __name__ == "__main__":  # noqa: C901
+    ####################################################################
     # Input parameters.
     dist_name = "Exp. Dist."
     sort_by = "n_cmps"
@@ -70,21 +71,31 @@ if __name__ == "__main__":  # noqa: C901
     )
     outfile = infile_pattern.replace(".txt.gz", ".pdf")
     outfile = outfile.replace("*", "N")
+    ####################################################################
 
+    ####################################################################
     # Column indices for the input file(s).
     col_states = 0
-    col_dist_params = 57  # to 59 (tau0, beta, delta)
-    col_fit_end = 51
-    # Lifetimes from the different methods.
-    col_cnt_cen = 1  # to 9 (mean, se, std, skew, kurt, median, min, max, nobs)
-    col_cnt_unc = 10  # to 18 (as col_cnt_cen)
-    col_rate = 19
-    # col_e = 20
-    col_int = 21  # to 25 (mean, std, skew, kurt, median)
-    col_kww = 26  # to 36 (mean, std, skew, kurt, median, fit params)
-    col_bur = 37  # to 49 (as col_kww)
-    col_dst = 52  # to 56 (as col_int)
+    col_dist_params = 123  # to 59
+    # Lifetimes from the counting methods.
+    col_cnt_cen = 1  # to 13
+    col_cnt_unc = 14  # to 26
+    col_k = 27
+    # Lifetimes from remain probabilities.
+    col_rp_int = 28  # to 36
+    col_rp_wbl = 37  # to 51
+    col_rp_brr = 52  # to 68
+    col_rp_fit_end = 70
+    # Lifetimes from Kaplan-Meier estimates.
+    col_km_int = 71  # to 79
+    col_km_wbl = 80  # to 94
+    col_km_brr = 95  # to 111
+    col_km_fit_end = 113
+    # True lifetimes
+    col_dst = 114  # to 122
+    ####################################################################
 
+    ####################################################################
     # Read data.
     infiles = glob.glob(infile_pattern)
     if len(infiles) < 1:
@@ -113,7 +124,9 @@ if __name__ == "__main__":  # noqa: C901
         raise ValueError("None of the input files contained data for state 1")
     shapes = np.transpose(np.asarray(shapes))
     data = np.transpose(np.asarray(data))
+    ####################################################################
 
+    ####################################################################
     # Sort data.
     if sort_by == "n_cmps":
         sort_ix = np.argsort(shapes[0])
@@ -180,12 +193,16 @@ if __name__ == "__main__":  # noqa: C901
         raise ValueError("Unknown value for `sort_by`: {}".format(sort_by))
     shapes = shapes[:, sort_ix]
     data = data[:, sort_ix]
+    ####################################################################
 
-    ylims_characs = [(None, None) for i in range(5)]
+    ####################################################################
+    # Set axis limits.
+    ylims_characs = [(None, None) for i in range(6)]
     ylims_cnt = [(None, None) for i in range(3)]
+    ylims_res = (None, None)
     ylims_fit_params = [(None, None) for i in range(3)]
-    ylims_fit_goodness = [(None, None) for i in range(3)]
-    ylims_fit_region = [(None, None)]
+    ylims_fit_goodness = [(None, None) for i in range(2)]
+    ylims_fit_region = (None, None)
     if dist_name == "Exp. Dist." and sort_by == "n_cmps":
         ylims_characs = [
             (2e0, 3e2),  # Mean.
@@ -193,14 +210,16 @@ if __name__ == "__main__":  # noqa: C901
             (2e-1, 3e0),  # Skewness.
             (6e-1, 2e1),  # Excess kurtosis.
             (2e0, 3e2),  # Median.
+            (1e-1, 4e-1),  # Non-parametric kurtosis.
         ]
     if dist_name == "Exp. Dist." and sort_by == "n_frames":
         ylims_characs = [
             (8e0, 4e2),  # Mean.
             (9e1, 3e2),  # Standard deviation.
-            (4e-1, 3e0),  # Skewness.
+            (5e-2, 7e0),  # Skewness.
             (4e-1, 2e1),  # Excess kurtosis.
             (8e0, 4e2),  # Median.
+            (1e-1, 5e-1),  # Non-parametric kurtosis.
         ]
     if dist_name == "Exp. Dist." and sort_by == "every":
         ylims_characs = [
@@ -209,6 +228,7 @@ if __name__ == "__main__":  # noqa: C901
             (1e0, 4e0),  # Skewness.
             (5e0, 1e1),  # Excess kurtosis.
             (6e1, 9e2),  # Median.
+            (2e-4, 6e-1),  # Non-parametric kurtosis.
         ]
     if dist_name == "Exp. Dist." and sort_by == "tau0_true":
         ylims_characs = [
@@ -217,58 +237,71 @@ if __name__ == "__main__":  # noqa: C901
             (1e0, 3e0),  # Skewness.
             (5e0, 1e1),  # Excess kurtosis.
             (1e1, 5e2),  # Median.
+            (1e-1, 4e-1),  # Non-parametric kurtosis.
         ]
     if dist_name == "Gamma Dist." and sort_by == "delta_true":
         ylims_characs = [
             (2e1, 5e2),  # Mean.
-            (4e1, 3e2),  # Standard deviation.
+            (4e1, 5e2),  # Standard deviation.
             (9e-1, 5e0),  # Skewness.
             (1e0, 3e1),  # Excess kurtosis.
             (3e0, 5e2),  # Median.
+            (1e-1, 5e-1),  # Non-parametric kurtosis.
         ]
         ylims_cnt = [(9e-1, 2e1), (9e2, 3e3), (1e4, 9e4)]
     if dist_name == "Chi Dist." and sort_by == "delta_true":
         ylims_cnt = [(8e-2, 1.2e1), (4e0, 1e1), (1e6, 4e6)]
+        ylims_fit_region = (1e0, 6e0)
     if dist_name == "Log-Logistic Dist." and sort_by == "beta_true":
         ylims_cnt = [(8e-1, 6e1), (1e2, 2e4), (1e4, 5e4)]
+    ####################################################################
 
+    ####################################################################
     label_true = "True"
-    # label_cen = "True Cens."
-    # label_unc = "True Uncen."
-    label_cnt_cen = "Cens."
-    label_cnt_unc = "Uncens."
-    label_rate = "Rate"
-    # label_e = r"$1/e$"
-    label_int = "Area"
-    label_kww = "Kohl."
-    label_bur = "Burr"
+    # label_true_cen = "True Cens."
+    # label_true_unc = "True Uncen."
+    label_cnt_cen = "Cens."  # Count
+    label_cnt_unc = "Uncens."  # Count
+    label_k = "Rate"
+    label_rp_int = "ACF Num"
+    label_rp_wbl = "ACF Wbl"
+    label_rp_brr = "ACF Burr"
+    label_km_int = "KM Num"
+    label_km_wbl = "KM Wbl"
+    label_km_brr = "KM Burr"
 
     color_true = "tab:green"
-    # color_cen = "tab:olive"
-    # color_unc = "darkolivegreen"
+    # color_true_cen = "tab:olive"
+    # color_true_unc = "darkolivegreen"
     color_cnt_cen = "tab:orange"
     color_cnt_unc = "tab:red"
-    color_rate = "tab:brown"
-    # color_e = "tab:pink"
-    color_int = "tab:purple"
-    color_kww = "tab:blue"
-    color_bur = "tab:cyan"
+    color_k = "tab:brown"
+    color_rp_int = "tab:purple"
+    color_rp_wbl = "tab:blue"
+    color_rp_brr = "tab:cyan"
+    color_km_int = "goldenrod"
+    color_km_wbl = "gold"
+    color_km_brr = "yellow"
 
-    marker_true = "s"
-    # marker_cen = "D"
-    # marker_unc = "d"
+    marker_true = "*"
+    # marker_true_cen = "P"
+    # marker_true_unc = "X"
     marker_cnt_cen = "H"
     marker_cnt_unc = "h"
-    marker_rate = "p"
-    # marker_e = "<"
-    marker_int = ">"
-    marker_kww = "^"
-    marker_bur = "v"
+    marker_k = "p"
+    marker_rp_int = "^"
+    marker_rp_wbl = ">"
+    marker_rp_brr = "<"
+    marker_km_int = "s"
+    marker_km_wbl = "D"
+    marker_km_brr = "d"
+    ####################################################################
 
     alpha = 0.75
 
     mdt.fh.backup(outfile)
     with PdfPages(outfile) as pdf:
+        ################################################################
         # Plot distribution characteristics.
         ylabels = (
             "Average Lifetime / Frames",
@@ -276,6 +309,7 @@ if __name__ == "__main__":  # noqa: C901
             "Skewness",
             "Excess Kurtosis",
             "Median / Frames",
+            "Non-Parametric Skewness",
         )
         for i, ylabel in enumerate(ylabels):
             if i == 0:
@@ -284,103 +318,229 @@ if __name__ == "__main__":  # noqa: C901
                 offset_i_cnt = 1
             fig, ax = plt.subplots(clear=True)
             # True lifetimes (from distribution).
-            ax.errorbar(
-                xdata,
-                data[col_dst + i],
-                yerr=None,
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
-                alpha=alpha,
-            )
-            # Method 1 (censored counting).
-            ax.errorbar(
-                xdata,
-                data[col_cnt_cen + i + offset_i_cnt],
-                yerr=data[col_cnt_cen + i + 1] if i == 0 else None,
-                label=label_cnt_cen,
-                color=color_cnt_cen,
-                marker=marker_cnt_cen,
-                alpha=alpha,
-            )
-            # Method 2 (uncensored counting).
-            ax.errorbar(
-                xdata,
-                data[col_cnt_unc + i + offset_i_cnt],
-                yerr=data[col_cnt_unc + i + 1] if i == 0 else None,
-                label=label_cnt_unc,
-                color=color_cnt_unc,
-                marker=marker_cnt_unc,
-                alpha=alpha,
-            )
-            # Method 3 (inverse transition rate).
-            if i == 0:
+            valid = np.isfinite(data[col_dst + i])
+            if np.any(valid):
                 ax.errorbar(
-                    xdata,
-                    data[col_rate],
+                    xdata[valid],
+                    data[col_dst + i][valid],
                     yerr=None,
-                    label=label_rate,
-                    color=color_rate,
-                    marker=marker_rate,
+                    label=label_true,
+                    color=color_true,
+                    marker=marker_true,
                     alpha=alpha,
                 )
-                # # Method 4 (1/e criterion).
-                # ax.errorbar(
-                #     xdata,
-                #     data[col_e],
-                #     yerr=None,
-                #     label=label_e,
-                #     color=color_e,
-                #     marker=marker_e,
-                #     alpha=alpha,
-                # )
-            # Method 5 (direct integral).
-            ax.errorbar(
-                xdata,
-                data[col_int + i],
-                yerr=None,
-                label=label_int,
-                color=color_int,
-                marker=marker_int,
-                alpha=alpha,
-            )
-            # Method 6 (integral of Kohlrausch fit).
-            ax.errorbar(
-                xdata,
-                data[col_kww + i],
-                yerr=None,
-                label=label_kww,
-                color=color_kww,
-                marker=marker_kww,
-                alpha=alpha,
-            )
-            # Method 7 (integral of Burr fit).
-            ax.errorbar(
-                xdata,
-                data[col_bur + i],
-                yerr=None,
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
-                alpha=alpha,
-            )
+            # Method 1: Censored counting.
+            valid = np.isfinite(data[col_cnt_cen + i + offset_i_cnt])
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_cnt_cen + i + offset_i_cnt][valid],
+                    yerr=data[col_cnt_cen + i + 1][valid] if i == 0 else None,
+                    label=label_cnt_cen,
+                    color=color_cnt_cen,
+                    marker=marker_cnt_cen,
+                    alpha=alpha,
+                )
+            # Method 2: Uncensored counting.
+            valid = np.isfinite(data[col_cnt_unc + i + offset_i_cnt])
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_cnt_unc + i + offset_i_cnt][valid],
+                    yerr=data[col_cnt_unc + i + 1][valid] if i == 0 else None,
+                    label=label_cnt_unc,
+                    color=color_cnt_unc,
+                    marker=marker_cnt_unc,
+                    alpha=alpha,
+                )
+            # Method 3: Inverse transition rate.
+            if i == 0:
+                valid = np.isfinite(data[col_k])
+                if np.any(valid):
+                    ax.errorbar(
+                        xdata[valid],
+                        data[col_k][valid],
+                        yerr=None,
+                        label=label_k,
+                        color=color_k,
+                        marker=marker_k,
+                        alpha=alpha,
+                    )
+            # Method 4: Numerical integration of the remain probability.
+            valid = np.isfinite(data[col_rp_int + i])
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_rp_int + i][valid],
+                    yerr=None,
+                    label=label_rp_int,
+                    color=color_rp_int,
+                    marker=marker_rp_int,
+                    alpha=alpha,
+                )
+            # Method 5: Weibull fit of the remain probability.
+            valid = np.isfinite(data[col_rp_wbl + i])
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_rp_wbl + i][valid],
+                    yerr=None,
+                    label=label_rp_wbl,
+                    color=color_rp_wbl,
+                    marker=marker_rp_wbl,
+                    alpha=alpha,
+                )
+            # Method 6: Burr Type XII fit of the remain probability.
+            valid = np.isfinite(data[col_rp_brr + i])
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_rp_brr + i][valid],
+                    yerr=None,
+                    label=label_rp_brr,
+                    color=color_rp_brr,
+                    marker=marker_rp_brr,
+                    alpha=alpha,
+                )
+            # Method 7: Numerical integration of the KM estimator.
+            valid = np.isfinite(data[col_km_int + i])
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_km_int + i][valid],
+                    yerr=None,
+                    label=label_km_int,
+                    color=color_km_int,
+                    marker=marker_km_int,
+                    alpha=alpha,
+                )
+            # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
+            valid = np.isfinite(data[col_km_wbl + i])
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_km_wbl + i][valid],
+                    yerr=None,
+                    label=label_km_wbl,
+                    color=color_km_wbl,
+                    marker=marker_km_wbl,
+                    alpha=alpha,
+                )
+            # Method 6: Burr Type XII fit of the remain probability.
+            valid = np.isfinite(data[col_km_brr + i])
+            if np.any(valid):
+                ax.errorbar(
+                    xdata[valid],
+                    data[col_km_brr + i][valid],
+                    yerr=None,
+                    label=label_km_brr,
+                    color=color_km_brr,
+                    marker=marker_km_brr,
+                    alpha=alpha,
+                )
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+            ylim = ax.get_ylim()
+            if i not in (2, 3, 5) and ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
             legend = ax.legend(
-                title=legend_title, ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL
+                title=legend_title, ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL
             )
             legend.get_title().set_multialignment("center")
-            if i in (2, 3):
-                ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
-                pdf.savefig()
+            pdf.savefig()
+            # Log scale y.
+            ax.relim()
+            ax.autoscale()
             ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            ax.set(
-                xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylims_characs[i]
-            )
+            ax.set(xlim=xlim, ylim=ylims_characs[i])
             pdf.savefig()
             plt.close()
+        ################################################################
 
-        # Plot number of min, max and number of samples for count
-        # methods.
+        ################################################################
+        # Plot average residual lifetime.
+        ylabel = "Avg. Res. Lifetime / Frames"
+        fig, ax = plt.subplots(clear=True)
+        ydata = data[col_dst + 6] / (2 * data[col_dst])
+        valid = np.isfinite(ydata)
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                ydata[valid],
+                label=(
+                    r"$\langle t_{true}^2 \rangle /"
+                    + r" 2 \langle t_{true} \rangle$"
+                ),
+                color=color_true,  # color_true_cen,
+                marker=marker_true,  # marker_true_cen,
+                alpha=alpha,
+            )
+        # ydata = data[col_dst + 7] / (2 * data[col_dst + 6])
+        # valid = np.isfinite(ydata)
+        # if np.any(valid):
+        #     ax.plot(
+        #         xdata[valid],
+        #         ydata[valid],
+        #         label=(
+        #             r"$\langle t_{true}^3 \rangle /"
+        #             + r" 2 \langle t_{true}^2 \rangle$"
+        #         ),
+        #         color=color_true_unc,
+        #         marker=marker_true_unc,
+        #         alpha=alpha,
+        #     )
+        # Method 4: Numerical integration of the remain probability.
+        valid = np.isfinite(data[col_rp_int])
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                data[col_rp_int][valid],
+                label=label_rp_int + r" $\langle t \rangle$",
+                color=color_rp_int,
+                marker=marker_rp_int,
+                alpha=alpha,
+            )
+        # Method 5: Weibull fit of the remain probability.
+        valid = np.isfinite(data[col_rp_wbl])
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                data[col_rp_wbl][valid],
+                label=label_rp_wbl + r" $\langle t \rangle$",
+                color=color_rp_wbl,
+                marker=marker_rp_wbl,
+                alpha=alpha,
+            )
+        # Method 6: Burr Type XII fit of the remain probability.
+        valid = np.isfinite(data[col_rp_brr])
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                data[col_rp_brr][valid],
+                label=label_rp_brr + r" $\langle t \rangle$",
+                color=color_rp_brr,
+                marker=marker_rp_brr,
+                alpha=alpha,
+            )
+        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
+        ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+        ylim = ax.get_ylim()
+        if ylim[0] < 0:
+            ax.set_ylim(0, ylim[1])
+        legend = ax.legend(title=legend_title, **mdtplt.LEGEND_KWARGS_XSMALL)
+        legend.get_title().set_multialignment("center")
+        pdf.savefig()
+        # Log scale y.
+        ax.relim()
+        ax.autoscale()
+        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+        ax.set(xlim=xlim, ylim=ylims_res)
+        pdf.savefig()
+        plt.close()
+        ################################################################
+
+        ################################################################
+        # Plot min, max and number of samples for count methods.
         ylabels = (
             "Min. Lifetime / Frames",
             "Max. Lifetime / Frames",
@@ -388,8 +548,11 @@ if __name__ == "__main__":  # noqa: C901
         )
         for i, ylabel in enumerate(ylabels):
             fig, ax = plt.subplots(clear=True)
-            col_cnt_i = len(ylims_characs) + 1 + i
-            # Method 1 (censored counting).
+            col_cnt_i = len(ylims_characs)
+            col_cnt_i += 1  # Uncertainty of the mean.
+            col_cnt_i += 3  # 2nd to 3rd raw moment.
+            col_cnt_i += i
+            # Method 1: Censored counting.
             valid = data[col_cnt_cen + col_cnt_i] > 0
             if np.any(valid):
                 ax.plot(
@@ -400,7 +563,7 @@ if __name__ == "__main__":  # noqa: C901
                     marker=marker_cnt_cen,
                     alpha=alpha,
                 )
-            # Method 2 (uncensored counting).
+            # Method 2: Uncensored counting.
             valid = data[col_cnt_unc + col_cnt_i] > 0
             if np.any(valid):
                 ax.plot(
@@ -412,202 +575,281 @@ if __name__ == "__main__":  # noqa: C901
                     alpha=alpha,
                 )
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylims_cnt[i])
-            handles, labels = ax.get_legend_handles_labels()
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+            ylim = ax.get_ylim()
+            if ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
             legend = ax.legend(
-                title=legend_title,
-                ncol=max(len(handles), 1),
-                **mdtplt.LEGEND_KWARGS_XSMALL,
+                title=legend_title, ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL
             )
             legend.get_title().set_multialignment("center")
             pdf.savefig()
+            # Log scale y.
+            ax.relim()
+            ax.autoscale()
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(xlim=xlim, ylim=ylims_cnt[i])
+            pdf.savefig()
             plt.close()
+        ################################################################
 
+        ################################################################
         # Plot fit parameters tau0 and beta.
         ylabels = (
             r"Fit Parameter $\tau_0$ / Frames",
             r"Fit Parameter $\beta$",
+            r"Fit Parameter $\delta$",
         )
         for i, ylabel in enumerate(ylabels):
             fig, ax = plt.subplots(clear=True)
             # True distribution.
             valid = data[col_dist_params + i] > 0
             if np.any(valid):
-                ax.plot(
+                ax.errorbar(
                     xdata[valid],
                     data[col_dist_params + i][valid],
+                    yerr=None,
                     label=label_true,
                     color=color_true,
                     marker=marker_true,
                     alpha=alpha,
                 )
-            # Method 6 (Kohlrausch fit).
-            col_kww_i = len(ylims_characs) + 2 * i
-            valid = data[col_kww + col_kww_i] > 0
+            if i < 2:
+                # Method 5: Weibull fit of the remain probability.
+                col_rp_wbl_i = len(ylims_characs)
+                col_rp_wbl_i += 3  # 2nd to 3rd raw moment.
+                col_rp_wbl_i += 2 * i
+                valid = data[col_rp_wbl + col_rp_wbl_i] > 0
+                if np.any(valid):
+                    ax.errorbar(
+                        xdata[valid],
+                        data[col_rp_wbl + col_rp_wbl_i][valid],
+                        yerr=data[col_rp_wbl + col_rp_wbl_i + 1][valid],
+                        label=label_rp_wbl,
+                        color=color_rp_wbl,
+                        marker=marker_rp_wbl,
+                        alpha=alpha,
+                    )
+            # Method 6: Burr Type XII fit of the remain probability.
+            col_rp_brr_i = len(ylims_characs)
+            col_rp_brr_i += 3  # 2nd to 3rd raw moment.
+            col_rp_brr_i += 2 * i
+            valid = data[col_rp_brr + col_rp_brr_i] > 0
             if np.any(valid):
                 ax.errorbar(
                     xdata[valid],
-                    data[col_kww + col_kww_i][valid],
-                    yerr=data[col_kww + col_kww_i + 1][valid],
-                    label=label_kww,
-                    color=color_kww,
-                    marker=marker_kww,
+                    data[col_rp_brr + col_rp_brr_i][valid],
+                    yerr=data[col_rp_brr + col_rp_brr_i + 1][valid],
+                    label=label_rp_brr,
+                    color=color_rp_brr,
+                    marker=marker_rp_brr,
                     alpha=alpha,
                 )
-            # Method 7 (Burr fit).
-            col_bur_i = len(ylims_characs) + 2 * i
-            valid = data[col_bur + col_bur_i] > 0
+            if i < 2:
+                # Method 8: Weibull fit of the Kaplan-Meier estimator.
+                col_km_wbl_i = len(ylims_characs)
+                col_km_wbl_i += 3  # 2nd to 3rd raw moment.
+                col_km_wbl_i += 2 * i
+                valid = data[col_km_wbl + col_km_wbl_i] > 0
+                if np.any(valid):
+                    ax.errorbar(
+                        xdata[valid],
+                        data[col_km_wbl + col_km_wbl_i][valid],
+                        yerr=data[col_km_wbl + col_km_wbl_i + 1][valid],
+                        label=label_km_wbl,
+                        color=color_km_wbl,
+                        marker=marker_km_wbl,
+                        alpha=alpha,
+                    )
+            # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
+            col_km_brr_i = len(ylims_characs)
+            col_km_brr_i += 3  # 2nd to 3rd raw moment.
+            col_km_brr_i += 2 * i
+            valid = data[col_km_brr + col_km_brr_i] > 0
             if np.any(valid):
                 ax.errorbar(
                     xdata[valid],
-                    data[col_bur + col_bur_i][valid],
-                    yerr=data[col_bur + col_bur_i + 1][valid],
-                    label=label_bur,
-                    color=color_bur,
-                    marker=marker_bur,
+                    data[col_km_brr + col_km_brr_i][valid],
+                    yerr=data[col_km_brr + col_km_brr_i + 1][valid],
+                    label=label_km_brr,
+                    color=color_km_brr,
+                    marker=marker_km_brr,
                     alpha=alpha,
                 )
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            ax.set(
-                xlabel=xlabel,
-                ylabel=ylabel,
-                xlim=xlim,
-                ylim=ylims_fit_params[i],
-            )
-            handles, labels = ax.get_legend_handles_labels()
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+            ylim = ax.get_ylim()
+            if ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
             legend = ax.legend(
-                title=legend_title,
-                ncol=max(len(handles), 1),
-                **mdtplt.LEGEND_KWARGS_XSMALL,
+                title=legend_title, ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL
             )
             legend.get_title().set_multialignment("center")
             pdf.savefig()
+            # Log scale y.
+            ax.relim()
+            ax.autoscale()
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(xlim=xlim, ylim=ylims_fit_params[i])
+            pdf.savefig()
             plt.close()
+        ################################################################
 
-        # Plot fit parameter delta.
-        fig, ax = plt.subplots(clear=True)
-        # True delta (from distribution).
-        col_true_i = 2
-        valid = data[col_dist_params + col_true_i] > 0
-        if np.any(valid):
-            ax.plot(
-                xdata[valid],
-                data[col_dist_params + col_true_i][valid],
-                label=label_true,
-                color=color_true,
-                marker=marker_true,
-                alpha=alpha,
-            )
-        # Method 7 (Burr fit).
-        col_bur_i = 9
-        valid = data[col_bur + col_bur_i] > 0
-        if np.any(valid):
-            ax.errorbar(
-                xdata[valid],
-                data[col_bur + col_bur_i][valid],
-                yerr=data[col_bur + col_bur_i + 1][valid],
-                label=label_bur,
-                color=color_bur,
-                marker=marker_bur,
-                alpha=alpha,
-            )
-        ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(
-            xlabel=xlabel,
-            ylabel=r"Fit Parameter $\delta$",
-            xlim=xlim,
-            ylim=ylims_fit_params[2],
-        )
-        handles, labels = ax.get_legend_handles_labels()
-        legend = ax.legend(
-            title=legend_title,
-            ncol=max(len(handles), 1),
-            **mdtplt.LEGEND_KWARGS_XSMALL,
-        )
-        legend.get_title().set_multialignment("center")
-        pdf.savefig()
-        plt.close()
-
+        ################################################################
         # Plot goodness of fit quantities.
         ylabels = (r"Coeff. of Determ. $R^2$", "RMSE")
         for i, ylabel in enumerate(ylabels):
             fig, ax = plt.subplots(clear=True)
             # Remain probability to the true survival function.
-            col_true_i = 8 + i
+            col_true_i = len(ylims_characs)
+            col_true_i += 3  # 2nd to 3rd raw moment.
+            col_true_i += len(ylims_fit_params)
+            col_true_i += i
             valid = data[col_dst + col_true_i] > 0
             if np.any(valid):
                 ax.plot(
                     xdata[valid],
                     data[col_dst + col_true_i][valid],
-                    label=r"$C(t)$",
-                    color=color_true,
-                    marker=marker_true,
+                    label="ACF to True",
+                    color=color_rp_int,
+                    marker=marker_rp_int,
                     alpha=alpha,
                 )
-            # Method 6 (Kohlrausch fit).
-            col_kww_i = 9 + i
-            valid = data[col_kww + col_kww_i] > 0
+            # Method 5: Weibull fit of the remain probability.
+            col_rp_wbl_i = len(ylims_characs)
+            col_rp_wbl_i += 3  # 2nd to 3rd raw moment.
+            col_rp_wbl_i += 2 * (len(ylims_fit_params) - 1)
+            col_rp_wbl_i += i
+            valid = data[col_rp_wbl + col_rp_wbl_i] > 0
             if np.any(valid):
                 ax.plot(
                     xdata[valid],
-                    data[col_kww + col_kww_i][valid],
-                    label=label_kww,
-                    color=color_kww,
-                    marker=marker_kww,
+                    data[col_rp_wbl + col_rp_wbl_i][valid],
+                    label=label_rp_wbl,
+                    color=color_rp_wbl,
+                    marker=marker_rp_wbl,
                     alpha=alpha,
                 )
-            # Method 7 (Burr fit).
-            col_bur_i = 11 + i
-            valid = data[col_bur + col_bur_i] > 0
+            # Method 6: Burr Type XII fit of the remain probability.
+            col_rp_brr_i = len(ylims_characs)
+            col_rp_brr_i += 3  # 2nd to 3rd raw moment.
+            col_rp_brr_i += 2 * len(ylims_fit_params)
+            col_rp_brr_i += i
+            valid = data[col_rp_brr + col_rp_brr_i] > 0
             if np.any(valid):
                 ax.plot(
                     xdata[valid],
-                    data[col_bur + col_bur_i][valid],
-                    label=label_bur,
-                    color=color_bur,
-                    marker=marker_bur,
+                    data[col_rp_brr + col_rp_brr_i][valid],
+                    label=label_rp_brr,
+                    color=color_rp_brr,
+                    marker=marker_rp_brr,
+                    alpha=alpha,
+                )
+            # Kaplan-Meier estimator to the true survival function.
+            col_true_i = len(ylims_characs)
+            col_true_i += 3  # 2nd to 3rd raw moment.
+            col_true_i += len(ylims_fit_params)
+            col_true_i += 2  # Remain probability to true SF.
+            col_true_i += i
+            valid = data[col_dst + col_true_i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_dst + col_true_i][valid],
+                    label="KM to True",
+                    color=color_km_int,
+                    marker=marker_km_int,
+                    alpha=alpha,
+                )
+            # Method 8: Weibull fit of the Kaplan-Meier estimator.
+            col_km_wbl_i = len(ylims_characs)
+            col_km_wbl_i += 3  # 2nd to 3rd raw moment.
+            col_km_wbl_i += 2 * (len(ylims_fit_params) - 1)
+            col_km_wbl_i += i
+            valid = data[col_km_wbl + col_km_wbl_i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_km_wbl + col_km_wbl_i][valid],
+                    label=label_km_wbl,
+                    color=color_km_wbl,
+                    marker=marker_km_wbl,
+                    alpha=alpha,
+                )
+            # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
+            col_km_brr_i = len(ylims_characs)
+            col_km_brr_i += 3  # 2nd to 3rd raw moment.
+            col_km_brr_i += 2 * len(ylims_fit_params)
+            col_km_brr_i += i
+            valid = data[col_km_brr + col_km_brr_i] > 0
+            if np.any(valid):
+                ax.plot(
+                    xdata[valid],
+                    data[col_km_brr + col_km_brr_i][valid],
+                    label=label_km_brr,
+                    color=color_km_brr,
+                    marker=marker_km_brr,
                     alpha=alpha,
                 )
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-            if i > 0:
-                ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-            ax.set(
-                xlabel=xlabel,
-                ylabel=ylabel,
-                xlim=xlim,
-                ylim=ylims_fit_goodness[i],
-            )
-            handles, labels = ax.get_legend_handles_labels()
+            ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+            ylim = ax.get_ylim()
+            if ylim[0] < 0:
+                ax.set_ylim(0, ylim[1])
             legend = ax.legend(
-                title=legend_title,
-                ncol=max(len(handles), 1),
-                **mdtplt.LEGEND_KWARGS_XSMALL,
+                title=legend_title, ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL
             )
             legend.get_title().set_multialignment("center")
             pdf.savefig()
+            # Log scale y.
+            ax.relim()
+            ax.autoscale()
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set(xlim=xlim, ylim=ylims_fit_goodness[i])
+            pdf.savefig()
             plt.close()
+        ################################################################
 
+        ################################################################
         # Plot end of fit region.
+        ylabel = "End of Fit Region / Frames"
         fig, ax = plt.subplots(clear=True)
-        valid = data[col_fit_end] > 0
+        # Fit of remain probability.
+        valid = data[col_rp_fit_end] > 0
         if np.any(valid):
-            ax.plot(xdata[valid], data[col_fit_end][valid], marker="v")
+            ax.plot(
+                xdata[valid],
+                data[col_rp_fit_end][valid],
+                label="ACF",
+                color=color_rp_wbl,
+                marker=marker_rp_wbl,
+            )
+        # Fit of Kaplan-Meier estimator.
+        valid = data[col_km_fit_end] > 0
+        if np.any(valid):
+            ax.plot(
+                xdata[valid],
+                data[col_km_fit_end][valid],
+                label="KM",
+                color=color_km_wbl,
+                marker=marker_km_wbl,
+            )
         ax.set_xscale("log", base=10, subs=np.arange(2, 10))
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        ax.set(
-            xlabel=xlabel,
-            ylabel="End of Fit Region / Frames",
-            xlim=xlim,
-            ylim=ylims_fit_region[0],
-        )
+        ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
+        ylim = ax.get_ylim()
+        if ylim[0] < 0:
+            ax.set_ylim(0, ylim[1])
         legend = ax.legend(title=legend_title, **mdtplt.LEGEND_KWARGS_XSMALL)
         legend.get_title().set_multialignment("center")
         pdf.savefig()
+        # Log scale y.
+        ax.relim()
+        ax.autoscale()
+        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+        ax.set(xlim=xlim, ylim=ylims_fit_region)
+        pdf.savefig()
         plt.close()
-
+        ################################################################
     print("Created {}".format(outfile))
 
     print("\n")
