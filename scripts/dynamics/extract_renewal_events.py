@@ -420,6 +420,13 @@ def extract_renewal_events(  # noqa: C901
                 if not np.any(remain):
                     # Last selection compound(s) that was (were) bound
                     # to reference compound rix at time t0 got detached.
+                    print()
+                    print("rix               =", rix)
+                    print("rix_t0            =", rix_t0)
+                    print("t0[rix_t0]        =", t0[rix_t0])
+                    print("selix[j]          =", selix[j])
+                    print("selix_t0[rix_t0]  =", selix_t0[rix_t0])
+                    print("selpos_t0[rix_t0] =", selpos_t0[rix_t0])
                     selix_t0[rix_t0] = selix_t0[rix_t0][0]
                     selpos_t0[rix_t0] = selpos_t0[rix_t0][0]
                     trenew[rix_t0] = frame - t0[rix_t0]
@@ -433,8 +440,13 @@ def extract_renewal_events(  # noqa: C901
                     )
                     selix_bound = cm[rix].nonzero()[1]
                     if len(selix_bound) == 0:
+                        # No other selection compound has bound to the
+                        # reference compound between t0 and now.
                         refix2refix_t0[rix] = -1
                     else:
+                        # Another selection compound has already bound
+                        # to the selection compound somewhere between t0
+                        # and now.
                         refix2refix_t0[rix] = len(refix_t0)
                         refix_t0.append(rix)
                         selix_t0.append(selix_bound)
@@ -565,6 +577,11 @@ def extract_renewal_events(  # noqa: C901
             selix_t0[i] = selix_t0[i][0]
         selix_t0 = selix_t0.astype(np.uint32)
 
+        print()
+        print("selix_t0 =", selix_t0)
+        print("trenew   =", trenew)
+        print("t0       =", t0)
+        print("refix_t0 =", refix_t0)
         ix_sort = np.lexsort((selix_t0, trenew, t0, refix_t0))
         valid = valid[ix_sort]
         refix_t0 = refix_t0[ix_sort]
@@ -918,7 +935,9 @@ if __name__ == "__main__":
         dtrj = data[-1]
         data = np.column_stack(data[:-1])
     if len(data) == 0:
-        raise ValueError("Could not detect any renewal event")
+        warnings.warn(
+            "Could not detect any renewal event", RuntimeWarning, stacklevel=2
+        )
     data[:, 2] *= timestep
     data[:, 2] += start_time
     data[:, 3] *= timestep
