@@ -5932,6 +5932,11 @@ def back_jump_prob(
             "At least one element of `bj_prob` is greater than one.  This"
             " should not have happened"
         )
+    if np.sum(bj_prob) > 1:
+        raise ValueError(
+            "The sum of all `bj_prob` is greater than one.  This should not"
+            " have happened"
+        )
     return bj_prob
 
 
@@ -6302,5 +6307,10 @@ def back_jump_prob_discrete(
         raise ValueError(
             "At least one element of `bj_prob` is greater than one.  This"
             " should not have happened"
+        )
+    if np.any(np.sum(bj_prob, axis=-1) > 1):
+        raise ValueError(
+            "For at least one state is the sum of all back-jump probabilities"
+            " greater than one.  This should not have happened"
         )
     return bj_prob
