@@ -5932,6 +5932,11 @@ def back_jump_prob(
             "At least one element of `bj_prob` is greater than one.  This"
             " should not have happened"
         )
+    if np.sum(bj_prob) > 1:
+        raise ValueError(
+            "The sum of all `bj_prob` is greater than one.  This should not"
+            " have happened"
+        )
     return bj_prob
 
 
