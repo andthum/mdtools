@@ -5711,6 +5711,7 @@ def back_jump_prob(
     continuous=False,
     discard_neg=False,
     discard_neg_btw=False,
+    return_norm=False,
     verbose=False,
 ):
     r"""
@@ -5748,6 +5749,8 @@ def back_jump_prob(
     discard_neg_btw : bool, optional
         If ``True``, discard back jumps when the compound has visited a
         negative state between :math:`t_0` and :math:`t_0 + \Delta t`.
+    return_norm : bool, optional
+        If ``True``, return the normalization factors for all lag times.
     verbose : bool, optional
         If ``True`` print a progress bar.
 
@@ -5761,6 +5764,12 @@ def back_jump_prob(
         occurred.  Another interpretation could be that the k-th element
         of the array is the percentage of compounds that return back to
         there initial state k frames after a state transition has
+        occurred.
+    norm : numpy.ndarray
+        Array of the same shape as `bj_prob` containing the
+        corresponding normalization factors.  The k-th element of
+        ``bj_prob * norm`` is the number of compounds that return back
+        to there initial state k frames after a state transition has
         occurred.
 
     See Also
@@ -5916,7 +5925,6 @@ def back_jump_prob(
             )
 
     bj_prob = bj_prob / norm
-    del norm
     if bj_prob[0] != 0:
         raise ValueError(
             "`bj_prob[0]` = {} != 0.  This should not have"
@@ -5937,7 +5945,10 @@ def back_jump_prob(
             "The sum of all `bj_prob` is greater than one.  This should not"
             " have happened"
         )
-    return bj_prob
+    if return_norm:
+        return bj_prob, norm
+    else:
+        return bj_prob
 
 
 def back_jump_prob_discrete(
