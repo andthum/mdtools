@@ -5957,6 +5957,7 @@ def back_jump_prob_discrete(
     continuous=False,
     discard_neg=False,
     discard_neg_btw=False,
+    return_norm=False,
     verbose=False,
 ):
     r"""
@@ -5998,6 +5999,9 @@ def back_jump_prob_discrete(
     discard_neg_btw : bool, optional
         If ``True``, discard back jumps when the compound has visited a
         negative state between :math:`t_0` and :math:`t_0 + \Delta t`.
+    return_norm : bool, optional
+        If ``True``, return the normalization factors for all states and
+        all lag times.
     verbose : bool, optional
         If ``True`` print a progress bar.
 
@@ -6010,6 +6014,9 @@ def back_jump_prob_discrete(
         initial state j frames after a state transition has occurred,
         given that the compound was in state i of the second discrete
         trajectory at time :math:`t_0`.
+    norm : numpy.ndarray
+        Array of the same shape as `bj_prob` containing the
+        corresponding normalization factors.
 
     See Also
     --------
@@ -6308,7 +6315,6 @@ def back_jump_prob_discrete(
             " happened".format(bj_prob[:, 0])
         )
     bj_prob = bj_prob / norm
-    del norm
     if np.any(bj_prob < 0):
         raise ValueError(
             "At least one element of `bj_prob` is less than zero.  This should"
@@ -6324,4 +6330,7 @@ def back_jump_prob_discrete(
             "For at least one state is the sum of all back-jump probabilities"
             " greater than one.  This should not have happened"
         )
-    return bj_prob
+    if return_norm:
+        return bj_prob, norm
+    else:
+        return bj_prob
