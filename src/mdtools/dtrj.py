@@ -6325,10 +6325,11 @@ def back_jump_prob_discrete(
             "At least one element of `bj_prob` is greater than one.  This"
             " should not have happened"
         )
-    if np.any(np.nansum(bj_prob, axis=-1) > 1):
+    if continuous and np.any(np.nansum(bj_prob, axis=-1) > 1):
         raise ValueError(
-            "For at least one state is the sum of all back-jump probabilities"
-            " greater than one.  This should not have happened"
+            "For at least one state in the second discrete trajectory the sum"
+            " of all back-jump probabilities is greater than one while"
+            " `continuous` is True.  This should not have happened"
         )
     if return_norm:
         return bj_prob, norm
