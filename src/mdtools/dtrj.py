@@ -5924,12 +5924,12 @@ def back_jump_prob(
                 "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
             )
 
-    bj_prob = bj_prob / norm
     if bj_prob[0] != 0:
         raise ValueError(
             "`bj_prob[0]` = {} != 0.  This should not have"
             " happened".format(bj_prob[0])
         )
+    bj_prob = bj_prob / norm
     if np.any(bj_prob < 0):
         raise ValueError(
             "At least one element of `bj_prob` is less than zero.  This should"
@@ -5940,10 +5940,10 @@ def back_jump_prob(
             "At least one element of `bj_prob` is greater than one.  This"
             " should not have happened"
         )
-    if np.nansum(bj_prob) > 1:
+    if continuous and np.nansum(bj_prob) > 1:
         raise ValueError(
-            "The sum of all `bj_prob` is greater than one.  This should not"
-            " have happened"
+            "The sum of all `bj_prob` is greater than one while `continuous`"
+            " is True.  This should not have happened"
         )
     if return_norm:
         return bj_prob, norm
