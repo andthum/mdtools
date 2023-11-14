@@ -5867,6 +5867,7 @@ def back_jump_prob(
 
     bj_prob = np.zeros(n_frames - 1, dtype=np.uint32)
     norm = np.zeros_like(bj_prob)
+    n_trans_valid = 0  # Required only for consistency checks.
 
     if verbose:
         proc = psutil.Process()
@@ -5877,11 +5878,13 @@ def back_jump_prob(
     for cmp_trj in trj:
         # Frames directly *before* state transitions.
         ix_trans = np.flatnonzero(np.diff(cmp_trj))
+        n_trans_valid += len(ix_trans)
         # Loop over all state transitions.
         for t0 in ix_trans:
             if discard_neg and cmp_trj[t0] < 0:
                 # Discard back jumps starting from (and consequently
                 # ending in) a negative state.
+                n_trans_valid -= 1
                 continue
             # Trajectory after the state transition.
             cmp_trj_a = cmp_trj[t0 + 1 :]
@@ -5896,6 +5899,7 @@ def back_jump_prob(
                 if discard_neg_btw and cmp_trj_a[0] < 0:
                     # Discard back jumps when the compound has visited a
                     # negative state in between.
+                    n_trans_valid -= 1
                     continue
                 # Frame at which the compound leaves the new state for
                 # the first time.
@@ -5911,8 +5915,10 @@ def back_jump_prob(
                 ix_back = ix_back if ix_back == ix_trans2 else 0
             elif discard_neg_btw:  # and not continuous
                 if ix_back > 0 and np.any(cmp_trj_a[:ix_back] < 0):
+                    n_trans_valid -= 1
                     continue
                 elif ix_back == 0 and np.any(cmp_trj_a < 0):
+                    n_trans_valid -= 1
                     continue
             if ix_back > 0:
                 bj_prob[ix_back] += 1
@@ -5929,6 +5935,17 @@ def back_jump_prob(
             "`bj_prob[0]` = {} != 0.  This should not have"
             " happened".format(bj_prob[0])
         )
+    if np.sum(bj_prob) >= max(1, n_trans_valid):
+        raise ValueError(
+            "The total number of back jumps ({}) is greater than or equal to"
+            " the total number of valid transitions ({}).  This should not"
+            " have happened".format(np.sum(bj_prob), n_trans_valid)
+        )
+    if norm[0] != n_trans_valid:
+        raise ValueError(
+            "`norm[0]` ({}) != `n_trans_valid` ({}).  This should not have"
+            " happened".format(norm[0], n_trans_valid)
+        )
     bj_prob = bj_prob / norm
     if np.any(bj_prob < 0):
         raise ValueError(
@@ -5940,7 +5957,8 @@ def back_jump_prob(
             "At least one element of `bj_prob` is greater than one.  This"
             " should not have happened"
         )
-    if continuous and np.nansum(bj_prob) > 1:
+    tolerance = 1e-3
+    if continuous and np.nansum(bj_prob) > 1 + tolerance:
         raise ValueError(
             "The sum of all `bj_prob` is greater than one while `continuous`"
             " is True.  This should not have happened"
@@ -5951,7 +5969,7 @@ def back_jump_prob(
         return bj_prob
 
 
-def back_jump_prob_discrete(
+def back_jump_prob_discrete(  # noqa: C901
     dtrj1,
     dtrj2,
     continuous=False,
@@ -6249,6 +6267,8 @@ def back_jump_prob_discrete(
 
     bj_prob = np.zeros((n_states, n_frames - 1), dtype=np.uint32)
     norm = np.zeros_like(bj_prob)
+    # Required only for consistency checks.
+    n_trans_valid = np.zeros(n_states, dtype=np.uint32)
 
     if verbose:
         proc = psutil.Process()
@@ -6304,6 +6324,7 @@ def back_jump_prob_discrete(
             # Maximum possible lag time for a back jump.
             max_lag = len(cmp_trj_a)
             norm[state2, :max_lag] += 1
+            n_trans_valid[state2] += 1
         if verbose:
             trj.set_postfix_str(
                 "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
@@ -6313,6 +6334,18 @@ def back_jump_prob_discrete(
         raise ValueError(
             "`bj_prob[:, 0]` = {} != 0.  This should not have"
             " happened".format(bj_prob[:, 0])
+        )
+    if np.any(np.sum(bj_prob, axis=-1) > n_trans_valid):
+        raise ValueError(
+            "For at least one state in the second discrete trajectory the"
+            " total number of back jumps ({}) is greater than the total number"
+            " of valid transitions ({}).  This should not have"
+            " happened".format(np.sum(bj_prob, axis=-1), n_trans_valid)
+        )
+    if not np.array_equal(norm[:, 0], n_trans_valid):
+        raise ValueError(
+            "`norm[:, 0]` ({}) != `n_trans_valid` ({}).  This should not have"
+            " happened".format(norm[:, 0], n_trans_valid)
         )
     bj_prob = bj_prob / norm
     if np.any(bj_prob < 0):
@@ -6325,7 +6358,8 @@ def back_jump_prob_discrete(
             "At least one element of `bj_prob` is greater than one.  This"
             " should not have happened"
         )
-    if continuous and np.any(np.nansum(bj_prob, axis=-1) > 1):
+    tolerance = 1e-3
+    if continuous and np.any(np.nansum(bj_prob, axis=-1) > 1 + tolerance):
         raise ValueError(
             "For at least one state in the second discrete trajectory the sum"
             " of all back-jump probabilities is greater than one while"
