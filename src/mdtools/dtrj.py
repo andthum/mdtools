@@ -5969,7 +5969,7 @@ def back_jump_prob(
         return bj_prob
 
 
-def back_jump_prob_discrete(
+def back_jump_prob_discrete(  # noqa: C901
     dtrj1,
     dtrj2,
     continuous=False,
@@ -6267,6 +6267,8 @@ def back_jump_prob_discrete(
 
     bj_prob = np.zeros((n_states, n_frames - 1), dtype=np.uint32)
     norm = np.zeros_like(bj_prob)
+    # Required only for consistency checks.
+    n_trans_valid = np.zeros(n_states, dtype=np.uint32)
 
     if verbose:
         proc = psutil.Process()
@@ -6322,6 +6324,7 @@ def back_jump_prob_discrete(
             # Maximum possible lag time for a back jump.
             max_lag = len(cmp_trj_a)
             norm[state2, :max_lag] += 1
+            n_trans_valid[state2] += 1
         if verbose:
             trj.set_postfix_str(
                 "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
@@ -6331,6 +6334,18 @@ def back_jump_prob_discrete(
         raise ValueError(
             "`bj_prob[:, 0]` = {} != 0.  This should not have"
             " happened".format(bj_prob[:, 0])
+        )
+    if np.any(np.sum(bj_prob, axis=-1) > n_trans_valid):
+        raise ValueError(
+            "For at least one state in the second discrete trajectory the"
+            " total number of back jumps ({}) is greater than the total number"
+            " of valid transitions ({}).  This should not have"
+            " happened".format(np.sum(bj_prob, axis=-1), n_trans_valid)
+        )
+    if not np.array_equal(norm[:, 0], n_trans_valid):
+        raise ValueError(
+            "`norm[:, 0]` ({}) != `n_trans_valid` ({}).  This should not have"
+            " happened".format(norm[:, 0], n_trans_valid)
         )
     bj_prob = bj_prob / norm
     if np.any(bj_prob < 0):
@@ -6343,7 +6358,8 @@ def back_jump_prob_discrete(
             "At least one element of `bj_prob` is greater than one.  This"
             " should not have happened"
         )
-    if continuous and np.any(np.nansum(bj_prob, axis=-1) > 1):
+    tolerance = 1e-3
+    if continuous and np.any(np.nansum(bj_prob, axis=-1) > 1 + tolerance):
         raise ValueError(
             "For at least one state in the second discrete trajectory the sum"
             " of all back-jump probabilities is greater than one while"
