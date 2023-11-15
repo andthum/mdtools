@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2021  The MDTools Development Team and all contributors
-# listed in the file AUTHORS.rst
+# Copyright (C) 2021-2023  The MDTools Development Team and all
+# contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -19,27 +18,30 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+"""TODO: Write docstring"""
+
+
 __author__ = "Andreas Thum"
 
 
 # Standard libraries
-import sys
+import argparse
 import os
+import sys
 import warnings
 from datetime import datetime
-import argparse
 
-# Third party libraries
-import psutil
-import numpy as np
+# Third-party libraries
 import MDAnalysis.lib.distances as mdadist
+import numpy as np
+import psutil
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 
 
 def check_hex_lattice(verts, r0, box, flatside='x', tol=1e-3):
-    """
+    r"""
     Check if a given hexagonal lattice is suited for the analyses in
     this script.
 
@@ -77,30 +79,35 @@ def check_hex_lattice(verts, r0, box, flatside='x', tol=1e-3):
     """
     verts = mdadist.apply_PBC(verts, box=box)
     if not np.allclose(verts[:, 2], verts[0, 2], rtol=0, atol=tol):
-        raise ValueError("The hexagonal lattice must lie flat in xy"
-                         " plane")
+        raise ValueError(
+            "The hexagonal lattice must lie flat in xy plane"
+        )
     direction = ('x', 'y')
     if flatside == 'x':
         ix0, ix1 = 0, 1
     elif flatside == 'y':
         ix0, ix1 = 1, 0
     else:
-        raise ValueError("flatside must be either 'x' or 'y', but you"
-                         " gave {}".format(flatside))
+        raise ValueError(
+            "`flatside` must be either 'x' or 'y', but you gave"
+            " {}".format(flatside)
+        )
     if not np.isclose(box[ix0] % (r0 * 3), 0, rtol=0, atol=tol):
-        raise ValueError("The hexagonal lattice does not continue"
-                         " properly across periodic boundaries in {}"
-                         " direction".format(direction[ix0]))
+        raise ValueError(
+            "The hexagonal lattice does not continue properly across periodic"
+            " boundaries in {} direction".format(direction[ix0])
+        )
     if not np.isclose(box[ix1] % (r0 * np.sqrt(3)), 0, rtol=0, atol=tol):
-        raise ValueError("The hexagonal lattice does not continue"
-                         " properly across periodic boundaries in {}"
-                         " direction".format(direction[ix1]))
+        raise ValueError(
+            "The hexagonal lattice does not continue properly across periodic"
+            " boundaries in {} direction".format(direction[ix1])
+        )
 
 
 # A "copy"" of this function is used in discretization/discrete_hex.py
 # Last modified: 2021-01-19
 def hex_verts2faces(verts, r0, box, flatside='x', tol=1e-3):
-    """
+    r"""
     Calculate the positions of the faces of a hexagonal lattice from the
     positions of the vertices.
 
@@ -139,11 +146,7 @@ def hex_verts2faces(verts, r0, box, flatside='x', tol=1e-3):
     The lattice must lie flat in xy plane and continue properly across
     periodic boundaries.
     """
-    check_hex_lattice(verts=verts,
-                      r0=r0,
-                      box=box,
-                      flatside=flatside,
-                      tol=tol)
+    check_hex_lattice(verts=verts, r0=r0, box=box, flatside=flatside, tol=tol)
     verts = mdadist.apply_PBC(verts, box=box)
     faces = np.copy(verts)
     if flatside == 'x':
@@ -151,8 +154,10 @@ def hex_verts2faces(verts, r0, box, flatside='x', tol=1e-3):
     elif flatside == 'y':
         faces[:, 1] += r0
     else:
-        raise ValueError("flatside must be either x or y, but you gave"
-                         " {}".format(flatside))
+        raise ValueError(
+            "`flatside` must be either x or y, but you gave"
+            " {}".format(flatside)
+        )
     faces = mdadist.apply_PBC(faces, box=box)
     precision = int(np.ceil(-np.log10(tol)))
     np.round(faces, precision, out=faces)
@@ -163,15 +168,17 @@ def hex_verts2faces(verts, r0, box, flatside='x', tol=1e-3):
         valid = np.isin(faces[:, 1], verts[:, 1], invert=True)
     faces = faces[valid]
     if 2 * len(faces) != len(verts):
-        raise ValueError("The number of hexagon faces ({}) is not half"
-                         " the number of vertices ({}). This should not"
-                         " have happened".format(len(faces), len(verts)))
+        raise ValueError(
+            "The number of hexagon faces ({}) is not half the number of"
+            " vertices ({}).  This should not have"
+            " happened".format(len(faces), len(verts))
+        )
     ix_sort = np.lexsort(faces[:, ::-1].T)
     return faces[ix_sort]
 
 
 def get_1st_hex_face_col(verts, r0, box, tol):
-    """
+    r"""
     Get the positions of the hexagon faces in the first column of a
     hexagonal lattice.
 
@@ -185,8 +192,9 @@ def get_1st_hex_face_col(verts, r0, box, tol):
         hexagons is related to the lattice constant `a` via
         :math:`a = 2 r_0 \sin{(60°)} = r_0 \sqrt{3}`.
     box : array_like, optional
-        The unit cell dimensions of the system, which must be orthogonal.
-        They must be provided in the same format as returned by
+        The unit cell dimensions of the system, which must be
+        orthogonal.  They must be provided in the same format as
+        returned by
         :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
         ``[lx, ly, lz, alpha, beta, gamma]``.
     tol : scalar, optional
@@ -209,24 +217,29 @@ def get_1st_hex_face_col(verts, r0, box, tol):
     """
     mdt.check.box(box=box, with_angles=True, orthorhombic=True, dim=1)
     check_hex_lattice(verts=verts, r0=r0, box=box, flatside='x', tol=tol)
-    hex_faces = hex_verts2faces(verts=verts,
-                                r0=r0,
-                                box=box,
-                                flatside='x',
-                                tol=tol)
+    hex_faces = hex_verts2faces(
+        verts=verts, r0=r0, box=box, flatside='x', tol=tol
+    )
     xmin = np.min(hex_faces[:, 0])
     ix = np.isclose(hex_faces[:, 0], xmin, rtol=0, atol=args.TOL)
+    if np.isclose(xmin, 0, rtol=0, atol=tol):
+        # Also consider hexagon faces that lie on the opposite edge of
+        # the simulation box, because with periodic boundary conditions
+        # these positions are equivalent to zero.
+        ix2 = np.isclose(hex_faces[:, 0], box[0], rtol=0, atol=tol)
+        ix = np.sort(np.append(ix, ix2))
     hex_face_col = hex_faces[ix]
     a0 = r0 * np.sqrt(3)  # Lattice constant
     if not np.isclose(len(hex_face_col), box[1] / a0, rtol=0, atol=tol):
-        raise ValueError("The number of hexagons per column is {} but"
-                         " should be {}"
-                         .format(len(hex_face_col), box[1] / a0))
+        raise ValueError(
+            "The number of hexagons per column is {} but should be"
+            " {}".format(len(hex_face_col), box[1] / a0)
+        )
     return hex_face_col
 
 
 def get_1st_hex_face_rows(verts, r0, box, tol):
-    """
+    r"""
     Get the positions of the hexagon faces in the first two staggered
     rows of a hexagonal lattice.
 
@@ -240,8 +253,9 @@ def get_1st_hex_face_rows(verts, r0, box, tol):
         hexagons is related to the lattice constant `a` via
         :math:`a = 2 r_0 \sin{(60°)} = r_0 \sqrt{3}`.
     box : array_like, optional
-        The unit cell dimensions of the system, which must be orthogonal.
-        They must be provided in the same format as returned by
+        The unit cell dimensions of the system, which must be
+        orthogonal.  They must be provided in the same format as
+        returned by
         :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
         ``[lx, ly, lz, alpha, beta, gamma]``.
     tol : scalar, optional
@@ -265,28 +279,34 @@ def get_1st_hex_face_rows(verts, r0, box, tol):
     """
     mdt.check.box(box=box, with_angles=True, orthorhombic=True, dim=1)
     check_hex_lattice(verts=verts, r0=r0, box=box, flatside='x', tol=tol)
-    hex_faces = hex_verts2faces(verts=verts,
-                                r0=r0,
-                                box=box,
-                                flatside='x',
-                                tol=tol)
+    hex_faces = hex_verts2faces(
+        verts=verts, r0=r0, box=box, flatside='x', tol=tol
+    )
     a0 = r0 * np.sqrt(3)  # Lattice constant
     ymin = np.min(hex_faces[:, 1])
     ix = np.isclose(hex_faces[:, 1], ymin, rtol=0, atol=tol)
+    if np.isclose(ymin, 0, rtol=0, atol=tol):
+        # Also consider hexagon faces that lie on the opposite edge of
+        # the simulation box, because with periodic boundary conditions
+        # these positions are equivalent to zero.
+        ix2 = np.isclose(hex_faces[:, 1], box[1], rtol=0, atol=tol)
+        ix = np.sort(np.append(ix, ix2))
     hex_face_row1 = hex_faces[ix]
     ix = np.isclose(hex_faces[:, 1], ymin + a0 / 2, rtol=0, atol=tol)
+    if np.isclose(ymin + a0 / 2, 0, rtol=0, atol=tol):
+        ix2 = np.isclose(hex_faces[:, 1], box[1], rtol=0, atol=tol)
+        ix = np.sort(np.append(ix, ix2))
     hex_face_row2 = hex_faces[ix]
-    if not np.isclose(len(hex_face_row1),
-                      box[0] / (r0 * 3),
-                      rtol=0,
-                      atol=tol):
-        raise ValueError("The number of hexagons per row is {} but"
-                         " should be {}"
-                         .format(len(hex_face_row1), box[0] / (r0 * 3)))
+    if not np.isclose(len(hex_face_row1), box[0] / (r0 * 3), rtol=0, atol=tol):
+        raise ValueError(
+            "The number of hexagons per row is {} but should be"
+            " {}".format(len(hex_face_row1), box[0] / (r0 * 3))
+        )
     if len(hex_face_row2) != len(hex_face_row1):
-        raise ValueError("The number of hexagons in row 2 ({}) is not"
-                         " the same as in row 1 ({})"
-                         .format(len(hex_face_row2), len(hex_face_row1)))
+        raise ValueError(
+            "The number of hexagons in row 2 ({}) is not the same as in row 1"
+            " ({})".format(len(hex_face_row2), len(hex_face_row1))
+        )
     return np.asarray([hex_face_row1, hex_face_row2])
 
 
