@@ -222,11 +222,13 @@ def get_1st_hex_face_col(verts, r0, box, tol):
     )
     xmin = np.min(hex_faces[:, 0])
     ix = np.isclose(hex_faces[:, 0], xmin, rtol=0, atol=args.TOL)
+    ix = np.flatnonzero(ix)
     if np.isclose(xmin, 0, rtol=0, atol=tol):
         # Also consider hexagon faces that lie on the opposite edge of
         # the simulation box, because with periodic boundary conditions
         # these positions are equivalent to zero.
         ix2 = np.isclose(hex_faces[:, 0], box[0], rtol=0, atol=tol)
+        ix2 = np.flatnonzero(ix2)
         ix = np.sort(np.append(ix, ix2))
     hex_face_col = hex_faces[ix]
     a0 = r0 * np.sqrt(3)  # Lattice constant
@@ -285,16 +287,20 @@ def get_1st_hex_face_rows(verts, r0, box, tol):
     a0 = r0 * np.sqrt(3)  # Lattice constant
     ymin = np.min(hex_faces[:, 1])
     ix = np.isclose(hex_faces[:, 1], ymin, rtol=0, atol=tol)
+    ix = np.flatnonzero(ix)
     if np.isclose(ymin, 0, rtol=0, atol=tol):
         # Also consider hexagon faces that lie on the opposite edge of
         # the simulation box, because with periodic boundary conditions
         # these positions are equivalent to zero.
         ix2 = np.isclose(hex_faces[:, 1], box[1], rtol=0, atol=tol)
+        ix2 = np.flatnonzero(ix2)
         ix = np.sort(np.append(ix, ix2))
     hex_face_row1 = hex_faces[ix]
     ix = np.isclose(hex_faces[:, 1], ymin + a0 / 2, rtol=0, atol=tol)
+    ix = np.flatnonzero(ix)
     if np.isclose(ymin + a0 / 2, 0, rtol=0, atol=tol):
         ix2 = np.isclose(hex_faces[:, 1], box[1], rtol=0, atol=tol)
+        ix2 = np.flatnonzero(ix2)
         ix = np.sort(np.append(ix, ix2))
     hex_face_row2 = hex_faces[ix]
     if not np.isclose(len(hex_face_row1), box[0] / (r0 * 3), rtol=0, atol=tol):
