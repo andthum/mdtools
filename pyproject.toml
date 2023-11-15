@@ -29,6 +29,7 @@ import_heading_thirdparty = "Third-party libraries"
 import_heading_firstparty = "First-party libraries"
 import_heading_localfolder = "Local imports"
 known_local_folder = [
+    "axial_hex_distribution_1nn",
     "lifetime_autocorr_serial",
     "msd_at_coord_change",
     "msd_layer_serial",
