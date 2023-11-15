@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-
 # This file is part of MDTools.
-# Copyright (C) 2021  The MDTools Development Team and all contributors
-# listed in the file AUTHORS.rst
+# Copyright (C) 2021-2023  The MDTools Development Team and all
+# contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -19,27 +18,32 @@
 # along with MDTools.  If not, see <http://www.gnu.org/licenses/>.
 
 
+"""TODO: Write docstring"""
+
+
 __author__ = "Andreas Thum"
 
 
 # Standard libraries
-import sys
+import argparse
 import os
+import sys
 import warnings
 from datetime import datetime
-import argparse
 
-# Third party libraries
-import psutil
+# Third-party libraries
 import numpy as np
+import psutil
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
+
+# Local imports
 from axial_hex_distribution_1nn import check_hex_lattice, hex_verts2faces
 
 
 def get_1st_hex_face_cols(verts, r0, box, tol):
-    """
+    r"""
     Get the positions of the hexagon faces in the first two staggered
     columns of a hexagonal lattice.
 
@@ -53,8 +57,9 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
         hexagons is related to the lattice constant `a` via
         :math:`a = 2 r_0 \sin{(60°)} = r_0 \sqrt{3}`.
     box : array_like, optional
-        The unit cell dimensions of the system, which must be orthogonal.
-        They must be provided in the same format as returned by
+        The unit cell dimensions of the system, which must be
+        orthogonal.  They must be provided in the same format as
+        returned by
         :attr:`MDAnalysis.coordinates.base.Timestep.dimensions`:
         ``[lx, ly, lz, alpha, beta, gamma]``.
     tol : scalar, optional
@@ -78,11 +83,9 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
     """
     mdt.check.box(box=box, with_angles=True, orthorhombic=True, dim=1)
     check_hex_lattice(verts=verts, r0=r0, box=box, flatside='x', tol=tol)
-    hex_faces = hex_verts2faces(verts=verts,
-                                r0=r0,
-                                box=box,
-                                flatside='x',
-                                tol=tol)
+    hex_faces = hex_verts2faces(
+        verts=verts, r0=r0, box=box, flatside='x', tol=tol
+    )
     xmin = np.min(hex_faces[:, 0])
     ix = np.isclose(hex_faces[:, 0], xmin, rtol=0, atol=args.TOL)
     hex_face_col1 = hex_faces[ix]
@@ -90,13 +93,15 @@ def get_1st_hex_face_cols(verts, r0, box, tol):
     hex_face_col2 = hex_faces[ix]
     a0 = r0 * np.sqrt(3)  # Lattice constant
     if not np.isclose(len(hex_face_col1), box[1] / a0, rtol=0, atol=tol):
-        raise ValueError("The number of hexagons per column is {} but"
-                         " should be {}"
-                         .format(len(hex_face_col1), box[1] / a0))
+        raise ValueError(
+            "The number of hexagons per column is {} but should be"
+            " {}".format(len(hex_face_col1), box[1] / a0)
+        )
     if len(hex_face_col2) != len(hex_face_col1):
-        raise ValueError("The number of hexagons in column 2 ({}) is not"
-                         " the same as in column 1 ({})"
-                         .format(len(hex_face_col2), len(hex_face_col1)))
+        raise ValueError(
+            "The number of hexagons in column 2 ({}) is not the same as in"
+            " column 1 ({})".format(len(hex_face_col2), len(hex_face_col1))
+        )
     return np.asarray([hex_face_col1, hex_face_col2])
 
 
