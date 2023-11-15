@@ -5935,11 +5935,11 @@ def back_jump_prob(
             "`bj_prob[0]` = {} != 0.  This should not have"
             " happened".format(bj_prob[0])
         )
-    if np.sum(bj_prob) >= max(1, n_trans_valid):
+    if np.sum(bj_prob) > n_trans_valid:
         raise ValueError(
-            "The total number of back jumps ({}) is greater than or equal to"
-            " the total number of valid transitions ({}).  This should not"
-            " have happened".format(np.sum(bj_prob), n_trans_valid)
+            "The total number of back jumps ({}) is greater than the total"
+            " number of valid transitions ({}).  This should not have"
+            " happened".format(np.sum(bj_prob), n_trans_valid)
         )
     if norm[0] != n_trans_valid:
         raise ValueError(
