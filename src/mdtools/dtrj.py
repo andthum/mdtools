@@ -4651,9 +4651,9 @@ def leave_prob(*args, **kwargs):
     prob = np.full_like(n_leaves, np.nan, dtype=np.float64)
     prob = np.divide(n_leaves, n_risk, where=(n_risk != 0), out=prob)
     del n_leaves, n_risk
-    if prob[0] != 0:
+    if prob[0] != 0 and not np.isnan(prob[0]):
         raise ValueError(
-            "`prob[0]` = {} != 0.  This should not have"
+            "`prob[0]` = {} != 0 or NaN.  This should not have"
             " happened".format(prob[0])
         )
     if np.any(prob < 0):
@@ -4924,7 +4924,7 @@ def leave_prob_discrete(*args, **kwargs):
     del n_leaves, n_risk
     if np.any(prob[:, 0][~np.isnan(prob[:, 0])] != 0):
         raise ValueError(
-            "`prob[:, 0]` = {} != 0.  This should not have"
+            "`prob[:, 0]` = {} != 0 or NaN.  This should not have"
             " happened".format(prob[:, 0])
         )
     if np.any(prob < 0):
@@ -5231,9 +5231,10 @@ def kaplan_meier(*args, **kwargs):
     sf_var *= sf**2
 
     del n_leaves, n_risk
-    if sf[0] != 1:
+    if sf[0] != 1 and not np.isnan(sf[0]):
         raise ValueError(
-            "`sf[0]` = {} != 1.  This should not have happened".format(sf[0])
+            "`sf[0]` = {} != 1 or NaN.  This should not have"
+            " happened".format(sf[0])
         )
     if np.any(sf < 0):
         raise ValueError(
@@ -5683,7 +5684,7 @@ def kaplan_meier_discrete(*args, **kwargs):
     del n_leaves, n_risk
     if np.any(sf[:, 0][~np.isnan(sf[:, 0])] != 1):
         raise ValueError(
-            "`sf[:, 0]` = {} != 1.  This should not have"
+            "`sf[:, 0]` = {} != 1 or NaN.  This should not have"
             " happened".format(sf[:, 0])
         )
     if np.any(sf < 0):
