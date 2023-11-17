@@ -5231,9 +5231,10 @@ def kaplan_meier(*args, **kwargs):
     sf_var *= sf**2
 
     del n_leaves, n_risk
-    if sf[0] != 1:
+    if sf[0] != 1 and not np.isnan(sf[0]):
         raise ValueError(
-            "`sf[0]` = {} != 1.  This should not have happened".format(sf[0])
+            "`sf[0]` = {} != 1 or NaN.  This should not have"
+            " happened".format(sf[0])
         )
     if np.any(sf < 0):
         raise ValueError(
@@ -5683,7 +5684,7 @@ def kaplan_meier_discrete(*args, **kwargs):
     del n_leaves, n_risk
     if np.any(sf[:, 0][~np.isnan(sf[:, 0])] != 1):
         raise ValueError(
-            "`sf[:, 0]` = {} != 1.  This should not have"
+            "`sf[:, 0]` = {} != 1 or NaN.  This should not have"
             " happened".format(sf[:, 0])
         )
     if np.any(sf < 0):
