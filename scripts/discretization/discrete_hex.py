@@ -411,18 +411,18 @@ if __name__ == '__main__':
             timer_frame = datetime.now()
 
         if not np.allclose(surf.positions, surf_pos):
-            print(flush=True)
-            print("  Note: The surface has moved in", flush=True)
-            print("  Frame {:12d}".format(ts.frame), flush=True)
-            print("  Step: {:>12}    Time: {:>12} (ps)"
-                  .format(ts.data['step'], ts.data['time']),
-                  flush=True)
+            # print(flush=True)
+            # print("  Note: The surface has moved in", flush=True)
+            # print("  Frame {:12d}".format(ts.frame), flush=True)
+            # print("  Step: {:>12}    Time: {:>12} (ps)"
+            #       .format(ts.data['step'], ts.data['time']),
+            #       flush=True)
             n_surf_moves += 1
             ix_sort1 = np.lexsort(surf.positions[:, ::-1].T)
             ix_sort2 = np.lexsort(surf_pos[:, ::-1].T)
             if not np.allclose(surf.positions[ix_sort1],
                                surf_pos[ix_sort2]):
-                print("  This was a dangerous move!", flush=True)
+                # print("  This was a dangerous move!", flush=True)
                 n_surf_moves_dangerous += 1
             del ix_sort1, ix_sort2
             lattice = hex_verts2faces(verts=surf.positions,
