@@ -242,11 +242,12 @@ if __name__ == "__main__":
     print("Last frame to read:     {:>8d}".format(END - 1))
     print("Read every n-th frame:  {:>8d}".format(EVERY))
     timer = datetime.now()
-    prob = mdt.dtrj.back_jump_prob(
+    prob, norm = mdt.dtrj.back_jump_prob(
         dtrj,
         continuous=args.CONTINUOUS,
         discard_neg=args.DISCARD_NEG,
         discard_neg_btw=args.DISCARD_NEG_BTW,
+        return_norm=True,
         verbose=True,
     )
     del dtrj
@@ -260,6 +261,10 @@ if __name__ == "__main__":
         "Back-jump probability: Probability to return to the initial state\n"
         + "after a state transition as function of the time that has passed\n"
         + "since the state transition averaged over all states.\n"
+        + "\n"
+        + "The total number of back jumps at a given lag time can be\n"
+        + "obtained by multiplying the back-jump probabilities with the\n"
+        + "normalization factors.\n"
         + "\n\n"
         + "intermittency:   {}\n".format(args.INTERMITTENCY)
         + "continuous:      {}\n".format(args.CONTINUOUS)
@@ -272,13 +277,14 @@ if __name__ == "__main__":
     header += (
         "The columns contain:\n"
         + "  1 Lag time (in trajectory steps)\n"
-        + "  2 back-jump probability\n"
+        + "  2 Back-jump probability\n"
+        + "  3 Normalization factors\n"
         + "\n"
         + "Column number:\n"
         + "{:>14d} {:>16d}".format(1, 2)
     )
     lag_times = np.arange(0, len(prob) * EVERY, EVERY, dtype=np.uint32)
-    data = np.column_stack([lag_times, prob])
+    data = np.column_stack([lag_times, prob, norm])
     mdt.fh.savetxt(args.OUTFILE, data, header=header)
     print("Created {}".format(args.OUTFILE))
     print("Elapsed time:         {}".format(datetime.now() - timer))
