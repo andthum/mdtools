@@ -511,12 +511,12 @@ if __name__ == '__main__':
                            surf_pos_prev,
                            rtol=0,
                            atol=args.TOL):
-            print(flush=True)
-            print("  Note: The surface has moved in", flush=True)
-            print("  Frame {:12d}".format(ts.frame), flush=True)
-            print("  Step: {:>12}    Time: {:>12} (ps)"
-                  .format(ts.data['step'], ts.data['time']),
-                  flush=True)
+            # print(flush=True)
+            # print("  Note: The surface has moved in", flush=True)
+            # print("  Frame {:12d}".format(ts.frame), flush=True)
+            # print("  Step: {:>12}    Time: {:>12} (ps)"
+            #       .format(ts.data['step'], ts.data['time']),
+            #       flush=True)
             n_surf_moves += 1
             ix_sort1 = np.lexsort(surf.positions.T)
             ix_sort2 = np.lexsort(surf_pos_prev.T)
@@ -524,9 +524,9 @@ if __name__ == '__main__':
                                surf_pos_prev[ix_sort2],
                                rtol=0,
                                atol=args.TOL):
-                print("  This was a dangerous move!", flush=True)
+                # print("  This was a dangerous move!", flush=True)
                 n_surf_moves_dangerous += 1
-            print(flush=True)
+            # print(flush=True)
             del ix_sort1, ix_sort2
             hex_face_cols = get_1st_hex_face_cols(verts=surf.positions,
                                                   r0=args.R0,
