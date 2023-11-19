@@ -41,7 +41,11 @@ Options
     second discrete trajectory must have the same shape as the first
     discrete trajectory.
 -o
-    Output filename.
+    Output filename of the file containing the back-jump probabilities.
+--norm-out
+    Output filename of the file containing the normalization factors
+    (optional).  Multiplying the back-jump probabilities with the
+    normalization factors yields the total number of back jumps.
 -b
     First frame to read from the discrete trajectory.  Frame numbering
     starts at zero.  Default: ``0``.
@@ -148,7 +152,21 @@ if __name__ == "__main__":
         dest="OUTFILE",
         type=str,
         required=True,
-        help="Output filename.",
+        help=(
+            "Output filename of the file containing the back-jump"
+            " probabilities."
+        ),
+    )
+    parser.add_argument(
+        "--norm-out",
+        dest="OUTFILE_NORM",
+        type=str,
+        required=False,
+        default=None,
+        help=(
+            "Output filename of the file containing the normalization factors"
+            " (optional)."
+        ),
     )
     parser.add_argument(
         "-b",
@@ -300,8 +318,11 @@ if __name__ == "__main__":
         continuous=args.CONTINUOUS,
         discard_neg=args.DISCARD_NEG,
         discard_neg_btw=args.DISCARD_NEG_BTW,
+        return_norm=args.OUTFILE_NORM is not None,
         verbose=True,
     )
+    if args.OUTFILE_NORM is not None:
+        prob, norm = prob
     del dtrj1, dtrj2
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
@@ -309,12 +330,14 @@ if __name__ == "__main__":
     print("\n")
     print("Creating output...")
     timer = datetime.now()
-    header = (
+    header_prob = (
         "Back-jump probability: Probability to return to the initial state\n"
         + "after a state transition as function of the time that has passed\n"
         + "since the state transition resolved with respect to the states in\n"
         + "a second discrete trajectory.\n"
-        + "\n\n"
+    )
+    header_base = (
+        "\n\n"
         + "intermittency_1: {}\n".format(args.INTERMITTENCY1)
         + "intermittency_2: {}\n".format(args.INTERMITTENCY2)
         + "continuous:      {}\n".format(args.CONTINUOUS)
@@ -322,9 +345,10 @@ if __name__ == "__main__":
         + "discard_neg_btw: {}\n".format(args.DISCARD_NEG_BTW)
         + "\n\n"
     )
-    header += dtrj1_trans_info_str
-    header += "\n\n"
-    header += (
+    header_base += dtrj1_trans_info_str
+    header_base += "\n\n"
+    header_prob = header_prob + header_base
+    header_prob += (
         "The first column contains the lag times (in trajectory steps).\n"
         "The first row contains the states of the second discrete trajectory\n"
         "that were used to discretize the back-jump probability.\n"
@@ -333,9 +357,36 @@ if __name__ == "__main__":
     )
     lag_times = np.arange(0, prob.shape[1] * EVERY, EVERY, dtype=np.uint32)
     mdt.fh.savetxt_matrix(
-        args.OUTFILE, prob.T, var1=lag_times, var2=dtrj2_states, header=header
+        args.OUTFILE,
+        prob.T,
+        var1=lag_times,
+        var2=dtrj2_states,
+        header=header_prob,
     )
     print("Created {}".format(args.OUTFILE))
+    if args.OUTFILE_NORM is not None:
+        header_norm = (
+            "Normalization factors used to normalize the back-jump\n"
+            "probabilities.\n"
+            "Multiplying the back-jump probabilities with the normalization\n"
+            "factors yields the total number of back jumps.\n"
+        )
+        header_norm = header_norm + header_base
+        header_norm += (
+            "The first column contains the lag times (in trajectory steps).\n"
+            "The first row contains the states of the second discrete"
+            " trajectory\n"
+            "that were used to discretize the back-jump probability.\n"
+            "The remaining matrix elements are the normalization factors.\n"
+        )
+        mdt.fh.savetxt_matrix(
+            args.OUTFILE_NORM,
+            norm.T,
+            var1=lag_times,
+            var2=dtrj2_states,
+            header=header_norm,
+        )
+        print("Created {}".format(args.OUTFILE_NORM))
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
