@@ -83,7 +83,8 @@ be called and their meaning.
     whilst still being considered to be in this state provided that it
     returns to this state after the given number of frames.  In other
     words, a compound is only considered to have left its state if it
-    has left it for at least the given number of frames.
+    has left it for at least the given number of frames.  Default:
+    ``0``.
 --debug
     Run in :ref:`debug mode <debug-mode-label>`.
 
@@ -228,6 +229,7 @@ if __name__ == "__main__":
             "Maximum number of frames a compound is allowed to leave its state"
             " whilst still being considered to be in this state provided that"
             " it returns to this state after the given number of frames."
+            "  Default: %(default)s."
         ),
     )
     parser.add_argument(
