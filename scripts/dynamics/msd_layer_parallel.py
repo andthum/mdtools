@@ -115,19 +115,23 @@ if __name__ == "__main__":  # noqa: 23
     print("\n")
     print("Creating/checking bins...")
     timer = datetime.now()
-    boxes = [ts.dimensions for ts in u.trajectory[BEGIN:END:EVERY]]
-    lbox_max = np.max(boxes[:, ixd])
-    if lbox_max <= 0:
+    lbox = u.trajectory[BEGIN].dimensions[ixd]
+    if lbox <= 0:
         raise ValueError(
             "Invalid simulation box: The box length ({}) in the given"
             " spatial dimension ({}) is less than or equal to"
-            " zero".format(lbox_max, args.DIRECTION)
+            " zero".format(lbox, args.DIRECTION)
         )
     if args.BINFILE is None:
-        bins = np.linspace(0, lbox_max, args.NUM + 1)
+        START, STOP, STEP, NUM = mdt.check.bins(
+            start=0, stop=1, num=args.NUM, amin=0, amax=1
+        )
+        # Create bins in the box coordinate system (0 to 1).
+        bins = np.linspace(START, STOP, NUM + 1)
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
-    bins = mdt.check.bin_edges(bins=bins, amin=0, amax=lbox_max)
+        bins = np.unique(bins) / lbox  # Convert bins to box coordinates
+    bins = mdt.check.bin_edges(bins=bins, amin=0, amax=1)
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
@@ -207,6 +211,8 @@ if __name__ == "__main__":  # noqa: 23
     print("\n")
     print("Calculating MD and MSD...")
     timer = datetime.now()
+    boxes = np.array([ts.dimensions for ts in u.trajectory[BEGIN:END:EVERY]])
+    lbox_mean = np.nanmean(boxes[:, ixd], axis=0)
     pool = mdt.parallel.ProcessPool(nprocs=n_cpus)
     for block in range(NBLOCKS):
         pool.submit_task(
@@ -261,6 +267,7 @@ if __name__ == "__main__":  # noqa: 23
     print("\n")
     print("Creating output...")
     timer = datetime.now()
+    bins *= lbox_mean  # Convert bins from box to Cartesian coordinates.
     header = (
         "The brackets <...> denote averaging over all particles and\n"
         + "over all possible restarting points t0.  d[...] stands for the\n"
@@ -271,9 +278,9 @@ if __name__ == "__main__":  # noqa: 23
         + "Selection compound: '{}'\n".format(args.COM)
         + mdt.rti.ag_info_str(sel)
         + "\n\n\n"
-        + "The first colum contains the diffustion times (ps).\n"
-        + "The first row contains the bin edges used for discretizing\n"
-        + "the initial compound positions (Angstrom).\n"
+        + "The first column contains the diffusion times (ps).\n"
+        + "The first row contains the (average) bin edges used for\n"
+        + "discretizing the initial compound positions (in Angstrom).\n"
         + "The remaining matrix elements contain the respective "
     )
 

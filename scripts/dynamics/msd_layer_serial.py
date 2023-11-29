@@ -22,11 +22,6 @@ r"""
 Calculate the mean displacement (MD) and the mean squared displacement
 (MSD) of a given compound as function of its initial position.
 
-.. todo::
-
-    Do the binning in box coordinates (-> all boxes are cubes with unit
-    length) to account for fluctuating simulation boxes.
-
 Options
 -------
 -f
@@ -90,15 +85,19 @@ Options
     The spatial dimension in which to bin the displacements according to
     the initial position of the selection compounds.  Default: ``"z"``.
 --bin-num
-    Number of bins to use for discretizing the given spatial dimension.
-    Binning always ranges from zero to the maximum box length in the
-    given spatial dimension.  Note that the bins do not scale with a
-    potentially fluctuating simulation box.  Default: ``10``.
+    Number of equidistant bins (not bin edges!) to use for discretizing
+    the given spatial dimension.  Binning always ranges from zero to the
+    box length in the given spatial dimension.  The bins are scaled with
+    a possibly fluctuating simulation box.  Default: ``10``.
 --bins
     Text file containing custom bin edges in Angstrom.  Bin edges are
     read from the first column, lines starting with '#' are ignored.
-    Bins do not need to be equidistant.  \--bins takes precedence over
-    \--bin-num.
+    The file must be formatted such that the bin edges can be read with
+    the command ``numpy.loadtxt(BINFILE, usecols=0)``.  Bins do not need
+    to be equidistant.  All bin edges must lie within the simulation box
+    as obtained from the first frame read.  The given bin edges are
+    sorted ascending order and and duplicate bin edges are removed.
+    \--bins takes precedence over \--bin-num.
 --debug
     Run in :ref:`debug mode <debug-mode-label>`.
 
@@ -370,9 +369,11 @@ def msd_layer(pos, boxes, bins, direction="z", restart=1, verbose=True):
         ``[lx, ly, lz, alpha, beta, gamma]``.
     bins : array_like
         1-dimensional array containing the bin edges to use for binning
-        the initial particle position.  For binning the particle
-        positions, the positions are wrapped back into the primary unit
-        cell.
+        the initial particle position.  The binning is done with wrapped
+        coordinates in the box coordinate systems.  Therefore, the bin
+        edges must lie between 0 and 1!  It might be easiest to first
+        define the bin edges in Cartesian coordinates and then divide
+        all of them by the box length.
     direction : {'x', 'y', 'z'}
         The spatial direction in which to bin the initial particle
         position.
@@ -396,7 +397,7 @@ def msd_layer(pos, boxes, bins, direction="z", restart=1, verbose=True):
     """
     pos = mdt.check.pos_array(pos, dim=3)
     boxes = mdt.check.box(boxes, with_angles=True, dim=2)
-    bins = np.asarray(bins)
+    bins = mdt.check.bin_edges(bins=bins, amin=0, amax=1)
     if direction not in ("x", "y", "z"):
         raise ValueError(
             "`direction` must be either 'x', 'y' or 'z', but you gave"
@@ -435,6 +436,7 @@ def msd_layer(pos, boxes, bins, direction="z", restart=1, verbose=True):
         pos_wrapped_t0 = mdadist.apply_PBC(
             pos[t0], boxes[t0], backend=mda_backend
         )
+        pos_wrapped_t0 = mdt.box.cart2box(pos_wrapped_t0, box=boxes[t0])
         bin_ix = np.digitize(pos_wrapped_t0[:, ixd], bins=bins)
         bin_ix -= 1
         bin_ix_u, counts = np.unique(bin_ix, return_counts=True)
@@ -453,7 +455,7 @@ def msd_layer(pos, boxes, bins, direction="z", restart=1, verbose=True):
             restarts.set_postfix_str(
                 "{:>7.2f}MiB".format(mdt.rti.mem_usage(proc)), refresh=False
             )
-    del bin_ix, bin_ix_u, pos_wrapped_t0, displ, mask
+    del bins, bin_ix, bin_ix_u, pos_wrapped_t0, displ, mask
 
     if not np.all(norm[0] == 0):
         raise ValueError(
@@ -512,19 +514,23 @@ if __name__ == "__main__":
     print("\n")
     print("Creating/checking bins...")
     timer = datetime.now()
-    boxes = np.array([ts.dimensions for ts in u.trajectory[BEGIN:END:EVERY]])
-    lbox_max = np.max(boxes[:, ixd])
-    if lbox_max <= 0:
+    lbox = u.trajectory[BEGIN].dimensions[ixd]
+    if lbox <= 0:
         raise ValueError(
             "Invalid simulation box: The box length ({}) in the given"
             " spatial dimension ({}) is less than or equal to"
-            " zero".format(lbox_max, args.DIRECTION)
+            " zero".format(lbox, args.DIRECTION)
         )
     if args.BINFILE is None:
-        bins = np.linspace(0, lbox_max, args.NUM + 1)
+        START, STOP, STEP, NUM = mdt.check.bins(
+            start=0, stop=1, num=args.NUM, amin=0, amax=1
+        )
+        # Create bins in the box coordinate system (0 to 1).
+        bins = np.linspace(START, STOP, NUM + 1)
     else:
         bins = np.loadtxt(args.BINFILE, usecols=0)
-    bins = mdt.check.bin_edges(bins=bins, amin=0, amax=lbox_max)
+        bins = np.unique(bins) / lbox  # Convert bins to box coordinates
+    bins = mdt.check.bin_edges(bins=bins, amin=0, amax=1)
     print("Elapsed time:         {}".format(datetime.now() - timer))
     print("Current memory usage: {:.2f} MiB".format(mdt.rti.mem_usage(proc)))
 
@@ -562,6 +568,8 @@ if __name__ == "__main__":
     print("Calculating MD and MSD...")
     timer = datetime.now()
     timer_block = datetime.now()
+    boxes = np.array([ts.dimensions for ts in u.trajectory[BEGIN:END:EVERY]])
+    lbox_mean = np.nanmean(boxes[:, ixd], axis=0)
     md = [None] * NBLOCKS
     msd = [None] * NBLOCKS
     for block in range(NBLOCKS):
@@ -602,6 +610,7 @@ if __name__ == "__main__":
     print("\n")
     print("Creating output...")
     timer = datetime.now()
+    bins *= lbox_mean  # Convert bins from box to Cartesian coordinates.
     header = (
         "The brackets <...> denote averaging over all particles and over all\n"
         + "possible restarting points t0.  d[...] stands for the Dirac delta\n"
@@ -612,8 +621,8 @@ if __name__ == "__main__":
         + mdt.rti.ag_info_str(sel)
         + "\n\n\n"
         + "The first column contains the diffusion times (ps).\n"
-        + "The first row contains the bin edges used for discretizing the\n"
-        + "initial compound positions (in Angstrom).\n"
+        + "The first row contains the (average) bin edges used for\n"
+        + "discretizing the initial compound positions (in Angstrom).\n"
         + "The remaining matrix elements contain the respective "
     )
 
