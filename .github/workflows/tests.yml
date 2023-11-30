@@ -104,6 +104,7 @@ jobs:
           scripts/dynamics/plot_msd_layer*.py \
           scripts/gmx/*.py \
           scripts/other/*.py \
+          scripts/structure/densmap.py \
           scripts/structure/lig_change_at_pos_change_blocks.py \
           scripts/structure/subvolume_charge.py \
           scripts/structure/plot_gmx_densmap.py \
