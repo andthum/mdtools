@@ -468,7 +468,7 @@ if __name__ == "__main__":  # noqa: C901
         + "Actual grid spacing:   {:>16.9e} A x {:>15.9e} A\n".format(
             bin_width_0, bin_width_1
         )
-        + "(Average) bin volume:  {:>16.9e}\n".format(bin_volume)
+        + "(Average) bin volume:  {:>16.9e} A^3\n".format(bin_volume)
         + "Number of read frames:  {:d}\n".format(N_FRAMES)
         + "(Average) simulation box lengths:\n"
         + "  lx: {:>16.9e} A\n".format(lbox_mean[0])
@@ -476,11 +476,11 @@ if __name__ == "__main__":  # noqa: C901
         + "  lz: {:>16.9e} A\n".format(lbox_mean[2])
         + "\n\n"
         + "The first column contains the (average) bin edges in Angstrom\n"
-        + "used for binning the {:s} direction of the plane.".format(
+        + "used for binning the {:s} direction of the plane.\n".format(
             plane_dims[args.DIRECTION][0]
         )
         + "The first row contains the (average) bin edges in Angstrom\n"
-        + "used for binning the {:s} direction of the plane.".format(
+        + "used for binning the {:s} direction of the plane.\n".format(
             plane_dims[args.DIRECTION][1]
         )
         + "The remaining matrix elements contain the number density of the\n"
