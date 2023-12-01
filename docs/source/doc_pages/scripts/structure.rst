@@ -22,6 +22,7 @@ Scripts
     :nosignatures:
 
     contact_hist
+    densmap
     lig_change_at_pos_change_blocks
     lig_change_at_pos_change_blocks_hist
     rmsd_trj_trj

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # This file is part of MDTools.
-# Copyright (C) 2021  The MDTools Development Team and all contributors
-# listed in the file AUTHORS.rst
+# Copyright (C) 2021-2023  The MDTools Development Team and all
+# contributors listed in the file AUTHORS.rst
 #
 # MDTools is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -22,10 +22,6 @@ r"""
 Read up to three matrices from text files and plot them as one RGB
 matrix with :meth:`matplotlib.axes.Axes.imshow`.
 
-.. todo::
-
-    Finish docstring.
-
 Each matrix must be stored in a separate text file.  The first column of
 the text files must contain the x values and the first row the y values
 (note that this is opposed to the standard matrix convention).  The
@@ -35,43 +31,60 @@ may contain comment lines starting with '#', which will be ignored.
 
 Options
 -------
--r          File containing the matrix that shall be represented as red
-            levels in the final RGB matrix.
--g          File containing the matrix that shall be represented as
-            green levels in the final RGB matrix.
--b          File containing the matrix that shall be represented as blue
-            levels in the final RGB matrix.  Note that at leas one of
-            the -r, -g and -b flag must be provided.  If multiple
-            matrices are given, all matrices must have the same shape
-            and the same x and y values.  The input matrices must not
-            contain negative values.
--o          Output filename.
--c          Eliminate values below a certain cutoff in the final RGB
-            matrix to suppress noise.  The values of each RGB channel
-            are normalized to the interval [0, 1] (not [0,255] as
-            usual).  Default: ``0``.
---Otsu      Use Otsu's binarization [#]_ to automatically calculate a
-            cutoff.  If \--Otsu is set, -c will be ignored.  This option
-            requires the `opencv-python`_ package to be installed on
-            your computer.
---xylabel   x- and y-axis label.  Default:
-            ``[r'$x$ / nm', r'$y$ / nm']``.
---xlim      Left and right limit of the x-axis in data coordinates.
-            Pass 'None' to adjust the limit(s) automatically.  Default:
-            ``[None, None]``.
---ylim      Lower and upper limit of the y-axis in data coordinates.
-            Pass 'None' to adjust the limit(s) automatically.  Default:
-            ``[None, None]``.
+-r
+    File containing the matrix that shall be represented as red levels
+    in the final RGB matrix.
+-g
+    File containing the matrix that shall be represented as green levels
+    in the final RGB matrix.
+-b
+    File containing the matrix that shall be represented as blue levels
+    in the final RGB matrix.
+
+    Note that at least one of the -r, -g and -b flag must be provided.
+    If multiple matrices are given, all matrices must have the same
+    shape and the same x and y values.  The input matrices must not
+    contain negative values.
+-o
+    Output filename.
+-c
+    Eliminate values below a certain cutoff in the final RGB  matrix to
+    suppress noise.  The values of each RGB channel are normalized to
+    the interval [0, 1] (not [0,255] as usual).  Default: ``0``.
+--Otsu
+    Use Otsu's binarization [#]_ to automatically calculate a cutoff.
+    If \--Otsu is set, -c will be ignored.  This option requires the
+    `opencv-python`_ package.
+--xylabel
+    x- and y-axis label.  Default: ``[r'$x$ / nm', r'$y$ / nm']``.
+--xlim
+    Left and right limit of the x-axis in data coordinates.  Pass 'None'
+    to adjust the limit(s) automatically.  Default: ``[None, None]``.
+--ylim
+    Lower and upper limit of the y-axis in data coordinates.  Pass
+    'None' to adjust the limit(s) automatically.  Default:
+    ``[None, None]``.
 --xticks-at-yticks
-            Set x-ticks at the same positions as y-ticks.
+    Set x-ticks at the same positions as y-ticks.
 
 .. _opencv-python: https://pypi.org/project/opencv-python/
+
+See Also
+--------
+:mod:`scripts.structure.densmap` :
+    Compute a 2-dimensional number density map
 
 Notes
 -----
 This python script is inspired by the work of Hadrian Montes-Campos
 [#]_:sup:`,` [#]_.  It was originally designed to read the output file
-that is produced by the GROMACS tool 'gmx densmap' with the '-od' flag.
+that is produced by the GROMACS tool `gmx densmap`_ with the '-od' flag
+but can equally well read other matrix files (like the one produced by
+:mod:`scripts.structure.densmap`) as long as they are provided in the
+specified format.
+
+.. _gmx densmap:
+    https://manual.gromacs.org/documentation/current/onlinehelp/gmx-densmap.html
 
 References
 ----------
@@ -88,10 +101,6 @@ References
     double layer of ionic liquid-alcohol mixtures at the electrochemical
     interface" <https://doi.org/10.1039/C8CP05632C>`_, Physical
     Chemistry Chemical Physics, 2018, 20, 30412-30427.
-
-Examples
---------
-TODO
 """
 
 
@@ -99,18 +108,18 @@ __author__ = "Andreas Thum"
 
 
 # Standard libraries
+import argparse
 import os
 import sys
 import warnings
-import argparse
 from datetime import datetime, timedelta
 
-# Third party libraries
-import psutil
-import numpy as np
+# Third-party libraries
 import matplotlib.pyplot as plt
+import numpy as np
+import psutil
 
-# Local application/library specific imports
+# First-party libraries
 import mdtools as mdt
 import mdtools.plot as mdtplt
 
@@ -153,9 +162,12 @@ def read_matrix(fname):
     Notes
     -----
     This function was originally designed to read the output file that
-    is produced by the GROMACS tool 'gmx densmap' with the '-od' flag
+    is produced by the GROMACS tool `gmx densmap`_ with the '-od' flag
     and to prepare the matrix for plotting with
     :meth:`matplotlib.axes.Axes.imshow`.
+
+    .. _gmx densmap:
+        https://manual.gromacs.org/documentation/current/onlinehelp/gmx-densmap.html
     """
     data = np.loadtxt(fname)
     x = data[1:, 0]
@@ -165,7 +177,7 @@ def read_matrix(fname):
     return x, y, z
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # noqa: C901
     timer_tot = datetime.now()
     proc = psutil.Process()
     proc.cpu_percent()  # Initiate monitoring of CPU usage
@@ -173,7 +185,7 @@ if __name__ == "__main__":
         description=(
             "Read up to three matrices from text files and plot them as one"
             " RGB matrix with matplotlib.axes.Axes.imshow.  For more"
-            " information, refer to the documetation of this script."
+            " information, refer to the documentation of this script."
         )
     )
     parser.add_argument(
@@ -214,7 +226,7 @@ if __name__ == "__main__":
         dest="OUTFILE",
         type=str,
         required=True,
-        help=("Output filename."),
+        help="Output filename.",
     )
     parser.add_argument(
         "-c",
@@ -225,7 +237,7 @@ if __name__ == "__main__":
         help=(
             "Eliminate values below a certain cutoff in the final RGB matrix"
             " to suppress noise.  The values of each RGB channel are"
-            " normalized to the interval [0, 1].  Default: %(default)s"
+            " normalized to the interval [0, 1].  Default: %(default)s."
         ),
     )
     parser.add_argument(
@@ -246,7 +258,7 @@ if __name__ == "__main__":
         nargs=2,
         required=False,
         default=[r"$x$ / nm", r"$y$ / nm"],
-        help=("x- and y-axis label.  Default: %(default)s"),
+        help="x- and y-axis label.  Default: %(default)s.",
     )
     parser.add_argument(
         "--xlim",
@@ -257,7 +269,7 @@ if __name__ == "__main__":
         default=[None, None],
         help=(
             "Left and right limit of the x-axis in data coordinates.  Default:"
-            " %(default)s"
+            " %(default)s."
         ),
     )
     parser.add_argument(
@@ -269,7 +281,7 @@ if __name__ == "__main__":
         default=[None, None],
         help=(
             "Lower and upper limit of the y-axis in data coordinates."
-            "  Default: %(default)s"
+            "  Default: %(default)s."
         ),
     )
     parser.add_argument(
@@ -278,7 +290,7 @@ if __name__ == "__main__":
         required=False,
         default=False,
         action="store_true",
-        help=("Set x-ticks at the same positions as y-ticks."),
+        help="Set x-ticks at the same positions as y-ticks.",
     )
     args = parser.parse_args()
     print(mdt.rti.run_time_info_str())
@@ -295,6 +307,7 @@ if __name__ == "__main__":
             "-c ({}) will be ignored, because --Otsu is"
             " set".format(args.CUTOFF),
             RuntimeWarning,
+            stacklevel=2,
         )
 
     print("\n")
@@ -356,7 +369,8 @@ if __name__ == "__main__":
     timer = datetime.now()
     if args.OTSU:
         try:
-            import cv2
+            # Third-party libraries
+            import cv2  # noqa: I005
         except ImportError:
             raise ImportError(
                 "To use Otsu's binarization, the package cv2 must be installed"
