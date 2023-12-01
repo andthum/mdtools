@@ -348,6 +348,11 @@ if __name__ == "__main__":  # noqa: C901
     nbins = np.round(lbox_plane / args.GRID_SPACING).astype(np.uint32)
     bins = []
     for nb in nbins:
+        if nb < 1:
+            raise ValueError(
+                "The grid spacing ({}) is larger than the simulation box"
+                " ({}).".format(args.GRID_SPACING, box)
+            )
         START, STOP, STEP, NUM = mdt.check.bins(
             start=0, stop=1, num=nb, amin=0, amax=1
         )
@@ -387,6 +392,7 @@ if __name__ == "__main__":  # noqa: C901
     print("Time step last frame:   {:>12.3f} ps".format(last_frame_read.dt))
     timer = datetime.now()
     lbox_mean = np.zeros(3, dtype=np.float64)
+    hist_tmp, bins0, bins1 = np.nan, np.nan, np.nan
     trj = mdt.rti.ProgressBar(u.trajectory[BEGIN:END:EVERY])
     for ts in trj:
         lbox_mean += ts.dimensions[:3]
