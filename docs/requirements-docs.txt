@@ -7,4 +7,4 @@
 # => The sphix requirement must not be >=6.0
 
 sphinx >=5.0, <8.0
-sphinx-rtd-theme >=1.0, <2.0
+sphinx-rtd-theme >=1.0, <3.0
