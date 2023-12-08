@@ -255,22 +255,23 @@ def dist_characs(a, axis=-1, n_moms=4):
     Returns
     -------
     characs : numpy.ndarray
-        Array of shape ``(10 + n_moms-1, )`` containing the following
+        Array of shape ``(11 + n_moms-1, )`` containing the following
         distribution characteristics:
 
             1. Sample mean (unbiased 1st raw moment)
             2. Uncertainty of the sample mean (standard error)
             3. Corrected sample standard deviation
-            4. Unbiased sample skewness (Fisher)
-            5. Unbiased sample excess kurtosis (according to Fisher)
-            6. Sample median
-            7. Non-parametric skewness
-            8. 2nd raw moment (biased estimate)
-            9. 3rd raw moment (biased estimate)
-            10. 4th raw moment (biased estimate)
-            11. Sample minimum
-            12. Sample maximum
-            13. Number of samples
+            4. Corrected coefficient of variation
+            5. Unbiased sample skewness (Fisher)
+            6. Unbiased sample excess kurtosis (according to Fisher)
+            7. Sample median
+            8. Non-parametric skewness
+            9. 2nd raw moment (biased estimate)
+            10. 3rd raw moment (biased estimate)
+            11. 4th raw moment (biased estimate)
+            12. Sample minimum
+            13. Sample maximum
+            14. Number of samples
 
         The number of calculated raw moments depends on `n_moms`.  The
         first raw moment (mean) is always calculated.
@@ -279,8 +280,9 @@ def dist_characs(a, axis=-1, n_moms=4):
     nobs, min_max, mean, var, skew, kurt = stats.describe(
         a, axis=axis, ddof=1, bias=False
     )
-    median = np.median(a, axis=axis)
     std = np.sqrt(var)
+    cv = std / mean
+    median = np.median(a, axis=axis)
     skew_non_param = np.divide((mean - median), std)
     raw_moments = [np.mean(a**n) for n in range(2, n_moms + 1)]
     characs = np.array(
@@ -288,6 +290,7 @@ def dist_characs(a, axis=-1, n_moms=4):
             mean,  # Sample mean.
             np.divide(std, np.sqrt(nobs)),  # Uncertainty of sample mean
             std,  # Corrected sample standard deviation.
+            cv,  # Corrected coefficient of variation.
             skew,  # Unbiased sample skewness (Fisher).
             kurt,  # Unbiased sample excess kurtosis (Fisher).
             median,  # Median of the sample.
@@ -363,7 +366,7 @@ def count_method(
         n_states = len(states_check)
     else:
         n_states = len(states)
-    characs = np.full((n_states, 9 + n_moms), np.nan, dtype=np.float64)
+    characs = np.full((n_states, 10 + n_moms), np.nan, dtype=np.float64)
     characs[:, -1] = 0  # Default number of observations.
     for i, lts in enumerate(lts_per_state):
         if len(lts) == 0:
@@ -462,7 +465,9 @@ def raw_moment_integrate(sf, x, n=1):
     """
     valid = np.isfinite(x) & np.isfinite(sf)
     if not np.any(valid):
-        warnings.warn("No valid values for numerical integration")
+        warnings.warn(
+            "No valid values for numerical integration", stacklevel=2
+        )
         return np.nan
     if n < 1 or np.any(np.modf(n)[0] != 0):
         raise ValueError(
@@ -477,8 +482,8 @@ def raw_moment_integrate(sf, x, n=1):
 
 def skewness(mu2, mu3):
     r"""
-    Calculate the Fisher's skewness of a distribution from the second
-    and third central moment.
+    Calculate Fisher's skewness of a distribution from the second and
+    third central moment.
 
     .. math::
 
@@ -566,18 +571,19 @@ def integral_method(surv_funcs, times, n_moms=4, int_thresh=0.01):
     Returns
     -------
     characs : numpy.ndarray
-        Array of shape ``(6 + n_moms-1, )`` containing the following
+        Array of shape ``(7 + n_moms-1, )`` containing the following
         distribution characteristics:
 
             1. Mean (1st raw moment)
             2. Standard deviation
-            3. Skewness (Fisher)
-            4. Excess kurtosis (according to Fisher)
-            5. Median
-            6. Non-parametric skewness
-            7. 2nd raw moment
-            8. 3rd raw moment
-            9. 4th raw moment
+            3. Coefficient of variation
+            4. Skewness (Fisher)
+            5. Excess kurtosis (according to Fisher)
+            6. Median
+            7. Non-parametric skewness
+            8. 2nd raw moment
+            9. 3rd raw moment
+            10. 4th raw moment
 
         The number of calculated raw moments depends on `n_moms`.  The
         first raw moment (mean) is always calculated.
@@ -600,7 +606,7 @@ def integral_method(surv_funcs, times, n_moms=4, int_thresh=0.01):
         )
 
     n_frames, n_states = surv_funcs.shape
-    characs = np.full((n_states, 5 + n_moms), np.nan, dtype=np.float64)
+    characs = np.full((n_states, 6 + n_moms), np.nan, dtype=np.float64)
     for i, sf in enumerate(surv_funcs.T):
         raw_moms = np.full(n_moms, np.nan, dtype=np.float64)
         cen_moms = np.full_like(raw_moms, np.nan)
@@ -612,13 +618,15 @@ def integral_method(surv_funcs, times, n_moms=4, int_thresh=0.01):
                 cen_moms[n] = mdt.stats.moment_raw2cen(raw_moms[: n + 1])
         skew = skewness(mu2=cen_moms[1], mu3=cen_moms[2])
         kurt = kurtosis(mu2=cen_moms[1], mu4=cen_moms[3])
-        median = cross(y=0.5, x=times, f=sf)
         std = np.sqrt(cen_moms[1])
+        cv = std / raw_moms[0]
+        median = cross(y=0.5, x=times, f=sf)
         skew_non_param = np.divide((raw_moms[0] - median), std)
         characs[i] = np.array(
             [
                 raw_moms[0],  # Mean.
                 std,  # Standard deviation.
+                cv,  # Coefficient of variation.
                 skew,  # Skewness (Fisher).
                 kurt,  # Excess kurtosis (Fisher).
                 median,  # Median
@@ -774,18 +782,19 @@ def weibull_fit_method(
     Returns
     -------
     characs : numpy.ndarray
-        Array of shape ``(6 + n_moms-1, )`` containing the following
+        Array of shape ``(7 + n_moms-1, )`` containing the following
         distribution characteristics:
 
             1. Mean (1st raw moment)
             2. Standard deviation
-            3. Skewness (Fisher)
-            4. Excess kurtosis (according to Fisher)
-            5. Median
-            6. Non-parametric skewness
-            7. 2nd raw moment
-            8. 3rd raw moment
-            9. 4th raw moment
+            3. Coefficient of variation
+            4. Skewness (Fisher)
+            5. Excess kurtosis (according to Fisher)
+            6. Median
+            7. Non-parametric skewness
+            8. 2nd raw moment
+            9. 3rd raw moment
+            10. 4th raw moment
 
         The number of calculated raw moments depends on `n_moms`.  The
         first raw moment (mean) is always calculated.
@@ -907,12 +916,12 @@ def weibull_fit_method(
         )
     if fit_start.shape != surv_funcs.shape[1:]:
         raise ValueError(
-            "fit_start.shape ({}) != surv_funcs.shape[1:]"
+            "`fit_start.shape` ({}) != `surv_funcs.shape[1:]v"
             " ({})".format(fit_start.shape, surv_funcs.shape[1:])
         )
     if fit_stop.shape != fit_start.shape:
         raise ValueError(
-            "fit_stop.shape ({}) != fit_start.shape"
+            "`fit_stop.shape` ({}) != `fit_start.shape`"
             " ({})".format(fit_stop.shape, fit_start.shape)
         )
     if n_moms < 1:
@@ -924,7 +933,7 @@ def weibull_fit_method(
         surv_funcs_var = np.asarray(surv_funcs_var)
         if surv_funcs_var.shape != surv_funcs.shape:
             raise ValueError(
-                "surv_funcs_var.shape ({}) != surv_funcs.shape"
+                "`surv_funcs_var.shape` ({}) != `surv_funcs.shape`"
                 " ({})".format(surv_funcs_var.shape, surv_funcs.shape)
             )
 
@@ -933,7 +942,7 @@ def weibull_fit_method(
     popt = np.full((n_states, 2), np.nan, dtype=np.float64)
     perr = np.full_like(popt, np.nan)
     fit_quality = np.full((n_states, 2), np.nan, dtype=np.float64)
-    characs = np.full((n_states, 5 + n_moms), np.nan, dtype=np.float64)
+    characs = np.full((n_states, 6 + n_moms), np.nan, dtype=np.float64)
     for i, sf in enumerate(surv_funcs.T):
         # Do the fit.
         times_fit = times[fit_start[i] : fit_stop[i]]
@@ -961,13 +970,15 @@ def weibull_fit_method(
         )
         raw_moms = [dist.moment(n) for n in range(1, n_moms + 1)]
         var, skew, kurt = dist.stats(moments="vsk")
-        median = dist.median()
         std = np.sqrt(var)
+        cv = std / raw_moms[0]
+        median = dist.median()
         skew_non_param = np.divide((raw_moms[0] - median), std)
         characs[i] = np.array(
             [
                 raw_moms[0],  # Mean.
                 std,  # Standard deviation.
+                cv,  # Coefficient of variation.
                 skew,  # Skewness (Fisher).
                 kurt,  # Excess kurtosis (Fisher).
                 median,  # Median
@@ -1021,18 +1032,19 @@ def burr12_fit_method(
     Returns
     -------
     characs : numpy.ndarray
-        Array of shape ``(6 + n_moms-1, )`` containing the following
+        Array of shape ``(7 + n_moms-1, )`` containing the following
         distribution characteristics:
 
             1. Mean (1st raw moment)
             2. Standard deviation
-            3. Skewness (Fisher)
-            4. Excess kurtosis (according to Fisher)
-            5. Median
-            6. Non-parametric skewness
-            7. 2nd raw moment
-            8. 3rd raw moment
-            9. 4th raw moment
+            3. Coefficient of variation
+            4. Skewness (Fisher)
+            5. Excess kurtosis (according to Fisher)
+            6. Median
+            7. Non-parametric skewness
+            8. 2nd raw moment
+            9. 3rd raw moment
+            10. 4th raw moment
 
         The number of calculated raw moments depends on `n_moms`.  The
         first raw moment (mean) is always calculated.
@@ -1136,12 +1148,12 @@ def burr12_fit_method(
         )
     if fit_start.shape != surv_funcs.shape[1:]:
         raise ValueError(
-            "fit_start.shape ({}) != surv_funcs.shape[1:]"
+            "`fit_start.shape` ({}) != `surv_funcs.shape[1:]`"
             " ({})".format(fit_start.shape, surv_funcs.shape[1:])
         )
     if fit_stop.shape != fit_start.shape:
         raise ValueError(
-            "fit_stop.shape ({}) != fit_start.shape"
+            "`fit_stop.shape` ({}) != `fit_start.shape`"
             " ({})".format(fit_stop.shape, fit_start.shape)
         )
     if n_moms < 1:
@@ -1153,7 +1165,7 @@ def burr12_fit_method(
         surv_funcs_var = np.asarray(surv_funcs_var)
         if surv_funcs_var.shape != surv_funcs.shape:
             raise ValueError(
-                "surv_funcs_var.shape ({}) != surv_funcs.shape"
+                "`surv_funcs_var.shape` ({}) != `surv_funcs.shape`"
                 " ({})".format(surv_funcs_var.shape, surv_funcs.shape)
             )
 
@@ -1162,7 +1174,7 @@ def burr12_fit_method(
     popt = np.full((n_states, 3), np.nan, dtype=np.float64)
     perr = np.full_like(popt, np.nan)
     fit_quality = np.full((n_states, 2), np.nan, dtype=np.float64)
-    characs = np.full((n_states, 5 + n_moms), np.nan, dtype=np.float64)
+    characs = np.full((n_states, 6 + n_moms), np.nan, dtype=np.float64)
     for i, sf in enumerate(surv_funcs.T):
         # Do the fit.
         times_fit = times[fit_start[i] : fit_stop[i]]
@@ -1190,13 +1202,15 @@ def burr12_fit_method(
         )
         raw_moms = [dist.moment(n) for n in range(1, n_moms + 1)]
         var, skew, kurt = dist.stats(moments="vsk")
-        median = dist.median()
         std = np.sqrt(var)
+        cv = std / raw_moms[0]
+        median = dist.median()
         skew_non_param = np.divide((raw_moms[0] - median), std)
         characs[i] = np.array(
             [
                 raw_moms[0],  # Mean.
                 std,  # Standard deviation.
+                cv,  # Coefficient of variation.
                 skew,  # Skewness (Fisher).
                 kurt,  # Excess kurtosis (Fisher).
                 median,  # Median
@@ -1575,7 +1589,9 @@ if __name__ == "__main__":  # noqa: C901
 
         lts_true_rp_goodness = np.full((n_states, 2), np.nan, dtype=np.float64)
         lts_true_km_goodness = np.full_like(lts_true_rp_goodness, np.nan)
-        lts_true_characs = np.full((n_states, 9), np.nan, dtype=np.float64)
+        lts_true_characs = np.full(
+            (n_states, 6 + n_moms), np.nan, dtype=np.float64
+        )
         for i in range(n_states):
             # Quantities to assess the fit goodness if the estimated
             # survival function is seen as fit of the true survival
@@ -1594,13 +1610,15 @@ if __name__ == "__main__":  # noqa: C901
             # Calculate distribution characteristics.
             raw_moms = [lt_dists[i].moment(n) for n in range(1, n_moms + 1)]
             var, skew, kurt = lt_dists[i].stats(moments="vsk")
-            median = lt_dists[i].median()
             std = np.sqrt(var)
+            cv = std / raw_moms[0]
+            median = lt_dists[i].median()
             skew_non_param = np.divide((raw_moms[0] - median), std)
             lts_true_characs[i] = np.array(
                 [
                     raw_moms[0],  # Mean.
                     std,  # Standard deviation.
+                    cv,  # Coefficient of variation.
                     skew,  # Skewness (Fisher).
                     kurt,  # Excess kurtosis (Fisher).
                     median,  # Median
@@ -1617,60 +1635,60 @@ if __name__ == "__main__":  # noqa: C901
     data = [
         states,  # 1
         # Method 1: Censored counting.
-        lts_cnt_cen_characs,  # 2-14
+        lts_cnt_cen_characs,  # 2-15
         # Method 2: Uncensored counting.
-        lts_cnt_unc_characs,  # 15-27
+        lts_cnt_unc_characs,  # 16-29
         # Method 3: Inverse transition rate.
-        lts_k,  # 28
+        lts_k,  # 30
         # Method 4: Numerical integration of the remain probability.
-        lts_rp_int_characs,  # 29-37
+        lts_rp_int_characs,  # 31-40
         # Method 5: Weibull fit of the remain probability.
-        lts_rp_wbl_characs,  # 38-46
-        tau0_rp_wbl,  # 47
-        tau0_rp_wbl_sd,  # 48
-        beta_rp_wbl,  # 49
-        beta_rp_wbl_sd,  # 50
-        lts_rp_wbl_fit_goodness,  # 51-52
+        lts_rp_wbl_characs,  # 41-50
+        tau0_rp_wbl,  # 51
+        tau0_rp_wbl_sd,  # 52
+        beta_rp_wbl,  # 53
+        beta_rp_wbl_sd,  # 54
+        lts_rp_wbl_fit_goodness,  # 55-56
         # Method 6: Burr Type XII fit of the remain probability.
-        lts_rp_brr_characs,  # 53-61
-        tau0_rp_brr,  # 62
-        tau0_rp_brr_sd,  # 63
-        beta_rp_brr,  # 64
-        beta_rp_brr_sd,  # 65
-        delta_rp_brr,  # 66
-        delta_rp_brr_sd,  # 67
-        lts_rp_brr_fit_goodness,  # 68-69
+        lts_rp_brr_characs,  # 57-66
+        tau0_rp_brr,  # 67
+        tau0_rp_brr_sd,  # 68
+        beta_rp_brr,  # 69
+        beta_rp_brr_sd,  # 70
+        delta_rp_brr,  # 71
+        delta_rp_brr_sd,  # 72
+        lts_rp_brr_fit_goodness,  # 73-74
         # Fit region for the remain probability.
-        fit_start_rp * args.TIME_CONV,  # 70
-        (fit_stop_rp - 1) * args.TIME_CONV,  # 71
+        fit_start_rp * args.TIME_CONV,  # 75
+        (fit_stop_rp - 1) * args.TIME_CONV,  # 76
         # Method 7: Numerical integration of the Kaplan-Meier estimator.
-        lts_km_int_characs,  # 72-80
+        lts_km_int_characs,  # 77-86
         # Method 8: Weibull fit of the Kaplan-Meier estimator.
-        lts_km_wbl_characs,  # 81-89
-        tau0_km_wbl,  # 90
-        tau0_km_wbl_sd,  # 91
-        beta_km_wbl,  # 92
-        beta_km_wbl_sd,  # 93
-        lts_km_wbl_fit_goodness,  # 94-95
+        lts_km_wbl_characs,  # 87-96
+        tau0_km_wbl,  # 97
+        tau0_km_wbl_sd,  # 98
+        beta_km_wbl,  # 99
+        beta_km_wbl_sd,  # 100
+        lts_km_wbl_fit_goodness,  # 101-102
         # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
-        lts_km_brr_characs,  # 96-104
-        tau0_km_brr,  # 105
-        tau0_km_brr_sd,  # 106
-        beta_km_brr,  # 107
-        beta_km_brr_sd,  # 108
-        delta_km_brr,  # 109
-        delta_km_brr_sd,  # 110
-        lts_km_brr_fit_goodness,  # 111-112
+        lts_km_brr_characs,  # 103-112
+        tau0_km_brr,  # 113
+        tau0_km_brr_sd,  # 114
+        beta_km_brr,  # 115
+        beta_km_brr_sd,  # 116
+        delta_km_brr,  # 117
+        delta_km_brr_sd,  # 118
+        lts_km_brr_fit_goodness,  # 119-120
         # Fit region for the Kaplan-Meier estimator.
-        fit_start_km * args.TIME_CONV,  # 113
-        (fit_stop_km - 1) * args.TIME_CONV,  # 114
+        fit_start_km * args.TIME_CONV,  # 121
+        (fit_stop_km - 1) * args.TIME_CONV,  # 122
     ]
     if args.INFILE_PARAM is not None:
         data += [
-            lts_true_characs,  # 115-123
-            dist_params,  # 124-126
-            lts_true_rp_goodness,  # 127-128
-            lts_true_km_goodness,  # 129-130
+            lts_true_characs,  # 123-132
+            dist_params,  # 133-135
+            lts_true_rp_goodness,  # 136-137
+            lts_true_km_goodness,  # 138-139
         ]
     data = np.column_stack(data)
     header = (
@@ -1770,86 +1788,88 @@ if __name__ == "__main__":  # noqa: C901
         + "The columns contain:\n"
         + "  1 State index (zero-based)\n"
         + "\n"
-        + "Method based on counting frames:\n"
+        + "Methods based on counting frames:\n"
         + "  Method 1: Censored counting\n"
         + "  2 Sample mean (1st raw moment) / frames\n"
         + "  3 Uncertainty of the sample mean (standard error) / frames\n"
         + "  4 Corrected sample standard deviation / frames\n"
-        + "  5 Unbiased sample skewness (Fisher)\n"
-        + "  6 Unbiased sample excess kurtosis (Fisher)\n"
-        + "  7 Sample median / frames\n"
-        + "  8 Non-parametric skewness\n"
-        + "  9 2nd raw moment (biased estimate) / frames^2\n"
-        + " 10 3rd raw moment (biased estimate) / frames^3\n"
-        + " 11 4th raw moment (biased estimate) / frames^4\n"
-        + " 12 Sample minimum / frames\n"
-        + " 13 Sample maximum / frames\n"
-        + " 14 Number of observations/samples\n"
+        + "  5 Corrected coefficient of variation\n"
+        + "  6 Unbiased sample skewness (Fisher)\n"
+        + "  7 Unbiased sample excess kurtosis (Fisher)\n"
+        + "  8 Sample median / frames\n"
+        + "  9 Non-parametric skewness\n"
+        + " 10 2nd raw moment (biased estimate) / frames^2\n"
+        + " 11 3rd raw moment (biased estimate) / frames^3\n"
+        + " 12 4th raw moment (biased estimate) / frames^4\n"
+        + " 13 Sample minimum / frames\n"
+        + " 14 Sample maximum / frames\n"
+        + " 15 Number of observations/samples\n"
         + "\n"
         + "  Method 2: Uncensored counting.\n"
-        + " 15-27 As Method 1\n"
+        + " 16-29 As Method 1\n"
         + "\n"
         + "  Method 3: Inverse transition rate\n"
-        + " 28 Mean lifetime / frames\n"
+        + " 30 Mean lifetime / frames\n"
         + "\n"
-        + "Method based on the ACF:\n"
+        + "Methods based on the ACF:\n"
         + "  Method 4: Numerical integration of the ACF\n"
-        + " 29 Mean lifetime (1st raw moment) / frames\n"
-        + " 30 Standard deviation / frames\n"
-        + " 31 Skewness (Fisher)\n"
-        + " 32 Excess kurtosis (Fisher)\n"
-        + " 33 Median / frames\n"
-        + " 34 Non-parametric skewness\n"
-        + " 35 2nd raw moment / frames^2\n"
-        + " 36 3rd raw moment / frames^3\n"
-        + " 37 4th raw moment / frames^4\n"
+        + " 31 Mean lifetime (1st raw moment) / frames\n"
+        + " 32 Standard deviation / frames\n"
+        + " 33 Coefficient of variation"
+        + " 34 Skewness (Fisher)\n"
+        + " 35 Excess kurtosis (Fisher)\n"
+        + " 36 Median / frames\n"
+        + " 37 Non-parametric skewness\n"
+        + " 38 2nd raw moment / frames^2\n"
+        + " 39 3rd raw moment / frames^3\n"
+        + " 40 4th raw moment / frames^4\n"
         + "\n"
         + "  Method 5: Weibull fit of the ACF\n"
-        + " 38-46 As Method 4\n"
-        + " 47 Fit parameter tau0_wbl / frames\n"
-        + " 48 Standard deviation of tau0_wbl / frames\n"
-        + " 49 Fit parameter beta_wbl\n"
-        + " 50 Standard deviation of beta_wbl\n"
-        + " 51 Coefficient of determination of the fit (R^2 value)\n"
-        + " 52 Root-mean-square error (RMSE) of the fit\n"
+        + " 41-50 As Method 4\n"
+        + " 51 Fit parameter tau0_wbl / frames\n"
+        + " 52 Standard deviation of tau0_wbl / frames\n"
+        + " 53 Fit parameter beta_wbl\n"
+        + " 54 Standard deviation of beta_wbl\n"
+        + " 55 Coefficient of determination of the fit (R^2 value)\n"
+        + " 56 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Method 6: Burr Type XII fit of the ACF\n"
-        + " 53-65 As Method 5\n"
-        + " 66 Fit parameter delta_brr\n"
-        + " 67 Standard deviation of delta_brr\n"
-        + " 68 Coefficient of determination of the fit (R^2 value)\n"
-        + " 69 Root-mean-square error (RMSE) of the fit\n"
+        + " 57-70 As Method 5\n"
+        + " 71 Fit parameter delta_brr\n"
+        + " 72 Standard deviation of delta_brr\n"
+        + " 73 Coefficient of determination of the fit (R^2 value)\n"
+        + " 74 Root-mean-square error (RMSE) of the fit\n"
         + "\n"
         + "  Fit region for all ACF fitting methods\n"
-        + " 70 Start of fit region (inclusive) / frames\n"
-        + " 71 End of fit region (inclusive) / frames\n"
+        + " 75 Start of fit region (inclusive) / frames\n"
+        + " 76 End of fit region (inclusive) / frames\n"
         + "\n"
-        + "Method based on the Kaplan-Meier estimator:\n"
+        + "Methods based on the Kaplan-Meier estimator:\n"
         + "  Method 7: Numerical integration of the Kaplan-Meier estimator\n"
-        + " 72-80 As Method 4\n"
+        + " 77-86 As Method 4\n"
         + "\n"
         + "  Method 8: Weibull fit of the Kaplan-Meier estimator\n"
-        + " 81-95 As Method 5\n"
+        + " 87-102 As Method 5\n"
         + "\n"
         + "  Method 9: Burr Type XII fit of the Kaplan-Meier estimator\n"
-        + " 96-112 As Method 6\n"
+        + " 103-120 As Method 6\n"
         + "\n"
         + "  Fit region for all Kaplan-Meier estimator fitting methods\n"
-        + " 113 Start of fit region (inclusive) / frames\n"
-        + " 114 End of fit region (inclusive) / frames\n"
+        + " 121 Start of fit region (inclusive) / frames\n"
+        + " 122 End of fit region (inclusive) / frames\n"
     )
     if args.INFILE_PARAM is not None:
         header += (
             "\n"
             + "  True state lifetimes\n"
-            + " 115-123 As Method 4\n"
-            + " 124 Scale parameter tau0 of the true distribution\n"
-            + " 125 Shape parameter beta of the true distribution\n"
-            + " 126 Shape parameter delta of the true distribution\n"
-            + " 127 R^2 if the ACF is seen as fit of the true SF\n"
-            + " 128 RMSE of the ACF to the true SF\n"
-            + " 129 R^2 if the KM estimator is seen as fit of the true SF\n"
-            + " 130 RMSE of the Kaplan-Meier estimator to the true SF\n"
+            + " 123-132 As Method 4\n"
+            + " 133 Scale parameter tau0 of the true distribution\n"
+            + " 134 Shape parameter beta of the true distribution\n"
+            + " 135 Shape parameter delta of the true distribution\n"
+            + " 136 R^2 if the ACF is seen as fit of the true SF\n"
+            + " 137 RMSE of the ACF to the true SF\n"
+            + " 138 R^2 if the KM estimator is seen as fit of the true SF\n"
+            + " 139 RMSE of the Kaplan-Meier estimator to the true SF\n"
         )
     header += "\n" + "Column number:\n"
     header += "{:>14d}".format(1)
