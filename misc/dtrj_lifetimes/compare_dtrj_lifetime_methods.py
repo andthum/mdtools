@@ -1946,6 +1946,7 @@ if __name__ == "__main__":  # noqa: C901
         ylabels = (
             "Average Lifetime / Frames",
             "Std. Dev. / Frames",
+            "Coeff. of Variation",
             "Skewness",
             "Excess Kurtosis",
             "Median / Frames",
@@ -1958,7 +1959,7 @@ if __name__ == "__main__":  # noqa: C901
                 offset_i_cnt = 1
             fig, ax = plt.subplots(clear=True)
             if args.INFILE_PARAM is not None:
-                # True lifetimes distribution.
+                # True lifetime distribution.
                 ax.errorbar(
                     states,
                     lts_true_characs[:, i],
@@ -2061,24 +2062,23 @@ if __name__ == "__main__":  # noqa: C901
             )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
-            if i not in (2, 3, 5) and ylim[0] < 0:
+            if ylim[0] < 0 and ylabel not in (
+                "Skewness",
+                "Excess Kurtosis",
+                "Non-Parametric Skewness",
+            ):
                 ax.set_ylim(0, ylim[1])
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
             ax.set_xticks([], minor=True)
             ax.legend(ncol=3, **mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
             yd_min, yd_max = get_ydata_min_max(ax)
-            if len(yd_min) > 0:
-                # Set y axis to log scale.
-                # Round y limits to next lower and higher power of ten.
-                ylim = ax.get_ylim()
-                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
-                ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
-                ax.set_ylim(
-                    ymin if np.isfinite(ymin) else None,
-                    ymax if np.isfinite(ymax) else None,
-                )
+            if np.any(np.greater(yd_min, 0)):
+                # Log scale y.
+                ax.relim()
+                ax.autoscale()
                 ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                ax.set_xlim(xlim)
                 pdf.savefig()
             plt.close()
         ################################################################
@@ -2090,7 +2090,7 @@ if __name__ == "__main__":  # noqa: C901
             fig, ax = plt.subplots(clear=True)
             ax.plot(
                 states,
-                lts_true_characs[:, 6] / (2 * lts_true_characs[:, 0]),
+                lts_true_characs[:, 7] / (2 * lts_true_characs[:, 0]),
                 label=(
                     r"$\langle t_{true}^2 \rangle /"
                     + r" 2 \langle t_{true} \rangle$"
@@ -2101,7 +2101,7 @@ if __name__ == "__main__":  # noqa: C901
             )
             # ax.plot(
             #     states,
-            #     lts_true_characs[:, 7] / (2 * lts_true_characs[:, 6]),
+            #     lts_true_characs[:, 8] / (2 * lts_true_characs[:, 7]),
             #     label=(
             #         r"$\langle t_{true}^3 \rangle /"
             #         + r" 2 \langle t_{true}^2 \rangle$"
@@ -2146,17 +2146,12 @@ if __name__ == "__main__":  # noqa: C901
             ax.legend(ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
             yd_min, yd_max = get_ydata_min_max(ax)
-            if len(yd_min) > 0:
-                # Set y axis to log scale.
-                # Round y limits to next lower and higher power of ten.
-                ylim = ax.get_ylim()
-                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
-                ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
-                ax.set_ylim(
-                    ymin if np.isfinite(ymin) else None,
-                    ymax if np.isfinite(ymax) else None,
-                )
+            if np.any(np.greater(yd_min, 0)):
+                # Log scale y.
+                ax.relim()
+                ax.autoscale()
                 ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                ax.set_xlim(xlim)
                 pdf.savefig()
             plt.close()
         ################################################################
@@ -2173,7 +2168,7 @@ if __name__ == "__main__":  # noqa: C901
             # Method 1: Censored counting.
             ax.plot(
                 states,
-                lts_cnt_cen_characs[:, 10 + i],
+                lts_cnt_cen_characs[:, 11 + i],
                 label=label_cnt_cen,
                 color=color_cnt_cen,
                 marker=marker_cnt_cen,
@@ -2182,7 +2177,7 @@ if __name__ == "__main__":  # noqa: C901
             # Method 2: Uncensored counting.
             ax.plot(
                 states,
-                lts_cnt_unc_characs[:, 10 + i],
+                lts_cnt_unc_characs[:, 11 + i],
                 label=label_cnt_unc,
                 color=color_cnt_unc,
                 marker=marker_cnt_unc,
@@ -2197,17 +2192,12 @@ if __name__ == "__main__":  # noqa: C901
             ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
             yd_min, yd_max = get_ydata_min_max(ax)
-            if len(yd_min) > 0:
-                # Set y axis to log scale.
-                # Round y limits to next lower and higher power of ten.
-                ylim = ax.get_ylim()
-                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
-                ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
-                ax.set_ylim(
-                    ymin if np.isfinite(ymin) else None,
-                    ymax if np.isfinite(ymax) else None,
-                )
+            if np.any(np.greater(yd_min, 0)):
+                # Log scale y.
+                ax.relim()
+                ax.autoscale()
                 ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                ax.set_xlim(xlim)
                 pdf.savefig()
             plt.close()
         ################################################################
@@ -2283,17 +2273,12 @@ if __name__ == "__main__":  # noqa: C901
             ax.legend(ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
             yd_min, yd_max = get_ydata_min_max(ax)
-            if len(yd_min) > 0:
-                # Set y axis to log scale.
-                # Round y limits to next lower and higher power of ten.
-                ylim = ax.get_ylim()
-                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
-                ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
-                ax.set_ylim(
-                    ymin if np.isfinite(ymin) else None,
-                    ymax if np.isfinite(ymax) else None,
-                )
+            if np.any(np.greater(yd_min, 0)):
+                # Log scale y.
+                ax.relim()
+                ax.autoscale()
                 ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                ax.set_xlim(xlim)
                 pdf.savefig()
             plt.close()
         ################################################################
@@ -2368,20 +2353,12 @@ if __name__ == "__main__":  # noqa: C901
             ax.legend(ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL)
             pdf.savefig()
             yd_min, yd_max = get_ydata_min_max(ax)
-            if len(yd_min) > 0:
-                # Set y axis to log scale.
-                # Round `ymin` to next lower power of ten.
-                ylim = ax.get_ylim()
-                ymin = 10 ** np.floor(np.log10(np.min(yd_min)))
-                if i == 0:
-                    ymax = 2
-                else:
-                    ymax = 10 ** np.ceil(np.log10(np.max(yd_max)))
-                ax.set_ylim(
-                    ymin if np.isfinite(ymin) else None,
-                    ymax if np.isfinite(ymax) else None,
-                )
+            if np.any(np.greater(yd_min, 0)):
+                # Log scale y.
+                ax.relim()
+                ax.autoscale()
                 ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+                ax.set_xlim(xlim)
                 pdf.savefig()
             plt.close()
         ################################################################
@@ -2414,9 +2391,14 @@ if __name__ == "__main__":  # noqa: C901
         ax.set_xticks([], minor=True)
         ax.legend(**mdtplt.LEGEND_KWARGS_XSMALL)
         pdf.savefig()
-        # Set y axis to log scale.
-        ax.set_yscale("log", base=10, subs=np.arange(2, 10))
-        pdf.savefig()
+        yd_min, yd_max = get_ydata_min_max(ax)
+        if np.any(np.greater(yd_min, 0)):
+            # Log scale y.
+            ax.relim()
+            ax.autoscale()
+            ax.set_yscale("log", base=10, subs=np.arange(2, 10))
+            ax.set_xlim(xlim)
+            pdf.savefig()
         plt.close()
         ################################################################
 
