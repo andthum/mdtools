@@ -2225,7 +2225,7 @@ def lifetimes(
     """  # noqa: W505, E501
     dtrj = mdt.check.dtrj(dtrj)
     ax_cmp, ax_fr = mdt.dtrj.get_ax(ax_fr=axis)
-    n_frames = dtrj.shape[ax_fr]
+    n_cmps, n_frames = dtrj.shape[ax_cmp], dtrj.shape[ax_fr]
 
     # Ensure that the end of the trajectory (i.e. the virtual frame
     # after the last frame) is treated as the end of a state
@@ -2251,6 +2251,12 @@ def lifetimes(
     # trajectory and are therefore of no physical relevance and are thus
     # removed.
     lt = lt[lt > 0]
+    if np.sum(lt) != n_frames * n_cmps:
+        raise ValueError(
+            "The sum of all lifetimes ({}) is not equal to the total number of"
+            " frames ({}).  This should not have"
+            " happened".format(np.sum(lt), n_frames * n_cmps)
+        )
 
     # Get state and compound indices corresponding to each lifetime.
     states = dtrj[trans_ix_start]
