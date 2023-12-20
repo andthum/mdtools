@@ -896,7 +896,9 @@ mdt.dtrj.trans_per_state_vs_time(
         return hist
 
 
-def trans_rate_tot(dtrj, discard_neg_start=False, discard_all_neg=False):
+def trans_rate_tot(
+    dtrj, axis=-1, discard_neg_start=False, discard_all_neg=False
+):
     """
     Calculate the transition rate averaged over all compounds and over
     all states.
@@ -904,12 +906,14 @@ def trans_rate_tot(dtrj, discard_neg_start=False, discard_all_neg=False):
     Parameters
     ----------
     dtrj : array_like
-        The discrete trajectory.  Array of shape ``(n, f)``, where ``n``
-        is the number of compounds and ``f`` is the number of frames.
-        The shape can also be ``(f,)``, in which case the array is
-        expanded to shape ``(1, f)``.   The elements of `dtrj` are
-        interpreted as the indices of the states in which a given
-        compound is at a given frame.
+        Array containing the discrete trajectory.
+    axis : int, optional
+        The axis along which to search for state transitions.  For
+        ordinary discrete trajectories with shape ``(n, f)`` or
+        ``(f,)``, where ``n`` is the number of compounds and ``f`` is
+        the number of frames, set `axis` to ``-1``.  If you parse a
+        transposed discrete trajectory of shape ``(f, n)``, set `axis`
+        to ``0``.
     discard_neg_start : bool, optional
         If ``True``, discard all transitions starting from a negative
         state (see notes of :func:`mdtools.dtrj.trans_rate`).  This is
@@ -947,6 +951,50 @@ def trans_rate_tot(dtrj, discard_neg_start=False, discard_all_neg=False):
 
     See :func:`mdtools.dtrj.trans_rate` for details about valid and
     invalid states (`discard_neg_start` and `discard_all_neg`).
+
+    Examples
+    --------
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> mdt.dtrj.trans_rate_tot(dtrj)  # (4 * 2) / (4 * 6)
+    0.3333333333333333
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=0)
+    0.4166666666666667
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [6, 6, 6, 6, 6, 6]])
+    >>> mdt.dtrj.trans_rate_tot(dtrj)
+    0.26666666666666666
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=0)
+    0.5333333333333333
+
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1,  2,  2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [-6, -6, -6, -6, -6, -6],
+    ...                  [ 6,  6,  6,  6,  6,  6]])
+    >>> ax = -1
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax)
+    0.23809523809523808
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax, discard_neg_start=True)
+    0.27586206896551724
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax, discard_all_neg=True)
+    0.23809523809523808
+
+    >>> ax = 0
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax)
+    0.6904761904761905
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax, discard_neg_start=True)
+    0.5862068965517241
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax, discard_all_neg=True)
+    0.45
     """
     dtrj = mdt.check.dtrj(dtrj)
     if discard_neg_start and discard_all_neg:
@@ -959,34 +1007,17 @@ def trans_rate_tot(dtrj, discard_neg_start=False, discard_all_neg=False):
         n_frames_tot = np.count_nonzero(dtrj >= 0)
     elif discard_all_neg:
         discard_neg = "both"
-        ################################################################
-        # Taken from :func:`mdtools.dtrj.lifetimes`.
-        ax_fr = -1
-        n_frames = dtrj.shape[ax_fr]
-        trans_ix_start, trans_ix_end = mdt.dtrj.trans_ix(
-            np.insert(dtrj, n_frames, np.max(dtrj) + 1, axis=ax_fr),
-            axis=ax_fr,
-            pin="both",
-            tfft=True,
+        lts = mdt.dtrj.lifetimes(
+            dtrj, axis=axis, discard_all_neg=discard_all_neg
         )
-        lt = np.diff(trans_ix_end[ax_fr])  # State lifetimes
-        lt = lt[lt > 0]
-        states = dtrj[trans_ix_start]
-        valid_states = states >= 0
-        valid_follower = np.roll(valid_states, shift=-1)
-        trj_ends = (trans_ix_start[ax_fr] + 1) == n_frames
-        valid_follower[trj_ends] = True
-        valid = valid_states & valid_follower
-        ################################################################
-        n_frames_tot = np.sum(lt[valid])
-        del trans_ix_start, trans_ix_end, lt
-        del states, valid_states, valid_follower, valid, trj_ends
+        n_frames_tot = np.sum(lts)
+        del lts
     else:
         discard_neg = None
         n_frames_tot = dtrj.size
 
     n_trans_tot = np.count_nonzero(
-        mdt.dtrj.locate_trans(dtrj, discard_neg=discard_neg)
+        mdt.dtrj.locate_trans(dtrj, axis=axis, discard_neg=discard_neg)
     )
     return n_trans_tot / n_frames_tot
 
