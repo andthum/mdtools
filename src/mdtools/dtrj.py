@@ -896,6 +896,132 @@ mdt.dtrj.trans_per_state_vs_time(
         return hist
 
 
+def trans_rate_tot(
+    dtrj, axis=-1, discard_neg_start=False, discard_all_neg=False
+):
+    """
+    Calculate the transition rate averaged over all compounds and over
+    all states.
+
+    Parameters
+    ----------
+    dtrj : array_like
+        Array containing the discrete trajectory.
+    axis : int, optional
+        The axis along which to search for state transitions.  For
+        ordinary discrete trajectories with shape ``(n, f)`` or
+        ``(f,)``, where ``n`` is the number of compounds and ``f`` is
+        the number of frames, set `axis` to ``-1``.  If you parse a
+        transposed discrete trajectory of shape ``(f, n)``, set `axis`
+        to ``0``.
+    discard_neg_start : bool, optional
+        If ``True``, discard all transitions starting from a negative
+        state (see notes of :func:`mdtools.dtrj.trans_rate`).  This is
+        equivalent to discarding the lifetimes of all negative states
+        when calculating state lifetimes with
+        :func:`mdtools.dtrj.lifetimes_per_state`.  Must not be used
+        together with `discard_all_neg`.
+    discard_all_neg : bool, optional
+        If ``True``, discard all transitions starting from or ending in
+        a negative state (see notes :func:`mdtools.dtrj.trans_rate`).
+        This is equivalent to discarding the lifetimes of all negative
+        states and of all states that are followed by a negative state
+        when calculating state lifetimes with
+        :func:`mdtools.dtrj.lifetimes_per_state`.  Must not be used
+        together with `discard_neg_start`.
+
+    Returns
+    -------
+    trans_rate : float
+        The transition rate averaged over all compounds and over all
+        states.
+
+    Notes
+    -----
+    Transitions rates are calculated by simply counting the total number
+    of valid state transitions (summed over all compounds) and dividing
+    this number by the total number of valid frames (again, summed over
+    all compounds).
+
+    The inverse of the transition rate gives an estimate for the average
+    state lifetime.  In contrast to calculating the average lifetime by
+    simply counting how many frames a given compound stays in a given
+    state (as done by :func:`mdtools.dtrj.lifetimes_per_state`), this
+    method is not biased to lower lifetimes.
+
+    See :func:`mdtools.dtrj.trans_rate` for details about valid and
+    invalid states (`discard_neg_start` and `discard_all_neg`).
+
+    Examples
+    --------
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2]])
+    >>> mdt.dtrj.trans_rate_tot(dtrj)  # (4 * 2) / (4 * 6)
+    0.3333333333333333
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=0)
+    0.4166666666666667
+
+    >>> dtrj = np.array([[1, 2, 2, 3, 3, 3],
+    ...                  [2, 2, 3, 3, 3, 1],
+    ...                  [3, 3, 3, 1, 2, 2],
+    ...                  [1, 3, 3, 3, 2, 2],
+    ...                  [6, 6, 6, 6, 6, 6]])
+    >>> mdt.dtrj.trans_rate_tot(dtrj)
+    0.26666666666666666
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=0)
+    0.5333333333333333
+
+    >>> dtrj = np.array([[ 1, -2, -2,  3,  3,  3],
+    ...                  [-2, -2,  3,  3,  3,  1],
+    ...                  [ 3,  3,  3,  1,  2,  2],
+    ...                  [ 1,  3,  3,  3, -2, -2],
+    ...                  [ 1,  4,  4,  4,  4, -1],
+    ...                  [-6, -6, -6, -6, -6, -6],
+    ...                  [ 6,  6,  6,  6,  6,  6]])
+    >>> ax = -1
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax)
+    0.23809523809523808
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax, discard_neg_start=True)
+    0.27586206896551724
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax, discard_all_neg=True)
+    0.23809523809523808
+
+    >>> ax = 0
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax)
+    0.6904761904761905
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax, discard_neg_start=True)
+    0.5862068965517241
+    >>> mdt.dtrj.trans_rate_tot(dtrj, axis=ax, discard_all_neg=True)
+    0.45
+    """
+    dtrj = mdt.check.dtrj(dtrj)
+    if discard_neg_start and discard_all_neg:
+        raise ValueError(
+            "`discard_neg_start` and `discard_all_neg are` mutually exclusive"
+        )
+
+    if discard_neg_start:
+        discard_neg = "start"
+        n_frames_tot = np.count_nonzero(dtrj >= 0)
+    elif discard_all_neg:
+        discard_neg = "both"
+        lts = mdt.dtrj.lifetimes(
+            dtrj, axis=axis, discard_all_neg=discard_all_neg
+        )
+        n_frames_tot = np.sum(lts)
+        del lts
+    else:
+        discard_neg = None
+        n_frames_tot = dtrj.size
+
+    n_trans_tot = np.count_nonzero(
+        mdt.dtrj.locate_trans(dtrj, axis=axis, discard_neg=discard_neg)
+    )
+    return n_trans_tot / n_frames_tot
+
+
 def trans_rate(
     dtrj,
     axis=-1,
@@ -923,7 +1049,7 @@ def trans_rate(
         state (see notes).  This is equivalent to discarding the
         lifetimes of all negative states when calculating state
         lifetimes with :func:`mdtools.dtrj.lifetimes`.  Has no effect if
-        `discard_all_neg` is ``True`` .
+        `discard_all_neg` is ``True``.
     discard_all_neg : bool, optional
         If ``True``, discard all transitions starting from or ending in
         a negative state (see notes).  This is equivalent to discarding
@@ -1240,7 +1366,7 @@ def trans_rate_per_state(
         equivalent to discarding the lifetimes of all negative states
         when calculating state lifetimes with
         :func:`mdtools.dtrj.lifetimes_per_state`.  Has no effect if
-        `discard_all_neg` is ``True`` .
+        `discard_all_neg` is ``True``.
     discard_all_neg : bool, optional
         If ``True``, discard all transitions starting from or ending in
         a negative state (see notes :func:`mdtools.dtrj.trans_rate`).
@@ -2130,7 +2256,7 @@ def lifetimes(
     """  # noqa: W505, E501
     dtrj = mdt.check.dtrj(dtrj)
     ax_cmp, ax_fr = mdt.dtrj.get_ax(ax_fr=axis)
-    n_frames = dtrj.shape[ax_fr]
+    n_cmps, n_frames = dtrj.shape[ax_cmp], dtrj.shape[ax_fr]
 
     # Ensure that the end of the trajectory (i.e. the virtual frame
     # after the last frame) is treated as the end of a state
@@ -2156,6 +2282,12 @@ def lifetimes(
     # trajectory and are therefore of no physical relevance and are thus
     # removed.
     lt = lt[lt > 0]
+    if np.sum(lt) != n_frames * n_cmps:
+        raise ValueError(
+            "The sum of all lifetimes ({}) is not equal to the total number of"
+            " frames ({}).  This should not have"
+            " happened".format(np.sum(lt), n_frames * n_cmps)
+        )
 
     # Get state and compound indices corresponding to each lifetime.
     states = dtrj[trans_ix_start]
