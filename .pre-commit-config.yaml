@@ -116,7 +116,7 @@ repos:
       - id: "check-pre-commit-ci-config"
 
   - repo: "https://github.com/python-jsonschema/check-jsonschema"
-    rev: "0.27.0"
+    rev: "0.27.3"
     hooks:
       # Validate Dependabot Config (v2) against the schema provided by
       # SchemaStore.
@@ -153,7 +153,7 @@ repos:
       - id: "rst-inline-touching-normal"
 
   - repo: "https://github.com/PyCQA/isort"
-    rev: "5.12.0"
+    rev: "5.13.2"
     hooks:
       # Sort import statements with isort
       - id: "isort"
@@ -169,7 +169,7 @@ repos:
           - "colorama"
 
   - repo: "https://github.com/psf/black-pre-commit-mirror"
-    rev: "23.9.1"
+    rev: "23.12.1"
     hooks:
       # Format Python code with black.
       - id: "black"
@@ -204,7 +204,7 @@ repos:
           - "pep8-naming >=0.1, <1.0"
 
   - repo: "https://github.com/PyCQA/bandit"
-    rev: "1.7.5"
+    rev: "1.7.6"
     hooks:
       # Check code security with bandit.
       - id: "bandit"
@@ -273,7 +273,7 @@ repos:
     # v0.12.0 requires ruby2.7
     # v0.11.0 and v0.10.0 require ruby2.6
     # => stay at v0.9.0
-    rev: "v0.9.0"
+    rev: "v0.12.0"
     hooks:
       # Lint Markdown files with markdownlint.
       - id: "markdownlint"
