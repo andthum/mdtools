@@ -273,7 +273,7 @@ repos:
     # v0.12.0 requires ruby2.7
     # v0.11.0 and v0.10.0 require ruby2.6
     # => stay at v0.9.0
-    rev: "v0.12.0"
+    rev: "v0.9.0"
     hooks:
       # Lint Markdown files with markdownlint.
       - id: "markdownlint"
