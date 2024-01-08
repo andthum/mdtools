@@ -83,8 +83,6 @@ extend-select =
     W504,
 # List of glob patterns to include for checks.
 filename = *.py
-# Files that are checked by PyFlakes for doctest syntax.
-include-in-doctest = *.py, *.rst
 # Number of spaces used for indentation.
 indent-size = 4
 # Maximum allowed McCabe complexity
