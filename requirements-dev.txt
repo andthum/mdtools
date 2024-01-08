@@ -8,7 +8,7 @@
 bandit[toml] >=1.0, <2.0
 black >=23.0, <24.0
 cffconvert >=2.0, <3.0
-flake8 >=6.0, <7.0
+flake8 >=6.0, <8.0
 flake8-bandit >=4.0, <5.0
 flake8-bugbear >=23.0, <24.0
 flake8-builtins >=2.0, <3.0
