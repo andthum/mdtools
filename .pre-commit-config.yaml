@@ -193,7 +193,7 @@ repos:
           # Required Flake8 plugins.
           # Keep in sync with `requirements-dev.txt` and `.flake8`!
           - "flake8-bandit >=4.0, <5.0"
-          - "flake8-bugbear >=23.0, <24.0"
+          - "flake8-bugbear >=24.0, <25.0"
           - "flake8-builtins >=2.0, <3.0"
           - "flake8-comprehensions >=3.0, <4.0"
           - "flake8-docstrings >=1.0, <2.0"
