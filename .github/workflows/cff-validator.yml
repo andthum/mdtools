@@ -44,7 +44,7 @@ jobs:
           python -m pip install --user --upgrade pip
           echo "dir=$(pip cache dir)" >> ${GITHUB_OUTPUT}
       - name: "Create/Restore cache"
-        uses: "actions/cache@v3"
+        uses: "actions/cache@v4"
         with:
           path: "${{ steps.pip-cache.outputs.dir }}/**"
           key: |
