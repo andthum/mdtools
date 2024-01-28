@@ -936,6 +936,15 @@ def trans_rate_tot(
         The transition rate averaged over all compounds and over all
         states.
 
+    See Also
+    --------
+    :func:`mdtools.dtrj.trans_rate` :
+        Calculate the transition rate for each compound averaged over
+        all states
+    :func:`mdtools.dtrj.trans_rate_per_state` :
+        Calculate the transition rate for each state averaged over all
+        compounds
+
     Notes
     -----
     Transitions rates are calculated by simply counting the total number
@@ -1072,6 +1081,9 @@ def trans_rate(
 
     See Also
     --------
+    :func:`mdtools.dtrj.trans_rate_tot` :
+        Calculate the transition rate averaged over all compounds and
+        over all states
     :func:`mdtools.dtrj.trans_rate_per_state` :
         Calculate the transition rate for each state averaged over all
         compounds
@@ -1390,6 +1402,9 @@ def trans_rate_per_state(
 
     See Also
     --------
+    :func:`mdtools.dtrj.trans_rate_tot` :
+        Calculate the transition rate averaged over all compounds and
+        over all states
     :func:`mdtools.dtrj.trans_rate` :
         Calculate the transition rate for each compound averaged over
         all states
