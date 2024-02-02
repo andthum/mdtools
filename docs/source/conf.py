@@ -478,6 +478,7 @@ text_secnumber_suffix = html_secnumber_suffix
 # when running `make linkcheck`.
 linkcheck_ignore = [
     # 403 Client Error: Forbidden for url.
+    r"https://www.cabdirect.org/cabdirect/abstract/19272700028",
     r"https://doi.org/10.1002/9781118033005",
     r"https://doi.org/10.1021/acs.jctc.2c00327",
     r"https://doi.org/10.1063/5.0008316",
