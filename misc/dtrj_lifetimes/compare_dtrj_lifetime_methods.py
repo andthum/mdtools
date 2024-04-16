@@ -1480,7 +1480,6 @@ if __name__ == "__main__":  # noqa: C901
     print("\n")
     print("Calculating lifetimes from the Kaplan-Meier estimator...")
     timer = datetime.now()
-    # TODO
     # Read Kaplan-Meier survival functions from file.
     km_surv_funcs, km_surv_funcs_var, times, _states = read_sf_from_file(
         args.INFILE_KM,
@@ -1505,7 +1504,7 @@ if __name__ == "__main__":  # noqa: C901
         popt_km_wbl,
         perr_km_wbl,
     ) = weibull_fit_method(
-        remain_probs,
+        km_surv_funcs,
         times,
         fit_start=fit_start_km,
         fit_stop=fit_stop_km,
@@ -1524,7 +1523,7 @@ if __name__ == "__main__":  # noqa: C901
         popt_conv_km_brr,
         perr_conv_km_brr,
     ) = burr12_fit_method(
-        remain_probs,
+        km_surv_funcs,
         times,
         fit_start=fit_start_km,
         fit_stop=fit_stop_km,
