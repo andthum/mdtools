@@ -76,23 +76,23 @@ if __name__ == "__main__":  # noqa: C901
     ####################################################################
     # Column indices for the input file(s).
     col_states = 0
-    col_dist_params = 123  # to 59
+    col_dist_params = 132  # to 134
     # Lifetimes from the counting methods.
-    col_cnt_cen = 1  # to 13
-    col_cnt_unc = 14  # to 26
-    col_k = 27
+    col_cnt_cen = 1  # to 14
+    col_cnt_unc = 15  # to 28
+    col_k = 29
     # Lifetimes from remain probabilities.
-    col_rp_int = 28  # to 36
-    col_rp_wbl = 37  # to 51
-    col_rp_brr = 52  # to 68
-    col_rp_fit_end = 70
+    col_rp_int = 30  # to 39
+    col_rp_wbl = 40  # to 55
+    col_rp_brr = 56  # to 73
+    col_rp_fit_end = 75
     # Lifetimes from Kaplan-Meier estimates.
-    col_km_int = 71  # to 79
-    col_km_wbl = 80  # to 94
-    col_km_brr = 95  # to 111
-    col_km_fit_end = 113
+    col_km_int = 76  # to 85
+    col_km_wbl = 86  # to 101
+    col_km_brr = 102  # to 119
+    col_km_fit_end = 121
     # True lifetimes
-    col_dst = 114  # to 122
+    col_dst = 122  # to 131
     ####################################################################
 
     ####################################################################
@@ -110,7 +110,7 @@ if __name__ == "__main__":  # noqa: C901
         # Only keep the row that contains the data for state 1.
         valid = data_file[:, col_states] == 1
         if not np.any(valid):
-            data.append(np.full(62, np.nan))
+            data.append(np.full(data_file.shape[1], np.nan))
         elif np.count_nonzero(valid) != 1:
             raise ValueError(
                 "The input file contains multiple rows with state 1:"
@@ -197,7 +197,7 @@ if __name__ == "__main__":  # noqa: C901
 
     ####################################################################
     # Set axis limits.
-    ylims_characs = [(None, None) for i in range(6)]
+    ylims_characs = [(None, None) for i in range(7)]
     ylims_cnt = [(None, None) for i in range(3)]
     ylims_res = (None, None)
     ylims_fit_params = [(None, None) for i in range(3)]
@@ -206,25 +206,28 @@ if __name__ == "__main__":  # noqa: C901
     if dist_name == "Exp. Dist." and sort_by == "n_cmps":
         ylims_characs = [
             (2e0, 3e2),  # Mean.
-            (1e0, 2e2),  # Standard deviation.
-            (2e-1, 3e0),  # Skewness.
+            (1e0, 4e2),  # Standard deviation.
+            (2e-1, 2e0),  # Coefficient of Variation.
+            (2e-1, 4e0),  # Skewness.
             (6e-1, 2e1),  # Excess kurtosis.
             (2e0, 3e2),  # Median.
             (1e-1, 4e-1),  # Non-parametric kurtosis.
         ]
     if dist_name == "Exp. Dist." and sort_by == "n_frames":
         ylims_characs = [
-            (8e0, 4e2),  # Mean.
+            (8e0, 5e2),  # Mean.
             (9e1, 3e2),  # Standard deviation.
-            (5e-2, 7e0),  # Skewness.
+            (5e-1, 2e0),  # Coefficient of Variation.
+            (5e-2, 3e0),  # Skewness.
             (4e-1, 2e1),  # Excess kurtosis.
-            (8e0, 4e2),  # Median.
+            (8e0, 5e2),  # Median.
             (1e-1, 5e-1),  # Non-parametric kurtosis.
         ]
     if dist_name == "Exp. Dist." and sort_by == "every":
         ylims_characs = [
             (6e1, 9e2),  # Mean.
             (9e1, 7e2),  # Standard deviation.
+            (None, None),  # Coefficient of Variation.
             (1e0, 4e0),  # Skewness.
             (5e0, 1e1),  # Excess kurtosis.
             (6e1, 9e2),  # Median.
@@ -232,27 +235,78 @@ if __name__ == "__main__":  # noqa: C901
         ]
     if dist_name == "Exp. Dist." and sort_by == "tau0_true":
         ylims_characs = [
-            (1e1, 5e2),  # Mean.
+            (2e1, 5e2),  # Mean.
             (2e1, 5e2),  # Standard deviation.
+            (9e-1, 2e0),  # Coefficient of Variation.
             (1e0, 3e0),  # Skewness.
             (5e0, 1e1),  # Excess kurtosis.
             (1e1, 5e2),  # Median.
             (1e-1, 4e-1),  # Non-parametric kurtosis.
         ]
+        ylims_res = ylims_characs[0]
     if dist_name == "Gamma Dist." and sort_by == "delta_true":
         ylims_characs = [
             (2e1, 5e2),  # Mean.
-            (4e1, 5e2),  # Standard deviation.
+            (4e1, 3e2),  # Standard deviation.
+            (4e-1, 3e0),  # Coefficient of Variation.
             (9e-1, 5e0),  # Skewness.
-            (1e0, 3e1),  # Excess kurtosis.
+            (1e0, 5e1),  # Excess kurtosis.
             (3e0, 5e2),  # Median.
             (1e-1, 5e-1),  # Non-parametric kurtosis.
         ]
         ylims_cnt = [(9e-1, 2e1), (9e2, 3e3), (1e4, 9e4)]
+    if dist_name == "Weibull Dist." and sort_by == "beta_true":
+        ylims_characs = [
+            (2e1, 2e5),  # Mean.
+            (2e0, 3e5),  # Standard deviation.
+            (2e-1, 4e1),  # Coefficient of Variation.
+            (3e-1, 7e1),  # Skewness.
+            (1e-1, 2e4),  # Excess kurtosis.
+            (2e1, 4e2),  # Median.
+            (3e-2, 5e-1),  # Non-parametric kurtosis.
+        ]
+    if dist_name == "Str. Exp. Dist." and sort_by == "beta_true":
+        ylims_characs = [
+            (2e1, 6e5),  # Mean.
+            (2e1, 4e5),  # Standard deviation.
+            (6e-1, 3e0),  # Coefficient of Variation.
+            (3e-1, 2e1),  # Skewness.
+            (1e-1, 9e2),  # Excess kurtosis.
+            (2e1, 7e4),  # Median.
+            (9e-2, 6e-1),  # Non-parametric kurtosis.
+        ]
     if dist_name == "Chi Dist." and sort_by == "delta_true":
+        ylims_characs = [
+            (7e-1, 5e0),  # Mean.
+            (2e-1, 2e0),  # Standard deviation.
+            (1e-1, 8e-1),  # Coefficient of Variation.
+            (1e-1, 7e1),  # Skewness.
+            (2e-3, 8e0),  # Excess kurtosis.
+            (6e-1, 5e0),  # Median.
+            (1e-2, 9e-1),  # Non-parametric kurtosis.
+        ]
         ylims_cnt = [(8e-2, 1.2e1), (4e0, 1e1), (1e6, 4e6)]
         ylims_fit_region = (1e0, 6e0)
+    if dist_name == "Lomax Dist." and sort_by == "delta_true":
+        ylims_characs = [
+            (5e0, 9e2),  # Mean.
+            (5e0, 3e3),  # Standard deviation.
+            (9e-1, 2e1),  # Coefficient of Variation.
+            (1e0, 6e1),  # Skewness.
+            (5e0, 6e3),  # Excess kurtosis.
+            (4e0, 2e2),  # Median.
+            (5e-2, 4e-1),  # Non-parametric kurtosis.
+        ]
     if dist_name == "Log-Logistic Dist." and sort_by == "beta_true":
+        ylims_characs = [
+            (4e1, 6e2),  # Mean.
+            (1e1, 9e2),  # Standard deviation.
+            (1e-1, 3e0),  # Coefficient of Variation.
+            (1e-1, 2e1),  # Skewness.
+            (2e-1, 6e2),  # Excess kurtosis.
+            (4e1, 2e2),  # Median.
+            (2e-2, 4e-1),  # Non-parametric kurtosis.
+        ]
         ylims_cnt = [(8e-1, 6e1), (1e2, 2e4), (1e4, 5e4)]
     ####################################################################
 
@@ -306,6 +360,7 @@ if __name__ == "__main__":  # noqa: C901
         ylabels = (
             "Average Lifetime / Frames",
             "Std. Dev. / Frames",
+            "Coeff. of Variation",
             "Skewness",
             "Excess Kurtosis",
             "Median / Frames",
@@ -317,7 +372,7 @@ if __name__ == "__main__":  # noqa: C901
             else:
                 offset_i_cnt = 1
             fig, ax = plt.subplots(clear=True)
-            # True lifetimes (from distribution).
+            # True lifetime distribution.
             valid = np.isfinite(data[col_dst + i])
             if np.any(valid):
                 ax.errorbar(
@@ -414,7 +469,7 @@ if __name__ == "__main__":  # noqa: C901
                     marker=marker_km_int,
                     alpha=alpha,
                 )
-            # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
+            # Method 8: Weibull fit of the Kaplan-Meier estimator.
             valid = np.isfinite(data[col_km_wbl + i])
             if np.any(valid):
                 ax.errorbar(
@@ -426,7 +481,7 @@ if __name__ == "__main__":  # noqa: C901
                     marker=marker_km_wbl,
                     alpha=alpha,
                 )
-            # Method 6: Burr Type XII fit of the remain probability.
+            # Method 9: Burr Type XII fit of the Kaplan-Meier estimator.
             valid = np.isfinite(data[col_km_brr + i])
             if np.any(valid):
                 ax.errorbar(
@@ -441,7 +496,11 @@ if __name__ == "__main__":  # noqa: C901
             ax.set_xscale("log", base=10, subs=np.arange(2, 10))
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
-            if i not in (2, 3, 5) and ylim[0] < 0:
+            if ylim[0] < 0 and ylabel not in (
+                "Skewness",
+                "Excess Kurtosis",
+                "Non-Parametric Skewness",
+            ):
                 ax.set_ylim(0, ylim[1])
             legend = ax.legend(
                 title=legend_title, ncol=2, **mdtplt.LEGEND_KWARGS_XSMALL
@@ -461,7 +520,7 @@ if __name__ == "__main__":  # noqa: C901
         # Plot average residual lifetime.
         ylabel = "Avg. Res. Lifetime / Frames"
         fig, ax = plt.subplots(clear=True)
-        ydata = data[col_dst + 6] / (2 * data[col_dst])
+        ydata = data[col_dst + 7] / (2 * data[col_dst])
         valid = np.isfinite(ydata)
         if np.any(valid):
             ax.plot(
@@ -475,7 +534,7 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_true,  # marker_true_cen,
                 alpha=alpha,
             )
-        # ydata = data[col_dst + 7] / (2 * data[col_dst + 6])
+        # ydata = data[col_dst + 8] / (2 * data[col_dst + 7])
         # valid = np.isfinite(ydata)
         # if np.any(valid):
         #     ax.plot(
@@ -749,7 +808,7 @@ if __name__ == "__main__":  # noqa: C901
             col_true_i = len(ylims_characs)
             col_true_i += 3  # 2nd to 3rd raw moment.
             col_true_i += len(ylims_fit_params)
-            col_true_i += 2  # Remain probability to true SF.
+            col_true_i += len(ylims_fit_goodness)  # RP to true SF.
             col_true_i += i
             valid = data[col_dst + col_true_i] > 0
             if np.any(valid):
