@@ -206,21 +206,21 @@ if __name__ == "__main__":  # noqa: C901
     if dist_name == "Exp. Dist." and sort_by == "n_cmps":
         ylims_characs = [
             (2e0, 3e2),  # Mean.
-            (1e0, 2e2),  # Standard deviation.
-            (None, None),  # Coefficient of Variation.
-            (2e-1, 3e0),  # Skewness.
+            (1e0, 4e2),  # Standard deviation.
+            (2e-1, 2e0),  # Coefficient of Variation.
+            (2e-1, 4e0),  # Skewness.
             (6e-1, 2e1),  # Excess kurtosis.
             (2e0, 3e2),  # Median.
             (1e-1, 4e-1),  # Non-parametric kurtosis.
         ]
     if dist_name == "Exp. Dist." and sort_by == "n_frames":
         ylims_characs = [
-            (8e0, 4e2),  # Mean.
+            (8e0, 5e2),  # Mean.
             (9e1, 3e2),  # Standard deviation.
-            (None, None),  # Coefficient of Variation.
-            (5e-2, 7e0),  # Skewness.
+            (5e-1, 2e0),  # Coefficient of Variation.
+            (5e-2, 3e0),  # Skewness.
             (4e-1, 2e1),  # Excess kurtosis.
-            (8e0, 4e2),  # Median.
+            (8e0, 5e2),  # Median.
             (1e-1, 5e-1),  # Non-parametric kurtosis.
         ]
     if dist_name == "Exp. Dist." and sort_by == "every":
@@ -235,29 +235,78 @@ if __name__ == "__main__":  # noqa: C901
         ]
     if dist_name == "Exp. Dist." and sort_by == "tau0_true":
         ylims_characs = [
-            (1e1, 5e2),  # Mean.
+            (2e1, 5e2),  # Mean.
             (2e1, 5e2),  # Standard deviation.
-            (None, None),  # Coefficient of Variation.
+            (9e-1, 2e0),  # Coefficient of Variation.
             (1e0, 3e0),  # Skewness.
             (5e0, 1e1),  # Excess kurtosis.
             (1e1, 5e2),  # Median.
             (1e-1, 4e-1),  # Non-parametric kurtosis.
         ]
+        ylims_res = ylims_characs[0]
     if dist_name == "Gamma Dist." and sort_by == "delta_true":
         ylims_characs = [
             (2e1, 5e2),  # Mean.
-            (4e1, 5e2),  # Standard deviation.
-            (None, None),  # Coefficient of Variation.
+            (4e1, 3e2),  # Standard deviation.
+            (4e-1, 3e0),  # Coefficient of Variation.
             (9e-1, 5e0),  # Skewness.
-            (1e0, 3e1),  # Excess kurtosis.
+            (1e0, 5e1),  # Excess kurtosis.
             (3e0, 5e2),  # Median.
             (1e-1, 5e-1),  # Non-parametric kurtosis.
         ]
         ylims_cnt = [(9e-1, 2e1), (9e2, 3e3), (1e4, 9e4)]
+    if dist_name == "Weibull Dist." and sort_by == "beta_true":
+        ylims_characs = [
+            (2e1, 2e5),  # Mean.
+            (2e0, 3e5),  # Standard deviation.
+            (2e-1, 4e1),  # Coefficient of Variation.
+            (3e-1, 7e1),  # Skewness.
+            (1e-1, 2e4),  # Excess kurtosis.
+            (2e1, 4e2),  # Median.
+            (3e-2, 5e-1),  # Non-parametric kurtosis.
+        ]
+    if dist_name == "Str. Exp. Dist." and sort_by == "beta_true":
+        ylims_characs = [
+            (2e1, 6e5),  # Mean.
+            (2e1, 4e5),  # Standard deviation.
+            (6e-1, 3e0),  # Coefficient of Variation.
+            (3e-1, 2e1),  # Skewness.
+            (1e-1, 9e2),  # Excess kurtosis.
+            (2e1, 7e4),  # Median.
+            (9e-2, 6e-1),  # Non-parametric kurtosis.
+        ]
     if dist_name == "Chi Dist." and sort_by == "delta_true":
+        ylims_characs = [
+            (7e-1, 5e0),  # Mean.
+            (2e-1, 2e0),  # Standard deviation.
+            (1e-1, 8e-1),  # Coefficient of Variation.
+            (1e-1, 7e1),  # Skewness.
+            (2e-3, 8e0),  # Excess kurtosis.
+            (6e-1, 5e0),  # Median.
+            (1e-2, 9e-1),  # Non-parametric kurtosis.
+        ]
         ylims_cnt = [(8e-2, 1.2e1), (4e0, 1e1), (1e6, 4e6)]
         ylims_fit_region = (1e0, 6e0)
+    if dist_name == "Lomax Dist." and sort_by == "delta_true":
+        ylims_characs = [
+            (5e0, 9e2),  # Mean.
+            (5e0, 3e3),  # Standard deviation.
+            (9e-1, 2e1),  # Coefficient of Variation.
+            (1e0, 6e1),  # Skewness.
+            (5e0, 6e3),  # Excess kurtosis.
+            (4e0, 2e2),  # Median.
+            (5e-2, 4e-1),  # Non-parametric kurtosis.
+        ]
     if dist_name == "Log-Logistic Dist." and sort_by == "beta_true":
+        ylims_characs = [
+            (4e1, 6e2),  # Mean.
+            (1e1, 9e2),  # Standard deviation.
+            (1e-1, 3e0),  # Coefficient of Variation.
+            (1e-1, 2e1),  # Skewness.
+            (2e-1, 6e2),  # Excess kurtosis.
+            (4e1, 2e2),  # Median.
+            (2e-2, 4e-1),  # Non-parametric kurtosis.
+        ]
         ylims_cnt = [(8e-1, 6e1), (1e2, 2e4), (1e4, 5e4)]
     ####################################################################
 
