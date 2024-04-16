@@ -1912,7 +1912,7 @@ if __name__ == "__main__":  # noqa: C901
     color_km_wbl = "gold"
     color_km_brr = "yellow"
 
-    marker_true = "*"
+    marker_true = "x"
     # marker_true_cen = "P"
     # marker_true_unc = "X"
     marker_cnt_cen = "H"
@@ -1957,17 +1957,6 @@ if __name__ == "__main__":  # noqa: C901
             else:
                 offset_i_cnt = 1
             fig, ax = plt.subplots(clear=True)
-            if args.INFILE_PARAM is not None:
-                # True lifetime distribution.
-                ax.errorbar(
-                    states,
-                    lts_true_characs[:, i],
-                    yerr=None,
-                    label=label_true,
-                    color=color_true,
-                    marker=marker_true,
-                    alpha=alpha,
-                )
             # Method 1: Censored counting.
             ax.errorbar(
                 states,
@@ -1999,36 +1988,6 @@ if __name__ == "__main__":  # noqa: C901
                     marker=marker_k,
                     alpha=alpha,
                 )
-            # Method 4: Numerical integration of the remain probability.
-            ax.errorbar(
-                states,
-                lts_rp_int_characs[:, i],
-                yerr=None,
-                label=label_rp_int,
-                color=color_rp_int,
-                marker=marker_rp_int,
-                alpha=alpha,
-            )
-            # Method 5: Weibull fit of the remain probability.
-            ax.errorbar(
-                states,
-                lts_rp_wbl_characs[:, i],
-                yerr=None,
-                label=label_rp_wbl,
-                color=color_rp_wbl,
-                marker=marker_rp_wbl,
-                alpha=alpha,
-            )
-            # Method 6: Burr Type XII fit of the remain probability.
-            ax.errorbar(
-                states,
-                lts_rp_brr_characs[:, i],
-                yerr=None,
-                label=label_rp_brr,
-                color=color_rp_brr,
-                marker=marker_rp_brr,
-                alpha=alpha,
-            )
             # Method 7: Numerical integration of the KM estimator.
             ax.errorbar(
                 states,
@@ -2059,6 +2018,60 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_km_brr,
                 alpha=alpha,
             )
+            # Method 4: Numerical integration of the remain probability.
+            ax.errorbar(
+                states,
+                lts_rp_int_characs[:, i],
+                yerr=None,
+                label=label_rp_int,
+                color=color_rp_int,
+                marker=marker_rp_int,
+                alpha=alpha,
+            )
+            # Method 5: Weibull fit of the remain probability.
+            ax.errorbar(
+                states,
+                lts_rp_wbl_characs[:, i],
+                yerr=None,
+                label=label_rp_wbl,
+                color=color_rp_wbl,
+                marker=marker_rp_wbl,
+                alpha=alpha,
+            )
+            # Method 6: Burr Type XII fit of the remain probability.
+            ax.errorbar(
+                states,
+                lts_rp_brr_characs[:, i],
+                yerr=None,
+                label=label_rp_brr,
+                color=color_rp_brr,
+                marker=marker_rp_brr,
+                alpha=alpha,
+            )
+            if args.INFILE_PARAM is not None:
+                # True lifetime distribution.
+                ax.errorbar(
+                    states,
+                    lts_true_characs[:, i],
+                    yerr=None,
+                    label=(
+                        label_true + r" $\mathrm{E}[T]$"
+                        if i == 0
+                        else label_true
+                    ),
+                    color=color_true,
+                    marker=marker_true,
+                    alpha=alpha,
+                )
+                # True average residual/remaining lifetime.
+                ax.errorbar(
+                    states,
+                    lts_true_characs[:, 7] / (2 * lts_true_characs[:, 0]),
+                    label=label_true + r" $\mathrm{E}[R]$",
+                    color="darkolivegreen",
+                    marker="+",
+                    alpha=alpha,
+                )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
             if ylim[0] < 0 and ylabel not in (
@@ -2083,37 +2096,15 @@ if __name__ == "__main__":  # noqa: C901
         ################################################################
 
         ################################################################
-        # Plot average residual lifetime.
+        # Plot average residual/remaining lifetime.
         if args.INFILE_PARAM is not None:
-            ylabel = "Avg. Res. Lifetime / Frames"
+            ylabel = "Avg. Rem. Lifetime / Frames"
             fig, ax = plt.subplots(clear=True)
-            ax.plot(
-                states,
-                lts_true_characs[:, 7] / (2 * lts_true_characs[:, 0]),
-                label=(
-                    r"$\langle t_{true}^2 \rangle /"
-                    + r" 2 \langle t_{true} \rangle$"
-                ),
-                color=color_true,  # color_true_cen,
-                marker=marker_true,  # marker_true_cen,
-                alpha=alpha,
-            )
-            # ax.plot(
-            #     states,
-            #     lts_true_characs[:, 8] / (2 * lts_true_characs[:, 7]),
-            #     label=(
-            #         r"$\langle t_{true}^3 \rangle /"
-            #         + r" 2 \langle t_{true}^2 \rangle$"
-            #     ),
-            #     color=color_true_unc,
-            #     marker=marker_true_unc,
-            #     alpha=alpha,
-            # )
             # Method 4: Numerical integration of the remain probability.
             ax.plot(
                 states,
                 lts_rp_int_characs[:, 0],
-                label=label_rp_int + r" $\langle t \rangle$",
+                label=label_rp_int,
                 color=color_rp_int,
                 marker=marker_rp_int,
                 alpha=alpha,
@@ -2122,7 +2113,7 @@ if __name__ == "__main__":  # noqa: C901
             ax.plot(
                 states,
                 lts_rp_wbl_characs[:, 0],
-                label=label_rp_wbl + r" $\langle t \rangle$",
+                label=label_rp_wbl,
                 color=color_rp_wbl,
                 marker=marker_rp_wbl,
                 alpha=alpha,
@@ -2131,11 +2122,28 @@ if __name__ == "__main__":  # noqa: C901
             ax.plot(
                 states,
                 lts_rp_brr_characs[:, 0],
-                label=label_rp_brr + r" $\langle t \rangle$",
+                label=label_rp_brr,
                 color=color_rp_brr,
                 marker=marker_rp_brr,
                 alpha=alpha,
             )
+            # True average residual/remaining lifetime.
+            ax.plot(
+                states,
+                lts_true_characs[:, 7] / (2 * lts_true_characs[:, 0]),
+                label=r"True $\mathrm{E}[T^2] / 2 \mathrm{E}[T]$",
+                color=color_true,
+                marker=marker_true,
+                alpha=alpha,
+            )
+            # ax.plot(
+            #     states,
+            #     lts_true_characs[:, 8] / (2 * lts_true_characs[:, 7]),
+            #     label=r"$\mathrm{E}[T^3] / 2 \mathrm{E}[T^2]$",
+            #     color=color_true_unc,
+            #     marker=marker_true_unc,
+            #     alpha=alpha,
+            # )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
             if ylim[0] < 0:
@@ -2210,17 +2218,6 @@ if __name__ == "__main__":  # noqa: C901
         )
         for i, ylabel in enumerate(ylabels):
             fig, ax = plt.subplots(clear=True)
-            if args.INFILE_PARAM is not None:
-                # True distribution.
-                ax.errorbar(
-                    states,
-                    dist_params[:, i],
-                    yerr=None,
-                    label=label_true,
-                    color=color_true,
-                    marker=marker_true,
-                    alpha=alpha,
-                )
             if i < 2:
                 # Method 5: Weibull fit of the remain probability.
                 ax.errorbar(
@@ -2263,6 +2260,17 @@ if __name__ == "__main__":  # noqa: C901
                 marker=marker_km_brr,
                 alpha=alpha,
             )
+            if args.INFILE_PARAM is not None:
+                # True distribution.
+                ax.errorbar(
+                    states,
+                    dist_params[:, i],
+                    yerr=None,
+                    label=label_true,
+                    color=color_true,
+                    marker=marker_true,
+                    alpha=alpha,
+                )
             ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim)
             ylim = ax.get_ylim()
             if ylim[0] < 0:
