@@ -116,7 +116,7 @@ repos:
       - id: "check-pre-commit-ci-config"
 
   - repo: "https://github.com/python-jsonschema/check-jsonschema"
-    rev: "0.28.2"
+    rev: "0.28.6"
     hooks:
       # Validate Dependabot Config (v2) against the schema provided by
       # SchemaStore.
@@ -171,7 +171,7 @@ repos:
   - repo: "https://github.com/psf/black-pre-commit-mirror"
     # Stay at black version 23, because some formatting rules change in
     # version 24.
-    rev: "23.12.1"
+    rev: "24.4.2"
     hooks:
       # Format Python code with black.
       - id: "black"
@@ -184,7 +184,7 @@ repos:
           - "--color"
 
   - repo: "https://github.com/PyCQA/flake8"
-    rev: "7.0.0"
+    rev: "7.1.0"
     hooks:
       # Lint Python code with Flake8.
       - id: "flake8"
@@ -206,7 +206,7 @@ repos:
           - "pep8-naming >=0.1, <1.0"
 
   - repo: "https://github.com/PyCQA/bandit"
-    rev: "1.7.8"
+    rev: "1.7.9"
     hooks:
       # Check code security with bandit.
       - id: "bandit"
@@ -275,7 +275,7 @@ repos:
     # v0.12.0 requires ruby2.7
     # v0.11.0 and v0.10.0 require ruby2.6
     # => stay at v0.9.0
-    rev: "v0.9.0"
+    rev: "v0.12.0"
     hooks:
       # Lint Markdown files with markdownlint.
       - id: "markdownlint"
