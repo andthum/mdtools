@@ -12,8 +12,9 @@ build:
 
 python:
   install:
-    - requirements: "requirements.txt"
+    - requirements: "docs/requirements-rtd.txt"
     - requirements: "docs/requirements-docs.txt"
+    - requirements: "requirements.txt"
     # Install the project itself.
     - method: "pip"
       path: "."
