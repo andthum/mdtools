@@ -53,7 +53,18 @@ jobs:
             ${{ runner.os }}-${{ matrix.python-version }}
             ${{ runner.os }}
       - name: "Install/Upgrade setuptools and wheel"
-        run: "python -m pip install --user --upgrade setuptools wheel"
+        # MDAnalysis requires NumPy (>=1.19.2) for setup (see also
+        # https://github.com/MDAnalysis/mdanalysis/issues/3374#issuecomment-889189979).
+        # MDAnalysis <3.0 requires Cython <3.0 (see
+        # https://github.com/MDAnalysis/mdanalysis/pull/4129 and
+        # https://github.com/cython/cython/issues/3690).
+        # Strangely, without `python-dev-tools` the installation of
+        # MDAnalysis might fail while building the wheel.
+        run: |
+          python -m pip install --user --upgrade setuptools wheel
+          python -m pip install --user --upgrade python-dev-tools
+          python -m pip install --user "Cython <3.0"
+          python -m pip install --user "numpy >=1.19.2"
       - name: "Install/Upgrade requirements of MDTools"
         run: |
           python -m pip install --user --upgrade -r requirements.txt
