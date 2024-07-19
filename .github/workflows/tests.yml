@@ -148,9 +148,10 @@ jobs:
     strategy:
       matrix:
         # Tests must be run on all target platforms and Python versions.
+        # Python <3.8 is not supported in the MacOS 14 runner.
         os:
           - "ubuntu-latest"
-          - "macos-latest"
+          - "macos-13"
           - "windows-latest"
         python-version:
           - "3.6"
@@ -203,11 +204,8 @@ jobs:
         # MDAnalysis <3.0 requires Cython <3.0 (see
         # https://github.com/MDAnalysis/mdanalysis/pull/4129 and
         # https://github.com/cython/cython/issues/3690).
-        # Without `python-dev-tools` the installation of MDAnalysis
-        # fails on MacOS-latest with Python 3.9 while building the wheel
-        # for MDAnalysis.  Strangely, the MDAnalysis wheel is only build
-        # on this OS-Python combination, whereas other OS-Python
-        # combinations fetch a pre-build wheel.
+        # Strangely, without `python-dev-tools` the installation of
+        # MDAnalysis might fail while building the wheel.
         run: |
           python -m pip install --user --upgrade setuptools wheel
           python -m pip install --user --upgrade python-dev-tools
