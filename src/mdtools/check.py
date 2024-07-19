@@ -1137,7 +1137,7 @@ def frame_slicing(start, stop, step, n_frames_tot=None, verbose=True):
     scripts, we have set up the above limitations.
 
     .. _slicing numpy arrays:
-        https://numpy.org/doc/stable/reference/arrays.indexing.html
+        https://numpy.org/doc/stable/user/basics.indexing.html#slicing-and-striding
     .. _slicing MDAnalysis trajectories:
         https://userguide.mdanalysis.org/stable/trajectories/slicing_trajectories.html
 
