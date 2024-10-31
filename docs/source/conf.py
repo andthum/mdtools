@@ -485,6 +485,10 @@ linkcheck_ignore = [
     r"https://doi\.org/10\.1073/pnas\.1900239116",
     r"https://doi\.org/10\.1080/00031305\.2017\.1356374",
     r"https://doi\.org/10\.1080/01621459\.1958\.10501452",
+    r"https://doi\.org/10\.1103/PhysRev\.126\.986",
+    r"https://doi\.org/10\.1103/PhysRev\.136\.A405",
+    r"https://doi\.org/10\.1103/PhysRevB\.74\.184430",
+    r"https://doi\.org/10\.1103/PhysRevLett\.98\.227802",
     # 418 Client Error: Unknown for url.
     r"https://doi\.org/10\.1109/TSMC\.1979\.4310076",
 ]

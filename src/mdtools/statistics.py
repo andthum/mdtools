@@ -516,7 +516,7 @@ def acf_se(x, axis=None, n=None):
         <https://en.wikipedia.org/wiki/Correlogram#Statistical_inference_with_correlograms>`_
 
     .. [#] Wikipedia `Autoregressive-moving-average model
-        <https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model#Moving-average_model>`_
+        <https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model#Moving_average_model>`_
 
     Examples
     --------
@@ -710,7 +710,7 @@ def acf_confint(x, axis=None, alpha=0.05, n=None):
         <https://en.wikipedia.org/wiki/Normal_distribution#Quantile_function>`_
 
     .. [3] Wikipedia `Autoregressive-moving-average model
-        <https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model#Moving-average_model>`_
+        <https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model#Moving_average_model>`_
 
     Examples
     --------
