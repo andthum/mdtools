@@ -55,7 +55,7 @@ jobs:
         # Tests must be run on all target platforms and Python versions.
         os:
           - "ubuntu-latest"
-          - "macos-latest"
+          - "macos-13"
           - "windows-latest"
         python-version:
           - "3.6"
