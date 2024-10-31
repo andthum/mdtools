@@ -30,6 +30,10 @@ Upcoming release
       :data:`mdtools._metadata.__author__` and in the CITATION.cff file.
     * Andreas Thum
 
+0.0.9.0
+
+    * Andreas Thum
+
 0.0.8.0
 
     * Andreas Thum
