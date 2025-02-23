@@ -481,6 +481,7 @@ linkcheck_ignore = [
     r"https://www\.cabdirect\.org/cabdirect/abstract/19272700028",
     r"https://doi\.org/10\.1002/9781118033005",
     r"https://doi\.org/10\.1021/acs\.jctc\.2c00327",
+    r"https://doi\.org/10\.1063/1\.1320826",
     r"https://doi\.org/10\.1063/5\.0008316",
     r"https://doi\.org/10\.1073/pnas\.1900239116",
     r"https://doi\.org/10\.1080/00031305\.2017\.1356374",
@@ -489,6 +490,7 @@ linkcheck_ignore = [
     r"https://doi\.org/10\.1103/PhysRev\.136\.A405",
     r"https://doi\.org/10\.1103/PhysRevB\.74\.184430",
     r"https://doi\.org/10\.1103/PhysRevLett\.98\.227802",
+    r"https://doi\.org/10\.3233/DS-190026",
     # 418 Client Error: Unknown for url.
     r"https://doi\.org/10\.1109/TSMC\.1979\.4310076",
 ]
