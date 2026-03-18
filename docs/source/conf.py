@@ -479,6 +479,7 @@ text_secnumber_suffix = html_secnumber_suffix
 linkcheck_ignore = [
     # 403 Client Error: Forbidden for url.
     r"https://www\.cabdirect\.org/cabdirect/abstract/19272700028",
+    r"https://docutils\.sourceforge\.io/docs/ref/rst/restructuredtext\.html#bullet-lists",  # noqa: E501
     r"https://doi\.org/10\.1002/9781118033005",
     r"https://doi\.org/10\.1021/acs\.jctc\.2c00327",
     r"https://doi\.org/10\.1063/1\.1320826",
@@ -491,6 +492,12 @@ linkcheck_ignore = [
     r"https://doi\.org/10\.1103/PhysRevB\.74\.184430",
     r"https://doi\.org/10\.1103/PhysRevLett\.98\.227802",
     r"https://doi\.org/10\.3233/DS-190026",
+    r"https://doi\.org/10\.5281/zenodo\.1172987",
+    r"https://doi\.org/10\.5281/zenodo\.1212495",
+    r"https://doi\.org/10\.5281/zenodo\.3233853",
+    r"https://doi\.org/10\.5281/zenodo\.7615177",
+    r"https://zenodo\.org/badge/DOI/10\.5281/zenodo\.7615177\.svg",
+    r"https://zenodo\.org/record/1172988",
     # 418 Client Error: Unknown for url.
     r"https://doi\.org/10\.1109/TSMC\.1979\.4310076",
 ]
