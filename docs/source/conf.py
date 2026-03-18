@@ -241,7 +241,7 @@ rst_epilog = """
 .. |explanation_of_these_terms| replace::
     :raw-html:`<a href="https://userguide.mdanalysis.org/stable/groups_of_atoms.html">explanation of these terms</a>`
 .. |MDA_always_guesses_atom_masses| replace::
-    :raw-html:`<a href="https://userguide.mdanalysis.org/formats/guessing.html">MDAnalysis always guesses atom masses</a>`
+    :raw-html:`<a href="https://userguide.mdanalysis.org/stable/guessing.html">MDAnalysis always guesses atom masses</a>`
 
 .. |shfmt| replace::
     :raw-html:`<a href="https://github.com/mvdan/sh#shfmt">shfmt</a>`
