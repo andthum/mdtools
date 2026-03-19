@@ -37,9 +37,9 @@ jobs:
     runs-on: "${{ matrix.os }}"
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
       - name: "Set up Python ${{ matrix.python-version }}"
-        uses: "actions/setup-python@v5"
+        uses: "actions/setup-python@v6"
         with:
           python-version: "${{ matrix.python-version }}"
       - name: "Export ${HOME}/.local/bin to ${PATH}"
@@ -54,7 +54,7 @@ jobs:
           python -m pip install --user --upgrade pip
           echo "dir=$(pip cache dir)" >> ${GITHUB_OUTPUT}
       - name: "Create/Restore cache"
-        uses: "actions/cache@v4"
+        uses: "actions/cache@v5"
         with:
           path: "${{ steps.pip-cache.outputs.dir }}/**"
           key: |
@@ -148,27 +148,23 @@ jobs:
     strategy:
       matrix:
         # Tests must be run on all target platforms and Python versions.
-        # Python <3.8 is not supported in the MacOS 14 runner.
         os:
           - "ubuntu-latest"
-          - "macos-13"
           - "windows-latest"
         python-version:
           - "3.6"
           - "3.7"
           - "3.8"
           - "3.9"
-        # Python 3.6 is not supported anymore in the Ubuntu 22.04 runner
-        # https://github.com/actions/setup-python/issues/544#issuecomment-1332535877
-        # Python 3.7 is not supported anymore in the Ubuntu 24.04 runner
         exclude:
+          # Python 3.6 is not supported anymore in the Ubuntu 22.04 runner
+          # https://github.com/actions/setup-python/issues/544#issuecomment-1332535877
+          # Python 3.7 is not supported anymore in the Ubuntu 24.04 runner
           - os: "ubuntu-latest"
             python-version: "3.6"
           - os: "ubuntu-latest"
             python-version: "3.7"
         include:
-          - os: "ubuntu-20.04"
-            python-version: "3.6"
           - os: "ubuntu-22.04"
             python-version: "3.7"
       # Do not cancel in-progress jobs if any matrix job fails
@@ -176,9 +172,9 @@ jobs:
     runs-on: "${{ matrix.os }}"
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
       - name: "Set up Python ${{ matrix.python-version }}"
-        uses: "actions/setup-python@v5"
+        uses: "actions/setup-python@v6"
         with:
           python-version: "${{ matrix.python-version }}"
       - name: "Export ${HOME}/.local/bin to ${PATH}"
@@ -193,7 +189,7 @@ jobs:
           python -m pip install --user --upgrade pip
           echo "dir=$(pip cache dir)" >> ${GITHUB_OUTPUT}
       - name: "Create/Restore cache"
-        uses: "actions/cache@v4"
+        uses: "actions/cache@v5"
         with:
           path: |
             ${{ steps.pip-cache.outputs.dir }}/**
@@ -215,7 +211,7 @@ jobs:
           python -m pip install --user --upgrade setuptools wheel
           python -m pip install --user --upgrade python-dev-tools
           python -m pip install --user "Cython <3.0"
-          python -m pip install --user "numpy >=1.19.2"
+          python -m pip install --user "numpy >=1.19.2,<2.0"
       - name: "Test installation of MDTools"
         run: |
           python -m pip install --user .

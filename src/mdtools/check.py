@@ -1548,7 +1548,7 @@ def masses(ag, flash_test=True):
     of mass.
 
     .. _MDAnalysis always guesses atom masses:
-        https://userguide.mdanalysis.org/formats/guessing.html
+        https://userguide.mdanalysis.org/stable/guessing.html
 
     Parameters
     ----------
@@ -1615,7 +1615,7 @@ def masses_new(ag, verbose=False):
     center of mass.
 
     .. _MDAnalysis always guesses atom masses:
-        https://userguide.mdanalysis.org/formats/guessing.html
+        https://userguide.mdanalysis.org/stable/guessing.html
 
     Parameters
     ----------

@@ -951,7 +951,7 @@ def com(ag, pbc=False, compound="group", make_whole=False, debug=False):
         :class:`~MDAnalysis.core.groups.Atom` coordinates.
 
     .. _MDAnalysis always guesses atom masses:
-        https://userguide.mdanalysis.org/formats/guessing.html
+        https://userguide.mdanalysis.org/stable/guessing.html
     """
     if compound == "atoms":
         if pbc:

@@ -17,8 +17,6 @@ updates:
     insecure-external-code-execution: "deny"
     pull-request-branch-name:
       separator: "/"
-    reviewers:
-      - "andthum"
     labels:
       - "dependencies"
       - "patch"
@@ -33,8 +31,6 @@ updates:
     insecure-external-code-execution: "deny"
     pull-request-branch-name:
       separator: "/"
-    reviewers:
-      - "andthum"
     labels:
       - "dependencies"
       - "skip-changelog"
@@ -49,8 +45,6 @@ updates:
     insecure-external-code-execution: "deny"
     pull-request-branch-name:
       separator: "/"
-    reviewers:
-      - "andthum"
     labels:
       - "dependencies"
       - "skip-changelog"
@@ -62,8 +56,6 @@ updates:
       interval: "weekly"
     pull-request-branch-name:
       separator: "/"
-    reviewers:
-      - "andthum"
     labels:
       - "dependencies"
       - "skip-changelog"
