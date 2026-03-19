@@ -174,8 +174,6 @@ jobs:
           - os: "macos-14"
             python-version: "3.7"
         include:
-          - os: "ubuntu-20.04"
-            python-version: "3.6"
           - os: "ubuntu-22.04"
             python-version: "3.7"
       # Do not cancel in-progress jobs if any matrix job fails
