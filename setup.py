@@ -160,7 +160,6 @@ if __name__ == "__main__":
             "Intended Audience :: Science/Research",
             "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",  # noqa: E501
             "Natural Language :: English",
-            "Operating System :: MacOS",
             "Operating System :: Microsoft :: Windows",
             "Operating System :: POSIX :: Linux",
             "Programming Language :: Python :: 3",
