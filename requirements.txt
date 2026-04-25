@@ -3,7 +3,7 @@
 # Keep in sync with references in CITATION.cff.
 gsd >=1.0, <3.0
 importlib-resources >=2.0, <7.0
-matplotlib >=3.3, <4.0
+matplotlib >=3.9.4, <4.0
 MDAnalysis >=2.0, <2.1
 numpy >=1.15, <2.0
 psutil >=5.0, <8.0
