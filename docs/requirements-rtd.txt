@@ -1,6 +1,6 @@
 # Additional requirements to build MDTools' documentation by readthedocs
 #
-# MDAnalysis requires NumPy (>=1.19.2) for setup (see also
+# MDAnalysis requires NumPy (>=2.4.5) for setup (see also
 # https://github.com/MDAnalysis/mdanalysis/issues/3374#issuecomment-889189979).
 # MDAnalysis <3.0 requires Cython <3.0 (see
 # https://github.com/MDAnalysis/mdanalysis/pull/4129 and
